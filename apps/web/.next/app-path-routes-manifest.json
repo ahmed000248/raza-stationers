@@ -1,9 +1,0 @@
-{
-  "/_global-error/page": "/_global-error",
-  "/_not-found/page": "/_not-found",
-  "/catalogue/[category]/page": "/catalogue/[category]",
-  "/catalogue/page": "/catalogue",
-  "/dev/components/page": "/dev/components",
-  "/favicon.ico/route": "/favicon.ico",
-  "/page": "/"
-}
