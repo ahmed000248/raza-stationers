@@ -1,0 +1,6 @@
+{"timestamp":"00:00:00.886","source":"Server","level":"LOG","message":""}
+{"timestamp":"00:00:08.069","source":"Server","level":"LOG","message":"○ Compiling / ..."}
+{"timestamp":"00:01:42.042","source":"Server","level":"LOG","message":"✓ Compiled in 97ms"}
+{"timestamp":"00:01:48.416","source":"Server","level":"LOG","message":"✓ Compiled in 69ms"}
+{"timestamp":"00:01:54.238","source":"Server","level":"LOG","message":"✓ Compiled in 71ms"}
+{"timestamp":"00:02:02.044","source":"Server","level":"LOG","message":"✓ Compiled in 78ms"}
