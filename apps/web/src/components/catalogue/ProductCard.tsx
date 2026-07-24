@@ -11,6 +11,8 @@ import { formatPKR, resolveDisplayPrice, UserPricingContext } from "@/lib/pricin
 import { useCart } from "@/hooks/use-cart"
 import { ShoppingBag, BellRing, Check } from "lucide-react"
 
+import Link from "next/link"
+
 interface ProductCardProps {
   product: ProductCatalogueView
   pricingContext?: UserPricingContext
@@ -44,49 +46,51 @@ export function ProductCard({ product, pricingContext }: ProductCardProps) {
   return (
     <Card className="group relative flex flex-col justify-between overflow-hidden rounded-2xl transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
       <CardContent className="p-4 space-y-3">
-        {/* Header Badges & Icon Block */}
-        <div className="relative">
-          <ProductIconBlock
-            category={product.categoryId.replace("cat-", "") as any}
-            size="md"
-            aspectRatio="video"
-            className="w-full rounded-xl"
-          />
+        {/* Clickable Header & Icon Block leading to Product Detail */}
+        <Link href={`/product/${product.id}`} className="block space-y-3 group/link">
+          <div className="relative">
+            <ProductIconBlock
+              category={product.categoryId.replace("cat-", "") as any}
+              size="md"
+              aspectRatio="video"
+              className="w-full rounded-xl"
+            />
 
-          {/* Stock Badge Overlay */}
-          <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
-            {isOutOfStock ? (
-              <Badge variant="destructive" className="text-[10px]">
-                Out of Stock
-              </Badge>
-            ) : isLowStock ? (
-              <Badge variant="amber" className="text-[10px]">
-                Low Stock ({product.currentQuantity})
-              </Badge>
-            ) : (
-              <Badge variant="evergreen" className="text-[10px]">
-                In Stock
-              </Badge>
+            {/* Stock Badge Overlay */}
+            <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
+              {isOutOfStock ? (
+                <Badge variant="destructive" className="text-[10px]">
+                  Out of Stock
+                </Badge>
+              ) : isLowStock ? (
+                <Badge variant="amber" className="text-[10px]">
+                  Low Stock ({product.currentQuantity})
+                </Badge>
+              ) : (
+                <Badge variant="evergreen" className="text-[10px]">
+                  In Stock
+                </Badge>
+              )}
+            </div>
+          </div>
+
+          {/* Product Names */}
+          <div className="space-y-1">
+            {product.shopName && (
+              <span className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                {product.shopName}
+              </span>
+            )}
+            <h4 className="font-heading font-semibold text-sm leading-snug text-[var(--color-ink-900)] line-clamp-2 group-hover/link:text-[var(--color-evergreen-600)] transition-colors">
+              {product.name}
+            </h4>
+            {product.nameUrdu && (
+              <p dir="rtl" className="font-urdu text-xs text-muted-foreground line-clamp-1">
+                {product.nameUrdu}
+              </p>
             )}
           </div>
-        </div>
-
-        {/* Product Names */}
-        <div className="space-y-1">
-          {product.shopName && (
-            <span className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
-              {product.shopName}
-            </span>
-          )}
-          <h4 className="font-heading font-semibold text-sm leading-snug text-[var(--color-ink-900)] line-clamp-2">
-            {product.name}
-          </h4>
-          {product.nameUrdu && (
-            <p dir="rtl" className="font-urdu text-xs text-muted-foreground line-clamp-1">
-              {product.nameUrdu}
-            </p>
-          )}
-        </div>
+        </Link>
       </CardContent>
 
       <CardFooter className="p-4 pt-0 flex items-center justify-between gap-2 border-t border-border/40 mt-auto">
