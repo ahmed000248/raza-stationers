@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/fonts/fonts.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/radius.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/styles.css">
+  <script src="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/_ds_bundle.js"></script>
+  <style>
+    body{margin:0;background:var(--canvas);font-family:var(--font-body);}
+    a{color:var(--evergreen-600);}
+    a:hover{color:var(--forest-700);}
+    @keyframes razaShake{0%,100%{transform:translateX(0);}25%{transform:translateX(-6px);}75%{transform:translateX(6px);}}
+    @keyframes razaToastIn{from{opacity:0;transform:translate(-50%,12px);}to{opacity:1;transform:translate(-50%,0);}}
+    .raza-cta:active{transform:scale(0.97);}
+    .raza-contact-row:hover{background:var(--mist-100);}
+  </style>
+</helmet>
+<dc-import name="SiteNav" active="contact" hint-size="100%,64px"></dc-import>
+<div style="padding-top:96px;max-width:1000px;margin:0 auto;padding-left:24px;padding-right:24px;padding-bottom:80px;">
+  <h1 style="font-family:var(--font-display);font-size:26px;color:var(--ink-900);margin:0 0 4px;">Contact &amp; Support</h1>
+  <div dir="rtl" style="font-family:var(--font-urdu);font-size:15px;color:var(--forest-700);margin-bottom:28px;">رابطہ اور مدد</div>
+
+  <div style="display:grid;grid-template-columns:1fr 1.2fr;gap:32px;align-items:start;">
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <sc-for list="{{ contactRows }}" as="c" hint-placeholder-count="4">
+        <div class="raza-contact-row" style="{{ c.rowStyle }}">
+          <div style="{{ c.iconWrapStyle }}">
+            <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="{{ c.icon }}" size="18" color="var(--evergreen-600)" hint-size="18px,18px"></x-import>
+          </div>
+          <div>
+            <div style="font-size:12px;color:var(--text-muted);">{{ c.label }}</div>
+            <div style="font-size:14px;font-weight:600;color:var(--ink-900);">{{ c.value }}</div>
+          </div>
+        </div>
+      </sc-for>
+      <div style="{{ mapStyle }}">Map placeholder — Lahore</div>
+
+      <div style="{{ hoursCardStyle }}">
+        <div style="font-family:var(--font-display);font-size:15px;color:var(--ink-900);margin-bottom:14px;">Business Hours</div>
+        <sc-for list="{{ hours }}" as="h" hint-placeholder-count="3">
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--border-subtle);">
+            <span style="color:var(--text-muted);">{{ h.day }}</span><span style="color:var(--ink-900);font-weight:500;">{{ h.time }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="{{ formCardStyle }}">
+      <div style="font-family:var(--font-display);font-size:17px;color:var(--ink-900);margin-bottom:18px;">Send Us a Message</div>
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.TextInput" label="Full Name" value="{{ form.name }}" onChange="{{ set.name }}" hint-size="100%,64px"></x-import>
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.PhoneInput" label="Mobile Number" value="{{ form.phone }}" onChange="{{ set.phone }}" hint-size="100%,68px"></x-import>
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.TextInput" label="Message" value="{{ form.message }}" onChange="{{ set.message }}" placeholder="How can we help?" hint-size="100%,90px"></x-import>
+      </div>
+      <sc-if value="{{ showError }}" hint-placeholder-val="{{ false }}">
+        <div style="{{ errorStyle }}">Please fill in your name, mobile number and message.</div>
+      </sc-if>
+      <button onClick="{{ submit }}" class="raza-cta" style="{{ submitBtnStyle }}">{{ submitLabel }}</button>
+      <sc-if value="{{ showSuccess }}" hint-placeholder-val="{{ false }}">
+        <div style="font-size:13px;color:var(--evergreen-600);background:var(--mist-100);border-radius:12px;padding:14px 18px;margin-top:16px;">Message sent. Our team will get back to you shortly.</div>
+      </sc-if>
+    </div>
+  </div>
+
+  <section style="max-width:640px;margin:56px auto 0;">
+    <h2 style="font-family:var(--font-display);font-size:20px;color:var(--ink-900);margin:0 0 18px;text-align:center;">Frequently Asked Questions</h2>
+    <div style="display:flex;flex-direction:column;">
+      <sc-for list="{{ faqs }}" as="item" hint-placeholder-count="5">
+        <div style="border-bottom:1px solid var(--border-subtle);">
+          <button onClick="{{ item.toggle }}" style="width:100%;display:flex;justify-content:space-between;align-items:center;background:none;border:none;padding:16px 4px;cursor:pointer;text-align:left;font-family:var(--font-body);font-size:13px;font-weight:600;color:var(--ink-900);">
+            <span>{{ item.q }}</span><span style="{{ item.chevronStyle }}">+</span>
+          </button>
+          <sc-if value="{{ item.open }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:0 4px 16px;font-size:13px;color:var(--text-muted);line-height:1.6;">{{ item.a }}</div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+</div>
+<dc-import name="SiteFooter" hint-size="100%,300px"></dc-import>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { form: { name: '', phone: '', message: '' }, showError: false, submitting: false, success: false, openFaq: -1 };
+  componentDidMount() { import('./shared/store.js').then((mod) => { this._store = mod; this.forceUpdate(); }); }
+  setField(k, v) { this.setState((s) => ({ form: { ...s.form, [k]: v } })); }
+  toggleFaq(i) { this.setState((s) => ({ openFaq: s.openFaq === i ? -1 : i })); }
+
+  renderVals() {
+    const store = this._store;
+    const contact = store ? store.CONTACT : { phone: '+92 42 3576 2200', whatsapp: '+92 300 1234567', email: 'sales@razastationers.pk', address: '14-B Bund Road Industrial Area, Lahore, Punjab', hours: [] };
+    const form = this.state.form;
+    const set = { name: (v) => this.setField('name', typeof v === 'string' ? v : v.target.value), phone: (v) => this.setField('phone', typeof v === 'string' ? v : v.target.value), message: (v) => this.setField('message', typeof v === 'string' ? v : v.target.value) };
+    const canSubmit = form.name.trim() && form.phone.trim() && form.message.trim();
+    const rowStyle = { display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', borderRadius: 14, transition: 'background 150ms ease-out' };
+    const iconWrapStyle = { width: 40, height: 40, borderRadius: 12, background: 'var(--mist-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 };
+    const contactRows = [
+      { icon: 'shop', label: 'Phone', value: contact.phone, rowStyle, iconWrapStyle },
+      { icon: 'whatsapp', label: 'WhatsApp', value: contact.whatsapp, rowStyle, iconWrapStyle },
+      { icon: 'invoice', label: 'Email', value: contact.email, rowStyle, iconWrapStyle },
+      { icon: 'delivery', label: 'Address', value: contact.address, rowStyle, iconWrapStyle },
+    ];
+    const faqSrc = store ? store.FAQS : [];
+    const faqs = faqSrc.map((f, i) => ({
+      q: f.q, a: f.a, open: this.state.openFaq === i, toggle: () => this.toggleFaq(i),
+      chevronStyle: { fontSize: 16, color: 'var(--evergreen-600)', transform: this.state.openFaq === i ? 'rotate(45deg)' : 'rotate(0deg)', transition: 'transform 200ms ease-out' },
+    }));
+
+    return {
+      contactRows,
+      mapStyle: { height: 160, borderRadius: 16, background: 'var(--mist-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 13, marginTop: 6 },
+      hoursCardStyle: { background: '#fff', border: '1px solid var(--border-subtle)', borderRadius: 16, padding: 22, marginTop: 6 },
+      hours: contact.hours,
+      formCardStyle: { background: '#fff', border: '1px solid var(--border-subtle)', borderRadius: 16, padding: 26 },
+      form, set,
+      showError: this.state.showError,
+      errorStyle: { fontSize: 12, color: 'var(--red-ink)', background: 'var(--red-tint)', borderRadius: 12, padding: '10px 14px', marginTop: 14, animation: 'razaShake 350ms ease-out' },
+      submitLabel: this.state.submitting ? 'Sending…' : 'Send Message',
+      submitBtnStyle: { height: 48, width: '100%', borderRadius: 999, background: canSubmit ? 'var(--evergreen-600)' : 'var(--sage-400)', opacity: canSubmit ? 1 : 0.7, color: '#fff', border: 'none', fontSize: 14, fontWeight: 600, cursor: canSubmit ? 'pointer' : 'not-allowed', marginTop: 20, transition: 'all 150ms ease-out' },
+      submit: () => {
+        if (!canSubmit) { this.setState({ showError: true }); return; }
+        this.setState({ submitting: true, showError: false });
+        setTimeout(() => this.setState({ submitting: false, success: true }), 700);
+      },
+      showSuccess: this.state.success,
+      faqs,
+    };
+  }
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/fonts/fonts.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/radius.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/styles.css">
+  <script src="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/_ds_bundle.js"></script>
+  <style>
+    body{margin:0;background:var(--canvas);font-family:var(--font-body);}
+    a{color:var(--evergreen-600);}
+    a:hover{color:var(--forest-700);}
+    .raza-cta:active{transform:scale(0.97);}
+  </style>
+</helmet>
+<dc-import name="SiteNav" active="wholesale" hint-size="100%,64px"></dc-import>
+<div style="padding-top:96px;max-width:900px;margin:0 auto;padding-left:24px;padding-right:24px;padding-bottom:80px;">
+  <h1 style="font-family:var(--font-display);font-size:26px;color:var(--ink-900);margin:0 0 4px;">Wholesale Account Registration</h1>
+  <div dir="rtl" style="font-family:var(--font-urdu);font-size:15px;color:var(--forest-700);margin-bottom:8px;">ہول سیل اکاؤنٹ رجسٹریشن</div>
+  <div style="font-size:13px;color:var(--text-muted);margin-bottom:28px;max-width:520px;">For shops, schools and bookstores buying in bulk. Applications are reviewed and approved within 1-2 business days.</div>
+
+  <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:32px;align-items:start;">
+    <div style="{{ panelStyle }}">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div style="grid-column:span 2;"><x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.TextInput" label="Business Name" value="{{ f.business }}" onChange="{{ set.business }}" hint-size="100%,64px"></x-import></div>
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Select" label="Business Type" value="{{ f.type }}" onChange="{{ set.type }}" options="{{ typeOptions }}" hint-size="100%,64px"></x-import>
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.TextInput" label="Contact Person" value="{{ f.contact }}" onChange="{{ set.contact }}" hint-size="100%,64px"></x-import>
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.PhoneInput" label="Mobile Number" value="{{ f.phone }}" onChange="{{ set.phone }}" hint-size="100%,68px"></x-import>
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.TextInput" label="Email" value="{{ f.email }}" onChange="{{ set.email }}" hint-size="100%,64px"></x-import>
+        <div style="grid-column:span 2;"><x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.TextInput" type="password" label="Password" value="{{ f.password }}" onChange="{{ set.password }}" hint-size="100%,64px"></x-import></div>
+        <div style="grid-column:span 2;"><x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.TextInput" label="Business Address" value="{{ f.address }}" onChange="{{ set.address }}" hint-size="100%,64px"></x-import></div>
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.TextInput" label="City" value="{{ f.city }}" onChange="{{ set.city }}" hint-size="100%,64px"></x-import>
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.TextInput" label="NTN / GST (Optional)" value="{{ f.ntn }}" onChange="{{ set.ntn }}" hint-size="100%,64px"></x-import>
+      </div>
+      <label style="display:flex;align-items:center;gap:10px;margin-top:20px;font-size:13px;color:var(--text-muted);">
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.CheckboxOption" checked="{{ f.terms }}" onChange="{{ set.terms }}" hint-size="20px,20px"></x-import>
+        I agree to the <a href="#" style="font-size:13px;">Terms &amp; Conditions</a>
+      </label>
+      <button onClick="{{ submit }}" class="raza-cta" style="{{ submitBtnStyle }}">{{ submitLabel }}</button>
+      <sc-if value="{{ showSuccess }}" hint-placeholder-val="{{ false }}">
+        <div style="font-size:13px;color:var(--evergreen-600);background:var(--mist-100);border-radius:12px;padding:14px 18px;margin-top:16px;">Application submitted. Our team will review and contact you within 1-2 business days.</div>
+      </sc-if>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:18px;text-align:center;">Already have an account? <a href="SignIn.dc.html" style="font-size:12px;font-weight:600;">Sign In</a></div>
+    </div>
+
+    <div style="{{ stepsCardStyle }}">
+      <div style="font-family:var(--font-display);font-size:16px;color:var(--ink-900);margin-bottom:18px;">What Happens Next?</div>
+      <sc-for list="{{ steps }}" as="s" hint-placeholder-count="3">
+        <div style="display:flex;gap:14px;margin-bottom:20px;">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--evergreen-600);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;">{{ s.num }}</div>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--ink-900);">{{ s.title }}</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:3px;line-height:1.5;">{{ s.desc }}</div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+<dc-import name="SiteFooter" hint-size="100%,300px"></dc-import>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { f: { business: '', type: '', contact: '', phone: '', email: '', password: '', address: '', city: '', ntn: '', terms: false }, submitting: false, success: false };
+  componentDidMount() { import('./shared/store.js').then((mod) => { this._store = mod; }); }
+  setField(k, v) { this.setState((s) => ({ f: { ...s.f, [k]: v } })); }
+
+  renderVals() {
+    const f = this.state.f;
+    const set = {};
+    ['business', 'type', 'contact', 'phone', 'email', 'password', 'address', 'city', 'ntn'].forEach((k) => {
+      set[k] = (v) => this.setField(k, typeof v === 'string' ? v : v.target.value);
+    });
+    set.terms = (v) => this.setField('terms', typeof v === 'boolean' ? v : !f.terms);
+    const canSubmit = f.business && f.contact && f.phone && f.password && f.address && f.city && f.terms;
+    return {
+      panelStyle: { background: '#fff', border: '1px solid var(--border-subtle)', borderRadius: 16, padding: 26 },
+      f, set,
+      typeOptions: ['Retail Shop', 'School', 'Bookstore', 'Other'].map((v) => ({ label: v, value: v })),
+      submitLabel: this.state.submitting ? 'Submitting…' : 'Submit Application',
+      submitBtnStyle: { height: 48, width: '100%', borderRadius: 999, background: canSubmit ? 'var(--evergreen-600)' : 'var(--sage-400)', opacity: canSubmit ? 1 : 0.7, color: '#fff', border: 'none', fontSize: 14, fontWeight: 600, cursor: canSubmit ? 'pointer' : 'not-allowed', marginTop: 22, transition: 'all 150ms ease-out' },
+      submit: () => {
+        if (!canSubmit || this.state.submitting) return;
+        this.setState({ submitting: true });
+        setTimeout(() => this.setState({ submitting: false, success: true }), 800);
+      },
+      showSuccess: this.state.success,
+      stepsCardStyle: { background: 'var(--mist-100)', borderRadius: 16, padding: 26 },
+      steps: [
+        { num: 1, title: 'Application Review', desc: 'Our team verifies your business details, usually within 1-2 business days.' },
+        { num: 2, title: 'Approval & Setup', desc: 'Once approved, your account is switched to wholesale pricing.' },
+        { num: 3, title: 'Start Ordering', desc: 'Log in anytime to see final wholesale prices and place bulk orders.' },
+      ],
+    };
+  }
+}
+
+</script>
+</body>
+</html>

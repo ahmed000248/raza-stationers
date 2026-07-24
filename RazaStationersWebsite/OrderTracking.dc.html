@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/fonts/fonts.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/radius.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/styles.css">
+  <script src="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/_ds_bundle.js"></script>
+  <style>
+    body{margin:0;background:var(--canvas);font-family:var(--font-body);}
+    a{color:var(--evergreen-600);}
+    a:hover{color:var(--forest-700);}
+    @keyframes razaFadeRise{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+    @keyframes razaFillIn{from{width:0%;}}
+    .raza-cta:active{transform:scale(0.97);}
+  </style>
+</helmet>
+<dc-import name="SiteNav" active="tracking" hint-size="100%,64px"></dc-import>
+<div style="padding-top:96px;max-width:720px;margin:0 auto;padding-left:24px;padding-right:24px;padding-bottom:80px;">
+  <h1 style="font-family:var(--font-display);font-size:26px;color:var(--ink-900);margin:0 0 6px;">Track Order</h1>
+  <div dir="rtl" style="font-family:var(--font-urdu);font-size:15px;color:var(--forest-700);margin-bottom:24px;">آرڈر ٹریک کریں</div>
+
+  <div style="{{ formCardStyle }}">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.TextInput" label="Order Number" value="{{ orderNum }}" onChange="{{ setOrderNum }}" placeholder="e.g. RS-10482" hint-size="100%,68px"></x-import>
+      <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.PhoneInput" label="Mobile Number" value="{{ phone }}" onChange="{{ setPhone }}" hint-size="100%,68px"></x-import>
+    </div>
+    <button onClick="{{ track }}" class="raza-cta" style="{{ trackBtnStyle }}">Track Order</button>
+    <sc-if value="{{ showError }}" hint-placeholder-val="{{ false }}">
+      <div style="font-size:12px;color:var(--red-ink);background:var(--red-tint);border-radius:12px;padding:10px 14px;margin-top:14px;">We couldn't find an order matching those details. Check the order number and mobile number and try again.</div>
+    </sc-if>
+  </div>
+
+  <sc-if value="{{ showResult }}" hint-placeholder-val="{{ false }}">
+    <div style="{{ resultCardStyle }}">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
+        <div style="font-family:var(--font-display);font-size:17px;color:var(--ink-900);">Order {{ orderNum }}</div>
+        <div style="font-size:12px;color:var(--text-muted);">Est. delivery: {{ estDelivery }}</div>
+      </div>
+      <div style="position:relative;margin:36px 0 20px;">
+        <div style="height:6px;background:var(--mist-100);border-radius:999px;position:relative;">
+          <div style="{{ progressFillStyle }}"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:12px;">
+          <sc-for list="{{ trackSteps }}" as="ts" hint-placeholder-count="5">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:6px;width:60px;">
+              <div style="{{ ts.dotStyle }}"></div>
+              <div style="{{ ts.labelStyle }}">{{ ts.label }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;justify-content:center;margin-top:24px;flex-wrap:wrap;">
+        <sc-if value="{{ showReorder }}" hint-placeholder-val="{{ false }}">
+          <a href="Catalogue.dc.html" class="raza-cta" style="height:46px;padding:0 26px;border-radius:999px;background:var(--evergreen-600);color:#fff;display:inline-flex;align-items:center;font-size:13px;font-weight:600;text-decoration:none;">Reorder</a>
+        </sc-if>
+        <a href="Contact.dc.html" class="raza-cta" style="height:46px;padding:0 26px;border-radius:999px;border:2px solid var(--evergreen-600);color:var(--evergreen-600);display:inline-flex;align-items:center;font-size:13px;font-weight:600;text-decoration:none;">Need Help</a>
+      </div>
+    </div>
+  </sc-if>
+</div>
+<dc-import name="SiteFooter" hint-size="100%,300px"></dc-import>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { orderNum: '', phone: '', showResult: false, showError: false };
+  componentDidMount() { import('./shared/store.js').then((mod) => { this._store = mod; this.forceUpdate(); }); }
+
+  renderVals() {
+    const store = this._store;
+    const { orderNum, phone, showResult, showError } = this.state;
+    const steps = store ? store.TRACK_STEPS : ['Placed', 'Processing', 'Packed', 'Out for Delivery', 'Delivered'];
+    const currentStep = 3; // Out for Delivery, demo fixture
+    const trackSteps = steps.map((label, i) => ({
+      label,
+      dotStyle: { width: 14, height: 14, borderRadius: '50%', background: i <= currentStep ? 'var(--evergreen-600)' : 'var(--mist-100)', border: i <= currentStep ? 'none' : '1.5px solid var(--border-subtle)', transition: 'background 300ms ease-out' },
+      labelStyle: { fontSize: 10, color: i <= currentStep ? 'var(--ink-900)' : 'var(--text-muted)', fontWeight: i === currentStep ? 700 : 500, textAlign: 'center' },
+    }));
+
+    return {
+      formCardStyle: { background: '#fff', border: '1px solid var(--border-subtle)', borderRadius: 16, padding: 24 },
+      orderNum, setOrderNum: (v) => this.setState({ orderNum: typeof v === 'string' ? v : v.target.value }),
+      phone, setPhone: (v) => this.setState({ phone: typeof v === 'string' ? v : v.target.value }),
+      trackBtnStyle: { height: 48, padding: '0 30px', borderRadius: 999, background: 'var(--evergreen-600)', color: '#fff', border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer', marginTop: 18, width: '100%', transition: 'background 150ms ease-out, transform 150ms ease-out' },
+      track: () => {
+        if (orderNum.trim() && phone.trim()) this.setState({ showResult: true, showError: false });
+        else this.setState({ showError: true, showResult: false });
+      },
+      showError, showResult,
+      resultCardStyle: { background: '#fff', border: '1px solid var(--border-subtle)', borderRadius: 16, padding: 28, marginTop: 20, animation: 'razaFadeRise 350ms ease-out both' },
+      estDelivery: '26 Jul 2026',
+      progressFillStyle: { position: 'absolute', top: 0, left: 0, height: 6, borderRadius: 999, background: 'var(--evergreen-600)', width: `${(currentStep / (steps.length - 1)) * 100}%`, animation: 'razaFillIn 700ms ease-out' },
+      trackSteps,
+      showReorder: true,
+    };
+  }
+}
+
+</script>
+</body>
+</html>

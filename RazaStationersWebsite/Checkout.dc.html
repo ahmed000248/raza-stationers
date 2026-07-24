@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/fonts/fonts.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/radius.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/styles.css">
+  <script src="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/_ds_bundle.js"></script>
+  <style>
+    body{margin:0;background:var(--canvas);font-family:var(--font-body);}
+    a{color:var(--evergreen-600);}
+    a:hover{color:var(--forest-700);}
+    @keyframes razaSlideIn{from{opacity:0;transform:translateX(24px);}to{opacity:1;transform:translateX(0);}}
+    @keyframes razaShake{0%,100%{transform:translateX(0);}25%{transform:translateX(-6px);}75%{transform:translateX(6px);}}
+    .raza-cta:active{transform:scale(0.97);}
+    .raza-radio-card:hover{border-color:var(--sage-400);}
+  </style>
+</helmet>
+<dc-import name="SiteNav" active="checkout" hint-size="100%,64px"></dc-import>
+<div style="padding-top:96px;max-width:900px;margin:0 auto;padding-left:24px;padding-right:24px;padding-bottom:80px;">
+  <h1 style="font-family:var(--font-display);font-size:26px;color:var(--ink-900);margin:0 0 28px;">Checkout</h1>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:36px;">
+    <sc-for list="{{ stepperItems }}" as="s" hint-placeholder-count="4">
+      <div style="display:flex;align-items:center;flex:1;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+          <div style="{{ s.circleStyle }}">{{ s.num }}</div>
+          <div style="{{ s.labelStyle }}">{{ s.label }}</div>
+        </div>
+        <sc-if value="{{ s.hasLine }}" hint-placeholder-val="{{ true }}">
+          <div style="{{ s.lineStyle }}"></div>
+        </sc-if>
+      </div>
+    </sc-for>
+  </div>
+
+  <sc-if value="{{ stepIsShipping }}" hint-placeholder-val="{{ true }}">
+    <div style="{{ panelStyle }}">
+      <div style="font-family:var(--font-display);font-size:17px;color:var(--ink-900);margin-bottom:18px;">Shipping Address</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div style="grid-column:span 2;">
+          <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.TextInput" label="Full Name" value="{{ form.name }}" onChange="{{ setName }}" placeholder="Shop or contact name" hint-size="100%,68px"></x-import>
+        </div>
+        <div style="grid-column:span 2;">
+          <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.PhoneInput" label="Mobile Number" value="{{ form.phone }}" onChange="{{ setPhone }}" hint-size="100%,68px"></x-import>
+        </div>
+        <div style="grid-column:span 2;">
+          <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.TextInput" label="Delivery Address" value="{{ form.address }}" onChange="{{ setAddress }}" placeholder="Shop address, street, area" hint-size="100%,68px"></x-import>
+        </div>
+        <div>
+          <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Select" label="City" value="{{ form.city }}" onChange="{{ setCity }}" options="{{ cityOptions }}" hint-size="100%,68px"></x-import>
+        </div>
+      </div>
+      <sc-if value="{{ showZoneError }}" hint-placeholder-val="{{ false }}">
+        <div style="{{ errorBoxStyle }}">This city is outside our delivery zones. We currently deliver to: {{ servedZonesText }}.</div>
+      </sc-if>
+      <div style="display:flex;justify-content:flex-end;margin-top:24px;">
+        <button onClick="{{ goToPayment }}" class="raza-cta" style="{{ primaryBtnStyle }}">Continue to Payment</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ stepIsPayment }}" hint-placeholder-val="{{ false }}">
+    <div style="{{ panelStyle }}animation:razaSlideIn 300ms ease-out both;">
+      <div style="font-family:var(--font-display);font-size:17px;color:var(--ink-900);margin-bottom:18px;">Order Summary</div>
+      <sc-for list="{{ summaryLines }}" as="l" hint-placeholder-count="3">
+        <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text-muted);padding:6px 0;">
+          <span>{{ l.name }} × {{ l.qty }}</span><span>{{ l.total }}</span>
+        </div>
+      </sc-for>
+      <div style="border-top:1px solid var(--border-subtle);margin:14px 0;"></div>
+      <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:700;color:var(--ink-900);">
+        <span>Total</span><span>{{ subtotalText }}</span>
+      </div>
+      <sc-if value="{{ showMinOrderError }}" hint-placeholder-val="{{ false }}">
+        <div style="{{ errorBoxStyle }}animation:razaShake 350ms ease-out;">Minimum order is {{ minOrderText }}. Add {{ shortfallText }} more to continue.</div>
+      </sc-if>
+
+      <div style="font-family:var(--font-display);font-size:17px;color:var(--ink-900);margin:28px 0 16px;">Payment Method</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <sc-for list="{{ paymentOptions }}" as="opt" hint-placeholder-count="3">
+          <label class="raza-radio-card" style="{{ opt.rowStyle }}">
+            <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.RadioOption" checked="{{ opt.checked }}" onChange="{{ opt.onSelect }}" hint-size="20px,20px"></x-import>
+            <div style="flex:1;">
+              <div style="font-size:14px;font-weight:600;color:var(--ink-900);">{{ opt.label }}</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">{{ opt.desc }}</div>
+            </div>
+          </label>
+        </sc-for>
+      </div>
+
+      <sc-if value="{{ showOnlineDetails }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:14px;">
+          <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.TextInput" label="Transaction ID / Receipt Reference" value="{{ form.txnId }}" onChange="{{ setTxnId }}" placeholder="e.g. TXN-8834211" hint-size="100%,68px"></x-import>
+        </div>
+      </sc-if>
+      <sc-if value="{{ showPayLaterInfo }}" hint-placeholder-val="{{ false }}">
+        <div style="font-size:12px;color:var(--text-muted);background:var(--mist-100);border-radius:12px;padding:12px 16px;margin-top:14px;">Available credit: <strong style="color:var(--ink-900);">{{ availableCreditText }}</strong></div>
+      </sc-if>
+
+      <label style="display:flex;align-items:center;gap:10px;margin-top:22px;font-size:13px;color:var(--text-muted);">
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.CheckboxOption" checked="{{ form.acceptedTerms }}" onChange="{{ setAcceptedTerms }}" hint-size="20px,20px"></x-import>
+        I agree to the <a href="#" style="font-size:13px;">Terms &amp; Conditions</a>
+      </label>
+
+      <div style="display:flex;justify-content:space-between;margin-top:26px;">
+        <button onClick="{{ backToShipping }}" style="height:48px;padding:0 26px;border-radius:999px;background:none;border:2px solid var(--border-subtle);color:var(--ink-900);font-size:14px;font-weight:600;cursor:pointer;">Back</button>
+        <button onClick="{{ placeOrder }}" class="raza-cta" style="{{ placeOrderBtnStyle }}">{{ placeOrderLabel }}</button>
+      </div>
+    </div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    step: 'shipping', demoState: 'guest', submitting: false,
+    form: { name: '', phone: '', address: '', city: '', payment: 'cod', txnId: '', acceptedTerms: false },
+    touchedZone: false,
+  };
+
+  componentDidMount() {
+    import('./shared/store.js').then((mod) => {
+      this._store = mod;
+      this.setState({ demoState: mod.getDemoState() });
+    });
+  }
+
+  setField(k, v) { this.setState((s) => ({ form: { ...s.form, [k]: v } })); }
+
+  renderVals() {
+    const store = this._store;
+    if (!store) return { stepperItems: [], stepIsShipping: true, stepIsPayment: false, panelStyle: {} };
+    const { step, form, demoState } = this.state;
+    const lines = store.cartLines(demoState);
+    const subtotal = store.cartSubtotal(demoState);
+    const minOrder = store.MIN_ORDER;
+    const belowMin = subtotal < minOrder && lines.length > 0;
+    const cityChosen = !!form.city;
+    const outsideZone = cityChosen && !store.SERVED_ZONES.includes(form.city);
+
+    const stepDefs = [{ key: 'cart', label: 'Cart' }, { key: 'shipping', label: 'Shipping' }, { key: 'payment', label: 'Payment' }, { key: 'confirmation', label: 'Confirmation' }];
+    const order = ['cart', 'shipping', 'payment', 'confirmation'];
+    const currentIdx = order.indexOf(step === 'payment' ? 'payment' : 'shipping');
+    const stepperItems = stepDefs.map((s, i) => {
+      const idx = order.indexOf(s.key);
+      const done = idx < currentIdx || (s.key === 'cart');
+      const active = (s.key === 'shipping' && step === 'shipping') || (s.key === 'payment' && step === 'payment');
+      return {
+        num: done && s.key !== 'confirmation' ? '\u2713' : i + 1,
+        label: s.label,
+        hasLine: i < stepDefs.length - 1,
+        circleStyle: { width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, background: (done || active) ? 'var(--evergreen-600)' : 'var(--mist-100)', color: (done || active) ? '#fff' : 'var(--text-muted)', transition: 'all 250ms ease-out' },
+        labelStyle: { fontSize: 11, fontWeight: active ? 700 : 500, color: active ? 'var(--ink-900)' : 'var(--text-muted)' },
+        lineStyle: { flex: 1, height: 2, background: done ? 'var(--evergreen-600)' : 'var(--border-subtle)', margin: '0 6px', transition: 'background 250ms ease-out' },
+      };
+    });
+
+    const cityOptions = store.SERVED_ZONES.concat(['Karachi', 'Islamabad']).map((c) => ({ label: c, value: c }));
+    const errorBoxStyle = { fontSize: 12, color: 'var(--red-ink)', background: 'var(--red-tint)', borderRadius: 12, padding: '10px 14px', marginTop: 14, lineHeight: 1.5 };
+    const primaryBtnStyle = { height: 48, padding: '0 30px', borderRadius: 999, background: 'var(--evergreen-600)', color: '#fff', border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer', transition: 'transform 150ms ease-out, background 150ms ease-out' };
+
+    const paymentDefs = [
+      { key: 'cod', label: 'Cash on Delivery', desc: 'Pay in cash when your order arrives.' },
+      { key: 'online', label: 'Online Payment', desc: 'Easypaisa, JazzCash, NayaPay or Bank Transfer.' },
+    ];
+    if (demoState === 'wholesale') paymentDefs.push({ key: 'later', label: 'Pay Later', desc: 'Use your approved credit balance.' });
+    const paymentOptions = paymentDefs.map((p) => ({
+      label: p.label, desc: p.desc, checked: form.payment === p.key,
+      onSelect: () => this.setField('payment', p.key),
+      rowStyle: { display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', borderRadius: 14, border: `1.5px solid ${form.payment === p.key ? 'var(--evergreen-600)' : 'var(--border-subtle)'}`, cursor: 'pointer', transition: 'border-color 150ms ease-out' },
+    }));
+
+    const canPlace = form.acceptedTerms && !belowMin && !outsideZone && lines.length > 0;
+
+    return {
+      stepperItems,
+      stepIsShipping: step === 'shipping', stepIsPayment: step === 'payment',
+      panelStyle: { background: '#fff', border: '1px solid var(--border-subtle)', borderRadius: 16, padding: 28 },
+      form,
+      setName: (v) => this.setField('name', typeof v === 'string' ? v : v.target.value),
+      setPhone: (v) => this.setField('phone', typeof v === 'string' ? v : v.target.value),
+      setAddress: (v) => this.setField('address', typeof v === 'string' ? v : v.target.value),
+      cityOptions,
+      setCity: (v) => this.setField('city', typeof v === 'string' ? v : v.target.value),
+      showZoneError: outsideZone,
+      servedZonesText: store.SERVED_ZONES.join(', '),
+      errorBoxStyle,
+      primaryBtnStyle,
+      goToPayment: () => { if (!outsideZone) this.setState({ step: 'payment' }); },
+      summaryLines: lines.map((l) => ({ name: l.product.name, qty: l.qty, total: store.formatPrice(l.lineTotal) })),
+      subtotalText: store.formatPrice(subtotal),
+      showMinOrderError: belowMin,
+      minOrderText: store.formatPrice(minOrder),
+      shortfallText: store.formatPrice(minOrder - subtotal),
+      paymentOptions,
+      showOnlineDetails: form.payment === 'online',
+      setTxnId: (v) => this.setField('txnId', typeof v === 'string' ? v : v.target.value),
+      showPayLaterInfo: form.payment === 'later',
+      availableCreditText: store.formatPrice(store.WHOLESALE_TIER.creditLimit - store.WHOLESALE_TIER.creditUsed),
+      setAcceptedTerms: (v) => this.setField('acceptedTerms', typeof v === 'boolean' ? v : !form.acceptedTerms),
+      backToShipping: () => this.setState({ step: 'shipping' }),
+      placeOrderLabel: this.state.submitting ? 'Placing Order…' : 'Place Order',
+      placeOrderBtnStyle: { height: 48, padding: '0 32px', borderRadius: 999, background: canPlace ? 'var(--evergreen-600)' : 'var(--sage-400)', opacity: canPlace ? 1 : 0.7, color: '#fff', border: 'none', fontSize: 14, fontWeight: 600, cursor: canPlace ? 'pointer' : 'not-allowed', transition: 'all 150ms ease-out' },
+      placeOrder: () => {
+        if (!canPlace || this.state.submitting) return;
+        this.setState({ submitting: true });
+        setTimeout(() => {
+          store.clearCart();
+          window.location.href = 'OrderConfirmation.dc.html';
+        }, 900);
+      },
+    };
+  }
+}
+
+</script>
+</body>
+</html>

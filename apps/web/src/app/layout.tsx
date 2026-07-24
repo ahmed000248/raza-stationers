@@ -1,0 +1,41 @@
+import type { Metadata } from "next";
+import { Poppins, Unbounded, Noto_Nastaliq_Urdu } from "next/font/google";
+import "./globals.css";
+
+const fontSans = Poppins({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-sans",
+});
+
+const fontHeading = Unbounded({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-heading",
+});
+
+const fontUrdu = Noto_Nastaliq_Urdu({
+  subsets: ["arabic"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-urdu",
+});
+
+export const metadata: Metadata = {
+  title: "Raza Stationers | Wholesale & Retail Stationery",
+  description: "Quality notebooks, pens and office supplies — wholesale pricing for registered shops.",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html
+      lang="en"
+      className={`${fontSans.variable} ${fontHeading.variable} ${fontUrdu.variable} h-full antialiased`}
+    >
+      <body className="min-h-full flex flex-col">{children}</body>
+    </html>
+  );
+}

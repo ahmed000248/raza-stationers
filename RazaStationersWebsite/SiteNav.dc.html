@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet>
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/fonts/fonts.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/radius.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/styles.css">
+  <script src="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/_ds_bundle.js"></script>
+  <style>
+    @keyframes razaCartBump { 0%{transform:scale(1);} 45%{transform:scale(1.3);} 100%{transform:scale(1);} }
+    body{margin:0;}
+  </style>
+</helmet>
+<div>
+  <div style="{{ navWrapStyle }}">
+    <div style="{{ navBarStyle }}">
+      <a href="Home.dc.html" style="{{ brandLinkStyle }}">
+        <div style="{{ brandEnStyle }}">Raza Stationers</div>
+        <div dir="rtl" style="{{ brandUrStyle }}">راضا اسٹیشنرز</div>
+      </a>
+      <sc-if value="{{ showDesktopLinks }}" hint-placeholder-val="{{ true }}">
+        <div style="{{ linksRowStyle }}">
+          <sc-for list="{{ navLinks }}" as="link" hint-placeholder-count="4">
+            <a href="{{ link.href }}" style="{{ link.style }}">{{ link.label }}</a>
+          </sc-for>
+        </div>
+      </sc-if>
+      <div style="{{ iconClusterStyle }}">
+        <a href="Catalogue.dc.html" aria-label="Search catalogue" style="{{ iconBtnStyle }}">
+          <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="search" size="17" color="var(--forest-700)" hint-size="17px,17px"></x-import>
+        </a>
+        <div style="{{ notifWrapStyle }}">
+          <button onClick="{{ toggleNotif }}" aria-label="Notifications" style="{{ notifBtnStyle }}">
+            <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="notification" size="17" color="var(--forest-700)" hint-size="17px,17px"></x-import>
+            <sc-if value="{{ hasUnread }}" hint-placeholder-val="{{ false }}">
+              <span style="{{ notifDotStyle }}"></span>
+            </sc-if>
+          </button>
+          <sc-if value="{{ notifOpen }}" hint-placeholder-val="{{ false }}">
+            <div style="{{ notifDropdownWrapStyle }}">
+              <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.NotificationDropdown" blur="20" items="{{ notifItems }}" hint-size="260px,180px"></x-import>
+            </div>
+          </sc-if>
+        </div>
+        <a href="Cart.dc.html" aria-label="{{ cartAriaLabel }}" style="{{ cartBtnStyle }}">
+          <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="cart" size="17" color="var(--forest-700)" hint-size="17px,17px"></x-import>
+          <sc-if value="{{ hasCartItems }}" hint-placeholder-val="{{ false }}">
+            <span style="{{ cartBadgeStyle }}">{{ cartCount }}</span>
+          </sc-if>
+        </a>
+        <a href="{{ accountHref }}" aria-label="Account" style="{{ iconBtnStyle }}">
+          <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="account" size="17" color="var(--forest-700)" hint-size="17px,17px"></x-import>
+        </a>
+      </div>
+    </div>
+  </div>
+  <div style="{{ demoSwitcherWrapStyle }}">
+    <span style="{{ demoLabelStyle }}">Preview as</span>
+    <sc-for list="{{ demoOptions }}" as="opt" hint-placeholder-count="3">
+      <button onClick="{{ opt.onClick }}" aria-label="{{ opt.aria }}" style="{{ opt.style }}">{{ opt.label }}</button>
+    </sc-for>
+  </div>
+  <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+    <div style="{{ bottomNavWrapStyle }}">
+      <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.BottomNav" width="{{ bottomNavWidth }}" items="{{ bottomItems }}" onItemClick="{{ onBottomNavClick }}" hint-size="280px,60px"></x-import>
+    </div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { demoState: 'guest', cart: [], scrolled: false, isMobile: false, notifOpen: false, bump: false, unreadCount: 0 };
+
+  componentDidMount() {
+    import('./shared/store.js').then((mod) => {
+      this._store = mod;
+      this.setState({ demoState: mod.getDemoState(), cart: mod.getCart(), unreadCount: mod.unreadNotifCount(), notifItemsRaw: mod.NOTIFICATIONS });
+      this.forceUpdate();
+    });
+    this._onScroll = () => {
+      const sc = window.scrollY > 8;
+      if (sc !== this.state.scrolled) this.setState({ scrolled: sc });
+    };
+    window.addEventListener('scroll', this._onScroll, { passive: true });
+    this._onResize = () => {
+      const m = window.innerWidth < 860;
+      if (m !== this.state.isMobile) this.setState({ isMobile: m });
+    };
+    this._onResize();
+    window.addEventListener('resize', this._onResize);
+    this._onStoreChange = () => {
+      if (!this._store) return;
+      const newCart = this._store.getCart();
+      const prevCount = (this.state.cart || []).reduce((s, l) => s + l.qty, 0);
+      const newCount = newCart.reduce((s, l) => s + l.qty, 0);
+      this.setState({ demoState: this._store.getDemoState(), cart: newCart });
+      if (newCount > prevCount) {
+        this.setState({ bump: true });
+        clearTimeout(this._bumpT);
+        this._bumpT = setTimeout(() => this.setState({ bump: false }), 420);
+      }
+    };
+    window.addEventListener('raza:store-changed', this._onStoreChange);
+    this._onDocClick = (e) => {
+      if (this.state.notifOpen && this._notifRef && !this._notifRef.contains(e.target)) this.setState({ notifOpen: false });
+    };
+    document.addEventListener('click', this._onDocClick);
+  }
+  componentWillUnmount() {
+    window.removeEventListener('scroll', this._onScroll);
+    window.removeEventListener('resize', this._onResize);
+    window.removeEventListener('raza:store-changed', this._onStoreChange);
+    document.removeEventListener('click', this._onDocClick);
+    clearTimeout(this._bumpT);
+  }
+
+  toggleNotif = (e) => { e.stopPropagation(); this.setState((s) => ({ notifOpen: !s.notifOpen })); };
+  setDemo = (v) => { if (this._store) { this._store.setDemoState(v); this.setState({ demoState: v }); } };
+
+  renderVals() {
+    const active = this.props.active || 'home';
+    const { demoState, scrolled, isMobile, notifOpen, bump, unreadCount } = this.state;
+    const cart = this.state.cart || [];
+    const cartCount = cart.reduce((s, l) => s + l.qty, 0);
+
+    const navLinkDefs = [
+      { key: 'home', label: 'Home', href: 'Home.dc.html' },
+      { key: 'catalogue', label: 'Catalogue', href: 'Catalogue.dc.html' },
+      { key: 'about', label: 'About', href: 'About.dc.html' },
+      { key: 'contact', label: 'Contact', href: 'Contact.dc.html' },
+    ];
+    const navLinks = navLinkDefs.map((l) => ({
+      key: l.key, label: l.label, href: l.href,
+      style: { fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: active === l.key ? 700 : 500, color: active === l.key ? 'var(--ink-900)' : 'var(--forest-700)', textDecoration: 'none', padding: '6px 2px', borderBottom: active === l.key ? '2px solid var(--evergreen-600)' : '2px solid transparent', transition: 'color 150ms ease-out' },
+    }));
+
+    const demoDefs = [{ key: 'guest', label: 'Guest' }, { key: 'retail', label: 'Retail' }, { key: 'wholesale', label: 'Wholesale' }];
+    const demoOptions = demoDefs.map((d) => ({
+      label: d.label, aria: 'Preview as ' + d.label, onClick: () => this.setDemo(d.key),
+      style: { height: 26, padding: '0 12px', borderRadius: 999, border: 'none', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-body)', background: demoState === d.key ? 'var(--evergreen-600)' : 'transparent', color: demoState === d.key ? '#fff' : 'var(--forest-700)', transition: 'all 150ms ease-out' },
+    }));
+
+    const groupOf = (k) => {
+      if (k === 'home') return 0;
+      if (['catalogue', 'product'].includes(k)) return 1;
+      if (['cart', 'checkout', 'confirmation', 'tracking', 'history'].includes(k)) return 2;
+      if (['account', 'signin', 'wholesale'].includes(k)) return 3;
+      return -1;
+    };
+    const g = groupOf(active);
+    const bottomHrefs = ['Home.dc.html', 'Catalogue.dc.html', 'Cart.dc.html', this.state.demoState === 'guest' ? 'SignIn.dc.html' : 'Account.dc.html'];
+    const bottomItems = [
+      { label: 'Home', active: g === 0 },
+      { label: 'Catalogue', active: g === 1 },
+      { label: cartCount ? `Cart (${cartCount})` : 'Cart', active: g === 2 },
+      { label: 'Account', active: g === 3 },
+    ];
+
+    const notifItems = ((this.state.notifItemsRaw) || []).map((n) => (n.unread ? '\u25CF ' : '') + n.title + '  \u00B7  ' + n.time);
+
+    return {
+      navWrapStyle: { position: 'fixed', top: 14, left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 60, pointerEvents: 'none' },
+      navBarStyle: {
+        display: 'inline-flex', alignItems: 'center', gap: isMobile ? 12 : 22, pointerEvents: 'auto',
+        background: scrolled ? 'rgba(248,249,246,0.85)' : 'var(--glass-bg)',
+        backdropFilter: `blur(${scrolled ? 26 : 18}px)`, WebkitBackdropFilter: `blur(${scrolled ? 26 : 18}px)`,
+        border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-pill)',
+        padding: scrolled ? '8px 16px' : '12px 22px', boxShadow: 'var(--glass-shadow)',
+        transition: 'all 250ms ease-out', maxWidth: 'calc(100vw - 24px)',
+      },
+      brandLinkStyle: { textDecoration: 'none', display: 'flex', flexDirection: 'column', paddingRight: 6, borderRight: '1px solid var(--border-subtle)', marginRight: 4 },
+      brandEnStyle: { fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: isMobile ? 12 : 14, color: 'var(--ink-900)', whiteSpace: 'nowrap' },
+      brandUrStyle: { fontFamily: 'var(--font-urdu)', fontSize: 11, color: 'var(--forest-700)', marginTop: 1 },
+      showDesktopLinks: !isMobile,
+      linksRowStyle: { display: 'flex', alignItems: 'center', gap: 18 },
+      navLinks,
+      iconClusterStyle: { display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 14 },
+      iconBtnStyle: { display: 'flex', width: 34, height: 34, borderRadius: '50%', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer', textDecoration: 'none', transition: 'background 150ms ease-out' },
+      notifWrapStyle: { position: 'relative' },
+      notifBtnStyle: { display: 'flex', width: 34, height: 34, borderRadius: '50%', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer', position: 'relative' },
+      hasUnread: unreadCount > 0,
+      notifDotStyle: { position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: '50%', background: 'var(--amber-500)', border: '1.5px solid var(--canvas)' },
+      toggleNotif: this.toggleNotif,
+      notifOpen,
+      notifDropdownWrapStyle: { position: 'absolute', top: 42, right: 0, zIndex: 70 },
+      notifItems,
+      cartBtnStyle: { display: 'flex', width: 34, height: 34, borderRadius: '50%', alignItems: 'center', justifyContent: 'center', background: 'transparent', textDecoration: 'none', position: 'relative', animation: bump ? 'razaCartBump 400ms ease-out' : 'none' },
+      cartAriaLabel: `Cart, ${cartCount} items`,
+      hasCartItems: cartCount > 0,
+      cartCount,
+      cartBadgeStyle: { position: 'absolute', top: 2, right: 0, minWidth: 15, height: 15, padding: '0 3px', borderRadius: '50%', background: 'var(--red-500)', color: '#fff', fontSize: 9, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' },
+      accountHref: demoState === 'guest' ? 'SignIn.dc.html' : 'Account.dc.html',
+      demoSwitcherWrapStyle: { position: 'fixed', top: 14, right: 16, zIndex: 61, display: isMobile ? 'none' : 'flex', alignItems: 'center', gap: 4, background: 'rgba(5,31,32,0.06)', borderRadius: 999, padding: '4px 6px 4px 12px' },
+      demoLabelStyle: { fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', marginRight: 2, fontFamily: 'var(--font-body)' },
+      demoOptions,
+      isMobile,
+      bottomNavWrapStyle: { position: 'fixed', bottom: 14, left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 60 },
+      bottomNavWidth: 280,
+      bottomItems,
+      onBottomNavClick: (i) => { window.location.href = bottomHrefs[i]; },
+    };
+  }
+}
+
+</script>
+</body>
+</html>

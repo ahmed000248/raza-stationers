@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/fonts/fonts.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/radius.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/styles.css">
+  <script src="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/_ds_bundle.js"></script>
+  <style>
+    body{margin:0;background:var(--canvas);font-family:var(--font-body);}
+    a{color:var(--evergreen-600);}
+    a:hover{color:var(--forest-700);}
+    @keyframes razaFadeRise{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+    .raza-card{transition:transform 200ms ease-out;}
+    .raza-card:hover{transform:translateY(-3px);}
+    .raza-pill:active{transform:scale(0.96);}
+    .raza-load-btn:hover{background:var(--forest-700) !important;}
+  </style>
+</helmet>
+<dc-import name="SiteNav" active="catalogue" hint-size="100%,64px"></dc-import>
+<div style="padding-top:96px;max-width:1280px;margin:0 auto;padding-left:24px;padding-right:24px;">
+
+  <div style="margin-bottom:22px;">
+    <h1 style="font-family:var(--font-display);font-size:28px;color:var(--ink-900);margin:0 0 4px;">Product Catalogue</h1>
+    <div dir="rtl" style="font-family:var(--font-urdu);font-size:16px;color:var(--forest-700);">پروڈکٹ کیٹلاگ</div>
+  </div>
+
+  <div style="{{ searchBarStyle }}">
+    <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="search" size="16" color="var(--text-muted)" hint-size="16px,16px"></x-import>
+    <input type="text" value="{{ searchTerm }}" onChange="{{ onSearchChange }}" placeholder="Search products..." style="border:none;outline:none;background:transparent;font-size:14px;font-family:var(--font-body);flex:1;color:var(--ink-900);"></input>
+  </div>
+
+  <div style="{{ toggleWrapStyle }}">
+    <button onClick="{{ setIndividual }}" class="raza-pill" style="{{ individualBtnStyle }}">Individual</button>
+    <button onClick="{{ setBulk }}" class="raza-pill" style="{{ bulkBtnStyle }}">Bulk</button>
+  </div>
+  <div style="font-size:12px;color:var(--text-muted);margin-top:-10px;margin-bottom:20px;">{{ purchaseTypeHint }}</div>
+
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:26px;">
+    <sc-for list="{{ categoryPills }}" as="cat" hint-placeholder-count="5">
+      <button onClick="{{ cat.onClick }}" class="raza-pill" style="{{ cat.style }}">{{ cat.label }}</button>
+    </sc-for>
+  </div>
+
+  <sc-if value="{{ showGuestBanner }}" hint-placeholder-val="{{ false }}">
+    <div style="{{ guestBannerStyle }}">
+      <div>
+        <div style="font-weight:600;font-size:14px;color:var(--ink-900);">See your wholesale price on every product</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Register your shop for approved wholesale pricing — no discount tiers, one final rate.</div>
+      </div>
+      <a href="WholesaleRegistration.dc.html" class="raza-pill" style="height:40px;padding:0 22px;border-radius:999px;background:var(--evergreen-600);color:#fff;display:inline-flex;align-items:center;font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap;">Register Now</a>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ loading }}" hint-placeholder-val="{{ true }}">
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px;margin-bottom:40px;">
+      <sc-for list="{{ skeletonSlots }}" as="s" hint-placeholder-count="8">
+        <div style="background:#fff;border:1px solid var(--border-subtle);border-radius:16px;padding:18px;height:230px;">
+          <div style="width:44px;height:44px;border-radius:12px;background:var(--mist-100);margin-bottom:14px;"></div>
+          <div style="width:80%;height:14px;background:var(--mist-100);border-radius:6px;margin-bottom:10px;"></div>
+          <div style="width:50%;height:14px;background:var(--mist-100);border-radius:6px;margin-bottom:18px;"></div>
+          <div style="width:40%;height:20px;background:var(--mist-100);border-radius:6px;"></div>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ notLoading }}" hint-placeholder-val="{{ false }}">
+    <sc-if value="{{ hasResults }}" hint-placeholder-val="{{ true }}">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px;">
+        <sc-for list="{{ visibleProducts }}" as="p" hint-placeholder-count="8">
+          <a href="{{ p.href }}" class="raza-card" style="{{ p.cardStyle }}">
+            <div style="{{ p.iconBlockStyle }}">
+              <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="{{ p.icon }}" size="20" color="#fff" hint-size="20px,20px"></x-import>
+            </div>
+            <div style="font-size:10px;font-weight:600;color:var(--forest-700);background:var(--mist-100);display:inline-block;padding:3px 10px;border-radius:999px;margin-bottom:8px;">{{ p.categoryLabel }}</div>
+            <div style="font-size:13px;font-weight:600;color:var(--ink-900);line-height:1.35;min-height:36px;">{{ p.name }}</div>
+            <div dir="rtl" style="font-family:var(--font-urdu);font-size:13px;color:var(--text-muted);margin-top:2px;">{{ p.nameUrdu }}</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">{{ p.priceLabel }}</div>
+            <div style="display:flex;align-items:baseline;gap:8px;margin-top:4px;">
+              <div style="font-size:17px;font-weight:700;color:var(--ink-900);">{{ p.priceText }}</div>
+              <div style="{{ p.badgeStyle }}">{{ p.stockLabel }}</div>
+            </div>
+          </a>
+        </sc-for>
+      </div>
+      <sc-if value="{{ showLoadMore }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;justify-content:center;margin:36px 0 60px;">
+          <button onClick="{{ loadMore }}" class="raza-load-btn" style="height:46px;padding:0 32px;border-radius:999px;background:var(--evergreen-600);color:#fff;border:none;font-size:14px;font-weight:600;cursor:pointer;transition:background 150ms ease-out;">Load More</button>
+        </div>
+      </sc-if>
+    </sc-if>
+    <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+      <div style="text-align:center;padding:70px 20px;">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--mist-100);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
+          <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="search" size="26" color="var(--evergreen-600)" hint-size="26px,26px"></x-import>
+        </div>
+        <div style="font-size:16px;font-weight:600;color:var(--ink-900);">No products found</div>
+        <div style="font-size:13px;color:var(--text-muted);margin-top:6px;">Try a different search term or category.</div>
+      </div>
+    </sc-if>
+  </sc-if>
+</div>
+<div style="height:60px;"></div>
+<dc-import name="SiteFooter" hint-size="100%,300px"></dc-import>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { loading: true, demoState: 'guest', purchaseType: 'individual', category: 'all', searchTerm: '', visibleCount: 8 };
+
+  componentDidMount() {
+    import('./shared/store.js').then((mod) => {
+      this._store = mod;
+      this.setState({ demoState: mod.getDemoState() });
+    });
+    setTimeout(() => this.setState({ loading: false }), 600);
+    this._onStoreChange = () => { if (this._store) this.setState({ demoState: this._store.getDemoState() }); };
+    window.addEventListener('raza:store-changed', this._onStoreChange);
+  }
+  componentWillUnmount() { window.removeEventListener('raza:store-changed', this._onStoreChange); }
+
+  cardFor(p) {
+    const store = this._store;
+    const price = store.priceDisplay(p, this.state.purchaseType, this.state.demoState);
+    const stock = store.stockInfo(p);
+    const toneColors = { success: { bg: 'var(--mist-100)', c: 'var(--evergreen-600)' }, warning: { bg: 'var(--amber-tint)', c: 'var(--amber-ink)' }, error: { bg: 'var(--red-tint)', c: 'var(--red-ink)' } };
+    const tc = toneColors[stock.tone] || toneColors.success;
+    return {
+      href: `ProductDetail.dc.html?id=${p.id}`,
+      icon: p.icon === 'block' ? 'shop' : p.icon,
+      categoryLabel: p.category.charAt(0).toUpperCase() + p.category.slice(1),
+      name: p.name, nameUrdu: p.nameUrdu,
+      priceLabel: price.label,
+      priceText: store.formatPrice(price.amount),
+      stockLabel: stock.label,
+      cardStyle: { background: '#fff', border: '1px solid var(--border-subtle)', borderRadius: 16, padding: 18, textDecoration: 'none', display: 'block', animation: 'razaFadeRise 420ms ease-out both' },
+      iconBlockStyle: { width: 44, height: 44, borderRadius: 12, background: p.icon === 'block' ? 'var(--sage-400)' : 'var(--evergreen-600)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
+      badgeStyle: { fontSize: 10, fontWeight: 600, color: tc.c, background: tc.bg, padding: '3px 9px', borderRadius: 999 },
+    };
+  }
+
+  renderVals() {
+    const store = this._store;
+    const products = store ? store.PRODUCTS : [];
+    const cats = store ? store.CATEGORIES : [];
+    const { purchaseType, category, searchTerm, demoState, loading, visibleCount } = this.state;
+
+    let filtered = products;
+    if (category !== 'all') filtered = filtered.filter((p) => p.category === category);
+    if (searchTerm.trim()) {
+      const q = searchTerm.trim().toLowerCase();
+      filtered = filtered.filter((p) => p.name.toLowerCase().includes(q) || p.category.includes(q));
+    }
+    const visible = filtered.slice(0, visibleCount);
+
+    const categoryPillDefs = [{ key: 'all', name: 'All Categories' }, ...cats];
+    const categoryPills = categoryPillDefs.map((c) => {
+      const active = category === (c.key || 'all');
+      return {
+        label: c.name,
+        onClick: () => this.setState({ category: c.key || 'all', visibleCount: 8 }),
+        style: { height: 36, padding: '0 18px', borderRadius: 999, border: active ? 'none' : '1px solid var(--border-subtle)', background: active ? 'var(--evergreen-600)' : '#fff', color: active ? '#fff' : 'var(--ink-900)', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-body)', transition: 'all 150ms ease-out' },
+      };
+    });
+
+    return {
+      searchBarStyle: { display: 'flex', alignItems: 'center', gap: 10, height: 48, padding: '0 18px', borderRadius: 999, background: '#fff', border: '1px solid var(--border-subtle)', marginBottom: 22, position: 'sticky', top: 78, zIndex: 10 },
+      searchTerm,
+      onSearchChange: (e) => this.setState({ searchTerm: e.target.value, visibleCount: 8 }),
+      toggleWrapStyle: { display: 'inline-flex', background: 'var(--mist-100)', borderRadius: 999, padding: 4, marginBottom: 6, gap: 4 },
+      individualBtnStyle: { height: 38, padding: '0 22px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 600, transition: 'all 150ms ease-out', background: purchaseType === 'individual' ? '#fff' : 'transparent', color: purchaseType === 'individual' ? 'var(--ink-900)' : 'var(--text-muted)', boxShadow: purchaseType === 'individual' ? '0 1px 4px rgba(5,31,32,0.12)' : 'none' },
+      bulkBtnStyle: { height: 38, padding: '0 22px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 600, transition: 'all 150ms ease-out', background: purchaseType === 'bulk' ? '#fff' : 'transparent', color: purchaseType === 'bulk' ? 'var(--ink-900)' : 'var(--text-muted)', boxShadow: purchaseType === 'bulk' ? '0 1px 4px rgba(5,31,32,0.12)' : 'none' },
+      setIndividual: () => this.setState({ purchaseType: 'individual' }),
+      setBulk: () => this.setState({ purchaseType: 'bulk' }),
+      purchaseTypeHint: purchaseType === 'bulk' ? 'Showing wholesale pack/carton pricing per unit shown' : 'Showing single-unit pricing',
+      categoryPills,
+      showGuestBanner: demoState === 'guest',
+      guestBannerStyle: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap', background: 'var(--mist-100)', borderRadius: 16, padding: '18px 22px', marginBottom: 28 },
+      loading, notLoading: !loading,
+      skeletonSlots: [1, 2, 3, 4, 5, 6, 7, 8],
+      hasResults: filtered.length > 0, noResults: filtered.length === 0,
+      visibleProducts: visible.map((p) => this.cardFor(p)),
+      showLoadMore: visible.length < filtered.length,
+      loadMore: () => this.setState((s) => ({ visibleCount: s.visibleCount + 8 })),
+    };
+  }
+}
+
+</script>
+</body>
+</html>

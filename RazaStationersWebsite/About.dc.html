@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/fonts/fonts.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/radius.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/styles.css">
+  <script src="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/_ds_bundle.js"></script>
+  <style>
+    body{margin:0;background:var(--canvas);font-family:var(--font-body);}
+    a{color:var(--evergreen-600);}
+    a:hover{color:var(--forest-700);}
+    @keyframes razaFadeRise{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+    .raza-cta:active{transform:scale(0.97);}
+  </style>
+</helmet>
+<dc-import name="SiteNav" active="about" hint-size="100%,64px"></dc-import>
+<div style="padding-top:96px;max-width:1000px;margin:0 auto;padding-left:24px;padding-right:24px;">
+
+  <section style="padding:24px 0 48px;text-align:center;max-width:640px;margin:0 auto;">
+    <h1 style="font-family:var(--font-display);font-size:30px;color:var(--ink-900);margin:0;">Our Story</h1>
+    <div dir="rtl" style="font-family:var(--font-urdu);font-size:17px;color:var(--forest-700);margin-top:6px;">ہماری کہانی</div>
+    <div style="font-size:14px;color:var(--text-muted);margin-top:18px;line-height:1.7;">Raza Stationers has supplied stationery, registers and sports goods to shops, schools and bookstores across Punjab for over two decades — sourcing directly from manufacturers and passing on genuine wholesale rates to registered accounts.</div>
+  </section>
+
+  <section id="stats-section" style="padding:20px 0 56px;">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px;">
+      <sc-for list="{{ stats }}" as="s" hint-placeholder-count="4">
+        <div style="text-align:center;background:var(--mist-100);border-radius:16px;padding:26px 12px;">
+          <div style="font-family:var(--font-display);font-size:30px;font-weight:700;color:var(--ink-900);">{{ s.display }}</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:6px;">{{ s.label }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="padding:20px 0 56px;">
+    <h2 style="font-family:var(--font-display);font-size:24px;color:var(--ink-900);margin:0 0 28px;text-align:center;">Why Shop Owners Choose Us</h2>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;">
+      <sc-for list="{{ features }}" as="f" hint-placeholder-count="3">
+        <div style="text-align:center;">
+          <div style="width:56px;height:56px;border-radius:16px;background:var(--evergreen-600);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+            <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="{{ f.icon }}" size="24" color="#fff" hint-size="24px,24px"></x-import>
+          </div>
+          <div style="font-size:15px;font-weight:600;color:var(--ink-900);">{{ f.title }}</div>
+          <div style="font-size:13px;color:var(--text-muted);margin-top:8px;line-height:1.6;">{{ f.desc }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="padding:20px 0 56px;">
+    <h2 style="font-family:var(--font-display);font-size:24px;color:var(--ink-900);margin:0 0 28px;text-align:center;">Our Team</h2>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px;">
+      <sc-for list="{{ team }}" as="t" hint-placeholder-count="4">
+        <div style="text-align:center;">
+          <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Avatar" initials="{{ t.initials }}" hint-size="64px,64px"></x-import>
+          <div style="font-size:13px;font-weight:600;color:var(--ink-900);margin-top:10px;">{{ t.name }}</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">{{ t.role }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="padding:36px 24px;background:var(--evergreen-600);border-radius:24px;text-align:center;margin-bottom:64px;">
+    <div style="font-family:var(--font-display);font-size:22px;color:#fff;">Ready for wholesale pricing?</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.85);margin-top:8px;">Register your shop, school or bookstore today.</div>
+    <a href="WholesaleRegistration.dc.html" class="raza-cta" style="height:46px;padding:0 30px;border-radius:999px;background:#fff;color:var(--evergreen-600);display:inline-flex;align-items:center;font-size:14px;font-weight:600;text-decoration:none;margin-top:20px;">Register for Wholesale Pricing</a>
+  </section>
+</div>
+<dc-import name="SiteFooter" hint-size="100%,300px"></dc-import>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { counts: [0, 0, 0, 0] };
+  statDefs = [
+    { target: 22, suffix: '+', label: 'Years in Business' },
+    { target: 4800, suffix: '+', label: 'Shops Served' },
+    { target: 30000, suffix: '+', label: 'Orders Delivered' },
+    { target: 5, suffix: '', label: 'Cities Covered' },
+  ];
+
+  componentDidMount() {
+    this._observer = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) { this.animateStats(); this._observer.disconnect(); } });
+    }, { threshold: 0.4 });
+    const el = document.getElementById('stats-section');
+    if (el) this._observer.observe(el);
+  }
+  componentWillUnmount() { if (this._observer) this._observer.disconnect(); }
+
+  animateStats() {
+    const duration = 1200, start = performance.now();
+    const tick = (now) => {
+      const t = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      this.setState({ counts: this.statDefs.map((s) => Math.round(s.target * eased)) });
+      if (t < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+
+  renderVals() {
+    const stats = this.statDefs.map((s, i) => ({ display: this.state.counts[i].toLocaleString('en-US') + s.suffix, label: s.label }));
+    return {
+      stats,
+      features: [
+        { icon: 'shop', title: 'Direct Factory Sourcing', desc: 'Bought straight from manufacturers, passed on at true wholesale rates.' },
+        { icon: 'delivery', title: 'Reliable Delivery', desc: 'Consistent delivery across served cities, on schedule.' },
+        { icon: 'wallet', title: 'Flexible Payments', desc: 'Cash, online transfer, or Pay Later for approved accounts.' },
+      ],
+      team: [
+        { initials: 'MR', name: 'Muhammad Raza', role: 'Founder' },
+        { initials: 'FA', name: 'Fatima Ali', role: 'Operations Lead' },
+        { initials: 'HK', name: 'Hassan Khan', role: 'Warehouse Manager' },
+        { initials: 'ZB', name: 'Zainab Bibi', role: 'Customer Support' },
+      ],
+    };
+  }
+}
+
+</script>
+</body>
+</html>

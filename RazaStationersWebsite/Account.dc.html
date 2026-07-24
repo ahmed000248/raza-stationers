@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/fonts/fonts.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/radius.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/styles.css">
+  <script src="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/_ds_bundle.js"></script>
+  <style>
+    body{margin:0;background:var(--canvas);font-family:var(--font-body);}
+    a{color:var(--evergreen-600);}
+    a:hover{color:var(--forest-700);}
+    @keyframes razaFillBar{from{width:0%;}}
+    @keyframes razaToastIn{from{opacity:0;transform:translate(-50%,12px);}to{opacity:1;transform:translate(-50%,0);}}
+    .raza-cta:active{transform:scale(0.97);}
+    .raza-tab:hover{color:var(--ink-900);}
+  </style>
+</helmet>
+<dc-import name="SiteNav" active="account" hint-size="100%,64px"></dc-import>
+<div style="padding-top:96px;max-width:1000px;margin:0 auto;padding-left:24px;padding-right:24px;padding-bottom:80px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:26px;flex-wrap:wrap;gap:12px;">
+    <div>
+      <h1 style="font-family:var(--font-display);font-size:26px;color:var(--ink-900);margin:0;">My Account</h1>
+      <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">{{ accountName }}</div>
+    </div>
+    <a href="Catalogue.dc.html" class="raza-cta" style="height:44px;padding:0 22px;border-radius:999px;background:var(--evergreen-600);color:#fff;display:inline-flex;align-items:center;font-size:13px;font-weight:600;text-decoration:none;">Quick Reorder</a>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:32px;">
+    <div style="{{ tierCardStyle }}">
+      <div style="font-size:11px;font-weight:600;color:var(--evergreen-600);text-transform:uppercase;letter-spacing:0.04em;">Pricing Tier</div>
+      <div style="font-family:var(--font-display);font-size:20px;color:var(--ink-900);margin-top:6px;">{{ tierName }}</div>
+      <div dir="rtl" style="font-family:var(--font-urdu);font-size:14px;color:var(--forest-700);margin-top:2px;">{{ tierNameUrdu }}</div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:14px;">
+        <sc-for list="{{ tierBenefits }}" as="b" hint-placeholder-count="3">
+          <div style="font-size:12px;color:var(--text-muted);display:flex;gap:8px;align-items:flex-start;">
+            <span style="color:var(--evergreen-600);">✓</span><span>{{ b }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="{{ creditCardStyle }}">
+      <div style="font-size:11px;font-weight:600;color:var(--evergreen-600);text-transform:uppercase;letter-spacing:0.04em;">Credit Balance</div>
+      <div style="font-family:var(--font-display);font-size:20px;color:var(--ink-900);margin-top:6px;">{{ availableCreditText }} available</div>
+      <div style="height:8px;background:var(--mist-100);border-radius:999px;margin-top:14px;position:relative;overflow:hidden;">
+        <div style="{{ creditBarFillStyle }}"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-top:8px;">
+        <span>Used: {{ creditUsedText }}</span><span>Limit: {{ creditLimitText }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:22px;border-bottom:1px solid var(--border-subtle);margin-bottom:24px;overflow-x:auto;">
+    <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="4">
+      <button onClick="{{ t.onClick }}" class="raza-tab" style="{{ t.style }}">{{ t.label }}</button>
+    </sc-for>
+  </div>
+
+  <sc-if value="{{ tabIsNotifications }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <sc-for list="{{ notifications }}" as="n" hint-placeholder-count="4">
+        <div style="{{ n.rowStyle }}">
+          <div style="{{ n.dotStyle }}"></div>
+          <div style="flex:1;">
+            <div style="font-size:13px;color:var(--ink-900);font-weight:{{ n.weight }};">{{ n.title }}</div>
+            <div dir="rtl" style="font-family:var(--font-urdu);font-size:13px;color:var(--text-muted);">{{ n.titleUrdu }}</div>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);white-space:nowrap;">{{ n.time }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ tabIsPreferences }}" hint-placeholder-val="{{ false }}">
+    <div style="{{ panelStyle }}">
+      <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Choose which categories you want restock and order updates for.</div>
+      <sc-for list="{{ prefs }}" as="p" hint-placeholder-count="4">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border-subtle);">
+          <span style="font-size:13px;color:var(--ink-900);">{{ p.label }}</span>
+          <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.CheckboxOption" checked="{{ p.checked }}" onChange="{{ p.onChange }}" hint-size="20px,20px"></x-import>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ tabIsDetails }}" hint-placeholder-val="{{ false }}">
+    <div style="{{ panelStyle }}">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.TextInput" label="Business Name" value="{{ details.business }}" onChange="{{ setDetail.business }}" hint-size="100%,64px"></x-import>
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.TextInput" label="Contact Person" value="{{ details.contact }}" onChange="{{ setDetail.contact }}" hint-size="100%,64px"></x-import>
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.PhoneInput" label="Mobile Number" value="{{ details.phone }}" onChange="{{ setDetail.phone }}" hint-size="100%,68px"></x-import>
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.TextInput" label="Email" value="{{ details.email }}" onChange="{{ setDetail.email }}" hint-size="100%,64px"></x-import>
+        <div style="grid-column:span 2;"><x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.TextInput" label="Address" value="{{ details.address }}" onChange="{{ setDetail.address }}" hint-size="100%,64px"></x-import></div>
+      </div>
+      <button onClick="{{ saveDetails }}" class="raza-cta" style="height:46px;padding:0 28px;border-radius:999px;background:var(--evergreen-600);color:#fff;border:none;font-size:13px;font-weight:600;cursor:pointer;margin-top:20px;">Save Changes</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ tabIsStaff }}" hint-placeholder-val="{{ false }}">
+    <div style="{{ panelStyle }}">
+      <div style="display:flex;flex-direction:column;gap:2px;">
+        <sc-for list="{{ staff }}" as="s" hint-placeholder-count="3">
+          <div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border-subtle);">
+            <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Avatar" initials="{{ s.initials }}" hint-size="40px,40px"></x-import>
+            <div style="flex:1;">
+              <div style="font-size:13px;font-weight:600;color:var(--ink-900);">{{ s.name }}</div>
+              <div style="font-size:11px;color:var(--text-muted);">{{ s.phone }} · {{ s.role }}</div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <button onClick="{{ addStaff }}" class="raza-cta" style="height:44px;padding:0 24px;border-radius:999px;border:2px solid var(--evergreen-600);color:var(--evergreen-600);background:none;font-size:13px;font-weight:600;cursor:pointer;margin-top:18px;">Add Staff Member</button>
+    </div>
+  </sc-if>
+
+  <div style="{{ helpCardStyle }}">
+    <div>
+      <div style="font-size:14px;font-weight:600;color:var(--ink-900);">Need help with your account?</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Our team can assist with orders, credit or account changes.</div>
+    </div>
+    <a href="Contact.dc.html" style="height:44px;padding:0 24px;border-radius:999px;border:2px solid var(--evergreen-600);color:var(--evergreen-600);display:inline-flex;align-items:center;font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap;">Contact Support</a>
+  </div>
+</div>
+
+<sc-if value="{{ toastVisible }}" hint-placeholder-val="{{ false }}">
+  <div style="{{ toastStyle }}">{{ toastMessage }}</div>
+</sc-if>
+<dc-import name="SiteFooter" hint-size="100%,300px"></dc-import>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    tab: 'notifications', demoState: 'wholesale', toast: null,
+    prefs: { registers: true, stationery: true, sports: false, office: false },
+    details: { business: 'Bookworld Traders', contact: 'Ahmed Raza', phone: '0300-1112233', email: 'ahmed@bookworld.pk', address: 'Main Bazaar, Gujranwala' },
+  };
+  componentDidMount() {
+    import('./shared/store.js').then((mod) => { this._store = mod; this.setState({ demoState: mod.getDemoState() }); });
+    this._onStoreChange = () => { if (this._store) this.setState({ demoState: this._store.getDemoState() }); };
+    window.addEventListener('raza:store-changed', this._onStoreChange);
+  }
+  componentWillUnmount() { window.removeEventListener('raza:store-changed', this._onStoreChange); clearTimeout(this._toastT); }
+  showToast(msg) { this.setState({ toast: msg }); clearTimeout(this._toastT); this._toastT = setTimeout(() => this.setState({ toast: null }), 2400); }
+  setDetail(k, v) { this.setState((s) => ({ details: { ...s.details, [k]: v } })); }
+  setPref(k, v) { this.setState((s) => ({ prefs: { ...s.prefs, [k]: v } })); }
+
+  renderVals() {
+    const store = this._store;
+    const { tab, demoState } = this.state;
+    const isWholesale = demoState === 'wholesale';
+    const tier = store ? store.WHOLESALE_TIER : { name: 'Retail Customer', nameUrdu: 'ریٹیل کسٹمر', benefits: [], creditLimit: 0, creditUsed: 0 };
+    const pct = tier.creditLimit ? Math.round((tier.creditUsed / tier.creditLimit) * 100) : 0;
+
+    const tabDefs = [{ key: 'notifications', label: 'Notifications' }, { key: 'preferences', label: 'Preferences' }, { key: 'details', label: 'Account Details' }];
+    if (isWholesale) tabDefs.push({ key: 'staff', label: 'Staff Logins' });
+    const tabs = tabDefs.map((t) => ({
+      label: t.label, onClick: () => this.setState({ tab: t.key }),
+      style: { background: 'none', border: 'none', padding: '0 0 12px', fontSize: 13, fontWeight: tab === t.key ? 700 : 500, color: tab === t.key ? 'var(--ink-900)' : 'var(--text-muted)', borderBottom: tab === t.key ? '2px solid var(--evergreen-600)' : '2px solid transparent', cursor: 'pointer', fontFamily: 'var(--font-body)', whiteSpace: 'nowrap', transition: 'color 150ms ease-out' },
+    }));
+
+    const notifSrc = store ? store.NOTIFICATIONS : [];
+    const notifications = notifSrc.map((n) => ({
+      title: n.title, titleUrdu: n.titleUrdu, time: n.time, weight: n.unread ? 600 : 400,
+      rowStyle: { display: 'flex', alignItems: 'flex-start', gap: 12, padding: '14px 16px', borderRadius: 14, background: n.unread ? 'var(--mist-100)' : '#fff', border: n.unread ? 'none' : '1px solid var(--border-subtle)' },
+      dotStyle: { width: 8, height: 8, borderRadius: '50%', background: n.unread ? 'var(--evergreen-600)' : 'transparent', marginTop: 5, flexShrink: 0 },
+    }));
+
+    const prefDefs = [{ key: 'registers', label: 'Registers restock & offers' }, { key: 'stationery', label: 'Stationery restock & offers' }, { key: 'sports', label: 'Sports goods restock & offers' }, { key: 'office', label: 'Office supplies restock & offers' }];
+    const prefs = prefDefs.map((p) => ({
+      label: p.label, checked: this.state.prefs[p.key],
+      onChange: (v) => this.setPref(p.key, typeof v === 'boolean' ? v : !this.state.prefs[p.key]),
+    }));
+
+    const details = this.state.details;
+    const setDetail = {};
+    ['business', 'contact', 'phone', 'email', 'address'].forEach((k) => { setDetail[k] = (v) => this.setDetail(k, typeof v === 'string' ? v : v.target.value); });
+
+    return {
+      accountName: isWholesale ? this.state.details.business : (demoState === 'retail' ? 'Retail Customer' : 'Guest'),
+      tierCardStyle: { background: 'var(--mist-100)', borderRadius: 16, padding: 22 },
+      tierName: isWholesale ? tier.name : 'Retail Customer',
+      tierNameUrdu: isWholesale ? tier.nameUrdu : 'ریٹیل کسٹمر',
+      tierBenefits: isWholesale ? tier.benefits : ['Retail pricing on every product', 'Register for wholesale pricing anytime'],
+      creditCardStyle: { background: '#fff', border: '1px solid var(--border-subtle)', borderRadius: 16, padding: 22 },
+      availableCreditText: store ? store.formatPrice(tier.creditLimit - tier.creditUsed) : 'Rs 0',
+      creditBarFillStyle: { position: 'absolute', top: 0, left: 0, height: 8, borderRadius: 999, background: 'var(--evergreen-600)', width: `${pct}%`, animation: 'razaFillBar 700ms ease-out' },
+      creditUsedText: store ? store.formatPrice(tier.creditUsed) : 'Rs 0',
+      creditLimitText: store ? store.formatPrice(tier.creditLimit) : 'Rs 0',
+      tabs,
+      tabIsNotifications: tab === 'notifications', tabIsPreferences: tab === 'preferences', tabIsDetails: tab === 'details', tabIsStaff: tab === 'staff',
+      notifications,
+      panelStyle: { background: '#fff', border: '1px solid var(--border-subtle)', borderRadius: 16, padding: 22 },
+      prefs,
+      details, setDetail,
+      saveDetails: () => this.showToast('Account details saved'),
+      staff: [
+        { initials: 'AR', name: 'Ahmed Raza', phone: '0300-1112233', role: 'Owner' },
+        { initials: 'SK', name: 'Sana Khalid', phone: '0321-4455667', role: 'Store Staff' },
+      ],
+      addStaff: () => this.showToast('Add Staff Member — coming soon'),
+      helpCardStyle: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap', background: 'var(--mist-100)', borderRadius: 16, padding: '20px 24px', marginTop: 32 },
+      toastVisible: !!this.state.toast, toastMessage: this.state.toast || '',
+      toastStyle: { position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)', background: 'var(--ink-900)', color: '#fff', padding: '14px 24px', borderRadius: 999, fontSize: 13, fontWeight: 500, zIndex: 100, animation: 'razaToastIn 250ms ease-out both', boxShadow: '0 8px 24px rgba(5,31,32,0.25)' },
+    };
+  }
+}
+
+</script>
+</body>
+</html>

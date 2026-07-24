@@ -1,0 +1,380 @@
+{
+  "plugins": [
+    "react",
+    "import"
+  ],
+  "rules": {
+    "react/forbid-elements": [
+      "warn",
+      {
+        "forbid": []
+      }
+    ],
+    "no-restricted-imports": [
+      "warn",
+      {
+        "patterns": [
+          {
+            "group": [
+              "components/admin/**",
+              "components/commerce/**",
+              "components/core/**",
+              "components/feedback/**",
+              "components/forms/**",
+              "components/navigation/**",
+              "ui_kits/admin/**",
+              "ui_kits/storefront/**"
+            ],
+            "message": "Import design-system components from 'index.js', not component internals."
+          }
+        ]
+      }
+    ],
+    "no-restricted-syntax": [
+      "warn",
+      {
+        "selector": "Literal[value=/#[0-9a-fA-F]{3,8}\\b/]",
+        "message": "Raw hex color — use a design-system color token via var()."
+      },
+      {
+        "selector": "Literal[value=/\\b\\d+px\\b/]",
+        "message": "Raw px value — use a design-system spacing token via var()."
+      },
+      {
+        "selector": "Literal[value=/font-family\\s*:\\s*(?!['\\\"]?(?:Unbounded|Poppins|Noto Nastaliq Urdu))/i]",
+        "message": "Font not provided by the design system. Available: Unbounded, Poppins, Noto Nastaliq Urdu."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='AdminSidebar'] > JSXAttribute > JSXIdentifier[name!=/^(?:brand|items|onItemClick|key|ref|className|style|children)$/]",
+        "message": "<AdminSidebar> doesn't accept that prop. Declared props: brand, items, onItemClick."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Avatar'] > JSXAttribute > JSXIdentifier[name!=/^(?:initials|size|key|ref|className|style|children)$/]",
+        "message": "<Avatar> doesn't accept that prop. Declared props: initials, size."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='BottomNav'] > JSXAttribute > JSXIdentifier[name!=/^(?:items|width|onItemClick|key|ref|className|style|children)$/]",
+        "message": "<BottomNav> doesn't accept that prop. Declared props: items, width, onItemClick."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Button'] > JSXAttribute > JSXIdentifier[name!=/^(?:variant|disabled|onClick|children|key|ref|className|style|children)$/]",
+        "message": "<Button> doesn't accept that prop. Declared props: variant, disabled, onClick, children."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Button'] > JSXAttribute[name.name='variant'] > Literal[value!=/^(?:primary|secondary|ghost)$/]",
+        "message": "<Button> variant must be one of 'primary' | 'secondary' | 'ghost'."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='CheckboxOption'] > JSXAttribute > JSXIdentifier[name!=/^(?:label|checked|onChange|key|ref|className|style|children)$/]",
+        "message": "<CheckboxOption> doesn't accept that prop. Declared props: label, checked, onChange."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='DataTable'] > JSXAttribute > JSXIdentifier[name!=/^(?:columns|rows|key|ref|className|style|children)$/]",
+        "message": "<DataTable> doesn't accept that prop. Declared props: columns, rows."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Icon'] > JSXAttribute > JSXIdentifier[name!=/^(?:name|size|color|style|key|ref|className|style|children)$/]",
+        "message": "<Icon> doesn't accept that prop. Declared props: name, size, color, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Icon'] > JSXAttribute[name.name='name'] > Literal[value!=/^(?:home|search|cart|account|delivery|notification|discount|wallet|shop|invoice|whatsapp|support)$/]",
+        "message": "<Icon> name must be one of 'home' | 'search' | 'cart' | 'account' | 'delivery' | 'notification' | 'discount' | 'wallet' | 'shop' | 'invoice' | 'whatsapp' | 'support'."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='LowStockPanel'] > JSXAttribute > JSXIdentifier[name!=/^(?:items|key|ref|className|style|children)$/]",
+        "message": "<LowStockPanel> doesn't accept that prop. Declared props: items."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='MetricCard'] > JSXAttribute > JSXIdentifier[name!=/^(?:label|urduLabel|value|trend|trendDirection|key|ref|className|style|children)$/]",
+        "message": "<MetricCard> doesn't accept that prop. Declared props: label, urduLabel, value, trend, trendDirection."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='MetricCard'] > JSXAttribute[name.name='trendDirection'] > Literal[value!=/^(?:up|down)$/]",
+        "message": "<MetricCard> trendDirection must be one of 'up' | 'down'."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='NotificationDropdown'] > JSXAttribute > JSXIdentifier[name!=/^(?:items|blur|key|ref|className|style|children)$/]",
+        "message": "<NotificationDropdown> doesn't accept that prop. Declared props: items, blur."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Panel'] > JSXAttribute > JSXIdentifier[name!=/^(?:padding|style|children|key|ref|className|style|children)$/]",
+        "message": "<Panel> doesn't accept that prop. Declared props: padding, style, children."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='PhoneInput'] > JSXAttribute > JSXIdentifier[name!=/^(?:countryCode|placeholder|value|onChange|key|ref|className|style|children)$/]",
+        "message": "<PhoneInput> doesn't accept that prop. Declared props: countryCode, placeholder, value, onChange."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='PillNavbar'] > JSXAttribute > JSXIdentifier[name!=/^(?:brand|links|blur|children|key|ref|className|style|children)$/]",
+        "message": "<PillNavbar> doesn't accept that prop. Declared props: brand, links, blur, children."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='ProductCard'] > JSXAttribute > JSXIdentifier[name!=/^(?:icon|category|name|nameUrdu|price|wholesalePrice|stockLabel|onAddToCart|key|ref|className|style|children)$/]",
+        "message": "<ProductCard> doesn't accept that prop. Declared props: icon, category, name, nameUrdu, price, wholesalePrice, stockLabel, onAddToCart."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='QuantityStepper'] > JSXAttribute > JSXIdentifier[name!=/^(?:value|onChange|key|ref|className|style|children)$/]",
+        "message": "<QuantityStepper> doesn't accept that prop. Declared props: value, onChange."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='RadioOption'] > JSXAttribute > JSXIdentifier[name!=/^(?:label|checked|onChange|key|ref|className|style|children)$/]",
+        "message": "<RadioOption> doesn't accept that prop. Declared props: label, checked, onChange."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Select'] > JSXAttribute > JSXIdentifier[name!=/^(?:options|value|onChange|key|ref|className|style|children)$/]",
+        "message": "<Select> doesn't accept that prop. Declared props: options, value, onChange."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='SimpleBarChart'] > JSXAttribute > JSXIdentifier[name!=/^(?:bars|height|key|ref|className|style|children)$/]",
+        "message": "<SimpleBarChart> doesn't accept that prop. Declared props: bars, height."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='SimpleLineChart'] > JSXAttribute > JSXIdentifier[name!=/^(?:points|height|key|ref|className|style|children)$/]",
+        "message": "<SimpleLineChart> doesn't accept that prop. Declared props: points, height."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='StatusBadge'] > JSXAttribute > JSXIdentifier[name!=/^(?:label|urduLabel|tone|key|ref|className|style|children)$/]",
+        "message": "<StatusBadge> doesn't accept that prop. Declared props: label, urduLabel, tone."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='StatusBadge'] > JSXAttribute[name.name='tone'] > Literal[value!=/^(?:success|warning|error|info|neutral)$/]",
+        "message": "<StatusBadge> tone must be one of 'success' | 'warning' | 'error' | 'info' | 'neutral'."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='TextInput'] > JSXAttribute > JSXIdentifier[name!=/^(?:type|placeholder|value|onChange|style|key|ref|className|style|children)$/]",
+        "message": "<TextInput> doesn't accept that prop. Declared props: type, placeholder, value, onChange, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='TopBar'] > JSXAttribute > JSXIdentifier[name!=/^(?:searchPlaceholder|initials|key|ref|className|style|children)$/]",
+        "message": "<TopBar> doesn't accept that prop. Declared props: searchPlaceholder, initials."
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/index.js"
+      ],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    }
+  ],
+  "x-omelette": {
+    "components": {
+      "AdminSidebar": {
+        "replaces": []
+      },
+      "Avatar": {
+        "replaces": []
+      },
+      "BottomNav": {
+        "replaces": []
+      },
+      "Button": {
+        "replaces": []
+      },
+      "CheckboxOption": {
+        "replaces": []
+      },
+      "DataTable": {
+        "replaces": []
+      },
+      "Icon": {
+        "replaces": []
+      },
+      "LowStockPanel": {
+        "replaces": []
+      },
+      "MetricCard": {
+        "replaces": []
+      },
+      "NotificationDropdown": {
+        "replaces": []
+      },
+      "Panel": {
+        "replaces": []
+      },
+      "PhoneInput": {
+        "replaces": []
+      },
+      "PillNavbar": {
+        "replaces": []
+      },
+      "ProductCard": {
+        "replaces": []
+      },
+      "QuantityStepper": {
+        "replaces": []
+      },
+      "RadioOption": {
+        "replaces": []
+      },
+      "Select": {
+        "replaces": []
+      },
+      "SimpleBarChart": {
+        "replaces": []
+      },
+      "SimpleLineChart": {
+        "replaces": []
+      },
+      "StatusBadge": {
+        "replaces": []
+      },
+      "TextInput": {
+        "replaces": []
+      },
+      "TopBar": {
+        "replaces": []
+      }
+    },
+    "tokens": [
+      "--accent-primary",
+      "--accent-primary-hover",
+      "--accent-secondary",
+      "--amber-500",
+      "--amber-ink",
+      "--amber-tint",
+      "--blue-500",
+      "--blue-ink",
+      "--blue-tint",
+      "--border-subtle",
+      "--canvas",
+      "--evergreen-600",
+      "--focus-ring",
+      "--font-body",
+      "--font-display",
+      "--font-urdu",
+      "--forest-700",
+      "--forest-800",
+      "--glass-bg",
+      "--glass-border",
+      "--glass-shadow",
+      "--ink-900",
+      "--mist-100",
+      "--radius-lg",
+      "--radius-none",
+      "--radius-pill",
+      "--radius-sm",
+      "--red-500",
+      "--red-ink",
+      "--red-tint",
+      "--sage-400",
+      "--space-1",
+      "--space-11",
+      "--space-16",
+      "--space-2",
+      "--space-3",
+      "--space-4",
+      "--space-6",
+      "--space-8",
+      "--surface-card",
+      "--surface-dark",
+      "--surface-page",
+      "--surface-tint",
+      "--text-body-lh",
+      "--text-body-size",
+      "--text-body-weight",
+      "--text-caption-lh",
+      "--text-caption-size",
+      "--text-caption-weight",
+      "--text-display-lh",
+      "--text-display-size",
+      "--text-display-weight",
+      "--text-h1-lh",
+      "--text-h1-size",
+      "--text-h1-weight",
+      "--text-h2-lh",
+      "--text-h2-size",
+      "--text-h2-weight",
+      "--text-h3-lh",
+      "--text-h3-size",
+      "--text-h3-weight",
+      "--text-muted",
+      "--text-on-dark",
+      "--text-on-sage",
+      "--text-primary",
+      "--text-urdu-lh",
+      "--text-urdu-size",
+      "--touch-target-min",
+      "--white"
+    ],
+    "tokenKinds": {
+      "--ink-900": "color",
+      "--forest-800": "color",
+      "--forest-700": "color",
+      "--evergreen-600": "color",
+      "--sage-400": "color",
+      "--mist-100": "color",
+      "--white": "color",
+      "--canvas": "color",
+      "--amber-500": "color",
+      "--amber-tint": "color",
+      "--amber-ink": "color",
+      "--red-500": "color",
+      "--red-tint": "color",
+      "--red-ink": "color",
+      "--blue-500": "color",
+      "--blue-tint": "color",
+      "--blue-ink": "color",
+      "--border-subtle": "color",
+      "--text-primary": "font",
+      "--text-muted": "font",
+      "--text-on-dark": "font",
+      "--text-on-sage": "font",
+      "--surface-page": "color",
+      "--surface-card": "color",
+      "--surface-dark": "color",
+      "--surface-tint": "color",
+      "--accent-primary": "color",
+      "--accent-primary-hover": "color",
+      "--accent-secondary": "color",
+      "--focus-ring": "color",
+      "--glass-bg": "color",
+      "--glass-border": "color",
+      "--glass-shadow": "shadow",
+      "--font-display": "font",
+      "--font-body": "font",
+      "--font-urdu": "font",
+      "--text-display-size": "font",
+      "--text-display-lh": "font",
+      "--text-display-weight": "font",
+      "--text-h1-size": "font",
+      "--text-h1-lh": "font",
+      "--text-h1-weight": "font",
+      "--text-h2-size": "font",
+      "--text-h2-lh": "font",
+      "--text-h2-weight": "font",
+      "--text-h3-size": "font",
+      "--text-h3-lh": "font",
+      "--text-h3-weight": "font",
+      "--text-body-size": "font",
+      "--text-body-lh": "font",
+      "--text-body-weight": "font",
+      "--text-caption-size": "font",
+      "--text-caption-lh": "font",
+      "--text-caption-weight": "font",
+      "--text-urdu-size": "font",
+      "--text-urdu-lh": "font",
+      "--space-1": "spacing",
+      "--space-2": "spacing",
+      "--space-3": "spacing",
+      "--space-4": "spacing",
+      "--space-6": "spacing",
+      "--space-8": "spacing",
+      "--space-11": "spacing",
+      "--space-16": "spacing",
+      "--touch-target-min": "spacing",
+      "--radius-none": "radius",
+      "--radius-sm": "radius",
+      "--radius-lg": "radius",
+      "--radius-pill": "radius"
+    },
+    "fontFamilies": [
+      "Noto Nastaliq Urdu",
+      "Poppins",
+      "Unbounded"
+    ]
+  }
+}

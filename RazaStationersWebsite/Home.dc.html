@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/fonts/fonts.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/radius.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/styles.css">
+  <script src="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/_ds_bundle.js"></script>
+  <style>
+    body{margin:0;background:var(--canvas);font-family:var(--font-body);}
+    a{color:var(--evergreen-600);}
+    a:hover{color:var(--forest-700);}
+    @keyframes razaFloat{0%{transform:translateY(0px) rotate(0deg);}50%{transform:translateY(-14px) rotate(1.5deg);}100%{transform:translateY(0px) rotate(0deg);}}
+    @keyframes razaFadeRise{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+    @keyframes razaCountFade{from{opacity:0;}to{opacity:1;}}
+    .raza-card{transition:transform 200ms ease-out, box-shadow 200ms ease-out;}
+    .raza-card:hover{transform:translateY(-3px);}
+    .raza-cta:active{transform:scale(0.97);}
+    .raza-accordion-btn:hover{color:var(--evergreen-600);}
+  </style>
+</helmet>
+<dc-import name="SiteNav" active="home" hint-size="100%,64px"></dc-import>
+<div style="padding-top:96px;max-width:1280px;margin:0 auto;">
+
+  <section style="display:grid;grid-template-columns:1.1fr 0.9fr;align-items:center;gap:40px;padding:24px 24px 64px;">
+    <div style="{{ heroTextStyle }}">
+      <h1 style="font-family:var(--font-display);font-size:clamp(32px,5vw,56px);line-height:1.08;color:var(--ink-900);font-weight:700;margin:0;">Stationery, registers &amp; sports goods — wholesale pricing for registered shops</h1>
+      <div dir="rtl" style="font-family:var(--font-urdu);font-size:22px;color:var(--forest-700);margin-top:14px;">رجسٹرڈ دکانداروں کے لیے ہول سیل قیمتیں</div>
+      <div style="font-size:16px;color:var(--text-muted);margin-top:16px;max-width:460px;line-height:1.6;">Order online instead of calling in — the same wholesale rates, delivered to your shop, school or bookstore.</div>
+      <div style="display:flex;gap:14px;margin-top:28px;flex-wrap:wrap;">
+        <a href="WholesaleRegistration.dc.html" class="raza-cta" style="height:48px;padding:0 30px;border-radius:999px;background:var(--evergreen-600);color:#fff;display:inline-flex;align-items:center;font-weight:600;font-size:14px;text-decoration:none;transition:background 150ms ease-out, transform 150ms ease-out;">Register for Wholesale Pricing</a>
+        <a href="Catalogue.dc.html" class="raza-cta" style="height:48px;padding:0 30px;border-radius:999px;border:2px solid var(--evergreen-600);color:var(--evergreen-600);display:inline-flex;align-items:center;font-weight:600;font-size:14px;text-decoration:none;transition:transform 150ms ease-out;">Browse Catalogue</a>
+      </div>
+    </div>
+    <div style="position:relative;height:340px;display:flex;align-items:center;justify-content:center;">
+      <div style="{{ isoWrapStyle }}">
+        <div style="width:150px;height:190px;background:var(--evergreen-600);border-radius:12px;position:absolute;left:20px;top:60px;box-shadow:0 24px 50px rgba(5,31,32,0.18);"></div>
+        <div style="width:150px;height:190px;background:var(--sage-400);border-radius:12px;position:absolute;left:60px;top:20px;box-shadow:0 24px 50px rgba(5,31,32,0.16);"></div>
+        <div style="width:110px;height:150px;background:var(--mist-100);border-radius:10px;position:absolute;left:170px;top:90px;border:1px solid var(--border-subtle);"></div>
+        <div style="width:14px;height:130px;background:var(--forest-700);border-radius:7px;position:absolute;left:230px;top:10px;transform:rotate(18deg);"></div>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding:32px 24px;display:flex;flex-direction:column;align-items:center;">
+    <div style="font-size:12px;font-weight:600;color:var(--text-muted);letter-spacing:0.04em;text-transform:uppercase;margin-bottom:18px;">Trusted by shops, schools &amp; bookstores across Punjab</div>
+    <div style="display:flex;gap:36px;flex-wrap:wrap;justify-content:center;opacity:0.7;">
+      <sc-for list="{{ clientLogos }}" as="c" hint-placeholder-count="5">
+        <div style="font-family:var(--font-display);font-weight:700;font-size:15px;color:var(--forest-700);">{{ c }}</div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="padding:40px 24px;">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:20px;">
+      <h2 style="font-family:var(--font-display);font-size:26px;color:var(--ink-900);margin:0;">Featured Products</h2>
+      <a href="Catalogue.dc.html" style="font-size:13px;font-weight:600;text-decoration:underline;text-underline-offset:3px;">View all</a>
+    </div>
+    <sc-if value="{{ loading }}" hint-placeholder-val="{{ true }}">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px;">
+        <sc-for list="{{ skeletonSlots }}" as="s" hint-placeholder-count="4">
+          <div style="background:#fff;border:1px solid var(--border-subtle);border-radius:16px;padding:18px;height:230px;">
+            <div style="width:44px;height:44px;border-radius:12px;background:var(--mist-100);margin-bottom:14px;"></div>
+            <div style="width:80%;height:14px;background:var(--mist-100);border-radius:6px;margin-bottom:10px;"></div>
+            <div style="width:50%;height:14px;background:var(--mist-100);border-radius:6px;margin-bottom:18px;"></div>
+            <div style="width:40%;height:20px;background:var(--mist-100);border-radius:6px;"></div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+    <sc-if value="{{ notLoading }}" hint-placeholder-val="{{ false }}">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px;">
+        <sc-for list="{{ featured }}" as="p" hint-placeholder-count="4">
+          <a href="{{ p.href }}" class="raza-card" style="{{ p.cardStyle }}">
+            <div style="{{ p.iconBlockStyle }}">
+              <sc-if value="{{ p.hasIcon }}" hint-placeholder-val="{{ true }}">
+                <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="{{ p.icon }}" size="20" color="#fff" hint-size="20px,20px"></x-import>
+              </sc-if>
+            </div>
+            <div style="font-size:10px;font-weight:600;color:var(--forest-700);background:var(--mist-100);display:inline-block;padding:3px 10px;border-radius:999px;margin-bottom:8px;">{{ p.categoryLabel }}</div>
+            <div style="font-size:13px;font-weight:600;color:var(--ink-900);line-height:1.35;min-height:36px;">{{ p.name }}</div>
+            <div dir="rtl" style="font-family:var(--font-urdu);font-size:13px;color:var(--text-muted);margin-top:2px;">{{ p.nameUrdu }}</div>
+            <div style="display:flex;align-items:baseline;gap:8px;margin-top:10px;">
+              <div style="font-size:17px;font-weight:700;color:var(--ink-900);">{{ p.priceText }}</div>
+              <div style="{{ p.badgeStyle }}">{{ p.stockLabel }}</div>
+            </div>
+          </a>
+        </sc-for>
+      </div>
+    </sc-if>
+  </section>
+
+  <section style="padding:40px 24px;background:var(--mist-100);border-radius:24px;margin:0 24px 40px;">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:20px;">
+      <h2 style="font-family:var(--font-display);font-size:26px;color:var(--ink-900);margin:0;">Best Sellers</h2>
+      <a href="Catalogue.dc.html" style="font-size:13px;font-weight:600;text-decoration:underline;text-underline-offset:3px;">View all</a>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px;">
+      <sc-for list="{{ bestSellers }}" as="p" hint-placeholder-count="4">
+        <a href="{{ p.href }}" class="raza-card" style="{{ p.cardStyle }}">
+          <div style="{{ p.iconBlockStyle }}">
+            <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="{{ p.icon }}" size="20" color="#fff" hint-size="20px,20px"></x-import>
+          </div>
+          <div style="font-size:10px;font-weight:600;color:var(--forest-700);background:var(--white);display:inline-block;padding:3px 10px;border-radius:999px;margin-bottom:8px;">{{ p.categoryLabel }}</div>
+          <div style="font-size:13px;font-weight:600;color:var(--ink-900);line-height:1.35;min-height:36px;">{{ p.name }}</div>
+          <div dir="rtl" style="font-family:var(--font-urdu);font-size:13px;color:var(--text-muted);margin-top:2px;">{{ p.nameUrdu }}</div>
+          <div style="display:flex;align-items:baseline;gap:8px;margin-top:10px;">
+            <div style="font-size:17px;font-weight:700;color:var(--ink-900);">{{ p.priceText }}</div>
+            <div style="{{ p.badgeStyle }}">{{ p.stockLabel }}</div>
+          </div>
+        </a>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="padding:20px 24px 56px;">
+    <h2 style="font-family:var(--font-display);font-size:26px;color:var(--ink-900);margin:0 0 28px;text-align:center;">Why Shop Owners Choose Raza Stationers</h2>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;">
+      <sc-for list="{{ features }}" as="f" hint-placeholder-count="3">
+        <div style="text-align:center;padding:8px 16px;">
+          <div style="width:56px;height:56px;border-radius:16px;background:var(--evergreen-600);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+            <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="{{ f.icon }}" size="24" color="#fff" hint-size="24px,24px"></x-import>
+          </div>
+          <div style="font-size:16px;font-weight:600;color:var(--ink-900);">{{ f.title }}</div>
+          <div style="font-size:13px;color:var(--text-muted);margin-top:8px;line-height:1.6;max-width:280px;margin-left:auto;margin-right:auto;">{{ f.desc }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="padding:20px 24px 72px;max-width:760px;margin:0 auto;">
+    <h2 style="font-family:var(--font-display);font-size:26px;color:var(--ink-900);margin:0 0 24px;text-align:center;">Frequently Asked Questions</h2>
+    <div style="display:flex;flex-direction:column;">
+      <sc-for list="{{ faqs }}" as="item" hint-placeholder-count="5">
+        <div style="border-bottom:1px solid var(--border-subtle);">
+          <button onClick="{{ item.toggle }}" class="raza-accordion-btn" style="width:100%;display:flex;justify-content:space-between;align-items:center;background:none;border:none;padding:18px 4px;cursor:pointer;text-align:left;font-family:var(--font-body);font-size:14px;font-weight:600;color:var(--ink-900);">
+            <span>{{ item.q }}</span>
+            <span style="{{ item.chevronStyle }}">+</span>
+          </button>
+          <sc-if value="{{ item.open }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:0 4px 18px;font-size:13px;color:var(--text-muted);line-height:1.6;">{{ item.a }}</div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+</div>
+<dc-import name="SiteFooter" hint-size="100%,300px"></dc-import>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { loading: true, demoState: 'guest', openFaq: -1 };
+
+  componentDidMount() {
+    import('./shared/store.js').then((mod) => {
+      this._store = mod;
+      this.setState({ demoState: mod.getDemoState() });
+    });
+    setTimeout(() => this.setState({ loading: false }), 550);
+  }
+
+  toggleFaq(i) { this.setState((s) => ({ openFaq: s.openFaq === i ? -1 : i })); }
+
+  cardFor(p, demoState) {
+    const price = this._store ? this._store.priceDisplay(p, 'individual', demoState) : { amount: p.retail };
+    const stock = this._store ? this._store.stockInfo(p) : { label: 'In Stock', tone: 'success' };
+    const toneColors = { success: { bg: 'var(--mist-100)', c: 'var(--evergreen-600)' }, warning: { bg: 'var(--amber-tint)', c: 'var(--amber-ink)' }, error: { bg: 'var(--red-tint)', c: 'var(--red-ink)' } };
+    const tc = toneColors[stock.tone] || toneColors.success;
+    return {
+      href: `ProductDetail.dc.html?id=${p.id}`,
+      icon: p.icon === 'block' ? 'shop' : p.icon,
+      hasIcon: true,
+      categoryLabel: p.category.charAt(0).toUpperCase() + p.category.slice(1),
+      name: p.name, nameUrdu: p.nameUrdu,
+      priceText: this._store ? this._store.formatPrice(price.amount) : ('Rs ' + p.retail),
+      stockLabel: stock.label,
+      cardStyle: { background: '#fff', border: '1px solid var(--border-subtle)', borderRadius: 16, padding: 18, textDecoration: 'none', display: 'block', animation: 'razaFadeRise 450ms ease-out both' },
+      iconBlockStyle: { width: 44, height: 44, borderRadius: 12, background: p.icon === 'block' ? 'var(--sage-400)' : 'var(--evergreen-600)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
+      badgeStyle: { fontSize: 10, fontWeight: 600, color: tc.c, background: tc.bg, padding: '3px 9px', borderRadius: 999 },
+    };
+  }
+
+  renderVals() {
+    const demoState = this.state.demoState;
+    const products = this._store ? this._store.PRODUCTS : [];
+    const featuredIds = ['REG-100', 'STA-GEL10', 'OFF-A4RM', 'SPT-FBL5'];
+    const bestIds = ['STA-BP10', 'REG-CASH', 'SPT-TBALL', 'OFF-STPL'];
+    const featured = products.filter((p) => featuredIds.includes(p.id)).map((p) => this.cardFor(p, demoState));
+    const bestSellers = products.filter((p) => bestIds.includes(p.id)).map((p) => this.cardFor(p, demoState));
+    const faqSrc = this._store ? this._store.FAQS.slice(0, 5) : [];
+    const faqs = faqSrc.map((f, i) => ({
+      q: f.q, a: f.a, open: this.state.openFaq === i,
+      toggle: () => this.toggleFaq(i),
+      chevronStyle: { fontSize: 18, color: 'var(--evergreen-600)', transform: this.state.openFaq === i ? 'rotate(45deg)' : 'rotate(0deg)', transition: 'transform 200ms ease-out' },
+    }));
+
+    return {
+      heroTextStyle: { animation: 'razaFadeRise 500ms ease-out both' },
+      isoWrapStyle: { position: 'relative', width: 300, height: 260, animation: 'razaFloat 6s ease-in-out infinite' },
+      clientLogos: ['Bookworld', 'City Stationers', 'Al-Falah School System', 'Metro Bookshop', 'Green Valley School'],
+      loading: this.state.loading, notLoading: !this.state.loading,
+      skeletonSlots: [1, 2, 3, 4],
+      featured, bestSellers,
+      features: [
+        { icon: 'shop', title: 'Direct Factory Sourcing', desc: 'Stock bought straight from manufacturers, passed on at true wholesale rates.' },
+        { icon: 'delivery', title: 'Easy Re-Ordering', desc: 'Reorder your last purchase in one tap from Order History.' },
+        { icon: 'wallet', title: 'Multiple Payment Options', desc: 'Cash on Delivery, Easypaisa, JazzCash, bank transfer, or Pay Later on credit.' },
+      ],
+      faqs,
+    };
+  }
+}
+
+</script>
+</body>
+</html>

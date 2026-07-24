@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/fonts/fonts.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/radius.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/styles.css">
+  <script src="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/_ds_bundle.js"></script>
+  <style>
+    body{margin:0;background:var(--canvas);font-family:var(--font-body);}
+    a{color:var(--evergreen-600);}
+    a:hover{color:var(--forest-700);}
+    @keyframes razaFadeRise{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+    @keyframes razaTotalPulse{0%{opacity:0.4;}100%{opacity:1;}}
+    .raza-cta:active{transform:scale(0.97);}
+    .raza-line:hover{background:var(--mist-100);}
+  </style>
+</helmet>
+<dc-import name="SiteNav" active="cart" hint-size="100%,64px"></dc-import>
+<div style="padding-top:96px;max-width:1000px;margin:0 auto;padding-left:24px;padding-right:24px;">
+  <h1 style="font-family:var(--font-display);font-size:28px;color:var(--ink-900);margin:0 0 24px;">Your Cart</h1>
+
+  <sc-if value="{{ hasLines }}" hint-placeholder-val="{{ true }}">
+    <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:32px;align-items:start;">
+      <div style="display:flex;flex-direction:column;">
+        <sc-for list="{{ lines }}" as="line" hint-placeholder-count="3">
+          <div class="raza-line" style="{{ line.rowStyle }}">
+            <div style="{{ line.iconBlockStyle }}">
+              <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="{{ line.icon }}" size="20" color="#fff" hint-size="20px,20px"></x-import>
+            </div>
+            <div style="flex:1;min-width:0;">
+              <a href="{{ line.href }}" style="font-size:14px;font-weight:600;color:var(--ink-900);text-decoration:none;">{{ line.name }}</a>
+              <div dir="rtl" style="font-family:var(--font-urdu);font-size:13px;color:var(--text-muted);">{{ line.nameUrdu }}</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">{{ line.priceLabel }} · {{ line.unitPriceText }}</div>
+              <button onClick="{{ line.onRemove }}" style="background:none;border:none;color:var(--red-ink);font-size:12px;padding:0;margin-top:6px;cursor:pointer;text-decoration:underline;">Remove</button>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px;">
+              <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.QuantityStepper" value="{{ line.qty }}" onChange="{{ line.onQtyChange }}" hint-size="110px,40px"></x-import>
+              <div key="{{ line.lineTotal }}" style="font-size:16px;font-weight:700;color:var(--ink-900);animation:razaTotalPulse 250ms ease-out;">{{ line.lineTotalText }}</div>
+            </div>
+          </div>
+        </sc-for>
+        <a href="Catalogue.dc.html" class="raza-cta" style="{{ continueBtnStyle }}">Continue Shopping</a>
+      </div>
+
+      <div style="{{ summaryCardStyle }}">
+        <div style="font-family:var(--font-display);font-size:17px;color:var(--ink-900);margin-bottom:18px;">Order Summary</div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text-muted);margin-bottom:10px;">
+          <span>Items ({{ itemCount }})</span><span>{{ subtotalText }}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text-muted);margin-bottom:10px;">
+          <span>Delivery</span><span>Calculated at checkout</span>
+        </div>
+        <div style="border-top:1px solid var(--border-subtle);margin:14px 0;"></div>
+        <div style="display:flex;justify-content:space-between;font-size:17px;font-weight:700;color:var(--ink-900);margin-bottom:22px;">
+          <span>Total</span><span key="{{ subtotalText }}" style="animation:razaTotalPulse 250ms ease-out;">{{ subtotalText }}</span>
+        </div>
+        <sc-if value="{{ showGuestNote }}" hint-placeholder-val="{{ false }}">
+          <div style="font-size:12px;color:var(--text-muted);background:var(--mist-100);border-radius:12px;padding:10px 14px;margin-bottom:16px;line-height:1.5;">Prices shown are retail. <a href="SignIn.dc.html" style="font-size:12px;">Log in</a> to see your wholesale price.</div>
+        </sc-if>
+        <a href="Checkout.dc.html" class="raza-cta" style="{{ checkoutBtnStyle }}">Proceed to Checkout</a>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+    <div style="text-align:center;padding:80px 20px;">
+      <div style="width:64px;height:64px;border-radius:50%;background:var(--mist-100);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="cart" size="26" color="var(--evergreen-600)" hint-size="26px,26px"></x-import>
+      </div>
+      <div style="font-size:17px;font-weight:600;color:var(--ink-900);">Your cart is empty</div>
+      <div dir="rtl" style="font-family:var(--font-urdu);font-size:14px;color:var(--text-muted);margin-top:4px;">آپ کی ٹوکری خالی ہے</div>
+      <div style="font-size:13px;color:var(--text-muted);margin-top:10px;">Browse the catalogue to add stationery, registers or sports goods.</div>
+      <a href="Catalogue.dc.html" class="raza-cta" style="height:46px;padding:0 30px;border-radius:999px;background:var(--evergreen-600);color:#fff;display:inline-flex;align-items:center;font-size:14px;font-weight:600;text-decoration:none;margin-top:22px;">Browse Catalogue</a>
+    </div>
+  </sc-if>
+</div>
+<div style="height:60px;"></div>
+<dc-import name="SiteFooter" hint-size="100%,300px"></dc-import>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { demoState: 'guest', cartVersion: 0 };
+
+  componentDidMount() {
+    import('./shared/store.js').then((mod) => {
+      this._store = mod;
+      this.setState({ demoState: mod.getDemoState() });
+    });
+    this._onStoreChange = () => {
+      if (this._store) this.setState((s) => ({ demoState: this._store.getDemoState(), cartVersion: s.cartVersion + 1 }));
+    };
+    window.addEventListener('raza:store-changed', this._onStoreChange);
+  }
+  componentWillUnmount() { window.removeEventListener('raza:store-changed', this._onStoreChange); }
+
+  renderVals() {
+    const store = this._store;
+    if (!store) return { hasLines: false, isEmpty: true, lines: [] };
+    const demoState = this.state.demoState;
+    const lines = store.cartLines(demoState);
+    const subtotal = store.cartSubtotal(demoState);
+    const itemCount = lines.reduce((s, l) => s + l.qty, 0);
+
+    const mappedLines = lines.map((line) => ({
+      href: `ProductDetail.dc.html?id=${line.product.id}`,
+      icon: line.product.icon === 'block' ? 'shop' : line.product.icon,
+      name: line.product.name, nameUrdu: line.product.nameUrdu,
+      priceLabel: line.purchaseType === 'bulk' ? line.product.bulk.label : 'Per Piece',
+      unitPriceText: store.formatPrice(line.unitAmount) + ' each',
+      qty: line.qty,
+      lineTotal: line.lineTotal,
+      lineTotalText: store.formatPrice(line.lineTotal),
+      rowStyle: { display: 'flex', gap: 16, alignItems: 'flex-start', padding: '18px 12px', borderRadius: 16, transition: 'background 150ms ease-out', animation: 'razaFadeRise 350ms ease-out both' },
+      iconBlockStyle: { width: 52, height: 52, borderRadius: 14, background: line.product.icon === 'block' ? 'var(--sage-400)' : 'var(--evergreen-600)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+      onQtyChange: (v) => { store.updateCartQty(line.index, v); },
+      onRemove: () => { store.removeCartLine(line.index); },
+    }));
+
+    return {
+      hasLines: lines.length > 0, isEmpty: lines.length === 0,
+      lines: mappedLines,
+      itemCount,
+      subtotalText: store.formatPrice(subtotal),
+      showGuestNote: demoState === 'guest',
+      continueBtnStyle: { display: 'inline-flex', alignItems: 'center', height: 46, padding: '0 28px', borderRadius: 999, border: '2px solid var(--evergreen-600)', color: 'var(--evergreen-600)', fontSize: 14, fontWeight: 600, textDecoration: 'none', marginTop: 10, width: 'fit-content', transition: 'transform 150ms ease-out' },
+      summaryCardStyle: { background: '#fff', border: '1px solid var(--border-subtle)', borderRadius: 16, padding: 24, position: 'sticky', top: 96 },
+      checkoutBtnStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center', height: 48, borderRadius: 999, background: 'var(--evergreen-600)', color: '#fff', fontSize: 14, fontWeight: 600, textDecoration: 'none', transition: 'transform 150ms ease-out, background 150ms ease-out' },
+    };
+  }
+}
+
+</script>
+</body>
+</html>

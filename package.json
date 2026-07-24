@@ -1,0 +1,18 @@
+{
+  "name": "raza-stationers-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=@raza-stationers/web",
+    "build": "npm run build --workspaces --if-present",
+    "build:web": "npm run build --workspace=@raza-stationers/web",
+    "lint": "npm run lint --workspaces --if-present"
+  },
+  "devDependencies": {
+    "typescript": "^5"
+  }
+}

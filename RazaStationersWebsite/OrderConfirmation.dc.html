@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/fonts/fonts.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/radius.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/styles.css">
+  <script src="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/_ds_bundle.js"></script>
+  <style>
+    body{margin:0;background:var(--canvas);font-family:var(--font-body);}
+    a{color:var(--evergreen-600);}
+    a:hover{color:var(--forest-700);}
+    @keyframes razaCheckIn{0%{transform:scale(0);opacity:0;}60%{transform:scale(1.15);opacity:1;}100%{transform:scale(1);opacity:1;}}
+    @keyframes razaFadeRise{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+    .raza-cta:active{transform:scale(0.97);}
+  </style>
+</helmet>
+<dc-import name="SiteNav" active="confirmation" hint-size="100%,64px"></dc-import>
+<div style="padding-top:110px;max-width:680px;margin:0 auto;padding-left:24px;padding-right:24px;padding-bottom:80px;text-align:center;">
+  <div style="width:76px;height:76px;border-radius:50%;background:var(--mist-100);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:razaCheckIn 500ms ease-out both;">
+    <svg width="34" height="34" viewBox="0 0 24 24" fill="none"><path d="M4 12.5 9.5 18 20 6" stroke="var(--evergreen-600)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <h1 style="font-family:var(--font-display);font-size:26px;color:var(--ink-900);margin:0;animation:razaFadeRise 400ms ease-out both;">Order Placed Successfully</h1>
+  <div dir="rtl" style="font-family:var(--font-urdu);font-size:16px;color:var(--forest-700);margin-top:6px;">آرڈر کامیابی سے موصول ہو گیا</div>
+  <div style="font-size:13px;color:var(--text-muted);margin-top:12px;">Order <strong style="color:var(--ink-900);">{{ orderId }}</strong> · Placed {{ orderDate }}</div>
+
+  <div style="{{ summaryCardStyle }}">
+    <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text-muted);margin-bottom:8px;">
+      <span>Items</span><span>{{ itemCount }}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text-muted);margin-bottom:8px;">
+      <span>Payment Method</span><span>{{ paymentMethodLabel }}</span>
+    </div>
+    <div style="border-top:1px solid var(--border-subtle);margin:14px 0;"></div>
+    <div style="display:flex;justify-content:space-between;font-size:17px;font-weight:700;color:var(--ink-900);">
+      <span>Total</span><span>{{ totalText }}</span>
+    </div>
+    <div style="text-align:left;margin-top:18px;">
+      <sc-for list="{{ orderedItems }}" as="it" hint-placeholder-count="3">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);padding:5px 0;">
+          <span>{{ it.name }} × {{ it.qty }}</span><span>{{ it.total }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="{{ nextStepsWrapStyle }}">
+    <div style="font-family:var(--font-display);font-size:16px;color:var(--ink-900);margin-bottom:16px;">Next Steps</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+      <sc-for list="{{ nextSteps }}" as="ns" hint-placeholder-count="3">
+        <div>
+          <div style="width:44px;height:44px;border-radius:12px;background:var(--evergreen-600);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;">
+            <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="{{ ns.icon }}" size="20" color="#fff" hint-size="20px,20px"></x-import>
+          </div>
+          <div style="font-size:12px;font-weight:600;color:var(--ink-900);">{{ ns.label }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:14px;justify-content:center;margin-top:32px;flex-wrap:wrap;">
+    <a href="OrderTracking.dc.html" class="raza-cta" style="height:48px;padding:0 28px;border-radius:999px;background:var(--evergreen-600);color:#fff;display:inline-flex;align-items:center;font-size:14px;font-weight:600;text-decoration:none;">Track Order</a>
+    <a href="Catalogue.dc.html" class="raza-cta" style="height:48px;padding:0 28px;border-radius:999px;border:2px solid var(--evergreen-600);color:var(--evergreen-600);display:inline-flex;align-items:center;font-size:14px;font-weight:600;text-decoration:none;">Browse More</a>
+  </div>
+</div>
+<dc-import name="SiteFooter" hint-size="100%,300px"></dc-import>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() {
+    import('./shared/store.js').then((mod) => { this._store = mod; this.forceUpdate(); });
+  }
+  renderVals() {
+    const store = this._store;
+    const items = [
+      { name: '100-Page Register', qty: 6, total: 'Rs 708' },
+      { name: 'Ball Pen — Box of 10', qty: 2, total: 'Rs 530' },
+      { name: 'A4 Copier Paper Ream', qty: 3, total: 'Rs 2,520' },
+    ];
+    return {
+      orderId: 'RS-10517', orderDate: 'Today',
+      summaryCardStyle: { background: '#fff', border: '1px solid var(--border-subtle)', borderRadius: 16, padding: 24, marginTop: 28, textAlign: 'left' },
+      itemCount: 11, paymentMethodLabel: 'Cash on Delivery', totalText: 'Rs 3,758',
+      orderedItems: items,
+      nextStepsWrapStyle: { marginTop: 32 },
+      nextSteps: [
+        { icon: 'invoice', label: 'We confirm your order' },
+        { icon: 'delivery', label: 'Order gets packed & shipped' },
+        { icon: 'shop', label: 'Delivered to your shop' },
+      ],
+    };
+  }
+}
+
+</script>
+</body>
+</html>

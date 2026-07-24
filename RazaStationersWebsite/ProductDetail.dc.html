@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/fonts/fonts.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/radius.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/styles.css">
+  <script src="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/_ds_bundle.js"></script>
+  <style>
+    body{margin:0;background:var(--canvas);font-family:var(--font-body);}
+    a{color:var(--evergreen-600);}
+    a:hover{color:var(--forest-700);}
+    @keyframes razaFadeRise{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+    @keyframes razaBump{0%{transform:scale(1);}50%{transform:scale(1.06);}100%{transform:scale(1);}}
+    @keyframes razaToastIn{from{opacity:0;transform:translate(-50%,12px);}to{opacity:1;transform:translate(-50%,0);}}
+    .raza-pill:active{transform:scale(0.96);}
+    .raza-card:hover{transform:translateY(-3px);}
+    .raza-card{transition:transform 200ms ease-out;}
+    .raza-step-btn:hover{background:var(--mist-100);}
+  </style>
+</helmet>
+<dc-import name="SiteNav" active="product" hint-size="100%,64px"></dc-import>
+<div style="padding-top:96px;max-width:1120px;margin:0 auto;padding-left:24px;padding-right:24px;">
+  <div style="font-size:12px;color:var(--text-muted);margin-bottom:20px;">
+    <a href="Catalogue.dc.html" style="text-decoration:none;">Catalogue</a> <span> / </span> <span>{{ product.categoryLabel }}</span>
+  </div>
+
+  <div style="display:grid;grid-template-columns:0.8fr 1.2fr;gap:48px;">
+    <div style="{{ iconBlockStyle }}">
+      <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="{{ product.icon }}" size="72" color="#fff" hint-size="72px,72px"></x-import>
+    </div>
+
+    <div style="animation:razaFadeRise 450ms ease-out both;">
+      <div style="font-size:11px;font-weight:600;color:var(--forest-700);background:var(--mist-100);display:inline-block;padding:4px 12px;border-radius:999px;margin-bottom:12px;">{{ product.categoryLabel }}</div>
+      <h1 style="font-family:var(--font-display);font-size:28px;color:var(--ink-900);margin:0;">{{ product.name }}</h1>
+      <div dir="rtl" style="font-family:var(--font-urdu);font-size:19px;color:var(--forest-700);margin-top:6px;">{{ product.nameUrdu }}</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:10px;">SKU: {{ product.sku }}</div>
+
+      <div style="display:flex;align-items:center;gap:10px;margin-top:14px;">
+        <div style="{{ stockBadgeStyle }}">{{ stock.label }}</div>
+        <div dir="rtl" style="font-family:var(--font-urdu);font-size:13px;color:var(--text-muted);">{{ stock.labelUrdu }}</div>
+      </div>
+
+      <div style="border-top:1px solid var(--border-subtle);margin:22px 0;"></div>
+
+      <div style="{{ toggleWrapStyle }}">
+        <button onClick="{{ setIndividual }}" class="raza-pill" style="{{ individualBtnStyle }}">Individual</button>
+        <button onClick="{{ setBulk }}" class="raza-pill" style="{{ bulkBtnStyle }}">Bulk</button>
+      </div>
+      <sc-if value="{{ isBulk }}" hint-placeholder-val="{{ false }}">
+        <div style="font-size:12px;color:var(--text-muted);margin-top:8px;">Pack size: {{ product.bulkLabel }}</div>
+      </sc-if>
+
+      <div style="margin-top:16px;">
+        <div style="font-family:var(--font-display);font-size:32px;font-weight:700;color:var(--ink-900);">{{ priceText }}</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">{{ priceUnitLabel }}</div>
+        <sc-if value="{{ showLoginCta }}" hint-placeholder-val="{{ false }}">
+          <a href="SignIn.dc.html" style="font-size:13px;font-weight:600;text-decoration:underline;text-underline-offset:3px;display:inline-block;margin-top:8px;">{{ loginCtaText }}</a>
+        </sc-if>
+      </div>
+
+      <div style="margin-top:26px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.QuantityStepper" value="{{ qty }}" onChange="{{ onQtyChange }}" hint-size="120px,44px"></x-import>
+        <sc-if value="{{ canAddToCart }}" hint-placeholder-val="{{ true }}">
+          <button onClick="{{ onAddToCart }}" class="raza-pill" style="{{ addBtnStyle }}">Add to Cart</button>
+        </sc-if>
+        <sc-if value="{{ isOutOfStock }}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{ onNotifyMe }}" class="raza-pill" style="{{ notifyBtnStyle }}">{{ notifyBtnLabel }}</button>
+        </sc-if>
+      </div>
+
+      <div style="border-top:1px solid var(--border-subtle);margin:26px 0 18px;"></div>
+      <div style="font-size:13px;color:var(--text-muted);line-height:1.7;">{{ product.description }}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 24px;margin-top:18px;font-size:13px;">
+        <sc-for list="{{ specs }}" as="s" hint-placeholder-count="4">
+          <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border-subtle);padding-bottom:8px;">
+            <span style="color:var(--text-muted);">{{ s.k }}</span>
+            <span style="color:var(--ink-900);font-weight:500;">{{ s.v }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <section style="padding:56px 0 20px;">
+    <h2 style="font-family:var(--font-display);font-size:22px;color:var(--ink-900);margin:0 0 20px;">Related Products</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px;">
+      <sc-for list="{{ related }}" as="p" hint-placeholder-count="4">
+        <a href="{{ p.href }}" class="raza-card" style="{{ p.cardStyle }}">
+          <div style="{{ p.iconBlockStyle }}">
+            <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="{{ p.icon }}" size="20" color="#fff" hint-size="20px,20px"></x-import>
+          </div>
+          <div style="font-size:13px;font-weight:600;color:var(--ink-900);line-height:1.35;min-height:36px;">{{ p.name }}</div>
+          <div dir="rtl" style="font-family:var(--font-urdu);font-size:13px;color:var(--text-muted);margin-top:2px;">{{ p.nameUrdu }}</div>
+          <div style="font-size:16px;font-weight:700;color:var(--ink-900);margin-top:10px;">{{ p.priceText }}</div>
+        </a>
+      </sc-for>
+    </div>
+  </section>
+</div>
+
+<sc-if value="{{ toastVisible }}" hint-placeholder-val="{{ false }}">
+  <div style="{{ toastStyle }}">{{ toastMessage }}</div>
+</sc-if>
+
+<div style="height:60px;"></div>
+<dc-import name="SiteFooter" hint-size="100%,300px"></dc-import>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { demoState: 'guest', purchaseType: 'individual', qty: 1, toast: null, notifySubscribed: false };
+
+  componentDidMount() {
+    import('./shared/store.js').then((mod) => {
+      this._store = mod;
+      const id = new URLSearchParams(window.location.search).get('id') || 'REG-100';
+      const product = mod.getProduct(id) || mod.PRODUCTS[0];
+      this.setState({ demoState: mod.getDemoState(), productId: product.id });
+    });
+    this._onStoreChange = () => { if (this._store) this.setState({ demoState: this._store.getDemoState() }); };
+    window.addEventListener('raza:store-changed', this._onStoreChange);
+  }
+  componentWillUnmount() { window.removeEventListener('raza:store-changed', this._onStoreChange); clearTimeout(this._toastT); }
+
+  showToast(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._toastT);
+    this._toastT = setTimeout(() => this.setState({ toast: null }), 2600);
+  }
+
+  renderVals() {
+    const store = this._store;
+    if (!store || !this.state.productId) {
+      return { product: { icon: 'discount', categoryLabel: '', name: 'Loading…', nameUrdu: '' }, iconBlockStyle: {}, stockBadgeStyle: {}, stock: { label: '', labelUrdu: '' }, toggleWrapStyle: {}, individualBtnStyle: {}, bulkBtnStyle: {}, isBulk: false, priceText: '', priceUnitLabel: '', showLoginCta: false, qty: 1, canAddToCart: false, isOutOfStock: false, specs: [], related: [], toastVisible: false };
+    }
+    const product = store.getProduct(this.state.productId);
+    const { purchaseType, demoState, qty } = this.state;
+    const price = store.priceDisplay(product, purchaseType, demoState);
+    const stock = store.stockInfo(product);
+    const toneColors = { success: { bg: 'var(--mist-100)', c: 'var(--evergreen-600)' }, warning: { bg: 'var(--amber-tint)', c: 'var(--amber-ink)' }, error: { bg: 'var(--red-tint)', c: 'var(--red-ink)' } };
+    const tc = toneColors[stock.tone] || toneColors.success;
+    const isOut = product.stock === 'out';
+
+    const related = store.relatedProducts(product, 4).map((p) => {
+      const rp = store.priceDisplay(p, 'individual', demoState);
+      return {
+        href: `ProductDetail.dc.html?id=${p.id}`,
+        icon: p.icon === 'block' ? 'shop' : p.icon,
+        name: p.name, nameUrdu: p.nameUrdu,
+        priceText: store.formatPrice(rp.amount),
+        cardStyle: { background: '#fff', border: '1px solid var(--border-subtle)', borderRadius: 16, padding: 18, textDecoration: 'none', display: 'block' },
+        iconBlockStyle: { width: 44, height: 44, borderRadius: 12, background: p.icon === 'block' ? 'var(--sage-400)' : 'var(--evergreen-600)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
+      };
+    });
+
+    return {
+      product: { ...product, categoryLabel: product.category.charAt(0).toUpperCase() + product.category.slice(1), icon: product.icon === 'block' ? 'shop' : product.icon, bulkLabel: product.bulk.label, description: `${product.name} — a reliable, everyday item stocked for both individual shop customers and bulk wholesale buyers. Sourced directly for consistent quality and availability.` },
+      iconBlockStyle: { width: '100%', aspectRatio: '1', borderRadius: 20, background: product.icon === 'block' ? 'var(--sage-400)' : 'var(--evergreen-600)', display: 'flex', alignItems: 'center', justifyContent: 'center', maxHeight: 340 },
+      stock,
+      stockBadgeStyle: { fontSize: 11, fontWeight: 600, color: tc.c, background: tc.bg, padding: '5px 12px', borderRadius: 999 },
+      toggleWrapStyle: { display: 'inline-flex', background: 'var(--mist-100)', borderRadius: 999, padding: 4, gap: 4 },
+      individualBtnStyle: { height: 36, padding: '0 20px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 600, transition: 'all 150ms ease-out', background: purchaseType === 'individual' ? '#fff' : 'transparent', color: purchaseType === 'individual' ? 'var(--ink-900)' : 'var(--text-muted)', boxShadow: purchaseType === 'individual' ? '0 1px 4px rgba(5,31,32,0.12)' : 'none' },
+      bulkBtnStyle: { height: 36, padding: '0 20px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 600, transition: 'all 150ms ease-out', background: purchaseType === 'bulk' ? '#fff' : 'transparent', color: purchaseType === 'bulk' ? 'var(--ink-900)' : 'var(--text-muted)', boxShadow: purchaseType === 'bulk' ? '0 1px 4px rgba(5,31,32,0.12)' : 'none' },
+      setIndividual: () => this.setState({ purchaseType: 'individual' }),
+      setBulk: () => this.setState({ purchaseType: 'bulk' }),
+      isBulk: purchaseType === 'bulk',
+      priceText: store.formatPrice(price.amount),
+      priceUnitLabel: price.label,
+      showLoginCta: !!price.cta,
+      loginCtaText: price.cta,
+      qty,
+      onQtyChange: (v) => this.setState({ qty: v }),
+      canAddToCart: !isOut,
+      isOutOfStock: isOut,
+      addBtnStyle: { height: 48, padding: '0 32px', borderRadius: 999, background: 'var(--evergreen-600)', color: '#fff', border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer', transition: 'background 150ms ease-out, transform 150ms ease-out' },
+      onAddToCart: () => {
+        store.addToCart(product.id, purchaseType, qty);
+        this.showToast('Item added to cart');
+      },
+      notifyBtnLabel: this.state.notifySubscribed ? "We'll notify you" : 'Notify Me When Available',
+      notifyBtnStyle: { height: 48, padding: '0 26px', borderRadius: 999, background: this.state.notifySubscribed ? 'var(--mist-100)' : 'transparent', color: this.state.notifySubscribed ? 'var(--evergreen-600)' : 'var(--evergreen-600)', border: '2px solid var(--evergreen-600)', fontSize: 14, fontWeight: 600, cursor: this.state.notifySubscribed ? 'default' : 'pointer', transition: 'all 150ms ease-out' },
+      onNotifyMe: () => { if (!this.state.notifySubscribed) { this.setState({ notifySubscribed: true }); this.showToast("We'll notify you when this is back in stock"); } },
+      specs: [
+        { k: 'SKU', v: product.sku },
+        { k: 'Category', v: product.category.charAt(0).toUpperCase() + product.category.slice(1) },
+        { k: 'Pack / Carton', v: product.bulk.label },
+        { k: 'Unit Type', v: 'Single Piece' },
+      ],
+      related,
+      toastVisible: !!this.state.toast,
+      toastMessage: this.state.toast || '',
+      toastStyle: { position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)', background: 'var(--ink-900)', color: '#fff', padding: '14px 24px', borderRadius: 999, fontSize: 13, fontWeight: 500, zIndex: 100, animation: 'razaToastIn 250ms ease-out both', boxShadow: '0 8px 24px rgba(5,31,32,0.25)' },
+    };
+  }
+}
+
+</script>
+</body>
+</html>

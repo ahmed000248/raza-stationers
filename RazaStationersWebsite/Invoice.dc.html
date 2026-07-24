@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/fonts/fonts.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/radius.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/styles.css">
+  <script src="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/_ds_bundle.js"></script>
+  <style>
+    body{margin:0;background:var(--canvas);font-family:var(--font-body);}
+    @media print { .no-print{display:none !important;} body{background:#fff;} }
+  </style>
+</helmet>
+<div style="max-width:760px;margin:0 auto;padding:40px 24px;">
+  <div class="no-print" style="display:flex;justify-content:flex-end;margin-bottom:16px;">
+    <button onClick="{{ printInvoice }}" style="height:44px;padding:0 24px;border-radius:999px;background:var(--evergreen-600);color:#fff;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-body);">Print / Save as PDF</button>
+  </div>
+  <div style="border:1px solid var(--border-subtle);border-radius:16px;padding:36px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid var(--border-subtle);padding-bottom:20px;margin-bottom:20px;">
+      <div>
+        <div style="font-family:var(--font-display);font-weight:700;font-size:18px;color:var(--ink-900);">Raza Stationers</div>
+        <div dir="rtl" style="font-family:var(--font-urdu);font-size:14px;color:var(--forest-700);">راضا اسٹیشنرز</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6;">14-B Bund Road Industrial Area, Lahore, Punjab<br />+92 42 3576 2200 · sales@razastationers.pk</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-family:var(--font-display);font-size:20px;color:var(--ink-900);">INVOICE</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:6px;">{{ orderId }}</div>
+        <div style="font-size:12px;color:var(--text-muted);">{{ orderDate }}</div>
+      </div>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead>
+        <tr style="text-align:left;color:var(--text-muted);font-size:11px;text-transform:uppercase;">
+          <th style="padding:8px 0;">Item</th><th style="text-align:right;">Qty</th><th style="text-align:right;">Unit Price</th><th style="text-align:right;">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <sc-for list="{{ items }}" as="it" hint-placeholder-count="4">
+          <tr style="border-top:1px solid var(--border-subtle);">
+            <td style="padding:10px 0;color:var(--ink-900);">{{ it.name }}</td>
+            <td style="text-align:right;color:var(--text-muted);">{{ it.qty }}</td>
+            <td style="text-align:right;color:var(--text-muted);">{{ it.unit }}</td>
+            <td style="text-align:right;color:var(--ink-900);font-weight:600;">{{ it.total }}</td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+    <div style="display:flex;justify-content:flex-end;margin-top:20px;">
+      <div style="width:220px;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text-muted);padding:4px 0;"><span>Subtotal</span><span>{{ subtotalText }}</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:700;color:var(--ink-900);border-top:1px solid var(--border-subtle);margin-top:8px;padding-top:8px;"><span>Total</span><span>{{ subtotalText }}</span></div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--text-muted);margin-top:30px;border-top:1px solid var(--border-subtle);padding-top:16px;">Payment method: {{ paymentMethod }}. Thank you for your business.</div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const items = [
+      { name: '100-Page Register', qty: 6, unit: 'Rs 118', total: 'Rs 708' },
+      { name: 'Ball Pen — Box of 10', qty: 2, unit: 'Rs 265', total: 'Rs 530' },
+      { name: 'A4 Copier Paper Ream', qty: 3, unit: 'Rs 840', total: 'Rs 2,520' },
+    ];
+    const id = new URLSearchParams(window.location.search).get('id') || 'RS-10482';
+    return {
+      orderId: id, orderDate: '20 Jul 2026',
+      items, subtotalText: 'Rs 3,758', paymentMethod: 'Cash on Delivery',
+      printInvoice: () => window.print(),
+    };
+  }
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/fonts/fonts.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/radius.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/styles.css">
+  <script src="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/_ds_bundle.js"></script>
+  <style>
+    body{margin:0;background:var(--canvas);font-family:var(--font-body);}
+    a{color:var(--evergreen-600);}
+    a:hover{color:var(--forest-700);}
+    @keyframes razaShake{0%,100%{transform:translateX(0);}25%{transform:translateX(-6px);}75%{transform:translateX(6px);}}
+    .raza-cta:active{transform:scale(0.97);}
+  </style>
+</helmet>
+<dc-import name="SiteNav" active="signin" hint-size="100%,64px"></dc-import>
+<div style="padding-top:96px;max-width:920px;margin:0 auto;padding-left:24px;padding-right:24px;padding-bottom:80px;">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start;">
+    <div style="{{ panelStyle }}">
+      <div style="font-family:var(--font-display);font-size:20px;color:var(--ink-900);margin-bottom:4px;">Sign In</div>
+      <div dir="rtl" style="font-family:var(--font-urdu);font-size:14px;color:var(--forest-700);margin-bottom:20px;">سائن ان کریں</div>
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.PhoneInput" label="Mobile Number" value="{{ phone }}" onChange="{{ setPhone }}" hint-size="100%,68px"></x-import>
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.TextInput" type="password" label="Password" value="{{ password }}" onChange="{{ setPassword }}" placeholder="Enter your password" hint-size="100%,68px"></x-import>
+      </div>
+      <sc-if value="{{ showError }}" hint-placeholder-val="{{ false }}">
+        <div style="{{ errorStyle }}">Enter both your mobile number and password to sign in.</div>
+      </sc-if>
+      <a href="Contact.dc.html" style="font-size:12px;font-weight:600;text-decoration:underline;display:inline-block;margin-top:12px;">Forgot password? Contact support for help</a>
+      <button onClick="{{ signIn }}" class="raza-cta" style="{{ signInBtnStyle }}">Sign In</button>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:18px;text-align:center;">New to Raza Stationers? <a href="#" onClick="{{ scrollToCreate }}" style="font-size:12px;font-weight:600;">Create a retail account</a></div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:20px;">
+      <div style="{{ panelStyle }}">
+        <div style="font-family:var(--font-display);font-size:17px;color:var(--ink-900);margin-bottom:16px;">Create Retail Account</div>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.TextInput" label="Full Name" value="{{ createName }}" onChange="{{ setCreateName }}" hint-size="100%,64px"></x-import>
+          <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.PhoneInput" label="Mobile Number" value="{{ createPhone }}" onChange="{{ setCreatePhone }}" hint-size="100%,68px"></x-import>
+          <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.TextInput" type="password" label="Password" value="{{ createPassword }}" onChange="{{ setCreatePassword }}" hint-size="100%,64px"></x-import>
+        </div>
+        <button onClick="{{ createAccount }}" class="raza-cta" style="{{ createBtnStyle }}">Create Account</button>
+      </div>
+      <div style="background:var(--mist-100);border-radius:16px;padding:22px;">
+        <div style="font-size:14px;font-weight:600;color:var(--ink-900);">Own a shop, school or bookstore?</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:6px;line-height:1.6;">Register for a wholesale account to unlock final wholesale pricing on every product.</div>
+        <a href="WholesaleRegistration.dc.html" class="raza-cta" style="height:44px;padding:0 24px;border-radius:999px;background:var(--evergreen-600);color:#fff;display:inline-flex;align-items:center;font-size:13px;font-weight:600;text-decoration:none;margin-top:14px;">Register for Wholesale</a>
+      </div>
+    </div>
+  </div>
+
+  <section style="max-width:640px;margin:56px auto 0;">
+    <h2 style="font-family:var(--font-display);font-size:20px;color:var(--ink-900);margin:0 0 18px;text-align:center;">Frequently Asked Questions</h2>
+    <div style="display:flex;flex-direction:column;">
+      <sc-for list="{{ faqs }}" as="item" hint-placeholder-count="3">
+        <div style="border-bottom:1px solid var(--border-subtle);">
+          <button onClick="{{ item.toggle }}" style="width:100%;display:flex;justify-content:space-between;align-items:center;background:none;border:none;padding:16px 4px;cursor:pointer;text-align:left;font-family:var(--font-body);font-size:13px;font-weight:600;color:var(--ink-900);">
+            <span>{{ item.q }}</span><span style="{{ item.chevronStyle }}">+</span>
+          </button>
+          <sc-if value="{{ item.open }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:0 4px 16px;font-size:13px;color:var(--text-muted);line-height:1.6;">{{ item.a }}</div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+</div>
+<dc-import name="SiteFooter" hint-size="100%,300px"></dc-import>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { phone: '', password: '', showError: false, createName: '', createPhone: '', createPassword: '', openFaq: -1 };
+  componentDidMount() { import('./shared/store.js').then((mod) => { this._store = mod; this.forceUpdate(); }); }
+  toggleFaq(i) { this.setState((s) => ({ openFaq: s.openFaq === i ? -1 : i })); }
+
+  renderVals() {
+    const store = this._store;
+    const faqSrc = store ? store.FAQS.slice(0, 3) : [];
+    const faqs = faqSrc.map((f, i) => ({
+      q: f.q, a: f.a, open: this.state.openFaq === i, toggle: () => this.toggleFaq(i),
+      chevronStyle: { fontSize: 16, color: 'var(--evergreen-600)', transform: this.state.openFaq === i ? 'rotate(45deg)' : 'rotate(0deg)', transition: 'transform 200ms ease-out' },
+    }));
+    return {
+      panelStyle: { background: '#fff', border: '1px solid var(--border-subtle)', borderRadius: 16, padding: 26 },
+      phone: this.state.phone, setPhone: (v) => this.setState({ phone: typeof v === 'string' ? v : v.target.value }),
+      password: this.state.password, setPassword: (v) => this.setState({ password: typeof v === 'string' ? v : v.target.value }),
+      showError: this.state.showError,
+      errorStyle: { fontSize: 12, color: 'var(--red-ink)', background: 'var(--red-tint)', borderRadius: 12, padding: '10px 14px', marginTop: 14, animation: 'razaShake 350ms ease-out' },
+      signInBtnStyle: { height: 48, width: '100%', borderRadius: 999, background: 'var(--evergreen-600)', color: '#fff', border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer', marginTop: 20, transition: 'transform 150ms ease-out, background 150ms ease-out' },
+      signIn: () => {
+        if (this.state.phone.trim() && this.state.password.trim()) {
+          if (store) store.setDemoState('wholesale');
+          window.location.href = 'Account.dc.html';
+        } else this.setState({ showError: true });
+      },
+      scrollToCreate: (e) => { e.preventDefault(); },
+      createName: this.state.createName, setCreateName: (v) => this.setState({ createName: typeof v === 'string' ? v : v.target.value }),
+      createPhone: this.state.createPhone, setCreatePhone: (v) => this.setState({ createPhone: typeof v === 'string' ? v : v.target.value }),
+      createPassword: this.state.createPassword, setCreatePassword: (v) => this.setState({ createPassword: typeof v === 'string' ? v : v.target.value }),
+      createBtnStyle: { height: 46, width: '100%', borderRadius: 999, background: 'var(--evergreen-600)', color: '#fff', border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer', marginTop: 18, transition: 'transform 150ms ease-out' },
+      createAccount: () => { if (store) store.setDemoState('retail'); window.location.href = 'Account.dc.html'; },
+      faqs,
+    };
+  }
+}
+
+</script>
+</body>
+</html>
