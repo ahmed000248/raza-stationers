@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { calculateCartSubtotal, calculateCartTotalItems } from "@/lib/cart-math"
 
 export interface CartItem {
   id: string
@@ -29,7 +30,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = React.useState<CartItem[]>([])
   const [isLoaded, setIsLoaded] = React.useState(false)
 
-  // Load guest cart from localStorage on client mount
+  // Load guest cart from localStorage on client mount (FR-CRT-01)
   React.useEffect(() => {
     try {
       const stored = localStorage.getItem(CART_STORAGE_KEY)
@@ -89,15 +90,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setItems([])
   }, [])
 
-  const totalItems = React.useMemo(
-    () => items.reduce((sum, item) => sum + item.quantity, 0),
-    [items]
-  )
-
-  const subtotal = React.useMemo(
-    () => items.reduce((sum, item) => sum + item.price * item.quantity, 0),
-    [items]
-  )
+  const totalItems = React.useMemo(() => calculateCartTotalItems(items), [items])
+  const subtotal = React.useMemo(() => calculateCartSubtotal(items), [items])
 
   return (
     <CartContext.Provider
