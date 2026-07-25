@@ -1,16 +1,16 @@
 # Graph Report - Raza Stationers  (2026-07-26)
 
 ## Corpus Check
-- 358 files · ~633,410 words
+- 364 files · ~634,470 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 4604 nodes · 7762 edges · 366 communities (302 shown, 64 thin omitted)
+- 4624 nodes · 7805 edges · 347 communities (285 shown, 62 thin omitted)
 - Extraction: 96% EXTRACTED · 4% INFERRED · 0% AMBIGUOUS · INFERRED: 279 edges (avg confidence: 0.59)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `f574c8d7`
+- Built from commit: `ab3bb9fd`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -270,22 +270,16 @@
 - multi-step-flow.tsx
 - 12. Spring Physics (Emil)
 - 14. Scroll-Driven Animations (Jhey)
-- 1. Enter & Exit Animations
 - 3. Visual Effects
 - 7. CSS Custom Properties & @property (Jhey)
-- 8. 3D CSS (Jhey)
 - SKILL.md
 - README.md
 - 6. Shared Layout Animations (Jakub)
 - page.tsx
-- emojiSafeSplit
-- simplifyStep
-- 6. Shared Layout Animations (Jakub)
 - AGENTS.md
 - @base-ui/react
 - class-variance-authority
 - framer-motion
-- gsap
 - lenis
 - @raza-stationers/api
 - @raza-stationers/types
@@ -327,25 +321,13 @@
 - eslint.config.mjs
 - next.config.ts
 - postcss.config.mjs
-- animejs
-- animejs
-- ScrollToPlugin.js
 - tabs.tsx
-- Terminal mode (flag-triggered fallback)
-- ha
-- Jakub Krehel's Animation Principles
 - getGlobalMatrix
-- Draggable
 - toast.tsx
 - empty-state.tsx
-- 11. CSS Transitions vs Keyframes (Emil)
 - 12. Spring Physics (Emil)
-- 1. Enter & Exit Animations
-- 8. 3D CSS (Jhey)
-- _callback
-- 6. Shared Layout Animations (Jakub)
+- page.tsx
 - @base-ui/react
-- framer-motion
 
 ## God Nodes (most connected - your core abstractions)
 1. `cn()` - 67 edges
@@ -374,15 +356,15 @@
 ## Import Cycles
 - None detected.
 
-## Communities (366 total, 64 thin omitted)
+## Communities (347 total, 62 thin omitted)
 
 ### Community 0 - "Draggable.js"
-Cohesion: 0.10
-Nodes (25): _addListener(), _addToRenderQueue(), _createElement(), _emptyFunc(), EventDispatcher, _getComputedStyle(), _getGSAP(), _identityMatrix (+17 more)
+Cohesion: 0.11
+Nodes (21): _addToRenderQueue(), _copy(), _extend(), _getComputedStyle(), _hasTouchID(), _identityMatrix, _isFixed(), _isFunction() (+13 more)
 
 ### Community 1 - "gsap-core.js"
-Cohesion: 0.05
-Nodes (71): _addAliasesToVars(), _addComplexStringPropTween(), _addGlobal(), _addModifiers(), _addPluginModifier(), _addPropTween(), _arraysMatch(), _colorLookup (+63 more)
+Cohesion: 0.04
+Nodes (90): _addAliasesToVars(), _addGlobal(), _addModifiers(), _addPluginModifier(), _addPropTween(), _arraysMatch(), _colorLookup, _colorOrderData() (+82 more)
 
 ### Community 2 - "GSDevTools.min.js"
 Cohesion: 0.06
@@ -393,44 +375,44 @@ Cohesion: 0.11
 Nodes (24): BoundingRect, ContextFunction, LineWrapperFunction, PrepareTextFunction, SplitText, SplitTextConfig, SplitTextOriginal, SplitTextTarget (+16 more)
 
 ### Community 4 - "CSSPlugin.js"
-Cohesion: 0.06
-Nodes (52): _addNonTweeningPT(), _addPxTranslate(), _addRawTransformPTs(), _addRotationalPropTween(), _applySVGOrigin(), _assign(), _checkPropPrefix(), _convertToUnit() (+44 more)
+Cohesion: 0.05
+Nodes (54): _addNonTweeningPT(), _addPxTranslate(), _addRawTransformPTs(), _addRotationalPropTween(), _applySVGOrigin(), _assign(), _checkPropPrefix(), _convertToUnit() (+46 more)
 
 ### Community 5 - "support.js"
-Cohesion: 0.14
-Nodes (17): Bilingual(), BilingualProps, Input(), cn(), FadeIn(), FadeInProps, SkeletonBlock(), SkeletonBlockProps (+9 more)
+Cohesion: 0.11
+Nodes (33): Badge(), BadgeProps, badgeVariants, Bilingual(), BilingualProps, Card, CardContent, CardDescription (+25 more)
 
 ### Community 6 - "MorphSVGPlugin.min.js"
-Cohesion: 0.12
-Nodes (25): aa(), arcToSegment(), ba(), ca(), convertToPath(), D(), da(), ia() (+17 more)
+Cohesion: 0.14
+Nodes (18): ba(), ca(), cacheRawPathMeasurements(), da(), ea(), fa(), ga(), ha() (+10 more)
 
 ### Community 7 - "ScrollTrigger.js"
 Cohesion: 0.08
-Nodes (51): _getProxyProp(), _callback(), _copyState(), _createMarker(), _defaults, _emptyArray, _endAnimation(), _getBounds() (+43 more)
+Nodes (50): _getProxyProp(), _callback(), _copyState(), _createMarker(), _defaults, _emptyArray, _endAnimation(), _getBounds() (+42 more)
 
 ### Community 8 - "Animation"
-Cohesion: 0.09
-Nodes (23): _addToTimeline(), _alignPlayhead(), Animation, _animationCycle(), _attemptInitTween(), _clamp(), _elapsedCycleDuration(), _interrupt() (+15 more)
+Cohesion: 0.10
+Nodes (19): _addLinkedListItem(), _addToTimeline(), _alignPlayhead(), Animation, _animationCycle(), _clamp(), _elapsedCycleDuration(), _isRevertWorthy() (+11 more)
 
 ### Community 9 - "index.ts"
-Cohesion: 0.15
-Nodes (15): DrawSVGPlugin, MorphSVGPlugin, MotionPathPlugin, CharSet, _charsLookup, _getGSAP(), _initCore(), _lower (+7 more)
+Cohesion: 0.08
+Nodes (39): DrawSVGPlugin, _getAttributeAsNumber(), _getDistance(), _getGSAP(), _getLength(), _getPosition(), _hasNonScalingStroke(), _initCore() (+31 more)
 
 ### Community 10 - "gsap.min.js"
 Cohesion: 0.06
 Nodes (25): Context(), Db(), Eb(), fb(), Gc(), Gw(), Hc(), ia() (+17 more)
 
 ### Community 11 - "ScrollTrigger"
-Cohesion: 0.08
-Nodes (5): ScrollSmoother(), _getTarget(), ScrollTrigger, ScrollSmoother(), ScrollSmoother()
+Cohesion: 0.10
+Nodes (4): ScrollSmoother(), _getTarget(), ScrollTrigger, ScrollSmoother()
 
 ### Community 12 - "Flip.js"
 Cohesion: 0.10
-Nodes (27): _absoluteProps, _batchLookup, _bodyMetrics, _bodyProps, _callbacks, _camelToDashed(), _dashedNameLookup, _emptyObj (+19 more)
+Nodes (26): _absoluteProps, _batchLookup, _bodyMetrics, _bodyProps, _callbacks, _camelToDashed(), _dashedNameLookup, _emptyObj (+18 more)
 
 ### Community 13 - "MotionPathPlugin.min.js"
-Cohesion: 0.12
-Nodes (23): T(), arcToSegment(), ca(), cacheRawPathMeasurements(), convertToPath(), D(), getPositionOnPath(), getProgressData() (+15 more)
+Cohesion: 0.13
+Nodes (22): arcToSegment(), ca(), cacheRawPathMeasurements(), convertToPath(), D(), getPositionOnPath(), getProgressData(), getRawPath() (+14 more)
 
 ### Community 14 - "MotionPathHelper.min.js"
 Cohesion: 0.09
@@ -442,39 +424,39 @@ Nodes (26): _calculateChange(), _calculateDuration(), _calculateTweenDuration(),
 
 ### Community 16 - "dependencies"
 Cohesion: 0.11
-Nodes (19): dependencies, clsx, gsap, @gsap/react, lucide-react, motion, next, react (+11 more)
+Nodes (19): dependencies, animejs, clsx, @gsap/react, lucide-react, motion, next, react (+11 more)
 
 ### Community 17 - "all.js"
-Cohesion: 0.06
-Nodes (10): CharSet(), _createClass(), _defineProperties(), emojiSafeSplit(), getClosestData(), getClosestProgressOnBezier(), pointToSegDist(), simplifyPoints() (+2 more)
+Cohesion: 0.07
+Nodes (3): _createClass(), _defineProperties(), MotionPathHelper()
 
 ### Community 18 - "index.ts"
 Cohesion: 0.04
-Nodes (44): CreditStatusCard(), CreditStatusCardProps, mockDiscountChangeLogs, mockStaffMembers, mockStockMovements, StaffWithUser, APIClientOptions, RazaAPIClient (+36 more)
+Nodes (43): CreditStatusCard(), CreditStatusCardProps, mockDiscountChangeLogs, mockStaffMembers, mockStockMovements, StaffWithUser, APIClientOptions, RazaAPIClient (+35 more)
 
 ### Community 19 - "Flip.min.js"
 Cohesion: 0.11
 Nodes (28): A(), Aa(), B(), ba(), ea(), fa(), FlipState(), ga() (+20 more)
 
 ### Community 20 - "all.js"
-Cohesion: 0.14
-Nodes (23): _checkRegister(), CSSRulePlugin, _getGSAP(), _initCore(), _windowExists(), _colorOrderData(), _colorStringFilter(), _conditionalReturn() (+15 more)
+Cohesion: 0.60
+Nodes (5): _checkRegister(), CSSRulePlugin, _getGSAP(), _initCore(), _windowExists()
 
 ### Community 21 - "Timeline"
-Cohesion: 0.08
-Nodes (12): _arrayContainsAny(), _createTweenType(), _getLabelInDirection(), _hasNoPausedAncestors(), _inheritDefaults(), _isNotFalse(), _parseKeyframe(), _parsePosition() (+4 more)
+Cohesion: 0.10
+Nodes (9): _createTweenType(), _getLabelInDirection(), _inheritDefaults(), _isNotFalse(), _parsePosition(), _setDefaults(), _setKeyframeDefaults(), Timeline (+1 more)
 
 ### Community 22 - ".enable"
 Cohesion: 0.11
-Nodes (32): _addListener(), _allowNativePanning(), _captureInputs(), _clampScrollAndGetDurationMultiplier(), _clearScrollMemory(), _dispatch(), _getScrollNormalizer(), _getTweenCreator() (+24 more)
+Nodes (33): _addListener(), _allowNativePanning(), _captureInputs(), _clampScrollAndGetDurationMultiplier(), _clearScrollMemory(), _dispatch(), _getScrollNormalizer(), _getTweenCreator() (+25 more)
 
 ### Community 23 - "Draggable.min.js"
 Cohesion: 0.13
 Nodes (29): A(), aa(), _assertThisInitialized(), Ba(), da(), Draggable(), Ea(), fa() (+21 more)
 
 ### Community 24 - "MorphSVGPlugin.js"
-Cohesion: 0.11
-Nodes (29): _addAnchorsToBezier(), _buildPointsFilter(), _cloneAndSortRawPath(), _equalizePointQuantity(), _equalizeSegmentQuantity(), _getAverageXY(), _getClosestAnchor(), _getClosestSegment() (+21 more)
+Cohesion: 0.10
+Nodes (32): _addAnchorsToBezier(), _buildPointsFilter(), _cloneAndSortRawPath(), _equalizePointQuantity(), _equalizeSegmentQuantity(), _getAverageXY(), _getClosestAnchor(), _getClosestSegment() (+24 more)
 
 ### Community 25 - "PixiPlugin.js"
 Cohesion: 0.11
@@ -509,24 +491,24 @@ Cohesion: 0.07
 Nodes (48): boot(), cdnScriptFor(), collectProps(), compileAttr(), compileTemplate(), contentKey(), createComponentFactory(), createHelmetManager() (+40 more)
 
 ### Community 33 - "paths.js"
-Cohesion: 0.12
-Nodes (28): _sliceModifier(), _appendOrMerge(), arcToSegment(), _attrToObj(), convertToPath(), _copyMetaData(), copyRawPath(), _createPath() (+20 more)
+Cohesion: 0.08
+Nodes (51): _pathFilter(), _addDimensionalPropTween(), _align(), _emptyFunc(), _getAlignMatrix(), _getPropNum(), _originToPoint(), _relativize() (+43 more)
 
 ### Community 34 - "Observer.js"
 Cohesion: 0.14
 Nodes (21): _addListener(), _bridge(), _getAbsoluteMax(), _getEvent(), _getGSAP(), _getScrollFunc(), _getVelocityProp(), _horizontal (+13 more)
 
 ### Community 35 - "PathEditor"
-Cohesion: 0.17
-Nodes (4): _addHistory(), PathEditor, _resetSelection(), MotionPathHelper()
+Cohesion: 0.13
+Nodes (8): _addHistory(), _checkDeselect(), _createElement(), _createSegmentAnchors(), _emptyFunc(), _initCore(), PathEditor, _resetSelection()
 
 ### Community 36 - "SplitText.js"
 Cohesion: 0.16
 Nodes (19): constructor(), _context(), _defaultContext, _disallowInline(), _elements(), _emojiSafeRegEx, _emptyArray, _emptyBounds (+11 more)
 
 ### Community 37 - "PathEditor.js"
-Cohesion: 0.11
-Nodes (24): _addListener(), _bind(), _checkDeselect(), _createElement(), _createSegmentAnchors(), _createSVG(), _editingAxis, _emptyFunc() (+16 more)
+Cohesion: 0.08
+Nodes (31): DraggableSVG(), _addListener(), Anchor, _bind(), _callback(), _createSVG(), DraggableSVG, _editingAxis (+23 more)
 
 ### Community 38 - "components.json"
 Cohesion: 0.09
@@ -541,8 +523,8 @@ Cohesion: 0.21
 Nodes (17): _applyInlineStyles(), _applyProps(), _copy(), _fit(), _getInverseGlobalMatrix(), _makeAbsolute(), _createSibling(), _divTemps (+9 more)
 
 ### Community 41 - ".constructor"
-Cohesion: 0.19
-Nodes (7): _autoDistance(), _getGSAP(), _maxScroll(), _round(), ScrollSmoother, _windowExists(), _wrap()
+Cohesion: 0.12
+Nodes (8): _autoDistance(), _getGSAP(), _maxScroll(), _round(), ScrollSmoother, _windowExists(), _wrap(), ScrollSmoother()
 
 ### Community 42 - "InertiaPlugin.min.js"
 Cohesion: 0.16
@@ -561,8 +543,8 @@ Cohesion: 0.18
 Nodes (21): _a(), Ao(), _assertThisInitialized(), cb(), cc(), ga(), gb(), hb() (+13 more)
 
 ### Community 46 - "CustomEase"
-Cohesion: 0.21
-Nodes (8): _bezierToPoints(), CustomEase, _findMinimum(), _getGSAP(), _initCore(), _normalize(), _round(), transformRawPath()
+Cohesion: 0.18
+Nodes (7): _bezierToPoints(), CustomEase, _findMinimum(), _getGSAP(), _initCore(), _normalize(), _round()
 
 ### Community 47 - "MotionPathPlugin.js"
 Cohesion: 0.18
@@ -573,8 +555,8 @@ Cohesion: 0.14
 Nodes (8): arcToSegment(), getClosestData(), getClosestProgressOnBezier(), MotionPathHelper(), pointToSegDist(), simplifyPoints(), simplifyStep(), stringToRawPath()
 
 ### Community 49 - "paths.js"
-Cohesion: 0.18
-Nodes (22): arcToSegment(), cacheRawPathMeasurements(), convertToPath(), copyRawPath(), flatPointsToSegment(), getClosestData(), getClosestProgressOnBezier(), getPositionOnPath() (+14 more)
+Cohesion: 0.15
+Nodes (26): arcToSegment(), bezierToPoints(), cacheRawPathMeasurements(), convertToPath(), copyRawPath(), flatPointsToSegment(), getClosestData(), getClosestProgressOnBezier() (+18 more)
 
 ### Community 50 - "ce"
 Cohesion: 0.15
@@ -584,9 +566,17 @@ Nodes (19): Ae(), ce(), $d(), ee(), ha(), he(), ka(), le() (+11 more)
 Cohesion: 0.25
 Nodes (16): _applyMatrix(), _cache(), _colorize(), _colorProps, EaselPlugin, _getCreateJS(), _getGSAP(), _idMatrix (+8 more)
 
+### Community 52 - "all.js"
+Cohesion: 0.10
+Nodes (5): MotionPathHelper(), _createClass(), _defineProperties(), PathEditor(), VelocityTracker()
+
 ### Community 53 - "Draggable.js"
 Cohesion: 0.18
 Nodes (5): _assertThisInitialized(), Draggable(), NOTE: "force" is actually the "time" when this method gets called by the gsap.ti, getGlobalMatrix(), Matrix2D()
+
+### Community 54 - "FlipBatch"
+Cohesion: 0.20
+Nodes (3): FlipBatch, _forEachBatch(), _makeCompsAbsolute()
 
 ### Community 55 - "MotionPathHelper.js"
 Cohesion: 0.24
@@ -597,8 +587,8 @@ Cohesion: 0.32
 Nodes (6): Action, ActionSearchBar(), allActionsSample, ANIMATION_VARIANTS, SearchResult, useDebounce()
 
 ### Community 57 - "_initTween"
-Cohesion: 0.12
-Nodes (17): _addLinkedListItem(), _callback(), _checkPlugin(), Context, _dispatch(), init(), _initTween(), _lazyRender() (+9 more)
+Cohesion: 0.09
+Nodes (22): f(), _arrayContainsAny(), _attemptInitTween(), _callback(), _checkPlugin(), Context, _dispatch(), init() (+14 more)
 
 ### Community 58 - "HTML mode"
 Cohesion: 0.06
@@ -677,8 +667,8 @@ Cohesion: 0.22
 Nodes (7): ScrollTrigger(), _getGSAP(), _windowExists(), ScrollTrigger(), _createClass(), _defineProperties(), ScrollTrigger()
 
 ### Community 77 - "page.tsx"
-Cohesion: 0.12
-Nodes (24): ProductDetailPage(), ProductDetailPageProps, ProductCard(), AddToCartButton(), ProductUnitSelector(), ProductUnitSelectorProps, Card, CardContent (+16 more)
+Cohesion: 0.11
+Nodes (26): ProductDetailPage(), ProductDetailPageProps, ProductCard(), ProductCardProps, AddToCartButton(), ProductUnitSelector(), ProductUnitSelectorProps, Card (+18 more)
 
 ### Community 78 - "CustomWiggle.js"
 Cohesion: 0.29
@@ -761,8 +751,8 @@ Cohesion: 0.20
 Nodes (14): CartPage(), CartLineItem(), CartLineItemProps, CartSummary(), QuantityStepper(), QuantityStepperProps, CartContext, CartContextValue (+6 more)
 
 ### Community 98 - "PathEditor.js"
-Cohesion: 0.25
-Nodes (6): MotionPathHelper(), PathEditor(), bezierToPoints(), pointToSegDist(), simplifyPoints(), simplifyStep()
+Cohesion: 0.21
+Nodes (6): _createElement(), Draggable, _emptyFunc(), _getGSAP(), _initCore(), _windowExists()
 
 ### Community 100 - "ScrambleTextPlugin.min.js"
 Cohesion: 0.47
@@ -784,6 +774,10 @@ Nodes (26): metadata, AccountPageContent(), SignInPage(), BusinessProfileTab(), 
 Cohesion: 0.40
 Nodes (5): arcToSegment(), convertToPath(), getRawPath(), rawPathToString(), stringToRawPath()
 
+### Community 117 - "ScrollSmoother.js"
+Cohesion: 0.32
+Nodes (8): aa(), ia(), reverseSegment(), U(), X(), Y(), Z(), $()
+
 ### Community 119 - "_unsupportedIterableToArray"
 Cohesion: 0.67
 Nodes (3): _arrayLikeToArray(), _createForOfIteratorHelperLoose(), _unsupportedIterableToArray()
@@ -801,8 +795,8 @@ Cohesion: 0.16
 Nodes (19): constructor(), _emojiSafeRegEx, _context(), _defaultContext, _disallowInline(), _elements(), _emptyArray, _emptyBounds (+11 more)
 
 ### Community 147 - "4. Phases"
-Cohesion: 0.18
-Nodes (16): Badge(), BadgeProps, badgeVariants, Card, CardContent, CardDescription, CardFooter, CardHeader (+8 more)
+Cohesion: 0.29
+Nodes (8): arcToSegment(), convertToPath(), D(), ja(), R(), rawPathToString(), stringToRawPath(), ua()
 
 ### Community 148 - "components.json"
 Cohesion: 0.09
@@ -817,12 +811,12 @@ Cohesion: 0.09
 Nodes (21): AnimatePresence, AnimatePresence Props, Basic Usage, Common Props, Drag, Drag Info Object, Framer Motion Reference, Gestures (+13 more)
 
 ### Community 151 - ".constructor"
-Cohesion: 0.48
-Nodes (5): _addScrollListener(), _getMaxScroll(), _isRoot(), _recordMaxScrolls(), _round()
+Cohesion: 0.23
+Nodes (14): _addListener(), _addScrollListener(), _getMaxScroll(), _isRoot(), _onMultiTouchDocument(), _onMultiTouchDocumentEnd(), _recordMaxScrolls(), _removeListener() (+6 more)
 
 ### Community 152 - ".hitTest"
-Cohesion: 0.15
-Nodes (4): Draggable, _assertThisInitialized(), Draggable(), getGlobalMatrix()
+Cohesion: 0.17
+Nodes (6): _assertThisInitialized(), Draggable(), getGlobalMatrix(), _assertThisInitialized(), Draggable(), getGlobalMatrix()
 
 ### Community 153 - "Raza Stationers Customer Website — Frontend QA and Testing Plan"
 Cohesion: 0.06
@@ -838,7 +832,7 @@ Nodes (18): Accessibility, Accessible Animation Guidelines, Common Performance I
 
 ### Community 156 - "dependencies"
 Cohesion: 0.11
-Nodes (19): dependencies, animejs, clsx, @gsap/react, lucide-react, motion, next, react (+11 more)
+Nodes (19): dependencies, clsx, framer-motion, @gsap/react, lucide-react, motion, next, react (+11 more)
 
 ### Community 157 - "devDependencies"
 Cohesion: 0.11
@@ -889,8 +883,8 @@ Cohesion: 0.13
 Nodes (14): AI-Slop Motion Patterns, Anti-Checklist, Blur-everywhere entrances, Bouncy-springs-on-utility-actions, From Emil's Perspective (Purposeful Restraint), From Jakub's Perspective (Production Polish), From Jhey's Perspective (Creative Learning), General Motion Design Mistakes (+6 more)
 
 ### Community 169 - "HTML mode"
-Cohesion: 0.14
-Nodes (14): Absolute bans, Canonical references, Demo cards (the centerpiece), Design system, Dual theme, Empty-state behavior, File structure, HTML mode (+6 more)
+Cohesion: 0.06
+Nodes (33): 01 · Lens summary, 02 · Where the timings land — duration-budget diagram, 03–05 · Per-lens sections, 06 · Combined recommendations, 07 · Lens Reference Summary, Absolute bans, Canonical references, Combined Recommendations (+25 more)
 
 ### Community 170 - "Frontend Architecture Reference (Customer Website)"
 Cohesion: 0.09
@@ -949,8 +943,8 @@ Cohesion: 0.18
 Nodes (10): Infer First, Ask Second, Propose Context + Weighting, Required Reading, STEP 1: Light Discovery, STEP 2: Load Weighted Knowledge, STEP 3: Generate, STEP 4: Self-Check, Success Criteria (+2 more)
 
 ### Community 184 - "SplitText.min.js"
-Cohesion: 0.43
-Nodes (4): constructor(), kill(), revert(), split()
+Cohesion: 0.36
+Nodes (5): T(), constructor(), kill(), revert(), split()
 
 ### Community 185 - "33. Mandatory Regression Smoke Suite"
 Cohesion: 0.09
@@ -993,8 +987,8 @@ Cohesion: 0.20
 Nodes (9): 1. Importing & Centralized Module, 2. Key Rules & Best Practices, 3. Plugin Usage Quick-Reference, A. ScrollTrigger (Scroll-Driven Animations), B. SplitText (Animated Typography), C. MorphSVGPlugin & DrawSVGPlugin, D. ScrollSmoother (Smooth Inertia Scrolling), E. Flip (Shared Layout Morphs & Transitions) (+1 more)
 
 ### Community 195 - "SKILL.md"
-Cohesion: 0.22
-Nodes (5): Accessibility, Functional vs. Decorative Motion, Implementation Checklist, Motion Sensitivity Considerations, Respect User Preferences
+Cohesion: 0.12
+Nodes (11): Accessibility, Functional vs. Decorative Motion, Implementation Checklist, Motion Sensitivity Considerations, Respect User Preferences, Common Mistakes (Jakub's Perspective), Core Philosophy: Invisible Enhancement, Jakub Krehel's Animation Principles (+3 more)
 
 ### Community 196 - "Terminal mode (flag-triggered fallback)"
 Cohesion: 0.10
@@ -1013,12 +1007,12 @@ Cohesion: 0.22
 Nodes (8): name, private, scripts, build, dev, lint, start, version
 
 ### Community 200 - "f"
-Cohesion: 0.33
-Nodes (5): f(), g(), h(), i(), l()
+Cohesion: 0.43
+Nodes (4): g(), h(), i(), l()
 
 ### Community 201 - "_dispatchEvent"
-Cohesion: 0.19
-Nodes (16): _copy(), _dispatchEvent(), _extend(), _getBounds(), _getDocScrollLeft(), _getDocScrollTop(), _getElementBounds(), _hasTouchID() (+8 more)
+Cohesion: 0.39
+Nodes (6): _getBounds(), _getDocScrollLeft(), _getDocScrollTop(), _getElementBounds(), _isUndefined(), _parseRect()
 
 ### Community 202 - "SplitText.js"
 Cohesion: 0.33
@@ -1033,12 +1027,12 @@ Cohesion: 0.10
 Nodes (20): 10. Expected Route Inventory, 1. Purpose, 2.1 Included, 2.2 Excluded from this QA pass, 2. Scope, 32.1 Required logic checks, 32.2 E2E testing, 32. Automated Checks (+12 more)
 
 ### Community 205 - "22. Phase 10 — Account Tests"
-Cohesion: 0.12
-Nodes (16): fontHeading, fontSans, fontUrdu, metadata, ProductCardProps, SiteFooter(), AccountStatus, AuthContext (+8 more)
+Cohesion: 0.13
+Nodes (14): fontHeading, fontSans, fontUrdu, metadata, SiteFooter(), AccountStatus, AuthContext, AuthContextValue (+6 more)
 
 ### Community 206 - "SKILL.md"
-Cohesion: 0.22
-Nodes (5): Accessibility, Functional vs. Decorative Motion, Implementation Checklist, Motion Sensitivity Considerations, Respect User Preferences
+Cohesion: 0.12
+Nodes (11): Accessibility, Functional vs. Decorative Motion, Implementation Checklist, Motion Sensitivity Considerations, Respect User Preferences, Common Mistakes (Jakub's Perspective), Core Philosophy: Invisible Enhancement, Jakub Krehel's Animation Principles (+3 more)
 
 ### Community 207 - "5-Phase Workflow Execution Pipeline"
 Cohesion: 0.22
@@ -1093,8 +1087,8 @@ Cohesion: 0.17
 Nodes (12): 12. Per-Page Functional Tests, QA-ACC — Accounting & Reporting, QA-AUDIT — Audit Log, QA-CAT — Product Catalogue (Admin), QA-CLIENT — Client Businesses, QA-DASH — Dashboard, QA-DISC — Discount & Credit, QA-DLV — Delivery Management (+4 more)
 
 ### Community 220 - "Motion Cookbook"
-Cohesion: 0.29
-Nodes (6): 13. Origin-Aware Animations (Emil), 4. Optical Alignment, 5. Icon & State Animations (Jakub), Contextual Icon Transitions, Geometric vs. Optical (Jakub), Motion Cookbook
+Cohesion: 0.07
+Nodes (26): 11. CSS Transitions vs Keyframes (Emil), 13. Origin-Aware Animations (Emil), 14. Scroll-Driven Animations (Jhey), 1. Enter & Exit Animations, 4. Optical Alignment, 5. Icon & State Animations (Jakub), 6. Shared Layout Animations (Jakub), 8. 3D CSS (Jhey) (+18 more)
 
 ### Community 221 - "2. Easing & Timing"
 Cohesion: 0.29
@@ -1144,13 +1138,9 @@ Nodes (6): Animate Skill for Claude Code, Dependencies, Examples Included, Insta
 Cohesion: 0.29
 Nodes (6): Accessibility omissions, Context blindness, Creation Gotchas, Motion that shouldn't exist, Performance failures, Wrong defaults
 
-### Community 233 - "Jakub Krehel's Animation Principles"
-Cohesion: 0.29
-Nodes (6): Common Mistakes (Jakub's Perspective), Core Philosophy: Invisible Enhancement, Jakub Krehel's Animation Principles, Jakub vs. Emil vs. Jhey, Signature Techniques (decision context — code in cookbook), When to Apply Jakub's Mindset
-
 ### Community 234 - "Motion Cookbook"
-Cohesion: 0.29
-Nodes (6): 13. Origin-Aware Animations (Emil), 4. Optical Alignment, 5. Icon & State Animations (Jakub), Contextual Icon Transitions, Geometric vs. Optical (Jakub), Motion Cookbook
+Cohesion: 0.07
+Nodes (26): 11. CSS Transitions vs Keyframes (Emil), 13. Origin-Aware Animations (Emil), 14. Scroll-Driven Animations (Jhey), 1. Enter & Exit Animations, 4. Optical Alignment, 5. Icon & State Animations (Jakub), 6. Shared Layout Animations (Jakub), 8. 3D CSS (Jhey) (+18 more)
 
 ### Community 235 - "2. Easing & Timing"
 Cohesion: 0.29
@@ -1165,8 +1155,8 @@ Cohesion: 0.29
 Nodes (6): Animation Performance Budget, Gradient Animation Performance (Jakub), Performance, Performance Checklist, Properties to Avoid Animating, will-change Explained (Jakub)
 
 ### Community 238 - "OrderTrackingTimeline.tsx"
-Cohesion: 0.27
-Nodes (14): _getAttributeAsNumber(), _getDistance(), _getGSAP(), _getLength(), _getPosition(), _hasNonScalingStroke(), _initCore(), _parse() (+6 more)
+Cohesion: 0.67
+Nodes (3): CharSet(), emojiSafeSplit(), splitInnerHTML()
 
 ### Community 239 - "ScrollSmoother.min.js"
 Cohesion: 0.47
@@ -1185,8 +1175,8 @@ Cohesion: 0.25
 Nodes (8): 36.1 Executive result, 36.2 Automated validation, 36.3 Coverage summary, 36.4 Defects, 36.5 Fixes made, 36.6 Deferred production requirements, 36.7 Final recommendation, 36. Final QA Report Format
 
 ### Community 243 - "8. Required Test Environments"
-Cohesion: 0.22
-Nodes (9): DraggableSVG(), DraggableSVG, _getConcatenatedTransforms(), _getConsolidatedMatrix(), _onMove(), _onPress(), _preventDefault(), DraggableSVG() (+1 more)
+Cohesion: 0.67
+Nodes (3): pointToSegDist(), simplifyPoints(), simplifyStep()
 
 ### Community 244 - "10. Button & Interactive Feedback (Emil)"
 Cohesion: 0.40
@@ -1228,10 +1218,6 @@ Nodes (7): 20. Phase 8 — Confirmation and Invoice Tests, QA-CONF-001 — Confi
 Cohesion: 0.40
 Nodes (5): 10. Button & Interactive Feedback (Emil), Blur as a Bridge, Don't Animate from scale(0), Scale on Press, Tooltip Delay Pattern
 
-### Community 255 - "11. CSS Transitions vs Keyframes (Emil)"
-Cohesion: 0.40
-Nodes (5): 11. CSS Transitions vs Keyframes (Emil), Damping for Natural Boundaries, Direct Style Updates for Performance, Interruptibility Problem, Momentum-Based Dismissal
-
 ### Community 256 - "SKILL.md"
 Cohesion: 0.40
 Nodes (4): Boundaries, Hunt, Output, Tags
@@ -1247,10 +1233,6 @@ Nodes (4): Boundaries, Examples, Format, Scoring
 ### Community 259 - "12. Spring Physics (Emil)"
 Cohesion: 0.29
 Nodes (7): 26. Accessibility QA, QA-A11Y-001 — Semantic structure, QA-A11Y-002 — Keyboard journey, QA-A11Y-003 — Forms, QA-A11Y-004 — Colour and state, QA-A11Y-005 — Zoom and reflow, QA-A11Y-006 — Assistive text
-
-### Community 260 - "14. Scroll-Driven Animations (Jhey)"
-Cohesion: 0.50
-Nodes (4): 14. Scroll-Driven Animations (Jhey), Duration Control Pattern, Progressive Enhancement, The Core Problem
 
 ### Community 261 - "1. Enter & Exit Animations"
 Cohesion: 0.29
@@ -1288,14 +1270,6 @@ Nodes (6): 15. Phase 3 — Home Page Tests, QA-HOME-001 — Hero, QA-HOME-002 �
 Cohesion: 0.50
 Nodes (4): 12. Spring Physics (Emil), Interruptibility, Key Parameters, Spring for Mouse Position
 
-### Community 271 - "14. Scroll-Driven Animations (Jhey)"
-Cohesion: 0.50
-Nodes (4): 14. Scroll-Driven Animations (Jhey), Duration Control Pattern, Progressive Enhancement, The Core Problem
-
-### Community 272 - "1. Enter & Exit Animations"
-Cohesion: 0.50
-Nodes (4): 1. Enter & Exit Animations, Enter Animation Recipe (Jakub), Exit Animation Subtlety (Jakub), Fill Mode for Persistence (Jhey)
-
 ### Community 273 - "3. Visual Effects"
 Cohesion: 0.50
 Nodes (4): 3. Visual Effects, Blur as a Signal (Jakub), Gradients & Color Spaces (Jakub), Shadows Instead of Borders (Jakub)
@@ -1303,10 +1277,6 @@ Nodes (4): 3. Visual Effects, Blur as a Signal (Jakub), Gradients & Color Spaces
 ### Community 274 - "7. CSS Custom Properties & @property (Jhey)"
 Cohesion: 0.50
 Nodes (4): 7. CSS Custom Properties & @property (Jhey), Decompose Complex Transforms, Scoped Variables for Dynamic Behavior (Jhey), Type Specification Unlocks Animation
-
-### Community 275 - "8. 3D CSS (Jhey)"
-Cohesion: 0.50
-Nodes (4): 8. 3D CSS (Jhey), Essential Setup, Responsive 3D, Think in Cuboids
 
 ### Community 276 - "SKILL.md"
 Cohesion: 0.50
@@ -1320,25 +1290,9 @@ Nodes (3): Deploy on Vercel, Getting Started, Learn More
 Cohesion: 0.33
 Nodes (6): 29. Performance QA, QA-PERF-001 — Production build, QA-PERF-002 — Lighthouse baseline, QA-PERF-003 — Core Web Vitals, QA-PERF-004 — Catalogue interaction, QA-PERF-005 — Slow network
 
-### Community 280 - "emojiSafeSplit"
-Cohesion: 0.24
-Nodes (14): _getDefaultSmoothPoints(), _segmentCanBeIgnored(), _smoothRawPath(), cacheRawPathMeasurements(), getPositionOnPath(), getProgressData(), getRotationAtBezierT(), getRotationAtProgress() (+6 more)
-
-### Community 281 - "simplifyStep"
-Cohesion: 0.23
-Nodes (11): _addDimensionalPropTween(), _align(), _emptyFunc(), _getAlignMatrix(), _getPropNum(), _originToPoint(), _relativize(), _segmentToRawPath() (+3 more)
-
-### Community 283 - "6. Shared Layout Animations (Jakub)"
-Cohesion: 0.67
-Nodes (3): 6. Shared Layout Animations (Jakub), Best Practices, FLIP Technique via layoutId
-
 ### Community 285 - "@base-ui/react"
 Cohesion: 0.33
 Nodes (6): 8.1 Browsers, 8.2 Viewports, 8.3 Input methods, 8.4 Network and device conditions, 8.5 Theme and preferences, 8. Required Test Environments
-
-### Community 288 - "gsap"
-Cohesion: 0.26
-Nodes (3): _setSelectable(), _setTouchActionForAllDescendants(), Anchor
 
 ### Community 299 - "_createClass"
 Cohesion: 0.40
@@ -1384,37 +1338,13 @@ Nodes (4): 7.1 Test status, 7.2 Defect severity, 7.3 Defect priority, 7. Result 
 Cohesion: 0.67
 Nodes (3): 2.1 Included, 2.2 Excluded from this QA pass, 2. Scope
 
-### Community 337 - "animejs"
-Cohesion: 0.18
-Nodes (11): 01 · Lens summary, 02 · Where the timings land — duration-budget diagram, 03–05 · Per-lens sections, 06 · Combined recommendations, 07 · Lens Reference Summary, Finding rows (Critical + Important only), Footer, Global theme switch (+3 more)
-
-### Community 338 - "ScrollToPlugin.js"
-Cohesion: 0.35
-Nodes (10): _buildGetter(), _clean(), _getGSAP(), _getOffset(), _initCore(), _isFunction(), _isString(), _max() (+2 more)
-
 ### Community 339 - "tabs.tsx"
 Cohesion: 0.22
 Nodes (10): Tabs(), TabsContent(), TabsContentProps, TabsContext, TabsContextValue, TabsList(), TabsProps, TabsTrigger() (+2 more)
 
-### Community 340 - "Terminal mode (flag-triggered fallback)"
-Cohesion: 0.22
-Nodes (8): Combined Recommendations, Lens Reference Summary, Mode selection, Output Format, Overall Assessment, Per-Designer Sections, Quick Summary (show first), Terminal mode (flag-triggered fallback)
-
-### Community 341 - "ha"
-Cohesion: 0.28
-Nodes (9): cacheRawPathMeasurements(), ea(), fa(), ga(), ha(), measureSegment(), pointsToSegment(), segmentToDistributedPoints() (+1 more)
-
-### Community 342 - "Jakub Krehel's Animation Principles"
-Cohesion: 0.29
-Nodes (6): Common Mistakes (Jakub's Perspective), Core Philosophy: Invisible Enhancement, Jakub Krehel's Animation Principles, Jakub vs. Emil vs. Jhey, Signature Techniques (decision context — code in cookbook), When to Apply Jakub's Mindset
-
 ### Community 343 - "getGlobalMatrix"
 Cohesion: 0.48
 Nodes (7): ba(), getGlobalMatrix(), S(), ua(), va(), Y(), $()
-
-### Community 344 - "Draggable"
-Cohesion: 0.38
-Nodes (3): _assertThisInitialized(), Draggable(), getGlobalMatrix()
 
 ### Community 345 - "toast.tsx"
 Cohesion: 0.29
@@ -1424,44 +1354,32 @@ Nodes (6): ToastContainer(), ToastItem, ToastProps, ToastVariant, variantIconMap
 Cohesion: 0.47
 Nodes (4): Button(), buttonVariants, EmptyState(), EmptyStateProps
 
-### Community 347 - "11. CSS Transitions vs Keyframes (Emil)"
-Cohesion: 0.40
-Nodes (5): 11. CSS Transitions vs Keyframes (Emil), Damping for Natural Boundaries, Direct Style Updates for Performance, Interruptibility Problem, Momentum-Based Dismissal
-
 ### Community 348 - "12. Spring Physics (Emil)"
 Cohesion: 0.50
 Nodes (4): 12. Spring Physics (Emil), Interruptibility, Key Parameters, Spring for Mouse Position
 
-### Community 349 - "1. Enter & Exit Animations"
-Cohesion: 0.50
-Nodes (4): 1. Enter & Exit Animations, Enter Animation Recipe (Jakub), Exit Animation Subtlety (Jakub), Fill Mode for Persistence (Jhey)
-
-### Community 350 - "8. 3D CSS (Jhey)"
-Cohesion: 0.50
-Nodes (4): 8. 3D CSS (Jhey), Essential Setup, Responsive 3D, Think in Cuboids
-
-### Community 352 - "6. Shared Layout Animations (Jakub)"
-Cohesion: 0.67
-Nodes (3): 6. Shared Layout Animations (Jakub), Best Practices, FLIP Technique via layoutId
+### Community 357 - "page.tsx"
+Cohesion: 0.14
+Nodes (16): DashboardPage(), CategoryBars(), KpiTile(), KpiTileProps, LowStockList(), RecentOrdersList(), SalesLineChart(), CategoryBarItem (+8 more)
 
 ## Knowledge Gaps
-- **1576 isolated node(s):** `Card`, `CARDS`, `variants`, `reducedMotionVariants`, `NAV_ITEMS` (+1571 more)
+- **1580 isolated node(s):** `Card`, `CARDS`, `variants`, `reducedMotionVariants`, `NAV_ITEMS` (+1575 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **64 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **62 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `f()` connect `f` to `r`, `badge.tsx`, `FlipBatch`, `getGlobalMatrix`, `SplitText.min.js`, `_initTween`?**
-  _High betweenness centrality (0.062) - this node is a cross-community bridge._
+- **Why does `f()` connect `_initTween` to `f`, `r`, `badge.tsx`, `FlipBatch`, `getGlobalMatrix`, `SplitText.min.js`?**
+  _High betweenness centrality (0.067) - this node is a cross-community bridge._
 - **Why does `createExternalModules()` connect `badge.tsx` to `_ds_bundle.js`?**
-  _High betweenness centrality (0.032) - this node is a cross-community bridge._
+  _High betweenness centrality (0.034) - this node is a cross-community bridge._
 - **What connects `Card`, `CARDS`, `variants` to the rest of the system?**
-  _1576 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _1580 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Draggable.js` be split into smaller, more focused modules?**
-  _Cohesion score 0.09879032258064516 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.10666666666666667 - nodes in this community are weakly interconnected._
 - **Should `gsap-core.js` be split into smaller, more focused modules?**
-  _Cohesion score 0.04642962092271525 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.043689320388349516 - nodes in this community are weakly interconnected._
 - **Should `GSDevTools.min.js` be split into smaller, more focused modules?**
   _Cohesion score 0.06498015873015874 - nodes in this community are weakly interconnected._
 - **Should `SplitText.ts` be split into smaller, more focused modules?**

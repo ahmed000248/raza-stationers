@@ -1925,8 +1925,8 @@
     "semantic_hash": ""
   },
   "apps/admin/src/app/dashboard/page.tsx": {
-    "mtime": 1785006312.1600137,
-    "ast_hash": "15426cb8204d5d61718fb64c79f4675c",
+    "mtime": 1785006622.389469,
+    "ast_hash": "3b86ffb6774bb3ae71e9de0691e7dbdb",
     "semantic_hash": ""
   },
   "apps/admin/src/app/delivery/page.tsx": {
@@ -1977,6 +1977,36 @@
   "apps/admin/src/lib/role.ts": {
     "mtime": 1785006272.7110634,
     "ast_hash": "449f1e3f3e0b48099c8c9784a65bf5fd",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/components/dashboard/CategoryBars.tsx": {
+    "mtime": 1785006603.795616,
+    "ast_hash": "3c61b2f71b69c1f4edaef0008a731432",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/components/dashboard/KpiTile.tsx": {
+    "mtime": 1785006592.2043183,
+    "ast_hash": "42b37e0638231461a7d17d6586ce790a",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/components/dashboard/LowStockList.tsx": {
+    "mtime": 1785006610.0092068,
+    "ast_hash": "0f7b1ad989c7ad1fd136048169268764",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/components/dashboard/RecentOrdersList.tsx": {
+    "mtime": 1785006615.7659955,
+    "ast_hash": "25b6cc8575f376371d28fd0ab8bb6217",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/components/dashboard/SalesLineChart.tsx": {
+    "mtime": 1785006598.1584795,
+    "ast_hash": "36e7d798514e7889a045614870ef5020",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/content/mock/dashboard-data.ts": {
+    "mtime": 1785006585.8782039,
+    "ast_hash": "dade62d7495bdc5fb37d0f5ff4eccb21",
     "semantic_hash": ""
   }
 }

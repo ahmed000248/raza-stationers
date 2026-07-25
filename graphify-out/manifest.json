@@ -1920,8 +1920,8 @@
     "semantic_hash": ""
   },
   "apps/admin/src/app/client-businesses/page.tsx": {
-    "mtime": 1785006317.0008574,
-    "ast_hash": "734b0296ced8cefc0854568ad8c1592f",
+    "mtime": 1785006824.398359,
+    "ast_hash": "482a7d63eb593ad61997a1f3ab15e9bf",
     "semantic_hash": ""
   },
   "apps/admin/src/app/dashboard/page.tsx": {
@@ -2007,6 +2007,26 @@
   "apps/admin/src/content/mock/dashboard-data.ts": {
     "mtime": 1785006585.8782039,
     "ast_hash": "dade62d7495bdc5fb37d0f5ff4eccb21",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/components/clients/ClientDrawer.tsx": {
+    "mtime": 1785006849.2661712,
+    "ast_hash": "2a600cab966d9fcb816a60b448c96e31",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/components/clients/ClientFilterBar.tsx": {
+    "mtime": 1785006750.0018244,
+    "ast_hash": "9902b0d2515127d4d4e83674b93ee68e",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/components/clients/ClientTable.tsx": {
+    "mtime": 1785006802.799487,
+    "ast_hash": "bd143895f03df8ffecae82641a5b4e5f",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/content/mock/client-data.ts": {
+    "mtime": 1785006797.7120461,
+    "ast_hash": "c1f3396f57f301afdd134d1187317868",
     "semantic_hash": ""
   }
 }
