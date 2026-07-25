@@ -2,6 +2,8 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+* **Phase 10 (Accounting & Reporting)** has been implemented.
+
 First, run the development server:
 
 ```bash
