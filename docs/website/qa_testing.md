@@ -95,8 +95,8 @@ Before testing, the agent must read:
 3. `docs/BRD.md`
 4. `docs/FRD.md`
 5. `docs/TRD.md`
-6. `docs/architecture.md`
-7. `docs/phases.md`
+6. `docs/website/architecture.md`
+7. `docs/website/phases.md`
 8. This file
 9. The approved customer sitemap
 10. The approved customer design or design screenshots
@@ -2099,7 +2099,7 @@ Never state “production-ready” based only on this frontend QA pass.
 Use the following instruction when assigning this document to a testing agent:
 
 ```text
-Test the complete Raza Stationers customer frontend in apps/web using docs/qa_testing.md.
+Test the complete Raza Stationers customer frontend in apps/web using docs/website/qa_testing.md.
 
 First read .agents/AGENTS.md, PRD.md, BRD.md, FRD.md, TRD.md, architecture.md, phases.md and qa_testing.md. Inspect the repository with /graphify and analyze proposed QA changes with /ponytail.
 

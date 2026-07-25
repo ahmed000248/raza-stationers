@@ -67,15 +67,6 @@
     </div>
 
     <div style="padding:32px;flex:1">
-      <sc-if value="{{ blocked }}" hint-placeholder-val="{{ false }}">
-        <div style="background:var(--white);border:1px solid var(--border-subtle);border-radius:16px;padding:48px;text-align:center;max-width:480px;margin:60px auto">
-          <div style="font-size:15px;font-weight:600;margin-bottom:8px">Owner only</div>
-          <div style="color:var(--text-muted);font-size:13px;margin-bottom:20px">Discount tiers and credit limits are managed by the business owner.</div>
-          <a href="./Dashboard.dc.html" style="text-decoration:none"><x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Button" variant="primary" hint-size="auto,44px">Back to dashboard</x-import></a>
-        </div>
-      </sc-if>
-      <sc-if value="{{ notBlocked }}" hint-placeholder-val="{{ true }}">
-      <div>
       <h1 style="font-family:var(--font-display);font-size:26px;font-weight:600;margin:0">Discount &amp; Credit</h1>
       <div style="color:var(--text-muted);font-size:13px;margin-top:4px;margin-bottom:24px">رعایت اور کریڈٹ · pricing tiers and client credit limits</div>
 
@@ -97,7 +88,15 @@
       </div>
 
       <div style="background:var(--white);border:1px solid var(--border-subtle);border-radius:16px;overflow:hidden">
-        <div style="padding:16px 20px;font-size:14px;font-weight:600;border-bottom:1px solid var(--border-subtle)">Credit limits by client</div>
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;gap:8px">
+          <div style="font-size:14px;font-weight:600">Credit limits by client</div>
+          <sc-if value="{{ ownerVisible }}" hint-placeholder-val="{{ false }}">
+            <div style="font-size:9.5px;font-weight:700;color:var(--forest-700);background:var(--mist-100);padding:2px 8px;border-radius:999px">🔒 OWNER ONLY</div>
+          </sc-if>
+        </div>
+        <sc-if value="{{ notOwnerVisible }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:10px 20px;font-size:12.5px;color:var(--text-muted);background:var(--canvas);border-bottom:1px solid var(--border-subtle)">Only the business owner can change credit limits.</div>
+        </sc-if>
         <div style="display:table;width:100%;font-size:13px">
           <div style="display:table-row;color:var(--sage-400);font-size:11px;text-transform:uppercase;background:var(--canvas)">
             <div style="display:table-cell;padding:10px 20px;font-weight:600">Client</div>
@@ -111,17 +110,20 @@
               <div style="display:table-cell;padding:12px 12px;border-top:1px solid var(--border-subtle)">{{ c.creditLimitFmt }}</div>
               <div style="display:table-cell;padding:12px 12px;border-top:1px solid var(--border-subtle);color:{{ c.outstandingColor }};font-weight:600">{{ c.outstandingFmt }}</div>
               <div style="display:table-cell;padding:12px 20px;border-top:1px solid var(--border-subtle)">
-                <div style="display:flex;gap:8px;align-items:center">
-                  <input type="number" step="5000" value="{{ c.newLimit }}" onChange="{{ c.onLimitChange }}" style="width:110px;height:34px;border-radius:8px;border:1.5px solid var(--mist-100);padding:0 8px;font-family:var(--font-body);font-size:12.5px">
-                  <span onClick="{{ c.onApply }}" style="cursor:pointer;font-size:12px;font-weight:600;text-decoration:underline">Update</span>
-                </div>
+                <sc-if value="{{ ownerVisible }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;gap:8px;align-items:center">
+                    <input type="number" step="5000" value="{{ c.newLimit }}" onChange="{{ c.onLimitChange }}" style="width:110px;height:34px;border-radius:8px;border:1.5px solid var(--mist-100);padding:0 8px;font-family:var(--font-body);font-size:12.5px">
+                    <span onClick="{{ c.onApply }}" style="cursor:pointer;font-size:12px;font-weight:600;text-decoration:underline">Update</span>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ notOwnerVisible }}" hint-placeholder-val="{{ false }}">
+                  <span style="color:var(--text-muted);font-size:12.5px">{{ c.creditLimitFmt }}</span>
+                </sc-if>
               </div>
             </div>
           </sc-for>
         </div>
       </div>
-      </div>
-      </sc-if>
     </div>
   </div>
 
@@ -174,7 +176,7 @@ class Component extends DCLogic {
         weight: it.key === 'discount' ? 600 : 400, opacity: locked ? 0.7 : 1 };
     }) : [];
 
-    const blocked = data ? role !== 'owner' : false;
+    const ownerVisible = role === 'owner';
     const tiers = data ? this.state.tiers.map(t => ({ ...t, minOrderFmt: mod.formatRs(t.minOrder), onPctChange: (e) => this.onPctChange(t.name, e.target.value) })) : [];
     const clientRows = data ? this.state.clients.map(c => ({
       ...c, creditLimitFmt: mod.formatRs(c.creditLimit), outstandingFmt: mod.formatRs(c.outstanding),
@@ -186,7 +188,7 @@ class Component extends DCLogic {
       role, roleLabel: roleLabels[role], userName: role === 'owner' ? 'Rehan Raza' : role === 'admin' ? 'Sana Malik' : role === 'packing' ? 'Bilal Hussain' : 'Imran Sheikh',
       initials: role === 'owner' ? 'RR' : role === 'admin' ? 'SM' : role === 'packing' ? 'BH' : 'IS',
       navList, roleOptions: data ? mod.ROLES : [], onRoleChange: (e) => this.onRoleChange(e),
-      blocked, notBlocked: !blocked, tiers, saveTiers: () => this.saveTiers(), clientRows,
+      ownerVisible, notOwnerVisible: !ownerVisible, tiers, saveTiers: () => this.saveTiers(), clientRows,
       toasts: this.state.toasts,
     };
   }

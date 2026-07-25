@@ -3,7 +3,7 @@
 **Date:** 2026-07-25  
 **Commit Tested:** `post-defects-fix`  
 **Environment:** Windows, Node.js, Next.js 16.2.11 (Turbopack), localhost:3000  
-**QA Spec:** [docs/qa_testing.md](file:///d:/Projects/Raza%20Stationers/docs/qa_testing.md)
+**QA Spec:** [docs/website/qa_testing.md](file:///d:/Projects/Raza%20Stationers/docs/website/qa_testing.md)
 
 ---
 

@@ -8,8 +8,10 @@
   ],
   "scripts": {
     "dev": "npm run dev --workspace=@raza-stationers/web",
+    "dev:admin": "npm run dev --workspace=@raza-stationers/admin",
     "build": "npm run build --workspaces --if-present",
     "build:web": "npm run build --workspace=@raza-stationers/web",
+    "build:admin": "npm run build --workspace=@raza-stationers/admin",
     "lint": "npm run lint --workspaces --if-present"
   },
   "devDependencies": {

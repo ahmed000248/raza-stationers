@@ -72,7 +72,12 @@
           <h1 style="font-family:var(--font-display);font-size:26px;font-weight:600;margin:0">Stock Management</h1>
           <div style="color:var(--text-muted);font-size:13px;margin-top:4px">اسٹاک کا انتظام · inventory levels and restocking</div>
         </div>
-        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Button" variant="primary" onClick="{{ openAdd }}" hint-size="auto,44px">+ Record stock entry</x-import>
+        <div style="display:flex;gap:10px">
+          <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Button" variant="primary" onClick="{{ openAdd }}" hint-size="auto,44px">+ Log Restock</x-import>
+          <div onClick="{{ openCorrection }}" style="cursor:pointer;opacity:{{ correctionOpacity }}">
+            <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Button" variant="secondary" hint-size="auto,44px">{{ correctionLabel }}</x-import>
+          </div>
+        </div>
       </div>
 
       <div style="background:var(--white);border:1px solid var(--border-subtle);border-radius:16px;overflow:hidden;margin:20px 0">
@@ -108,9 +113,9 @@
           <sc-for list="{{ entries }}" as="e" hint-placeholder-count="4">
             <div style="display:table-row;animation:rowFade 300ms ease-out">
               <div style="display:table-cell;padding:12px 20px;border-top:1px solid var(--border-subtle)">{{ e.date }}</div>
-              <div style="display:table-cell;padding:12px 12px;border-top:1px solid var(--border-subtle);font-weight:600">{{ e.product }}</div>
-              <div style="display:table-cell;padding:12px 12px;border-top:1px solid var(--border-subtle)">+{{ e.qty }}</div>
-              <div style="display:table-cell;padding:12px 12px;border-top:1px solid var(--border-subtle);color:var(--text-muted)">{{ e.supplier }}</div>
+              <div style="display:table-cell;padding:12px 12px;border-top:1px solid var(--border-subtle);font-weight:600">{{ e.product }}<div style="margin-top:4px"><x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.StatusBadge" label="{{ e.typeLabel }}" tone="{{ e.typeTone }}" hint-size="auto,26px"></x-import></div></div>
+              <div style="display:table-cell;padding:12px 12px;border-top:1px solid var(--border-subtle)">{{ e.qtyFmt }}</div>
+              <div style="display:table-cell;padding:12px 12px;border-top:1px solid var(--border-subtle);color:var(--text-muted)">{{ e.supplierOrReason }}</div>
               <div style="display:table-cell;padding:12px 20px;border-top:1px solid var(--border-subtle);font-weight:600">{{ e.totalFmt }}</div>
             </div>
           </sc-for>
@@ -143,6 +148,32 @@
     </div>
   </sc-if>
 
+  <sc-if value="{{ correctionOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeCorrection }}" style="position:fixed;inset:0;background:rgba(5,31,32,.35);z-index:300;display:flex;align-items:center;justify-content:center">
+      <div onClick="{{ stop }}" style="background:var(--white);border-radius:16px;padding:28px;width:420px;box-sizing:border-box">
+        <div style="font-family:var(--font-display);font-size:17px;font-weight:600;margin-bottom:4px">Stock Correction</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">Owner only · manual adjustment outside routine restock, always logged</div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <select value="{{ cform.product }}" onChange="{{ onCProductChange }}" style="height:44px;border-radius:10px;border:1.5px solid var(--mist-100);padding:0 14px;font-family:var(--font-body);font-size:13px">
+            <sc-for list="{{ productOptions }}" as="p" hint-placeholder-count="8"><option value="{{ p }}">{{ p }}</option></sc-for>
+          </select>
+          <div>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Quantity change (use − for write-off, + to add)</div>
+            <input type="number" value="{{ cform.delta }}" onChange="{{ onCDeltaChange }}" placeholder="e.g. -14 or 20" style="width:100%;height:44px;border-radius:10px;border:1.5px solid var(--mist-100);padding:0 14px;font-family:var(--font-body);font-size:13px;box-sizing:border-box">
+          </div>
+          <div>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Reason (required)</div>
+            <textarea value="{{ cform.reason }}" onChange="{{ onCReasonChange }}" placeholder="e.g. damaged in storage, miscount correction" style="width:100%;min-height:70px;border-radius:10px;border:1.5px solid var(--mist-100);padding:12px 14px;font-family:var(--font-body);font-size:13px;box-sizing:border-box;resize:vertical"></textarea>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:20px">
+          <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Button" variant="primary" onClick="{{ saveCorrection }}" disabled="{{ correctionDisabled }}" hint-size="auto,44px">Save correction</x-import>
+          <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Button" variant="secondary" onClick="{{ closeCorrection }}" hint-size="auto,44px">Cancel</x-import>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
   <div style="position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:10px;z-index:400">
     <sc-for list="{{ toasts }}" as="tst" hint-placeholder-count="0">
       <div style="background:var(--white);border:1px solid var(--border-subtle);border-left:4px solid {{ tst.color }};border-radius:12px;padding:14px 18px;font-size:13px;font-weight:500;box-shadow:0 6px 20px rgba(5,31,32,.12);animation:toastIn 200ms ease-out;min-width:220px">{{ tst.msg }}</div>
@@ -154,15 +185,19 @@
 <script type="text/x-dc" data-dc-script>
 
 class Component extends DCLogic {
-  state = { role: 'owner', data: null, products: [], entries: [], toasts: [], modalOpen: false, form: { product: '', qty: '', price: '', supplier: '' } };
+  state = {
+    role: 'owner', data: null, products: [], entries: [], toasts: [], modalOpen: false, form: { product: '', qty: '', price: '', supplier: '' },
+    correctionOpen: false, cform: { product: '', delta: '', reason: '' },
+  };
 
   async componentDidMount() {
     const mod = await import('./adminData.js');
     this.mod = mod;
     const role = mod.getRole();
     this.setState({
-      role, data: mod, products: mod.PRODUCTS.map(p => ({ ...p })), entries: mod.STOCK_ENTRIES.map(e => ({ ...e })),
+      role, data: mod, products: mod.PRODUCTS.map(p => ({ ...p })), entries: mod.STOCK_ENTRIES.map(e => ({ ...e, type: 'restock' })),
       form: { product: mod.PRODUCTS[0].name, qty: '', price: '', supplier: mod.SUPPLIERS[0].name },
+      cform: { product: mod.PRODUCTS[0].name, delta: '', reason: '' },
     });
   }
 
@@ -188,6 +223,24 @@ class Component extends DCLogic {
     this.toast('Stock entry recorded — ' + qty + ' units added');
   }
 
+  openCorrection() {
+    if (this.state.role !== 'owner') { this.toast('Owner only — ask the business owner for access', 'warning'); return; }
+    this.setState({ correctionOpen: true, cform: { product: this.state.products[0].name, delta: '', reason: '' } });
+  }
+  closeCorrection() { this.setState({ correctionOpen: false }); }
+  setCForm(patch) { this.setState(s => ({ cform: { ...s.cform, ...patch } })); }
+  saveCorrection() {
+    const f = this.state.cform, delta = Number(f.delta), reason = f.reason.trim();
+    if (!delta || !reason) return;
+    const today = '2026-07-25';
+    this.setState(s => ({
+      entries: [{ date: today, product: f.product, qty: delta, supplier: '', reason, price: 0, total: 0, type: 'correction' }, ...s.entries],
+      products: s.products.map(p => p.name === f.product ? { ...p, stock: Math.max(0, p.stock + delta) } : p),
+      correctionOpen: false,
+    }));
+    this.toast('Stock correction recorded — written to audit log');
+  }
+
   renderVals() {
     const mod = this.mod, role = this.state.role, data = this.state.data;
     const roleLabels = { owner: 'Owner', admin: 'Admin / Operator', packing: 'Packing Worker', delivery: 'Delivery Worker' };
@@ -201,7 +254,13 @@ class Component extends DCLogic {
     }) : [];
 
     const lowRows = data ? this.state.products.filter(p => p.stock <= p.threshold) : [];
-    const entries = data ? this.state.entries.map(e => ({ ...e, totalFmt: mod.formatRs(e.total) })) : [];
+    const entries = data ? this.state.entries.map(e => ({
+      ...e, totalFmt: e.type === 'correction' ? '—' : mod.formatRs(e.total),
+      qtyFmt: e.qty > 0 ? '+' + e.qty : String(e.qty),
+      supplierOrReason: e.type === 'correction' ? (e.reason || '') : e.supplier,
+      typeLabel: e.type === 'correction' ? 'Correction' : 'Restock', typeTone: e.type === 'correction' ? 'warning' : 'success',
+    })) : [];
+    const isOwner = role === 'owner';
 
     return {
       role, roleLabel: roleLabels[role], userName: role === 'owner' ? 'Rehan Raza' : role === 'admin' ? 'Sana Malik' : role === 'packing' ? 'Bilal Hussain' : 'Imran Sheikh',
@@ -213,6 +272,11 @@ class Component extends DCLogic {
       onProductChange: (e) => this.setForm({ product: e.target.value }), onQtyChange: (e) => this.setForm({ qty: e.target.value }),
       onPriceChange: (e) => this.setForm({ price: e.target.value }), onSupplierChange: (e) => this.setForm({ supplier: e.target.value }),
       save: () => this.save(), closeModal: () => this.closeModal(), stop: (e) => e.stopPropagation(),
+      correctionLabel: isOwner ? 'Stock Correction' : '🔒 Stock Correction', correctionOpacity: isOwner ? 1 : 0.6,
+      openCorrection: () => this.openCorrection(), closeCorrection: () => this.closeCorrection(), correctionOpen: this.state.correctionOpen,
+      cform: this.state.cform, onCProductChange: (e) => this.setCForm({ product: e.target.value }),
+      onCDeltaChange: (e) => this.setCForm({ delta: e.target.value }), onCReasonChange: (e) => this.setCForm({ reason: e.target.value }),
+      saveCorrection: () => this.saveCorrection(), correctionDisabled: !this.state.cform.reason || !this.state.cform.reason.trim() || !Number(this.state.cform.delta),
       toasts: this.state.toasts,
     };
   }

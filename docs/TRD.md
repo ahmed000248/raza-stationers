@@ -4,7 +4,7 @@
 
 **Prepared for:** Raza Stationers
 **Prepared by:** Ahmed (Product Owner), drafted with AI assistance
-**Version:** 1.3 (Draft)
+**Version:** 1.4 (Draft)
 **Date:** July 25, 2026
 **Status:** Draft
 **Based on:** PRD v1.1, BRD v1.1, FRD v1.2
@@ -19,6 +19,7 @@
 | 1.1 | 2026-07-23 | Ahmed | Added Owner-only vs. Admin-allowed authorization guidance and matching API endpoint annotations, aligned with FRD v1.1 | Draft |
 | 1.2 | 2026-07-23 | Ahmed | Re-verified every demo-stack component against current provider pricing; confirmed all layers (including hosting) remain $0 for the demo phase; added Supabase's 7-day auto-pause caveat and a note on Vercel Hobby's non-commercial terms | Draft |
 | 1.3 | 2026-07-25 | Ahmed | Reconciled this document against the actual scaffolded repo: switched §3/§5 from pnpm+Turborepo to npm workspaces (matches what's built, functionally equivalent for this scale); updated §5's repo tree to reflect real package/app names and flag what's not yet scaffolded (`apps/admin`, `apps/api`); removed stale product-image references from §6/§12 (no product photography, per the finalized description-based catalogue design); added `purchase_type` to the Product schema row; flagged an open architecture question on whether `apps/api` (NestJS) is still needed given Next.js Route Handlers/Server Actions could serve the same role | Draft |
+| 1.4 | 2026-07-25 | Ahmed | `apps/admin` scaffolded as its own Next.js app (resolving part of v1.3's open question — a separate app, not a route inside `apps/web`); added `packages/ui` (shared shadcn primitives, Bilingual, motion wrappers, and design tokens, consumed by both `apps/web` and `apps/admin`); updated §5's repo tree; `docs/` split into `docs/website/` and `docs/admin/` for surface-specific documents, with PRD/BRD/FRD/TRD staying at `docs/` root as cross-cutting | Draft |
 
 ---
 
@@ -143,24 +144,28 @@ A single monorepo (npm workspaces) keeps shared types, validation schemas, and b
 ```
 raza-stationers/
 ├── apps/
-│   ├── web/              # Next.js customer website — scaffolded, still the default create-next-app page
-│   ├── admin/             # Next.js admin panel — NOT YET SCAFFOLDED
+│   ├── web/              # Next.js customer website — full 14-page build, QA-passed
+│   ├── admin/             # Next.js admin panel — scaffolded (config + placeholder page only, no real pages yet)
 │   ├── mobile/             # React Native + Expo (Phase 2) — placeholder only, no real code
 │   └── api/               # NestJS backend — NOT YET SCAFFOLDED (see open architecture question below)
 ├── packages/
 │   ├── types/              # @raza-stationers/types — TypeScript domain types (Order, Product, ClientBusiness, etc.)
 │   ├── api/                 # @raza-stationers/api — shared HTTP client used by web/admin/mobile to call the backend
 │   ├── db/                   # @raza-stationers/db — DB access layer; must only ever be imported by the backend (apps/api), never by a frontend app — see note below
-│   ├── validation/            # Zod schemas shared between frontend forms and backend DTOs — NOT YET CREATED
-│   └── ui/                     # Shared Tailwind/React components for web + admin — NOT YET CREATED
+│   ├── validation/            # @raza-stationers/validation — Zod schemas shared between frontend forms and backend DTOs (created during the web build's Checkout phase)
+│   └── ui/                     # @raza-stationers/ui — shared shadcn primitives, Bilingual, motion wrappers, and design tokens (packages/ui/src/styles/tokens.css), consumed by both apps/web and apps/admin
 ├── docs/
-│   ├── PRD.md / BRD.md / FRD.md / TRD.md
+│   ├── PRD.md / BRD.md / FRD.md / TRD.md   # cross-cutting, both surfaces
+│   ├── website/                              # apps/web-scoped: architecture.md, phases.md, qa_testing.md, qa-report.md
+│   └── admin/                                  # apps/admin-scoped: architecture.md, phases.md, qa_testing.md
 └── docker-compose.yml    # Local Postgres + services for development — NOT YET CREATED
 ```
 
-**Fixed 2026-07-25:** `apps/web/package.json` had `@raza-stationers/db` listed as a direct dependency — a Next.js frontend importing the raw DB client would let it read/write the database without going through any of the NestJS auth guards `FR-SEC-01` requires. That dependency has been removed; `apps/web` (and the future `apps/admin`) should only ever depend on `@raza-stationers/api`.
+**Fixed 2026-07-25:** `apps/web/package.json` had `@raza-stationers/db` listed as a direct dependency — a Next.js frontend importing the raw DB client would let it read/write the database without going through any of the NestJS auth guards `FR-SEC-01` requires. That dependency has been removed; `apps/admin`'s package.json was scaffolded without it from the start, for the same reason. Both frontends depend only on `@raza-stationers/api`.
 
-**Open architecture question, not yet decided:** §4 above specifies a separate NestJS backend (`apps/api`) as the single API every frontend calls. Since neither `apps/admin` nor `apps/api` has been scaffolded yet, this is still a clean decision point rather than a correction: either (a) build `apps/api` as a real NestJS service per §4, the safer choice if the mobile app and admin panel need a stable, independently-versioned API contract, or (b) drop the separate backend and let `apps/web`'s own Next.js Route Handlers / Server Actions call `packages/db` directly, which is simpler to run and deploy (no second free-tier service, no Render cold starts) but means re-implementing the same request-handling logic if `apps/admin` is a separate Next.js app rather than routes inside `apps/web`. This document still assumes (a) until the owner/Ahmed decides otherwise, since (a) is what the rest of this TRD (§4, §7, §8, §16) is written against.
+**Note on `packages/ui`:** the components moved into `packages/ui` are copies of what already existed and was QA-passed in `apps/web/src/components/{ui,motion}` — `apps/web` was deliberately left importing its own local copies rather than being rewired to consume the new package in the same pass, to avoid risking a 60+ file mechanical import change against an already-approved build. `apps/admin` consumes `packages/ui` from day one. Migrating `apps/web` onto `packages/ui` (deleting its local duplicates) is a real, tracked follow-up — not silently accepted permanent duplication.
+
+**Open architecture question, not yet decided:** §4 above specifies a separate NestJS backend (`apps/api`) as the single API every frontend calls. Since `apps/api` still isn't scaffolded, this remains a clean decision point rather than a correction: either (a) build `apps/api` as a real NestJS service per §4, the safer choice if the mobile app and admin panel need a stable, independently-versioned API contract, or (b) drop the separate backend and let Next.js Route Handlers / Server Actions in each frontend call `packages/db` directly, which is simpler to run and deploy (no second free-tier service, no Render cold starts) but means each of `apps/web` and `apps/admin` re-implements the same request-handling logic since they're now separate apps. This document still assumes (a) until the owner/Ahmed decides otherwise, since (a) is what the rest of this TRD (§4, §7, §8, §16) is written against.
 
 CI runs on GitHub Actions (free tier: 2,000 minutes/month is sufficient) — lint, type-check, unit tests, and API integration tests on every pull request.
 

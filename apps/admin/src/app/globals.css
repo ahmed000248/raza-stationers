@@ -1,0 +1,26 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "../../../../packages/ui/src/styles/tokens.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Admin-specific rules only. Shared color/font/radius/motion tokens live in
+ * packages/ui/src/styles/tokens.css (imported above) — do not redeclare them
+ * here. The .glass utility from apps/web is deliberately NOT imported: liquid
+ * glass is customer-facing only and must never appear on admin/data surfaces.
+ */
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+    background-color: var(--canvas);
+    color: var(--ink-900);
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading), var(--font-sans), sans-serif;
+  }
+}
