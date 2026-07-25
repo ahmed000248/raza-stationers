@@ -29,7 +29,7 @@ export function CategorySection() {
         {/* Category Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           {mockCategories.map((cat) => {
-            const categoryKey = cat.id.replace("cat-", "") as any
+            const categoryKey = cat.id.replace("cat-", "") as "paper" | "pens" | "office" | "files" | "cutting" | "art" | "general"
             return (
               <Link
                 key={cat.id}

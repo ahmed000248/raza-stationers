@@ -7,20 +7,24 @@ import { useAuth } from "@/hooks/use-auth"
 import { CreditStatusCard } from "@/components/account/CreditStatusCard"
 import { BusinessProfileTab } from "@/components/account/BusinessProfileTab"
 import { NotificationPreferencesTab } from "@/components/account/NotificationPreferencesTab"
+import { NotificationsFeedTab } from "@/components/account/NotificationsFeedTab"
+import { StaffTab } from "@/components/account/StaffTab"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Building2, CreditCard, Bell, ShieldCheck, Lock, LogOut } from "lucide-react"
+import { Building2, CreditCard, Bell, ShieldCheck, Lock, LogOut, Users, MessageSquare } from "lucide-react"
 
 function AccountPageContent() {
   const searchParams = useSearchParams()
   const initialTab = searchParams.get("tab") || "profile"
 
-  const { accountStatus, user, clientBusiness, logout } = useAuth()
-  const validTabs = ["profile", "credit", "preferences", "security"] as const
+  const { accountStatus, user, clientBusiness, businessRole, logout } = useAuth()
+  const validTabs = ["profile", "credit", "notifications", "preferences", "staff", "security"] as const
   type TabId = typeof validTabs[number]
   const [activeTab, setActiveTab] = React.useState<TabId>(
     validTabs.includes(initialTab as TabId) ? (initialTab as TabId) : "profile"
   )
+
+  const isOwnerOrManager = businessRole === "owner" || businessRole === "manager"
 
   return (
     <div className="py-10 px-6 min-h-screen">
@@ -84,6 +88,19 @@ function AccountPageContent() {
 
           <button
             type="button"
+            onClick={() => setActiveTab("notifications")}
+            className={`px-4 py-2.5 text-xs font-semibold rounded-t-xl border-b-2 transition-all whitespace-nowrap flex items-center gap-2 ${
+              activeTab === "notifications"
+                ? "border-[var(--color-evergreen-600)] text-[var(--color-evergreen-600)] bg-[var(--color-evergreen-600)]/10 font-bold"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Bell className="size-4" />
+            <span>Notifications Feed (FR-NTF-06)</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveTab("preferences")}
             className={`px-4 py-2.5 text-xs font-semibold rounded-t-xl border-b-2 transition-all whitespace-nowrap flex items-center gap-2 ${
               activeTab === "preferences"
@@ -91,9 +108,24 @@ function AccountPageContent() {
                 : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
-            <Bell className="size-4" />
-            <span>Notification Preferences (FR-NTF-06)</span>
+            <MessageSquare className="size-4" />
+            <span>Notification Preferences (FR-NTF-01)</span>
           </button>
+
+          {isOwnerOrManager && (
+            <button
+              type="button"
+              onClick={() => setActiveTab("staff")}
+              className={`px-4 py-2.5 text-xs font-semibold rounded-t-xl border-b-2 transition-all whitespace-nowrap flex items-center gap-2 ${
+                activeTab === "staff"
+                  ? "border-[var(--color-evergreen-600)] text-[var(--color-evergreen-600)] bg-[var(--color-evergreen-600)]/10 font-bold"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Users className="size-4" />
+              <span>Staff & Team (FR-CB-05/06)</span>
+            </button>
+          )}
 
           <button
             type="button"
@@ -114,7 +146,11 @@ function AccountPageContent() {
 
         {activeTab === "credit" && <CreditStatusCard clientBusiness={clientBusiness} />}
 
+        {activeTab === "notifications" && <NotificationsFeedTab />}
+
         {activeTab === "preferences" && <NotificationPreferencesTab />}
+
+        {activeTab === "staff" && isOwnerOrManager && <StaffTab />}
 
         {activeTab === "security" && (
           <div className="p-6 rounded-2xl border border-border bg-card space-y-4">

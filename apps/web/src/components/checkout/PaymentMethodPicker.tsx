@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { PaymentMethodType } from "@raza-stationers/validation"
-import { CreditCard, Wallet, Banknote, Upload, Check, AlertCircle, Building2, ShieldCheck } from "lucide-react"
+import { CreditCard, Wallet, Banknote, Upload, Check, Building2, ShieldCheck } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 

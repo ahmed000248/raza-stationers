@@ -9,7 +9,7 @@ import { formatPKR } from "@/lib/pricing"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Bilingual } from "@/components/ui/bilingual"
-import { Package, RotateCcw, ArrowRight, Truck, Calendar } from "lucide-react"
+import { Package, RotateCcw, ArrowRight, Calendar } from "lucide-react"
 
 interface OrderHistoryCardProps {
   order: Order

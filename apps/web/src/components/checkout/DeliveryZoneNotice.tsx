@@ -1,6 +1,6 @@
 import * as React from "react"
 import { SUPPORTED_DELIVERY_CITIES } from "@raza-stationers/validation"
-import { Truck, MapPin, AlertCircle, CheckCircle2 } from "lucide-react"
+import { Truck, AlertCircle, CheckCircle2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface DeliveryZoneNoticeProps {

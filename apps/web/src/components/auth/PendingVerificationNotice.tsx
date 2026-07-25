@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Clock, ShieldAlert, CheckCircle2, Building2 } from "lucide-react"
+import { Clock } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface PendingVerificationNoticeProps {

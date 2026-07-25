@@ -1,11 +1,10 @@
 "use client"
 
 import * as React from "react"
-import Link from "next/link"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Bilingual } from "@/components/ui/bilingual"
-import { isCityInDeliveryZone, SUPPORTED_DELIVERY_CITIES } from "@raza-stationers/validation"
+import { SUPPORTED_DELIVERY_CITIES } from "@raza-stationers/validation"
 import { Mail, Phone, MapPin, MessageSquare, Send, Check, Clock, Building2 } from "lucide-react"
 
 export default function ContactPage() {
@@ -18,8 +17,6 @@ export default function ContactPage() {
 
   const [errors, setErrors] = React.useState<Record<string, string>>({})
   const [submitted, setSubmitted] = React.useState(false)
-
-  const isCityValid = isCityInDeliveryZone(city)
 
   const validate = () => {
     const newErrors: Record<string, string> = {}

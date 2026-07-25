@@ -5,7 +5,6 @@ import { mockProducts } from "@/content/mock/products"
 import { ProductCard } from "@/components/catalogue/ProductCard"
 import { StaggerList } from "@/components/motion/stagger-list"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
 import { UserPricingContext } from "@/lib/pricing"
 import { Sparkles, Building2, User } from "lucide-react"
 

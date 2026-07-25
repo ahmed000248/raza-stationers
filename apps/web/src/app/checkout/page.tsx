@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge"
 import { Bilingual } from "@/components/ui/bilingual"
 import { formatPKR } from "@/lib/pricing"
 import { isCityInDeliveryZone, PaymentMethodType, SUPPORTED_DELIVERY_CITIES } from "@raza-stationers/validation"
-import { ArrowLeft, ArrowRight, ShieldCheck, Truck, AlertCircle, Building2, Lock } from "lucide-react"
+import { ArrowLeft, ArrowRight, Truck, Building2, Lock } from "lucide-react"
 
 export default function CheckoutPage() {
   const router = useRouter()
@@ -28,7 +28,7 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = React.useState<PaymentMethodType>("CASH_ON_DELIVERY")
   const [agreeToTerms, setAgreeToTerms] = React.useState(true)
   const [receiptUploaded, setReceiptUploaded] = React.useState(false)
-  const [isCreditActive, setIsCreditActive] = React.useState(true)
+  const isCreditActive = true
 
   // Validation Error State
   const [errors, setErrors] = React.useState<Record<string, string>>({})

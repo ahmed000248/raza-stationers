@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet>
+  <link rel="stylesheet" href="../_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/fonts/fonts.css">
+  <link rel="stylesheet" href="../_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/colors.css">
+  <link rel="stylesheet" href="../_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/typography.css">
+  <link rel="stylesheet" href="../_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/spacing.css">
+  <link rel="stylesheet" href="../_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/radius.css">
+  <link rel="stylesheet" href="../_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/styles.css">
+  <script src="../_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/_ds_bundle.js"></script>
+  <style>
+    body{margin:0;background:var(--canvas)}
+    a{color:var(--evergreen-600)} a:hover{color:var(--forest-700)}
+    @keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes badgeFade{from{opacity:0}to{opacity:1}}
+    @keyframes rowFade{from{opacity:.3}to{opacity:1}}
+    tr.rrow td{transition:background 150ms}
+    tr.rrow:hover td{background:var(--canvas)}
+  </style>
+</helmet>
+
+<div style="display:flex;min-height:100vh;font-family:var(--font-body);background:var(--canvas);color:var(--ink-900)">
+
+  <div style="width:240px;flex-shrink:0;background:var(--ink-900);display:flex;flex-direction:column;padding:24px 16px;position:sticky;top:0;height:100vh;box-sizing:border-box">
+    <div style="padding:0 8px 20px 8px">
+      <div style="font-family:var(--font-display);color:#fff;font-size:17px;font-weight:600">Raza Stationers</div>
+      <div style="color:var(--sage-400);font-size:11px;margin-top:3px">Admin Panel · انتظامی پینل</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:2px;flex:1;overflow-y:auto;overflow-x:hidden">
+      <sc-for list="{{ navList }}" as="item" hint-placeholder-count="11">
+        <a href="{{ item.href }}" onClick="{{ item.onClick }}" style="text-decoration:none;display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;margin-bottom:2px;cursor:pointer;transition:background 150ms;background:{{ item.bg }};color:{{ item.color }};opacity:{{ item.opacity }}">
+          <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="{{ item.icon }}" size="18" color="{{ item.color }}" hint-size="18px,18px"></x-import>
+          <span style="font-size:13.5px;font-weight:{{ item.weight }};flex:1">{{ item.label }}</span>
+          <sc-if value="{{ item.ownerOnly }}" hint-placeholder-val="{{ false }}"><span style="font-size:10px;color:var(--sage-400)">🔒</span></sc-if>
+        </a>
+      </sc-for>
+    </div>
+    <div style="border-top:1px solid rgba(255,255,255,.1);padding-top:14px;margin-top:10px">
+      <div style="font-size:10px;color:var(--sage-400);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;padding:0 8px">Viewing as</div>
+      <select value="{{ role }}" onChange="{{ onRoleChange }}" style="width:100%;background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:9px 10px;font-size:12.5px;font-family:var(--font-body)">
+        <sc-for list="{{ roleOptions }}" as="r" hint-placeholder-count="4"><option value="{{ r.key }}">{{ r.label }}</option></sc-for>
+      </select>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:14px;padding:0 8px">
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Avatar" initials="{{ initials }}" size="32" hint-size="32px,32px"></x-import>
+        <div style="min-width:0">
+          <div style="color:#fff;font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ userName }}</div>
+          <div style="color:var(--sage-400);font-size:11px">{{ roleLabel }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 32px;border-bottom:1px solid var(--border-subtle);background:var(--white)">
+      <div style="display:flex;align-items:center;gap:10px;background:var(--canvas);border-radius:999px;padding:9px 18px;width:300px">
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="search" size="16" color="var(--sage-400)" hint-size="16px,16px"></x-import>
+        <span style="font-size:13px;color:#8a938e">Search products, orders…</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:20px">
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="notification" size="21" color="var(--forest-700)" hint-size="21px,21px"></x-import>
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Avatar" initials="{{ initials }}" size="36" hint-size="36px,36px"></x-import>
+      </div>
+    </div>
+
+    <div style="padding:32px;flex:1">
+      <sc-if value="{{ blocked }}" hint-placeholder-val="{{ false }}">
+        <div style="background:var(--white);border:1px solid var(--border-subtle);border-radius:16px;padding:48px;text-align:center;max-width:480px;margin:60px auto">
+          <div style="font-size:15px;font-weight:600;margin-bottom:8px">This section isn't part of your role</div>
+          <div style="color:var(--text-muted);font-size:13px;margin-bottom:20px">Delivery workers see their assigned runs on the Delivery page.</div>
+          <a href="./DeliveryManagement.dc.html" style="text-decoration:none"><x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Button" variant="primary" hint-size="auto,44px">Go to Delivery</x-import></a>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ notBlocked }}" hint-placeholder-val="{{ true }}">
+      <div>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px">
+        <div>
+          <h1 style="font-family:var(--font-display);font-size:26px;font-weight:600;margin:0">Order Queue</h1>
+          <div style="color:var(--text-muted);font-size:13px;margin-top:4px">آرڈر قطار · {{ pageSubtitle }}</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin:20px 0;flex-wrap:wrap">
+        <sc-for list="{{ filters }}" as="f" hint-placeholder-count="7">
+          <div onClick="{{ f.onClick }}" style="cursor:pointer;padding:8px 16px;border-radius:999px;font-size:12.5px;font-weight:600;background:{{ f.bg }};color:{{ f.color }};border:1px solid {{ f.border }}">{{ f.label }}</div>
+        </sc-for>
+      </div>
+
+      <div style="background:var(--white);border:1px solid var(--border-subtle);border-radius:16px;overflow:hidden">
+        <div style="display:table;width:100%;border-collapse:collapse;font-size:13px">
+          <div style="display:table-row;text-align:left;color:var(--sage-400);font-size:11px;text-transform:uppercase;letter-spacing:.5px;background:var(--canvas)">
+            <div style="display:table-cell;padding:12px 20px;font-weight:600">Order #</div>
+            <div style="display:table-cell;padding:12px 12px;font-weight:600">Client</div>
+            <div style="display:table-cell;padding:12px 12px;font-weight:600;cursor:pointer" onClick="{{ onSortTotal }}">Total {{ sortArrow }}</div>
+            <div style="display:table-cell;padding:12px 12px;font-weight:600">Status</div>
+            <div style="display:table-cell;padding:12px 20px;font-weight:600">Placed</div>
+            <div style="display:table-cell;padding:12px 20px;font-weight:600"></div>
+          </div>
+          <sc-for list="{{ rows }}" as="o" hint-placeholder-count="5">
+            <div class="rrow" style="display:table-row;animation:rowFade 300ms ease-out">
+              <div style="display:table-cell;padding:14px 20px;border-top:1px solid var(--border-subtle);font-weight:600">{{ o.id }}</div>
+              <div style="display:table-cell;padding:14px 12px;border-top:1px solid var(--border-subtle)">{{ o.client }}<div style="color:var(--text-muted);font-size:11.5px">{{ o.city }}</div></div>
+              <div style="display:table-cell;padding:14px 12px;border-top:1px solid var(--border-subtle);font-weight:600">{{ o.totalFmt }}</div>
+              <div style="display:table-cell;padding:14px 12px;border-top:1px solid var(--border-subtle)">
+                <span key="{{ o.status }}" style="animation:badgeFade 200ms ease-out;display:inline-block">
+                  <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.StatusBadge" label="{{ o.statusLabel }}" tone="{{ o.tone }}" hint-size="auto,32px"></x-import>
+                </span>
+              </div>
+              <div style="display:table-cell;padding:14px 20px;border-top:1px solid var(--border-subtle);color:var(--text-muted);font-size:12px">{{ o.ago }}</div>
+              <div style="display:table-cell;padding:14px 20px;border-top:1px solid var(--border-subtle);text-align:right">
+                <span onClick="{{ o.onOpen }}" style="cursor:pointer;font-size:12.5px;font-weight:600;text-decoration:underline">View</span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </div>
+      </sc-if>
+    </div>
+  </div>
+
+  <sc-if value="{{ drawerOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeDrawer }}" style="position:fixed;inset:0;background:rgba(5,31,32,.35);z-index:300"></div>
+    <div style="position:fixed;top:0;right:0;height:100vh;width:440px;background:var(--white);z-index:301;box-shadow:0 0 40px rgba(5,31,32,.18);overflow-y:auto;padding:28px;box-sizing:border-box">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+        <div>
+          <div style="font-family:var(--font-display);font-size:19px;font-weight:600">{{ drawer.id }}</div>
+          <div style="color:var(--text-muted);font-size:12.5px;margin-top:2px">{{ drawer.client }} · {{ drawer.city }}</div>
+        </div>
+        <span onClick="{{ closeDrawer }}" style="cursor:pointer;font-size:20px;color:var(--text-muted)">×</span>
+      </div>
+      <div style="margin:14px 0">
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.StatusBadge" label="{{ drawer.statusLabel }}" tone="{{ drawer.tone }}" hint-size="auto,32px"></x-import>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">Pricing tier applied</div>
+      <div style="font-size:13.5px;font-weight:600;margin-bottom:18px">{{ drawer.tier }}</div>
+
+      <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Items</div>
+      <div style="border:1px solid var(--border-subtle);border-radius:12px;overflow:hidden;margin-bottom:20px">
+        <sc-for list="{{ drawer.items }}" as="it" hint-placeholder-count="2">
+          <div style="display:flex;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border-subtle);font-size:13px">
+            <span>{{ it.name }} <span style="color:var(--text-muted)">× {{ it.qty }}</span></span>
+            <span style="font-weight:600">{{ it.lineFmt }}</span>
+          </div>
+        </sc-for>
+        <div style="display:flex;justify-content:space-between;padding:12px 14px;font-size:13.5px;font-weight:700;background:var(--canvas)">
+          <span>Total</span><span>{{ drawer.totalFmt }}</span>
+        </div>
+      </div>
+
+      <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px">Status history</div>
+      <div style="margin-bottom:24px">
+        <sc-for list="{{ drawer.history }}" as="h" hint-placeholder-count="2">
+          <div style="display:flex;gap:10px;padding-bottom:14px">
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--evergreen-600);margin-top:5px;flex-shrink:0"></div>
+            <div>
+              <div style="font-size:13px;font-weight:600">{{ h.status }}</div>
+              <div style="font-size:11.5px;color:var(--text-muted)">{{ h.atFmt }}</div>
+              <sc-if value="{{ h.note }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:var(--text-muted);margin-top:2px;font-style:italic">{{ h.note }}</div></sc-if>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+
+      <sc-if value="{{ drawer.canConfirm }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;gap:10px;margin-bottom:12px">
+          <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Button" variant="primary" onClick="{{ doConfirm }}" hint-size="auto,44px">Confirm order</x-import>
+          <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Button" variant="secondary" onClick="{{ toggleReject }}" hint-size="auto,44px">Reject</x-import>
+        </div>
+        <sc-if value="{{ rejecting }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-bottom:16px">
+            <textarea value="{{ rejectNote }}" onChange="{{ onRejectNoteChange }}" placeholder="Reason for rejection (required)" style="width:100%;min-height:70px;border-radius:12px;border:1.5px solid var(--mist-100);padding:12px 14px;font-family:var(--font-body);font-size:13px;box-sizing:border-box;resize:vertical"></textarea>
+            <div style="margin-top:8px">
+              <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Button" variant="primary" onClick="{{ doReject }}" disabled="{{ rejectDisabled }}" hint-size="auto,44px">Confirm rejection</x-import>
+            </div>
+          </div>
+        </sc-if>
+      </sc-if>
+
+      <sc-if value="{{ drawer.canPack }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+          <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Button" variant="secondary" onClick="{{ doPrint }}" hint-size="auto,44px">Print picking slip</x-import>
+          <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Button" variant="primary" onClick="{{ doPack }}" hint-size="auto,44px">Mark packed</x-import>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ drawer.canAssign }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-bottom:12px">
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Assign delivery driver</div>
+          <select value="{{ driver }}" onChange="{{ onDriverChange }}" style="width:100%;height:44px;border-radius:999px;border:1.5px solid var(--mist-100);padding:0 16px;font-family:var(--font-body);font-size:13px;margin-bottom:10px">
+            <sc-for list="{{ driverOptions }}" as="d" hint-placeholder-count="3"><option value="{{ d }}">{{ d }}</option></sc-for>
+          </select>
+          <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Button" variant="primary" onClick="{{ doAssign }}" hint-size="auto,44px">Assign to delivery</x-import>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <div style="position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:10px;z-index:400">
+    <sc-for list="{{ toasts }}" as="tst" hint-placeholder-count="0">
+      <div style="background:var(--white);border:1px solid var(--border-subtle);border-left:4px solid {{ tst.color }};border-radius:12px;padding:14px 18px;font-size:13px;font-weight:500;box-shadow:0 6px 20px rgba(5,31,32,.12);animation:toastIn 200ms ease-out;min-width:220px">{{ tst.msg }}</div>
+    </sc-for>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+
+class Component extends DCLogic {
+  state = { role: 'owner', data: null, orders: [], toasts: [], openId: null, statusFilter: 'all', sortDir: 0, rejecting: false, rejectNote: '', driver: '' };
+
+  async componentDidMount() {
+    const mod = await import('./adminData.js');
+    this.mod = mod;
+    const role = mod.getRole();
+    this.setState({ role, data: mod, orders: mod.ORDERS.map(o => ({ ...o, history: o.history.map(h => ({ ...h })) })) });
+  }
+
+  toast(msg, tone) {
+    const id = Date.now() + Math.random();
+    const color = tone === 'error' ? 'var(--red-500)' : tone === 'warning' ? 'var(--amber-500)' : 'var(--evergreen-600)';
+    this.setState(s => ({ toasts: [...s.toasts, { id, msg, color }] }));
+    setTimeout(() => this.setState(s => ({ toasts: s.toasts.filter(x => x.id !== id) })), 3000);
+  }
+
+  onRoleChange(e) { this.mod.setRole(e.target.value); this.setState({ role: e.target.value, openId: null }); this.toast('Viewing as ' + e.target.value); }
+  updateOrder(id, patch, historyEntry) {
+    this.setState(s => ({ orders: s.orders.map(o => o.id === id ? { ...o, ...patch, history: historyEntry ? [...o.history, historyEntry] : o.history } : o) }));
+  }
+  now() { return '2026-07-25T15:00:00'; }
+
+  doConfirm() { const id = this.state.openId; this.updateOrder(id, { status: 'confirmed' }, { status: 'Confirmed', at: this.now() }); this.toast('Order ' + id + ' confirmed'); }
+  toggleReject() { this.setState(s => ({ rejecting: !s.rejecting })); }
+  onRejectNoteChange(e) { this.setState({ rejectNote: e.target.value }); }
+  doReject() {
+    const id = this.state.openId, note = this.state.rejectNote.trim();
+    if (!note) return;
+    this.updateOrder(id, { status: 'rejected' }, { status: 'Rejected', at: this.now(), note });
+    this.toast('Order ' + id + ' rejected', 'error');
+    this.setState({ rejecting: false, rejectNote: '', openId: null });
+  }
+  doPrint() { this.toast('Picking slip sent to printer'); }
+  doPack() { const id = this.state.openId; this.updateOrder(id, { status: 'packed' }, { status: 'Packed', at: this.now(), note: 'Ready for dispatch' }); this.toast('Order ' + id + ' marked packed'); this.setState({ openId: null }); }
+  onDriverChange(e) { this.setState({ driver: e.target.value }); }
+  doAssign() {
+    const id = this.state.openId, driver = this.state.driver || (this.mod.DELIVERY_STAFF[0]);
+    this.updateOrder(id, { status: 'dispatched' }, { status: 'Dispatched', at: this.now(), note: 'Driver: ' + driver });
+    this.toast('Order ' + id + ' assigned to ' + driver);
+    this.setState({ openId: null });
+  }
+  onSortTotal() { this.setState(s => ({ sortDir: s.sortDir === 1 ? -1 : 1 })); }
+  setFilter(f) { this.setState({ statusFilter: f }); }
+  openDrawer(id) { this.setState({ openId: id, rejecting: false, rejectNote: '', driver: '' }); }
+  closeDrawer() { this.setState({ openId: null, rejecting: false, rejectNote: '' }); }
+
+  renderVals() {
+    const mod = this.mod, role = this.state.role, data = this.state.data;
+    const roleLabels = { owner: 'Owner', admin: 'Admin / Operator', packing: 'Packing Worker', delivery: 'Delivery Worker' };
+    const navList = data ? mod.NAV_ITEMS.map(it => {
+      const locked = it.ownerOnly && role !== 'owner';
+      return { ...it, href: locked ? '#' : it.href,
+        onClick: locked ? (e) => { e.preventDefault(); this.toast('Owner only — ask the business owner for access', 'warning'); } : undefined,
+        bg: it.key === 'orders' ? 'var(--accent-primary)' : 'transparent',
+        color: it.key === 'orders' ? '#fff' : (locked ? 'rgba(142,182,155,.5)' : 'var(--sage-400)'),
+        weight: it.key === 'orders' ? 600 : 400, opacity: locked ? 0.7 : 1 };
+    }) : [];
+
+    const blocked = data ? (role === 'delivery') : false;
+    const TONE = { pending: 'info', confirmed: 'success', packed: 'success', dispatched: 'warning', delivered: 'success', rejected: 'error' };
+    const LABEL = { pending: 'Pending', confirmed: 'Confirmed', packed: 'Packed', dispatched: 'Dispatched', delivered: 'Delivered', rejected: 'Rejected' };
+    let list = data ? this.state.orders.slice() : [];
+    if (role === 'packing') list = list.filter(o => o.status === 'confirmed' || o.status === 'packed');
+    const sf = this.state.statusFilter;
+    if (sf !== 'all') list = list.filter(o => o.status === sf);
+    if (this.state.sortDir) list = list.slice().sort((a, b) => (a.total - b.total) * this.state.sortDir);
+
+    const rows = list.map(o => ({
+      ...o, totalFmt: mod ? mod.formatRs(o.total) : '', tone: TONE[o.status], statusLabel: LABEL[o.status],
+      ago: mod ? mod.timeAgo(o.placedAt) : '', onOpen: () => this.openDrawer(o.id),
+    }));
+
+    const filterDefs = [
+      { key: 'all', label: 'All' }, { key: 'pending', label: 'Pending' }, { key: 'confirmed', label: 'Confirmed' },
+      { key: 'packed', label: 'Packed' }, { key: 'dispatched', label: 'Dispatched' }, { key: 'delivered', label: 'Delivered' }, { key: 'rejected', label: 'Rejected' },
+    ];
+    const filters = data ? filterDefs.map(f => ({
+      label: f.label, onClick: () => this.setFilter(f.key),
+      bg: sf === f.key ? 'var(--accent-primary)' : 'var(--white)', color: sf === f.key ? '#fff' : 'var(--forest-700)',
+      border: sf === f.key ? 'var(--accent-primary)' : 'var(--border-subtle)',
+    })) : [];
+
+    const o = data ? this.state.orders.find(x => x.id === this.state.openId) : null;
+    const drawer = o ? {
+      id: o.id, client: o.client, city: o.city, tier: o.tier, statusLabel: LABEL[o.status], tone: TONE[o.status],
+      items: o.items.map(it => ({ ...it, lineFmt: mod.formatRs(it.qty * it.price) })),
+      totalFmt: mod.formatRs(o.total),
+      history: o.history.map(h => ({ ...h, atFmt: new Date(h.at).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) })),
+      canConfirm: role !== 'delivery' && role !== 'packing' && o.status === 'pending',
+      canPack: (role === 'admin' || role === 'owner' || role === 'packing') && o.status === 'confirmed',
+      canAssign: (role === 'admin' || role === 'owner') && o.status === 'packed',
+    } : null;
+
+    return {
+      role, roleLabel: roleLabels[role], userName: role === 'owner' ? 'Rehan Raza' : role === 'admin' ? 'Sana Malik' : role === 'packing' ? 'Bilal Hussain' : 'Imran Sheikh',
+      initials: role === 'owner' ? 'RR' : role === 'admin' ? 'SM' : role === 'packing' ? 'BH' : 'IS',
+      navList, roleOptions: data ? mod.ROLES : [], onRoleChange: (e) => this.onRoleChange(e),
+      blocked, notBlocked: !blocked,
+      pageSubtitle: role === 'packing' ? 'confirmed orders ready to pack' : 'incoming and in-progress orders',
+      filters, rows, sortArrow: this.state.sortDir === 1 ? '↑' : this.state.sortDir === -1 ? '↓' : '',
+      onSortTotal: () => this.onSortTotal(),
+      drawerOpen: !!drawer, drawer: drawer || {}, closeDrawer: () => this.closeDrawer(),
+      rejecting: this.state.rejecting, rejectNote: this.state.rejectNote, rejectDisabled: !this.state.rejectNote.trim(),
+      onRejectNoteChange: (e) => this.onRejectNoteChange(e),
+      doConfirm: () => this.doConfirm(), toggleReject: () => this.toggleReject(), doReject: () => this.doReject(),
+      doPrint: () => this.doPrint(), doPack: () => this.doPack(),
+      driver: this.state.driver, driverOptions: data ? mod.DELIVERY_STAFF : [], onDriverChange: (e) => this.onDriverChange(e), doAssign: () => this.doAssign(),
+      toasts: this.state.toasts,
+    };
+  }
+}
+
+</script>
+</body>
+</html>

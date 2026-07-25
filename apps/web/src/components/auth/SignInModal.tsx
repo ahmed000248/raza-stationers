@@ -2,12 +2,12 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { useAuth, AccountStatus } from "@/hooks/use-auth"
+import { useAuth } from "@/hooks/use-auth"
 import { Dialog } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Bilingual } from "@/components/ui/bilingual"
-import { LogIn, UserCheck, ShieldCheck, Clock, UserX, KeyRound, Sparkles } from "lucide-react"
+import { LogIn, ShieldCheck, Clock, UserX, Sparkles } from "lucide-react"
 
 interface SignInModalProps {
   open: boolean
@@ -15,9 +15,9 @@ interface SignInModalProps {
 }
 
 export function SignInModal({ open, onOpenChange }: SignInModalProps) {
-  const { accountStatus, loginAs, logout } = useAuth()
+  const { accountStatus, loginAs } = useAuth()
   const [identifier, setIdentifier] = React.useState("ahmed@alrazabookdepot.com")
-  const [password, setPassword] = React.useState("password123")
+  const [password, setPassword] = React.useState("")
   const [error, setError] = React.useState("")
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -33,80 +33,73 @@ export function SignInModal({ open, onOpenChange }: SignInModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <div className="w-full max-w-md space-y-6 p-2">
+      <div className="w-full max-w-md space-y-6 p-6">
         {/* Header */}
         <div className="text-center space-y-1">
-          <div className="inline-flex size-12 items-center justify-center rounded-2xl bg-[var(--color-evergreen-600)] text-white shadow-xs mb-1">
+          <div className="inline-flex size-12 items-center justify-center rounded-2xl bg-[var(--color-evergreen-600)] text-white shadow-xs mb-2">
             <LogIn className="size-6" />
           </div>
-          <h3 className="font-heading font-bold text-xl text-[var(--color-ink-900)]">
-            Sign In to Raza Stationers
-          </h3>
+          <h2 className="font-heading font-bold text-xl text-[var(--color-ink-900)]">
+            Customer Sign In
+          </h2>
           <p className="text-xs text-muted-foreground">
-            Access wholesale pricing, business credit terms, and order history.
+            FR-AUTH-01 Customer Authentication & Role Pricing
           </p>
         </div>
 
-        {/* Quick Role Switcher (CD-04 Test Driver) */}
-        <div className="p-3.5 rounded-2xl bg-muted/60 border border-border space-y-2 text-xs">
-          <div className="flex items-center justify-between font-semibold">
-            <span className="flex items-center gap-1.5 text-[var(--color-ink-900)]">
-              <Sparkles className="size-3.5 text-[var(--color-evergreen-600)]" />
-              <span>CD-04 Pricing Mode Switcher</span>
-            </span>
-            <span className="text-[10px] text-muted-foreground uppercase">Dev Helper</span>
+        {/* Quick Role Switcher (CD-04 Test Driver) - Development Only */}
+        {process.env.NODE_ENV !== "production" && (
+          <div className="p-3.5 rounded-2xl bg-muted/60 border border-border space-y-2 text-xs">
+            <div className="flex items-center justify-between font-semibold">
+              <span className="flex items-center gap-1.5 text-[var(--color-ink-900)]">
+                <Sparkles className="size-3.5 text-[var(--color-evergreen-600)]" />
+                <span>CD-04 Role Switcher</span>
+              </span>
+              <span className="text-[10px] text-muted-foreground uppercase">Dev Helper</span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-1.5">
+              <button
+                type="button"
+                onClick={() => loginAs("guest")}
+                className={`p-2 rounded-xl border text-[11px] font-semibold flex flex-col items-center gap-1 transition-all ${
+                  accountStatus === "guest"
+                    ? "bg-[var(--color-ink-900)] text-white border-[var(--color-ink-900)] shadow-xs"
+                    : "bg-card border-border text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <UserX className="size-3.5" />
+                <span>Guest</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => loginAs("pending")}
+                className={`p-2 rounded-xl border text-[11px] font-semibold flex flex-col items-center gap-1 transition-all ${
+                  accountStatus === "pending"
+                    ? "bg-amber-600 text-white border-amber-600 shadow-xs"
+                    : "bg-card border-border text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Clock className="size-3.5" />
+                <span>Pending</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => loginAs("approved")}
+                className={`p-2 rounded-xl border text-[11px] font-semibold flex flex-col items-center gap-1 transition-all ${
+                  accountStatus === "approved"
+                    ? "bg-[var(--color-evergreen-600)] text-white border-[var(--color-evergreen-600)] shadow-xs"
+                    : "bg-card border-border text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <ShieldCheck className="size-3.5" />
+                <span>Approved</span>
+              </button>
+            </div>
           </div>
-
-          <div className="grid grid-cols-3 gap-1.5">
-            <button
-              type="button"
-              onClick={() => {
-                loginAs("guest")
-                onOpenChange(false)
-              }}
-              className={`p-2 rounded-xl border text-[11px] font-semibold flex flex-col items-center gap-1 transition-all ${
-                accountStatus === "guest"
-                  ? "bg-[var(--color-ink-900)] text-white border-[var(--color-ink-900)] shadow-xs"
-                  : "bg-card border-border text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <UserX className="size-3.5" />
-              <span>Guest</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                loginAs("pending")
-                onOpenChange(false)
-              }}
-              className={`p-2 rounded-xl border text-[11px] font-semibold flex flex-col items-center gap-1 transition-all ${
-                accountStatus === "pending"
-                  ? "bg-amber-600 text-white border-amber-600 shadow-xs"
-                  : "bg-card border-border text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Clock className="size-3.5" />
-              <span>Pending</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                loginAs("approved")
-                onOpenChange(false)
-              }}
-              className={`p-2 rounded-xl border text-[11px] font-semibold flex flex-col items-center gap-1 transition-all ${
-                accountStatus === "approved"
-                  ? "bg-[var(--color-evergreen-600)] text-white border-[var(--color-evergreen-600)] shadow-xs"
-                  : "bg-card border-border text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <ShieldCheck className="size-3.5" />
-              <span>Approved (15%)</span>
-            </button>
-          </div>
-        </div>
+        )}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -120,12 +113,7 @@ export function SignInModal({ open, onOpenChange }: SignInModalProps) {
           </div>
 
           <div className="space-y-1.5">
-            <div className="flex justify-between items-baseline">
-              <label className="text-xs font-semibold text-foreground">Password *</label>
-              <a href="#" className="text-[11px] text-[var(--color-evergreen-600)] hover:underline">
-                Forgot password?
-              </a>
-            </div>
+            <label className="text-xs font-semibold text-foreground">Password *</label>
             <Input
               type="password"
               value={password}
@@ -144,7 +132,7 @@ export function SignInModal({ open, onOpenChange }: SignInModalProps) {
 
         {/* Footer Registration Link */}
         <div className="border-t border-border pt-4 text-center text-xs text-muted-foreground space-y-1">
-          <p>Don't have a wholesale business account yet?</p>
+          <p>Don&apos;t have a wholesale business account yet?</p>
           <Link
             href="/register"
             onClick={() => onOpenChange(false)}

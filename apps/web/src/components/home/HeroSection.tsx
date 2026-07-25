@@ -16,28 +16,31 @@ export function HeroSection() {
 
   useGSAP(
     () => {
-      const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-      if (prefersReducedMotion) return
+      const mm = gsap.matchMedia()
 
-      const tl = gsap.timeline({ defaults: { ease: "power3.out" } })
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        const tl = gsap.timeline({ defaults: { ease: "power3.out" } })
 
-      tl.from(heroTextRef.current?.children || [], {
-        y: 24,
-        opacity: 0,
-        stagger: 0.12,
-        duration: 0.8,
-      }).from(
-        isoCardsRef.current?.children || [],
-        {
-          y: 40,
+        tl.from(heroTextRef.current?.children || [], {
+          y: 24,
           opacity: 0,
-          rotateX: 15,
-          rotateY: -15,
-          stagger: 0.15,
-          duration: 0.9,
-        },
-        "-=0.5"
-      )
+          stagger: 0.12,
+          duration: 0.8,
+        }).from(
+          isoCardsRef.current?.children || [],
+          {
+            y: 40,
+            opacity: 0,
+            rotateX: 15,
+            rotateY: -15,
+            stagger: 0.15,
+            duration: 0.9,
+          },
+          "-=0.5"
+        )
+      })
+
+      return () => mm.revert()
     },
     { scope: containerRef }
   )

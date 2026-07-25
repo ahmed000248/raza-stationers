@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="../_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/fonts/fonts.css">
+  <link rel="stylesheet" href="../_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/colors.css">
+  <link rel="stylesheet" href="../_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/typography.css">
+  <link rel="stylesheet" href="../_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/spacing.css">
+  <link rel="stylesheet" href="../_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/radius.css">
+  <link rel="stylesheet" href="../_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/styles.css">
+  <script src="../_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/_ds_bundle.js"></script>
+  <style>
+    body{margin:0;background:var(--canvas)}
+    a{color:var(--evergreen-600)} a:hover{color:var(--forest-700)}
+    @keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes pulseRing{0%{box-shadow:0 0 0 0 rgba(193,92,78,.5)}70%{box-shadow:0 0 0 8px rgba(193,92,78,0)}100%{box-shadow:0 0 0 0 rgba(193,92,78,0)}}
+    @keyframes revealX{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+    .skel{background:linear-gradient(90deg,var(--mist-100) 25%,#eef7ee 37%,var(--mist-100) 63%);background-size:400% 100%;animation:skshim 1.4s ease infinite;border-radius:8px}
+    @keyframes skshim{0%{background-position:100% 50%}100%{background-position:0 50%}}
+  </style>
+</helmet>
+
+<div style="display:flex;min-height:100vh;font-family:var(--font-body);background:var(--canvas);color:var(--ink-900)">
+
+  <div style="width:240px;flex-shrink:0;background:var(--ink-900);display:flex;flex-direction:column;padding:24px 16px;position:sticky;top:0;height:100vh;box-sizing:border-box">
+    <div style="padding:0 8px 20px 8px">
+      <div style="font-family:var(--font-display);color:#fff;font-size:17px;font-weight:600">Raza Stationers</div>
+      <div style="color:var(--sage-400);font-size:11px;margin-top:3px">Admin Panel · انتظامی پینل</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:2px;flex:1;overflow-y:auto;overflow-x:hidden">
+      <sc-for list="{{ navList }}" as="item" hint-placeholder-count="11">
+        <a href="{{ item.href }}" onClick="{{ item.onClick }}" style="text-decoration:none;display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;margin-bottom:2px;cursor:pointer;transition:background 150ms;background:{{ item.bg }};color:{{ item.color }};opacity:{{ item.opacity }}">
+          <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="{{ item.icon }}" size="18" color="{{ item.color }}" hint-size="18px,18px"></x-import>
+          <span style="font-size:13.5px;font-weight:{{ item.weight }};flex:1">{{ item.label }}</span>
+          <sc-if value="{{ item.ownerOnly }}" hint-placeholder-val="{{ false }}">
+            <span style="font-size:10px;color:var(--sage-400)">🔒</span>
+          </sc-if>
+        </a>
+      </sc-for>
+    </div>
+    <div style="border-top:1px solid rgba(255,255,255,.1);padding-top:14px;margin-top:10px">
+      <div style="font-size:10px;color:var(--sage-400);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;padding:0 8px">Viewing as</div>
+      <select value="{{ role }}" onChange="{{ onRoleChange }}" style="width:100%;background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:9px 10px;font-size:12.5px;font-family:var(--font-body)">
+        <sc-for list="{{ roleOptions }}" as="r" hint-placeholder-count="4">
+          <option value="{{ r.key }}">{{ r.label }}</option>
+        </sc-for>
+      </select>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:14px;padding:0 8px">
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Avatar" initials="{{ initials }}" size="32" hint-size="32px,32px"></x-import>
+        <div style="min-width:0">
+          <div style="color:#fff;font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ userName }}</div>
+          <div style="color:var(--sage-400);font-size:11px">{{ roleLabel }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 32px;border-bottom:1px solid var(--border-subtle);background:var(--white)">
+      <div style="display:flex;align-items:center;gap:10px;background:var(--canvas);border-radius:999px;padding:9px 18px;width:300px">
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="search" size="16" color="var(--sage-400)" hint-size="16px,16px"></x-import>
+        <span style="font-size:13px;color:#8a938e">Search products, orders…</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:20px">
+        <div style="position:relative;cursor:pointer" onClick="{{ onBellClick }}">
+          <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="notification" size="21" color="var(--forest-700)" hint-size="21px,21px"></x-import>
+          <sc-if value="{{ hasAlerts }}" hint-placeholder-val="{{ false }}">
+            <span style="position:absolute;top:-3px;right:-5px;background:var(--red-500);color:#fff;font-size:9px;font-weight:700;min-width:15px;height:15px;border-radius:999px;display:flex;align-items:center;justify-content:center;animation:pulseRing 2s infinite">{{ alertCount }}</span>
+          </sc-if>
+        </div>
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Avatar" initials="{{ initials }}" size="36" hint-size="36px,36px"></x-import>
+      </div>
+    </div>
+
+    <div style="padding:32px;flex:1">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:24px">
+        <div>
+          <h1 style="font-family:var(--font-display);font-size:26px;font-weight:600;margin:0">Dashboard</h1>
+          <div style="color:var(--text-muted);font-size:13px;margin-top:4px">Friday, 25 July 2026 · overview of today's operations</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px">
+        <sc-for list="{{ tiles }}" as="t" hint-placeholder-count="6">
+          <div style="background:var(--white);border:1px solid var(--border-subtle);border-radius:16px;padding:22px;position:relative;overflow:hidden">
+            <sc-if value="{{ t.locked }}" hint-placeholder-val="{{ false }}">
+              <div style="position:absolute;top:14px;right:14px;background:var(--mist-100);color:var(--forest-700);font-size:10px;font-weight:700;padding:4px 9px;border-radius:999px">🔒 Owner only</div>
+            </sc-if>
+            <div style="font-size:12.5px;color:var(--text-muted);font-weight:500">{{ t.label }} <span dir="rtl" style="font-family:var(--font-urdu);margin-left:6px;font-size:12px">{{ t.urdu }}</span></div>
+            <div style="font-size:32px;font-weight:700;margin-top:10px;filter:{{ t.blur }}">{{ t.display }}</div>
+            <div style="font-size:12px;font-weight:600;margin-top:6px;color:{{ t.tone }}">{{ t.sub }}</div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-bottom:20px">
+        <div style="background:var(--white);border:1px solid var(--border-subtle);border-radius:16px;padding:24px">
+          <div style="font-size:14px;font-weight:600;margin-bottom:14px">Sales — last 10 days</div>
+          <div style="transform-origin:left;animation:revealX 700ms ease-out">
+            <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.SimpleLineChart" points="{{ salesPoints }}" height="130" hint-size="100%,130px"></x-import>
+          </div>
+        </div>
+        <div style="background:var(--white);border:1px solid var(--border-subtle);border-radius:16px;padding:24px">
+          <div style="font-size:14px;font-weight:600;margin-bottom:14px">Sales by category</div>
+          <div style="display:flex;gap:14px;align-items:flex-end;height:130px">
+            <sc-for list="{{ bars }}" as="b" hint-placeholder-count="4">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:1">
+                <div style="width:100%;max-width:34px;height:{{ b.h }};background:{{ b.color }};border-radius:6px 6px 0 0;transition:height 600ms ease-out"></div>
+                <div style="font-size:10.5px;color:var(--text-muted)">{{ b.label }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div style="background:var(--white);border:1px solid var(--border-subtle);border-radius:16px;padding:24px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <div style="font-size:14px;font-weight:600">Low stock alerts</div>
+            <a href="./StockManagement.dc.html" style="font-size:12px;text-decoration:underline">View all</a>
+          </div>
+          <sc-for list="{{ lowStockRows }}" as="p" hint-placeholder-count="3">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border-subtle);font-size:13px">
+              <span>{{ p.name }}</span>
+              <span style="font-weight:700;color:var(--amber-ink)">{{ p.stock }} left</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="background:var(--white);border:1px solid var(--border-subtle);border-radius:16px;padding:24px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <div style="font-size:14px;font-weight:600">Recent orders</div>
+            <a href="./OrderQueue.dc.html" style="font-size:12px;text-decoration:underline">View all</a>
+          </div>
+          <sc-for list="{{ recentOrders }}" as="o" hint-placeholder-count="3">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border-subtle);font-size:13px">
+              <span>{{ o.id }} · {{ o.client }}</span>
+              <span style="font-weight:600">{{ o.totalFmt }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:10px;z-index:200">
+    <sc-for list="{{ toasts }}" as="tst" hint-placeholder-count="0">
+      <div style="background:var(--white);border:1px solid var(--border-subtle);border-left:4px solid {{ tst.color }};border-radius:12px;padding:14px 18px;font-size:13px;font-weight:500;box-shadow:0 6px 20px rgba(5,31,32,.12);animation:toastIn 200ms ease-out;min-width:220px">{{ tst.msg }}</div>
+    </sc-for>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { role: 'owner', data: null, counts: null, toasts: [] };
+
+  async componentDidMount() {
+    const mod = await import('./adminData.js');
+    this.mod = mod;
+    const role = mod.getRole();
+    const pending = mod.ORDERS.filter(o => o.status === 'pending').length;
+    const lowStock = mod.PRODUCTS.filter(p => p.stock <= p.threshold).length;
+    const approvals = mod.CLIENTS.filter(c => c.status === 'pending').length;
+    const overdue = mod.CLIENTS.filter(c => c.outstanding > 60000).length;
+    const packing = mod.ORDERS.filter(o => o.status === 'confirmed').length;
+    const deliveries = mod.ORDERS.filter(o => o.status === 'dispatched').length;
+    this.targets = { pending, lowStock, approvals, overdue, packing, deliveries };
+    this.setState({ role, data: mod, counts: { pending: 0, lowStock: 0, approvals: 0, overdue: 0, packing: 0, deliveries: 0 } });
+    this.runCountUp();
+  }
+
+  runCountUp() {
+    const start = performance.now(), dur = 700, targets = this.targets;
+    const step = (now) => {
+      const t = Math.min(1, (now - start) / dur);
+      const e = 1 - Math.pow(1 - t, 3);
+      this.setState({ counts: Object.fromEntries(Object.entries(targets).map(([k, v]) => [k, Math.round(v * e)])) });
+      if (t < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+
+  toast(msg, tone) {
+    const id = Date.now() + Math.random();
+    const color = tone === 'error' ? 'var(--red-500)' : tone === 'warning' ? 'var(--amber-500)' : 'var(--evergreen-600)';
+    this.setState(s => ({ toasts: [...s.toasts, { id, msg, color }] }));
+    setTimeout(() => this.setState(s => ({ toasts: s.toasts.filter(x => x.id !== id) })), 3000);
+  }
+
+  onRoleChange(e) {
+    this.mod.setRole(e.target.value);
+    this.setState({ role: e.target.value });
+    this.toast('Viewing as ' + e.target.value);
+  }
+
+  renderVals() {
+    const mod = this.mod, role = this.state.role, data = this.state.data;
+    const roleLabels = { owner: 'Owner', admin: 'Admin / Operator', packing: 'Packing Worker', delivery: 'Delivery Worker' };
+    const navList = data ? mod.NAV_ITEMS.map(it => {
+      const locked = it.ownerOnly && role !== 'owner';
+      return {
+        ...it, href: locked ? '#' : it.href,
+        onClick: locked ? (e) => { e.preventDefault(); this.toast('Owner only — ask the business owner for access', 'warning'); } : undefined,
+        bg: it.key === 'dashboard' ? 'var(--accent-primary)' : 'transparent',
+        color: it.key === 'dashboard' ? '#fff' : (locked ? 'rgba(142,182,155,.5)' : 'var(--sage-400)'),
+        weight: it.key === 'dashboard' ? 600 : 400,
+        opacity: locked ? 0.7 : 1,
+      };
+    }) : [];
+    const c = this.state.counts || {};
+    const tiles = data ? [
+      { label: 'Pending Orders', urdu: 'زیر التوا آرڈرز', display: c.pending, sub: c.pending > 0 ? 'Needs review' : 'All clear', tone: c.pending > 0 ? 'var(--amber-ink)' : 'var(--evergreen-600)' },
+      { label: 'Low-Stock Alerts', urdu: 'کم اسٹاک', display: c.lowStock, sub: c.lowStock + ' items below threshold', tone: 'var(--red-ink)' },
+      { label: 'Wholesale Approvals', urdu: 'رعایتی منظوری', display: c.approvals, sub: 'Awaiting owner decision', tone: 'var(--blue-ink)', locked: role !== 'owner' },
+      { label: 'Overdue Payments', urdu: 'زیر التوا ادائیگی', display: c.overdue, sub: 'Clients over limit', tone: 'var(--red-ink)', locked: role !== 'owner' },
+      { label: "Packing Queue", urdu: 'پیکنگ قطار', display: c.packing, sub: 'Confirmed, not packed', tone: 'var(--forest-700)' },
+      { label: "Today's Deliveries", urdu: 'آج کی ترسیل', display: c.deliveries, sub: 'Currently dispatched', tone: 'var(--forest-700)' },
+    ].map(t => ({ ...t, display: t.locked ? '—' : t.display, blur: t.locked ? 'blur(0px)' : 'none' })) : [];
+    const bars = data ? mod.CATEGORY_BARS.map(b => ({ label: b.label, h: b.value + '%', color: b.emphasis ? 'var(--evergreen-600)' : 'var(--sage-400)' })) : [];
+    const lowStockRows = data ? mod.PRODUCTS.filter(p => p.stock <= p.threshold).slice(0, 4) : [];
+    const recentOrders = data ? mod.ORDERS.slice(0, 4).map(o => ({ ...o, totalFmt: mod.formatRs(o.total) })) : [];
+    return {
+      role, roleLabel: roleLabels[role], userName: role === 'owner' ? 'Rehan Raza' : role === 'admin' ? 'Sana Malik' : role === 'packing' ? 'Bilal Hussain' : 'Imran Sheikh',
+      initials: role === 'owner' ? 'RR' : role === 'admin' ? 'SM' : role === 'packing' ? 'BH' : 'IS',
+      navList, roleOptions: data ? mod.ROLES : [], onRoleChange: (e) => this.onRoleChange(e),
+      tiles, bars, lowStockRows, recentOrders,
+      salesPoints: data ? mod.SALES_TREND : '',
+      hasAlerts: !!data && (this.targets.pending + this.targets.lowStock) > 0,
+      alertCount: data ? (this.targets.pending + this.targets.lowStock) : 0,
+      onBellClick: () => this.toast('You have ' + ((this.targets && (this.targets.pending + this.targets.lowStock)) || 0) + ' pending alerts'),
+      toasts: this.state.toasts,
+    };
+  }
+}
+</script>
+</body>
+</html>

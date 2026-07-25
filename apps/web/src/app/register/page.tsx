@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Bilingual } from "@/components/ui/bilingual"
 import { PendingVerificationNotice } from "@/components/auth/PendingVerificationNotice"
 import { isCityInDeliveryZone, SUPPORTED_DELIVERY_CITIES } from "@raza-stationers/validation"
-import { Building2, ArrowLeft, Upload, Check, ShieldCheck, ArrowRight, FileText } from "lucide-react"
+import { Building2, ArrowLeft, Upload, Check, ArrowRight, FileText } from "lucide-react"
 
 export default function WholesaleRegistrationPage() {
   const { accountStatus, loginAs, clientBusiness } = useAuth()

@@ -5,11 +5,10 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { mockProducts } from "@/content/mock/products"
 import { mockProductUnits } from "@/content/mock/units"
-import { ProductCatalogueView, ProductUnit } from "@raza-stationers/types"
+import { ProductUnit } from "@raza-stationers/types"
 import { ProductIconBlock } from "@/components/ui/product-icon-block"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Bilingual } from "@/components/ui/bilingual"
 import { ProductCard } from "@/components/catalogue/ProductCard"
 import { ProductUnitSelector } from "@/components/product/ProductUnitSelector"
 import { QuantityStepper } from "@/components/product/QuantityStepper"
@@ -17,7 +16,7 @@ import { AddToCartButton } from "@/components/product/AddToCartButton"
 import { calculateUnitPrice, calculateTotalBaseUnits } from "@/lib/unit-conversion"
 import { formatPKR, resolveDisplayPrice, UserPricingContext } from "@/lib/pricing"
 import { useCart } from "@/hooks/use-cart"
-import { ArrowLeft, BellRing, Check, ShieldCheck, Truck, Package, Layers } from "lucide-react"
+import { ArrowLeft, BellRing, Check, ShieldCheck, Truck, Layers } from "lucide-react"
 
 interface ProductDetailPageProps {
   params: Promise<{
@@ -116,7 +115,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           {/* Left Column: Solid Evergreen Icon Block Hero (FR-CAT-01 No Photo) */}
           <div className="lg:col-span-6 space-y-4">
             <ProductIconBlock
-              category={product.categoryId.replace("cat-", "") as any}
+              category={(product.categoryId.replace("cat-", "") as "paper" | "pens" | "office" | "files" | "cutting" | "art" | "general")}
               size="xl"
               aspectRatio="square"
               className="w-full rounded-2xl shadow-md"

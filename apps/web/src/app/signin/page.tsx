@@ -13,7 +13,7 @@ export default function SignInPage() {
   const router = useRouter()
   const { accountStatus, loginAs } = useAuth()
   const [identifier, setIdentifier] = React.useState("ahmed@alrazabookdepot.com")
-  const [password, setPassword] = React.useState("password123")
+  const [password, setPassword] = React.useState("")
   const [error, setError] = React.useState("")
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -51,57 +51,59 @@ export default function SignInPage() {
             </p>
           </div>
 
-          {/* Quick Role Switcher (CD-04 Test Driver) */}
-          <div className="p-3.5 rounded-2xl bg-muted/60 border border-border space-y-2 text-xs">
-            <div className="flex items-center justify-between font-semibold">
-              <span className="flex items-center gap-1.5 text-[var(--color-ink-900)]">
-                <Sparkles className="size-3.5 text-[var(--color-evergreen-600)]" />
-                <span>CD-04 Role Switcher</span>
-              </span>
-              <span className="text-[10px] text-muted-foreground uppercase">Dev Helper</span>
+          {/* Quick Role Switcher (CD-04 Test Driver) - Development Only */}
+          {process.env.NODE_ENV !== "production" && (
+            <div className="p-3.5 rounded-2xl bg-muted/60 border border-border space-y-2 text-xs">
+              <div className="flex items-center justify-between font-semibold">
+                <span className="flex items-center gap-1.5 text-[var(--color-ink-900)]">
+                  <Sparkles className="size-3.5 text-[var(--color-evergreen-600)]" />
+                  <span>CD-04 Role Switcher</span>
+                </span>
+                <span className="text-[10px] text-muted-foreground uppercase">Dev Helper</span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => loginAs("guest")}
+                  className={`p-2 rounded-xl border text-[11px] font-semibold flex flex-col items-center gap-1 transition-all ${
+                    accountStatus === "guest"
+                      ? "bg-[var(--color-ink-900)] text-white border-[var(--color-ink-900)] shadow-xs"
+                      : "bg-card border-border text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <UserX className="size-3.5" />
+                  <span>Guest</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => loginAs("pending")}
+                  className={`p-2 rounded-xl border text-[11px] font-semibold flex flex-col items-center gap-1 transition-all ${
+                    accountStatus === "pending"
+                      ? "bg-amber-600 text-white border-amber-600 shadow-xs"
+                      : "bg-card border-border text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Clock className="size-3.5" />
+                  <span>Pending</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => loginAs("approved")}
+                  className={`p-2 rounded-xl border text-[11px] font-semibold flex flex-col items-center gap-1 transition-all ${
+                    accountStatus === "approved"
+                      ? "bg-[var(--color-evergreen-600)] text-white border-[var(--color-evergreen-600)] shadow-xs"
+                      : "bg-card border-border text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <ShieldCheck className="size-3.5" />
+                  <span>Approved</span>
+                </button>
+              </div>
             </div>
-
-            <div className="grid grid-cols-3 gap-1.5">
-              <button
-                type="button"
-                onClick={() => loginAs("guest")}
-                className={`p-2 rounded-xl border text-[11px] font-semibold flex flex-col items-center gap-1 transition-all ${
-                  accountStatus === "guest"
-                    ? "bg-[var(--color-ink-900)] text-white border-[var(--color-ink-900)] shadow-xs"
-                    : "bg-card border-border text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <UserX className="size-3.5" />
-                <span>Guest</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => loginAs("pending")}
-                className={`p-2 rounded-xl border text-[11px] font-semibold flex flex-col items-center gap-1 transition-all ${
-                  accountStatus === "pending"
-                    ? "bg-amber-600 text-white border-amber-600 shadow-xs"
-                    : "bg-card border-border text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <Clock className="size-3.5" />
-                <span>Pending</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => loginAs("approved")}
-                className={`p-2 rounded-xl border text-[11px] font-semibold flex flex-col items-center gap-1 transition-all ${
-                  accountStatus === "approved"
-                    ? "bg-[var(--color-evergreen-600)] text-white border-[var(--color-evergreen-600)] shadow-xs"
-                    : "bg-card border-border text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <ShieldCheck className="size-3.5" />
-                <span>Approved</span>
-              </button>
-            </div>
-          </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">

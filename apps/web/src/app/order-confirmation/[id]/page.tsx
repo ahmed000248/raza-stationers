@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Bilingual } from "@/components/ui/bilingual"
 import { Dialog } from "@/components/ui/dialog"
 import { formatPKR } from "@/lib/pricing"
-import { CheckCircle2, FileText, ArrowRight, Package, Clock, Truck, Home } from "lucide-react"
+import { CheckCircle2, FileText, Home } from "lucide-react"
 
 interface OrderConfirmationPageProps {
   params: Promise<{

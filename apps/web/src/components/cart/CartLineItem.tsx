@@ -22,7 +22,7 @@ export function CartLineItem({ item, onUpdateQuantity, onRemove }: CartLineItemP
       {/* Left: Product Icon & Title Info */}
       <div className="flex items-center gap-4 min-w-0">
         <ProductIconBlock
-          category={(item.category || "paper") as any}
+          category={(item.category || "paper") as "paper" | "pens" | "office" | "files" | "cutting" | "art" | "general"}
           size="sm"
           className="size-14 rounded-xl shrink-0"
         />

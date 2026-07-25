@@ -6,9 +6,8 @@ import { useCart } from "@/hooks/use-cart"
 import { CartLineItem } from "@/components/cart/CartLineItem"
 import { CartSummary } from "@/components/cart/CartSummary"
 import { EmptyState } from "@/components/ui/empty-state"
-import { Button } from "@/components/ui/button"
 import { Bilingual } from "@/components/ui/bilingual"
-import { ShoppingBag, ArrowLeft, Trash2, ArrowRight } from "lucide-react"
+import { ShoppingBag, ArrowLeft, Trash2 } from "lucide-react"
 
 export default function CartPage() {
   const { items, updateQuantity, removeItem, clearCart, subtotal, totalItems } = useCart()

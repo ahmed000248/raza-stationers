@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Bilingual } from "@/components/ui/bilingual"
-import { Building2, ArrowRight, ShieldCheck } from "lucide-react"
+import { Building2, ArrowRight } from "lucide-react"
 
 export function GuestCtaBanner() {
   return (

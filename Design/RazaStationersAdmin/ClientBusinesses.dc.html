@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet>
+  <link rel="stylesheet" href="../_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/fonts/fonts.css">
+  <link rel="stylesheet" href="../_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/colors.css">
+  <link rel="stylesheet" href="../_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/typography.css">
+  <link rel="stylesheet" href="../_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/spacing.css">
+  <link rel="stylesheet" href="../_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/radius.css">
+  <link rel="stylesheet" href="../_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/styles.css">
+  <script src="../_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/_ds_bundle.js"></script>
+  <style>
+    body{margin:0;background:var(--canvas)}
+    a{color:var(--evergreen-600)} a:hover{color:var(--forest-700)}
+    @keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes rowFade{from{opacity:.3}to{opacity:1}}
+    tr.rrow td{transition:background 150ms}
+    tr.rrow:hover td{background:var(--canvas)}
+  </style>
+</helmet>
+
+<div style="display:flex;min-height:100vh;font-family:var(--font-body);background:var(--canvas);color:var(--ink-900)">
+  <div style="width:240px;flex-shrink:0;background:var(--ink-900);display:flex;flex-direction:column;padding:24px 16px;position:sticky;top:0;height:100vh;box-sizing:border-box">
+    <div style="padding:0 8px 20px 8px">
+      <div style="font-family:var(--font-display);color:#fff;font-size:17px;font-weight:600">Raza Stationers</div>
+      <div style="color:var(--sage-400);font-size:11px;margin-top:3px">Admin Panel · انتظامی پینل</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:2px;flex:1;overflow-y:auto;overflow-x:hidden">
+      <sc-for list="{{ navList }}" as="item" hint-placeholder-count="11">
+        <a href="{{ item.href }}" onClick="{{ item.onClick }}" style="text-decoration:none;display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;margin-bottom:2px;cursor:pointer;transition:background 150ms;background:{{ item.bg }};color:{{ item.color }};opacity:{{ item.opacity }}">
+          <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="{{ item.icon }}" size="18" color="{{ item.color }}" hint-size="18px,18px"></x-import>
+          <span style="font-size:13.5px;font-weight:{{ item.weight }};flex:1">{{ item.label }}</span>
+          <sc-if value="{{ item.ownerOnly }}" hint-placeholder-val="{{ false }}"><span style="font-size:10px;color:var(--sage-400)">🔒</span></sc-if>
+        </a>
+      </sc-for>
+    </div>
+    <div style="border-top:1px solid rgba(255,255,255,.1);padding-top:14px;margin-top:10px">
+      <div style="font-size:10px;color:var(--sage-400);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;padding:0 8px">Viewing as</div>
+      <select value="{{ role }}" onChange="{{ onRoleChange }}" style="width:100%;background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:9px 10px;font-size:12.5px;font-family:var(--font-body)">
+        <sc-for list="{{ roleOptions }}" as="r" hint-placeholder-count="4"><option value="{{ r.key }}">{{ r.label }}</option></sc-for>
+      </select>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:14px;padding:0 8px">
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Avatar" initials="{{ initials }}" size="32" hint-size="32px,32px"></x-import>
+        <div style="min-width:0">
+          <div style="color:#fff;font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ userName }}</div>
+          <div style="color:var(--sage-400);font-size:11px">{{ roleLabel }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 32px;border-bottom:1px solid var(--border-subtle);background:var(--white)">
+      <div style="display:flex;align-items:center;gap:10px;background:var(--canvas);border-radius:999px;padding:9px 18px;width:300px">
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="search" size="16" color="var(--sage-400)" hint-size="16px,16px"></x-import>
+        <span style="font-size:13px;color:#8a938e">Search products, orders…</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:20px">
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="notification" size="21" color="var(--forest-700)" hint-size="21px,21px"></x-import>
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Avatar" initials="{{ initials }}" size="36" hint-size="36px,36px"></x-import>
+      </div>
+    </div>
+
+    <div style="padding:32px;flex:1">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px">
+        <div>
+          <h1 style="font-family:var(--font-display);font-size:26px;font-weight:600;margin:0">Client Businesses</h1>
+          <div style="color:var(--text-muted);font-size:13px;margin-top:4px">کلائنٹ کاروبار · registered wholesale accounts</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;margin:20px 0;align-items:center">
+        <input value="{{ search }}" onChange="{{ onSearch }}" placeholder="Search by name or city…" style="height:44px;border-radius:999px;border:1.5px solid var(--mist-100);padding:0 18px;font-family:var(--font-body);font-size:13px;width:280px;box-sizing:border-box">
+        <div style="display:flex;gap:8px">
+          <sc-for list="{{ filters }}" as="f" hint-placeholder-count="4">
+            <div onClick="{{ f.onClick }}" style="cursor:pointer;padding:8px 16px;border-radius:999px;font-size:12.5px;font-weight:600;background:{{ f.bg }};color:{{ f.color }};border:1px solid {{ f.border }}">{{ f.label }}</div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="background:var(--white);border:1px solid var(--border-subtle);border-radius:16px;overflow:hidden">
+        <div style="display:table;width:100%;font-size:13px">
+          <div style="display:table-row;color:var(--sage-400);font-size:11px;text-transform:uppercase;background:var(--canvas)">
+            <div style="display:table-cell;padding:12px 20px;font-weight:600">Business</div>
+            <div style="display:table-cell;padding:12px 12px;font-weight:600">City</div>
+            <div style="display:table-cell;padding:12px 12px;font-weight:600">Tier</div>
+            <div style="display:table-cell;padding:12px 12px;font-weight:600">Status</div>
+            <div style="display:table-cell;padding:12px 20px;font-weight:600">Outstanding</div>
+            <div style="display:table-cell;padding:12px 20px;font-weight:600"></div>
+          </div>
+          <sc-for list="{{ rows }}" as="cl" hint-placeholder-count="5">
+            <div class="rrow" style="display:table-row;animation:rowFade 300ms ease-out">
+              <div style="display:table-cell;padding:14px 20px;border-top:1px solid var(--border-subtle);font-weight:600">{{ cl.name }}</div>
+              <div style="display:table-cell;padding:14px 12px;border-top:1px solid var(--border-subtle)">{{ cl.city }}</div>
+              <div style="display:table-cell;padding:14px 12px;border-top:1px solid var(--border-subtle)">{{ cl.tier }}</div>
+              <div style="display:table-cell;padding:14px 12px;border-top:1px solid var(--border-subtle)">
+                <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.StatusBadge" label="{{ cl.statusLabel }}" tone="{{ cl.tone }}" hint-size="auto,32px"></x-import>
+              </div>
+              <div style="display:table-cell;padding:14px 20px;border-top:1px solid var(--border-subtle);font-weight:600">{{ cl.outstandingFmt }}</div>
+              <div style="display:table-cell;padding:14px 20px;border-top:1px solid var(--border-subtle);text-align:right">
+                <span onClick="{{ cl.onOpen }}" style="cursor:pointer;font-size:12.5px;font-weight:600;text-decoration:underline">View</span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <sc-if value="{{ drawerOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeDrawer }}" style="position:fixed;inset:0;background:rgba(5,31,32,.35);z-index:300"></div>
+    <div style="position:fixed;top:0;right:0;height:100vh;width:460px;background:var(--white);z-index:301;box-shadow:0 0 40px rgba(5,31,32,.18);overflow-y:auto;padding:28px;box-sizing:border-box">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+        <div>
+          <div style="font-family:var(--font-display);font-size:19px;font-weight:600">{{ drawer.name }}</div>
+          <div style="color:var(--text-muted);font-size:12.5px;margin-top:2px">{{ drawer.city }} · {{ drawer.phone }} · client since {{ drawer.since }}</div>
+        </div>
+        <span onClick="{{ closeDrawer }}" style="cursor:pointer;font-size:20px;color:var(--text-muted)">×</span>
+      </div>
+      <div style="margin:14px 0"><x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.StatusBadge" label="{{ drawer.statusLabel }}" tone="{{ drawer.tone }}" hint-size="auto,32px"></x-import></div>
+
+      <sc-if value="{{ drawer.showApproval }}" hint-placeholder-val="{{ false }}">
+        <div style="background:var(--mist-100);border-radius:12px;padding:16px;margin-bottom:20px">
+          <div style="font-size:11px;font-weight:700;color:var(--forest-700);margin-bottom:6px">🔒 OWNER ONLY</div>
+          <div style="font-size:13px;margin-bottom:12px">New wholesale account awaiting approval.</div>
+          <div style="display:flex;gap:10px">
+            <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Button" variant="primary" onClick="{{ approve }}" hint-size="auto,40px">Approve account</x-import>
+            <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Button" variant="secondary" onClick="{{ reject }}" hint-size="auto,40px">Reject</x-import>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ drawer.approvalLocked }}" hint-placeholder-val="{{ false }}">
+        <div style="background:var(--canvas);border:1px solid var(--border-subtle);border-radius:12px;padding:14px 16px;margin-bottom:20px;font-size:12.5px;color:var(--text-muted)">🔒 Account approval is owner only. Ask the business owner to review this pending account.</div>
+      </sc-if>
+
+      <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px">Discount / pricing tier</div>
+      <div style="display:flex;gap:10px;margin-bottom:20px">
+        <select value="{{ tierSelect }}" onChange="{{ onTierChange }}" style="flex:1;height:44px;border-radius:999px;border:1.5px solid var(--mist-100);padding:0 16px;font-family:var(--font-body);font-size:13px">
+          <sc-for list="{{ tierOptions }}" as="t" hint-placeholder-count="4"><option value="{{ t }}">{{ t }}</option></sc-for>
+        </select>
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Button" variant="secondary" onClick="{{ applyTier }}" hint-size="auto,44px">Apply</x-import>
+      </div>
+
+      <sc-if value="{{ drawer.ownerVisible }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+          <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px">Credit limit &amp; balance</div>
+          <div style="font-size:9.5px;font-weight:700;color:var(--forest-700);background:var(--mist-100);padding:2px 8px;border-radius:999px">🔒 OWNER ONLY</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+          <div style="background:var(--canvas);border-radius:12px;padding:14px">
+            <div style="font-size:11px;color:var(--text-muted)">Credit limit</div>
+            <div style="font-size:16px;font-weight:700;margin-top:4px">{{ drawer.creditLimitFmt }}</div>
+          </div>
+          <div style="background:var(--canvas);border-radius:12px;padding:14px">
+            <div style="font-size:11px;color:var(--text-muted)">Outstanding</div>
+            <div style="font-size:16px;font-weight:700;margin-top:4px;color:{{ drawer.outstandingColor }}">{{ drawer.outstandingFmt }}</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px">Order history</div>
+      <div style="margin-bottom:20px">
+        <sc-for list="{{ drawer.orders }}" as="o" hint-placeholder-count="2">
+          <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border-subtle);font-size:13px">
+            <span>{{ o.id }} · {{ o.ago }}</span><span style="font-weight:600">{{ o.totalFmt }}</span>
+          </div>
+        </sc-for>
+        <sc-if value="{{ drawer.noOrders }}" hint-placeholder-val="{{ false }}"><div style="font-size:12.5px;color:var(--text-muted);padding:8px 0">No orders yet.</div></sc-if>
+      </div>
+
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+        <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px">Payment history</div>
+        <div style="font-size:9.5px;font-weight:700;color:var(--forest-700);background:var(--mist-100);padding:2px 8px;border-radius:999px">🔒 OWNER ONLY</div>
+      </div>
+      <sc-if value="{{ drawer.ownerVisible }}" hint-placeholder-val="{{ false }}">
+        <div>
+          <sc-for list="{{ drawer.payments }}" as="p" hint-placeholder-count="2">
+            <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border-subtle);font-size:13px">
+              <span>{{ p.date }} — {{ p.method }}</span><span style="font-weight:600">{{ p.amountFmt }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{ drawer.paymentsLocked }}" hint-placeholder-val="{{ false }}">
+        <div style="font-size:12.5px;color:var(--text-muted);padding:10px 0">Only the business owner can view payment history.</div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <div style="position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:10px;z-index:400">
+    <sc-for list="{{ toasts }}" as="tst" hint-placeholder-count="0">
+      <div style="background:var(--white);border:1px solid var(--border-subtle);border-left:4px solid {{ tst.color }};border-radius:12px;padding:14px 18px;font-size:13px;font-weight:500;box-shadow:0 6px 20px rgba(5,31,32,.12);animation:toastIn 200ms ease-out;min-width:220px">{{ tst.msg }}</div>
+    </sc-for>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+
+class Component extends DCLogic {
+  state = { role: 'owner', data: null, clients: [], toasts: [], search: '', statusFilter: 'all', openId: null, tierSelect: '' };
+
+  async componentDidMount() {
+    const mod = await import('./adminData.js');
+    this.mod = mod;
+    const role = mod.getRole();
+    this.setState({ role, data: mod, clients: mod.CLIENTS.map(c => ({ ...c })) });
+  }
+
+  toast(msg, tone) {
+    const id = Date.now() + Math.random();
+    const color = tone === 'error' ? 'var(--red-500)' : tone === 'warning' ? 'var(--amber-500)' : 'var(--evergreen-600)';
+    this.setState(s => ({ toasts: [...s.toasts, { id, msg, color }] }));
+    setTimeout(() => this.setState(s => ({ toasts: s.toasts.filter(x => x.id !== id) })), 3000);
+  }
+  onRoleChange(e) { this.mod.setRole(e.target.value); this.setState({ role: e.target.value, openId: null }); this.toast('Viewing as ' + e.target.value); }
+  onSearch(e) { this.setState({ search: e.target.value }); }
+  setFilter(f) { this.setState({ statusFilter: f }); }
+  updateClient(id, patch) { this.setState(s => ({ clients: s.clients.map(c => c.id === id ? { ...c, ...patch } : c) })); }
+  openDrawer(id) { const c = this.state.clients.find(x => x.id === id); this.setState({ openId: id, tierSelect: c ? c.tier : '' }); }
+  closeDrawer() { this.setState({ openId: null }); }
+  approve() { const id = this.state.openId; this.updateClient(id, { status: 'active' }); this.toast('Wholesale account approved — written to audit log'); }
+  reject() { const id = this.state.openId; this.updateClient(id, { status: 'suspended' }); this.toast('Account application rejected', 'error'); this.setState({ openId: null }); }
+  onTierChange(e) { this.setState({ tierSelect: e.target.value }); }
+  applyTier() { const id = this.state.openId; this.updateClient(id, { tier: this.state.tierSelect }); this.toast('Pricing tier updated to ' + this.state.tierSelect); }
+
+  renderVals() {
+    const mod = this.mod, role = this.state.role, data = this.state.data;
+    const roleLabels = { owner: 'Owner', admin: 'Admin / Operator', packing: 'Packing Worker', delivery: 'Delivery Worker' };
+    const navList = data ? mod.NAV_ITEMS.map(it => {
+      const locked = it.ownerOnly && role !== 'owner';
+      return { ...it, href: locked ? '#' : it.href,
+        onClick: locked ? (e) => { e.preventDefault(); this.toast('Owner only — ask the business owner for access', 'warning'); } : undefined,
+        bg: it.key === 'clients' ? 'var(--accent-primary)' : 'transparent',
+        color: it.key === 'clients' ? '#fff' : (locked ? 'rgba(142,182,155,.5)' : 'var(--sage-400)'),
+        weight: it.key === 'clients' ? 600 : 400, opacity: locked ? 0.7 : 1 };
+    }) : [];
+
+    const TONE = { active: 'success', pending: 'info', suspended: 'error' };
+    const LABEL = { active: 'Active', pending: 'Pending approval', suspended: 'Suspended' };
+    let list = data ? this.state.clients.slice() : [];
+    const q = this.state.search.trim().toLowerCase();
+    if (q) list = list.filter(c => c.name.toLowerCase().includes(q) || c.city.toLowerCase().includes(q));
+    if (this.state.statusFilter !== 'all') list = list.filter(c => c.status === this.state.statusFilter);
+    const rows = list.map(c => ({ ...c, statusLabel: LABEL[c.status], tone: TONE[c.status], outstandingFmt: mod.formatRs(c.outstanding), onOpen: () => this.openDrawer(c.id) }));
+
+    const filterDefs = [{ key: 'all', label: 'All' }, { key: 'active', label: 'Active' }, { key: 'pending', label: 'Pending' }, { key: 'suspended', label: 'Suspended' }];
+    const filters = data ? filterDefs.map(f => ({
+      label: f.label, onClick: () => this.setFilter(f.key),
+      bg: this.state.statusFilter === f.key ? 'var(--accent-primary)' : 'var(--white)', color: this.state.statusFilter === f.key ? '#fff' : 'var(--forest-700)',
+      border: this.state.statusFilter === f.key ? 'var(--accent-primary)' : 'var(--border-subtle)',
+    })) : [];
+
+    const cl = data ? this.state.clients.find(x => x.id === this.state.openId) : null;
+    const drawer = cl ? {
+      name: cl.name, city: cl.city, phone: cl.phone, since: cl.since, statusLabel: LABEL[cl.status], tone: TONE[cl.status],
+      showApproval: cl.status === 'pending' && role === 'owner',
+      approvalLocked: cl.status === 'pending' && role !== 'owner',
+      ownerVisible: role === 'owner', paymentsLocked: role !== 'owner',
+      creditLimitFmt: mod.formatRs(cl.creditLimit), outstandingFmt: mod.formatRs(cl.outstanding),
+      outstandingColor: cl.outstanding > 60000 ? 'var(--red-ink)' : 'var(--ink-900)',
+      orders: mod.ORDERS.filter(o => o.client === cl.name).map(o => ({ id: o.id, ago: mod.timeAgo(o.placedAt), totalFmt: mod.formatRs(o.total) })),
+      noOrders: !mod.ORDERS.some(o => o.client === cl.name),
+      payments: [{ date: '18 Jul 2026', method: 'Bank transfer', amountFmt: mod.formatRs(40000) }, { date: '02 Jul 2026', method: 'Cash', amountFmt: mod.formatRs(25000) }],
+    } : {};
+
+    return {
+      role, roleLabel: roleLabels[role], userName: role === 'owner' ? 'Rehan Raza' : role === 'admin' ? 'Sana Malik' : role === 'packing' ? 'Bilal Hussain' : 'Imran Sheikh',
+      initials: role === 'owner' ? 'RR' : role === 'admin' ? 'SM' : role === 'packing' ? 'BH' : 'IS',
+      navList, roleOptions: data ? mod.ROLES : [], onRoleChange: (e) => this.onRoleChange(e),
+      search: this.state.search, onSearch: (e) => this.onSearch(e), filters, rows,
+      drawerOpen: !!cl, drawer, closeDrawer: () => this.closeDrawer(),
+      tierSelect: this.state.tierSelect, tierOptions: data ? mod.DISCOUNT_TIERS.map(t => t.name + ' — ' + t.pct + '%') : [],
+      onTierChange: (e) => this.onTierChange(e), applyTier: () => this.applyTier(),
+      approve: () => this.approve(), reject: () => this.reject(),
+      toasts: this.state.toasts,
+    };
+  }
+}
+
+</script>
+</body>
+</html>

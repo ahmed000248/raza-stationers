@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet>
+  <link rel="stylesheet" href="../_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/fonts/fonts.css">
+  <link rel="stylesheet" href="../_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/colors.css">
+  <link rel="stylesheet" href="../_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/typography.css">
+  <link rel="stylesheet" href="../_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/spacing.css">
+  <link rel="stylesheet" href="../_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/radius.css">
+  <link rel="stylesheet" href="../_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/styles.css">
+  <script src="../_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/_ds_bundle.js"></script>
+  <script src="./image-slot.js"></script>
+  <style>
+    body{margin:0;background:var(--canvas)}
+    a{color:var(--evergreen-600)} a:hover{color:var(--forest-700)}
+    @keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes rowFade{from{opacity:.3}to{opacity:1}}
+  </style>
+</helmet>
+
+<div style="display:flex;min-height:100vh;font-family:var(--font-body);background:var(--canvas);color:var(--ink-900)">
+  <div style="width:240px;flex-shrink:0;background:var(--ink-900);display:flex;flex-direction:column;padding:24px 16px;position:sticky;top:0;height:100vh;box-sizing:border-box">
+    <div style="padding:0 8px 20px 8px">
+      <div style="font-family:var(--font-display);color:#fff;font-size:17px;font-weight:600">Raza Stationers</div>
+      <div style="color:var(--sage-400);font-size:11px;margin-top:3px">Admin Panel · انتظامی پینل</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:2px;flex:1;overflow-y:auto;overflow-x:hidden">
+      <sc-for list="{{ navList }}" as="item" hint-placeholder-count="11">
+        <a href="{{ item.href }}" onClick="{{ item.onClick }}" style="text-decoration:none;display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;margin-bottom:2px;cursor:pointer;transition:background 150ms;background:{{ item.bg }};color:{{ item.color }};opacity:{{ item.opacity }}">
+          <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="{{ item.icon }}" size="18" color="{{ item.color }}" hint-size="18px,18px"></x-import>
+          <span style="font-size:13.5px;font-weight:{{ item.weight }};flex:1">{{ item.label }}</span>
+          <sc-if value="{{ item.ownerOnly }}" hint-placeholder-val="{{ false }}"><span style="font-size:10px;color:var(--sage-400)">🔒</span></sc-if>
+        </a>
+      </sc-for>
+    </div>
+    <div style="border-top:1px solid rgba(255,255,255,.1);padding-top:14px;margin-top:10px">
+      <div style="font-size:10px;color:var(--sage-400);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;padding:0 8px">Viewing as</div>
+      <select value="{{ role }}" onChange="{{ onRoleChange }}" style="width:100%;background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:9px 10px;font-size:12.5px;font-family:var(--font-body)">
+        <sc-for list="{{ roleOptions }}" as="r" hint-placeholder-count="4"><option value="{{ r.key }}">{{ r.label }}</option></sc-for>
+      </select>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:14px;padding:0 8px">
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Avatar" initials="{{ initials }}" size="32" hint-size="32px,32px"></x-import>
+        <div style="min-width:0">
+          <div style="color:#fff;font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ userName }}</div>
+          <div style="color:var(--sage-400);font-size:11px">{{ roleLabel }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 32px;border-bottom:1px solid var(--border-subtle);background:var(--white)">
+      <div style="display:flex;align-items:center;gap:10px;background:var(--canvas);border-radius:999px;padding:9px 18px;width:300px">
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="search" size="16" color="var(--sage-400)" hint-size="16px,16px"></x-import>
+        <span style="font-size:13px;color:#8a938e">Search products, orders…</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:20px">
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="notification" size="21" color="var(--forest-700)" hint-size="21px,21px"></x-import>
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Avatar" initials="{{ initials }}" size="36" hint-size="36px,36px"></x-import>
+      </div>
+    </div>
+
+    <div style="padding:32px;flex:1">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px">
+        <div>
+          <h1 style="font-family:var(--font-display);font-size:26px;font-weight:600;margin:0">Product Catalogue</h1>
+          <div style="color:var(--text-muted);font-size:13px;margin-top:4px">مصنوعات کیٹلاگ · {{ count }} products</div>
+        </div>
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Button" variant="primary" onClick="{{ openAdd }}" hint-size="auto,44px">+ Add product</x-import>
+      </div>
+
+      <div style="display:flex;gap:8px;margin:20px 0;flex-wrap:wrap">
+        <sc-for list="{{ cats }}" as="c" hint-placeholder-count="5">
+          <div onClick="{{ c.onClick }}" style="cursor:pointer;padding:8px 16px;border-radius:999px;font-size:12.5px;font-weight:600;background:{{ c.bg }};color:{{ c.color }};border:1px solid {{ c.border }}">{{ c.label }}</div>
+        </sc-for>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+        <sc-for list="{{ products }}" as="p" hint-placeholder-count="8">
+          <div style="background:var(--white);border:1px solid var(--border-subtle);border-radius:14px;overflow:hidden;animation:rowFade 300ms ease-out">
+            <div style="width:100%;aspect-ratio:1/1;background:var(--canvas)">
+              <image-slot id="{{ p.id }}" placeholder="{{ p.name }}" shape="rect"></image-slot>
+            </div>
+            <div style="padding:14px">
+              <div style="font-size:10.5px;color:var(--sage-400);text-transform:uppercase;letter-spacing:.4px">{{ p.category }}</div>
+              <div style="font-size:13.5px;font-weight:600;margin:4px 0 8px 0;line-height:1.3">{{ p.name }}</div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:14px;font-weight:700">{{ p.priceFmt }}</span>
+                <span style="font-size:11.5px;color:{{ p.stockColor }};font-weight:600">{{ p.stock }} {{ p.unit }}</span>
+              </div>
+              <div style="margin-top:10px;display:flex;gap:8px">
+                <span onClick="{{ p.onEdit }}" style="cursor:pointer;font-size:12px;font-weight:600;text-decoration:underline">Edit</span>
+              </div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <sc-if value="{{ modalOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeModal }}" style="position:fixed;inset:0;background:rgba(5,31,32,.35);z-index:300;display:flex;align-items:center;justify-content:center">
+      <div onClick="{{ stop }}" style="background:var(--white);border-radius:16px;padding:28px;width:420px;box-sizing:border-box">
+        <div style="font-family:var(--font-display);font-size:17px;font-weight:600;margin-bottom:16px">{{ modalTitle }}</div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <input value="{{ form.name }}" onChange="{{ onNameChange }}" placeholder="Product name" style="height:44px;border-radius:10px;border:1.5px solid var(--mist-100);padding:0 14px;font-family:var(--font-body);font-size:13px">
+          <select value="{{ form.category }}" onChange="{{ onCategoryChange }}" style="height:44px;border-radius:10px;border:1.5px solid var(--mist-100);padding:0 14px;font-family:var(--font-body);font-size:13px">
+            <sc-for list="{{ catOptions }}" as="c" hint-placeholder-count="4"><option value="{{ c }}">{{ c }}</option></sc-for>
+          </select>
+          <div style="display:flex;gap:12px">
+            <input type="number" value="{{ form.price }}" onChange="{{ onPriceChange }}" placeholder="Price (Rs)" style="flex:1;height:44px;border-radius:10px;border:1.5px solid var(--mist-100);padding:0 14px;font-family:var(--font-body);font-size:13px">
+            <input type="number" value="{{ form.stock }}" onChange="{{ onStockChange }}" placeholder="Stock" style="flex:1;height:44px;border-radius:10px;border:1.5px solid var(--mist-100);padding:0 14px;font-family:var(--font-body);font-size:13px">
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:20px">
+          <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Button" variant="primary" onClick="{{ save }}" hint-size="auto,44px">{{ saveLabel }}</x-import>
+          <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Button" variant="secondary" onClick="{{ closeModal }}" hint-size="auto,44px">Cancel</x-import>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:10px;z-index:400">
+    <sc-for list="{{ toasts }}" as="tst" hint-placeholder-count="0">
+      <div style="background:var(--white);border:1px solid var(--border-subtle);border-left:4px solid {{ tst.color }};border-radius:12px;padding:14px 18px;font-size:13px;font-weight:500;box-shadow:0 6px 20px rgba(5,31,32,.12);animation:toastIn 200ms ease-out;min-width:220px">{{ tst.msg }}</div>
+    </sc-for>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+
+class Component extends DCLogic {
+  state = { role: 'owner', data: null, products: [], toasts: [], catFilter: 'all', modalMode: null, editId: null, form: { name: '', category: 'Stationery', price: '', stock: '' } };
+
+  async componentDidMount() {
+    const mod = await import('./adminData.js');
+    this.mod = mod;
+    const role = mod.getRole();
+    this.setState({ role, data: mod, products: mod.PRODUCTS.map(p => ({ ...p })) });
+  }
+
+  toast(msg, tone) {
+    const id = Date.now() + Math.random();
+    const color = tone === 'error' ? 'var(--red-500)' : tone === 'warning' ? 'var(--amber-500)' : 'var(--evergreen-600)';
+    this.setState(s => ({ toasts: [...s.toasts, { id, msg, color }] }));
+    setTimeout(() => this.setState(s => ({ toasts: s.toasts.filter(x => x.id !== id) })), 3000);
+  }
+  onRoleChange(e) { this.mod.setRole(e.target.value); this.setState({ role: e.target.value }); this.toast('Viewing as ' + e.target.value); }
+  setCatFilter(c) { this.setState({ catFilter: c }); }
+  openAdd() { this.setState({ modalMode: 'add', editId: null, form: { name: '', category: 'Stationery', price: '', stock: '' } }); }
+  openEdit(p) { this.setState({ modalMode: 'edit', editId: p.id, form: { name: p.name, category: p.category, price: p.price, stock: p.stock } }); }
+  closeModal() { this.setState({ modalMode: null }); }
+  setForm(patch) { this.setState(s => ({ form: { ...s.form, ...patch } })); }
+  save() {
+    const f = this.state.form;
+    if (!f.name.trim()) { this.toast('Product name required', 'error'); return; }
+    if (this.state.modalMode === 'add') {
+      const id = 'p' + (this.state.products.length + 1) + '-' + Date.now();
+      this.setState(s => ({ products: [{ id, sku: 'RS-NEW-' + Math.floor(Math.random() * 9000 + 1000), name: f.name, category: f.category, price: Number(f.price) || 0, stock: Number(f.stock) || 0, threshold: 20, unit: 'pc' }, ...s.products] }));
+      this.toast('Product added');
+    } else {
+      const id = this.state.editId;
+      this.setState(s => ({ products: s.products.map(p => p.id === id ? { ...p, name: f.name, category: f.category, price: Number(f.price) || 0, stock: Number(f.stock) || 0 } : p) }));
+      this.toast('Product updated');
+    }
+    this.setState({ modalMode: null });
+  }
+
+  renderVals() {
+    const mod = this.mod, role = this.state.role, data = this.state.data;
+    const roleLabels = { owner: 'Owner', admin: 'Admin / Operator', packing: 'Packing Worker', delivery: 'Delivery Worker' };
+    const navList = data ? mod.NAV_ITEMS.map(it => {
+      const locked = it.ownerOnly && role !== 'owner';
+      return { ...it, href: locked ? '#' : it.href,
+        onClick: locked ? (e) => { e.preventDefault(); this.toast('Owner only — ask the business owner for access', 'warning'); } : undefined,
+        bg: it.key === 'catalogue' ? 'var(--accent-primary)' : 'transparent',
+        color: it.key === 'catalogue' ? '#fff' : (locked ? 'rgba(142,182,155,.5)' : 'var(--sage-400)'),
+        weight: it.key === 'catalogue' ? 600 : 400, opacity: locked ? 0.7 : 1 };
+    }) : [];
+
+    let list = data ? this.state.products.slice() : [];
+    if (this.state.catFilter !== 'all') list = list.filter(p => p.category === this.state.catFilter);
+    const products = list.map(p => ({
+      ...p, priceFmt: mod.formatRs(p.price), stockColor: p.stock <= p.threshold ? 'var(--red-ink)' : 'var(--evergreen-600)',
+      onEdit: () => this.openEdit(p),
+    }));
+
+    const catDefs = data ? ['all', ...mod.CATEGORIES] : [];
+    const cats = catDefs.map(c => ({
+      label: c === 'all' ? 'All' : c, onClick: () => this.setCatFilter(c),
+      bg: this.state.catFilter === c ? 'var(--accent-primary)' : 'var(--white)', color: this.state.catFilter === c ? '#fff' : 'var(--forest-700)',
+      border: this.state.catFilter === c ? 'var(--accent-primary)' : 'var(--border-subtle)',
+    }));
+
+    return {
+      role, roleLabel: roleLabels[role], userName: role === 'owner' ? 'Rehan Raza' : role === 'admin' ? 'Sana Malik' : role === 'packing' ? 'Bilal Hussain' : 'Imran Sheikh',
+      initials: role === 'owner' ? 'RR' : role === 'admin' ? 'SM' : role === 'packing' ? 'BH' : 'IS',
+      navList, roleOptions: data ? mod.ROLES : [], onRoleChange: (e) => this.onRoleChange(e),
+      count: data ? this.state.products.length : 0, cats, products, openAdd: () => this.openAdd(),
+      modalOpen: !!this.state.modalMode, modalTitle: this.state.modalMode === 'add' ? 'Add product' : 'Edit product', saveLabel: this.state.modalMode === 'add' ? 'Add product' : 'Save changes',
+      form: this.state.form, catOptions: data ? mod.CATEGORIES : [],
+      onNameChange: (e) => this.setForm({ name: e.target.value }), onCategoryChange: (e) => this.setForm({ category: e.target.value }),
+      onPriceChange: (e) => this.setForm({ price: e.target.value }), onStockChange: (e) => this.setForm({ stock: e.target.value }),
+      save: () => this.save(), closeModal: () => this.closeModal(), stop: (e) => e.stopPropagation(),
+      toasts: this.state.toasts,
+    };
+  }
+}
+
+</script>
+</body>
+</html>

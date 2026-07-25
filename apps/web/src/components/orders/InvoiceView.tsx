@@ -4,7 +4,7 @@ import * as React from "react"
 import { Order } from "@raza-stationers/types"
 import { formatPKR } from "@/lib/pricing"
 import { Button } from "@/components/ui/button"
-import { Printer, Download, Building2, CheckCircle2 } from "lucide-react"
+import { Printer, Building2 } from "lucide-react"
 
 interface InvoiceViewProps {
   order: Order

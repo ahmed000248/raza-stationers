@@ -5,7 +5,6 @@ import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { Bell, Check, Settings, PackageCheck, AlertTriangle, CreditCard, Sparkles } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
 
 export interface NotificationItem {
   id: string

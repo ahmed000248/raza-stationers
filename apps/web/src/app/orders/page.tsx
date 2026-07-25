@@ -5,7 +5,7 @@ import Link from "next/link"
 import { mockOrders } from "@/content/mock/orders"
 import { OrderHistoryCard } from "@/components/orders/OrderHistoryCard"
 import { EmptyState } from "@/components/ui/empty-state"
-import { Package, ArrowLeft, Filter } from "lucide-react"
+import { Package, ArrowLeft } from "lucide-react"
 
 export default function OrderHistoryPage() {
   const [filterStatus, setFilterStatus] = React.useState<"all" | "pending_review" | "out_for_delivery" | "delivered">("all")

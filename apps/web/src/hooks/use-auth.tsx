@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { User, ClientBusiness } from "@raza-stationers/types"
+import { User, ClientBusiness, BusinessUserRole } from "@raza-stationers/types"
 import { UserPricingContext } from "@/lib/pricing"
 
 export type AccountStatus = "guest" | "pending" | "approved"
@@ -10,6 +10,7 @@ interface AuthContextValue {
   accountStatus: AccountStatus
   user: User | null
   clientBusiness: ClientBusiness | null
+  businessRole: BusinessUserRole | null
   pricingContext: UserPricingContext
   loginAs: (status: AccountStatus) => void
   logout: () => void
@@ -79,6 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [accountStatus, setAccountStatus] = React.useState<AccountStatus>("guest")
   const [user, setUser] = React.useState<User | null>(null)
   const [clientBusiness, setClientBusiness] = React.useState<ClientBusiness | null>(null)
+  const [businessRole, setBusinessRole] = React.useState<BusinessUserRole | null>(null)
   const [isLoaded, setIsLoaded] = React.useState(false)
 
   // Load stored auth status on client mount
@@ -106,12 +108,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (status === "approved") {
       setUser(mockApprovedUser)
       setClientBusiness(mockApprovedBusiness)
+      setBusinessRole("owner")
     } else if (status === "pending") {
       setUser(mockPendingUser)
       setClientBusiness(mockPendingBusiness)
+      setBusinessRole("owner")
     } else {
       setUser(null)
       setClientBusiness(null)
+      setBusinessRole(null)
     }
   }, [])
 
@@ -136,6 +141,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         accountStatus,
         user,
         clientBusiness,
+        businessRole,
         pricingContext,
         loginAs,
         logout,

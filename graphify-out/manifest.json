@@ -40,9 +40,9 @@
     "semantic_hash": "ce5cb18efd0990be59584b9fd0011a6d"
   },
   "package.json": {
-    "mtime": 1784753704.523958,
-    "ast_hash": "dcada5f1f9492f3496f54fc1d95ed024",
-    "semantic_hash": "dcada5f1f9492f3496f54fc1d95ed024"
+    "mtime": 1784926635.3457303,
+    "ast_hash": "e2113184c83f0e5ee40c9ac36cb0515f",
+    "semantic_hash": ""
   },
   "skills-lock.json": {
     "mtime": 1784753152.8827808,
@@ -70,9 +70,9 @@
     "semantic_hash": "9b77af189a21a7a64e4bd7a426f64176"
   },
   "apps/web/package.json": {
-    "mtime": 1784924294.3725035,
-    "ast_hash": "fe015ac87ce55b275c830d09785a87f9",
-    "semantic_hash": "fe015ac87ce55b275c830d09785a87f9"
+    "mtime": 1784972924.1936195,
+    "ast_hash": "58bc3d85be6d836b5efdb7e11c462056",
+    "semantic_hash": ""
   },
   "apps/web/postcss.config.mjs": {
     "mtime": 1784753023.5335717,
@@ -80,14 +80,14 @@
     "semantic_hash": "239f3ebf717465dc636818a1a619398d"
   },
   "apps/web/src/app/layout.tsx": {
-    "mtime": 1784926269.2415202,
-    "ast_hash": "1b8c95398bb937df9135f944ef98e6f0",
-    "semantic_hash": "1b8c95398bb937df9135f944ef98e6f0"
+    "mtime": 1784973314.0797918,
+    "ast_hash": "84f50efb9394d78c3c0b8665fa7b3a61",
+    "semantic_hash": ""
   },
   "apps/web/src/app/page.tsx": {
-    "mtime": 1784926274.172326,
-    "ast_hash": "4b6b6e2c71b760e06f48b47d360f58d2",
-    "semantic_hash": "4b6b6e2c71b760e06f48b47d360f58d2"
+    "mtime": 1784927120.5295348,
+    "ast_hash": "b9e920c3debe81e7d6e152ebff757f2d",
+    "semantic_hash": ""
   },
   "apps/web/src/components/kokonutui/action-search-bar.tsx": {
     "mtime": 1784753318.2172203,
@@ -773,5 +773,950 @@
     "mtime": 1784926258.7235,
     "ast_hash": "426429712bc5f6d6e00867122f4d4da2",
     "semantic_hash": "426429712bc5f6d6e00867122f4d4da2"
+  },
+  ".claude/settings.local.json": {
+    "mtime": 1784983760.4798725,
+    "ast_hash": "38866fd5bc9a5bf2c7c7fc7c2aa91df9",
+    "semantic_hash": ""
+  },
+  ".vscode/settings.json": {
+    "mtime": 1784926369.9776292,
+    "ast_hash": "e21598ab261bad9c03d700c295c63245",
+    "semantic_hash": ""
+  },
+  "apps/web/src/app/about/page.tsx": {
+    "mtime": 1784977202.8331382,
+    "ast_hash": "57fc0f7ab3f139337fa6deac054d3c1c",
+    "semantic_hash": ""
+  },
+  "apps/web/src/app/account/page.tsx": {
+    "mtime": 1785003024.1674898,
+    "ast_hash": "6b5cec43aebfad21dcc9b912a7daf9b6",
+    "semantic_hash": ""
+  },
+  "apps/web/src/app/cart/page.tsx": {
+    "mtime": 1785003330.949001,
+    "ast_hash": "9801d150d05ab0ad678b135179cec4ca",
+    "semantic_hash": ""
+  },
+  "apps/web/src/app/catalogue/[category]/page.tsx": {
+    "mtime": 1784927567.026683,
+    "ast_hash": "b69300c877caaa0d546670a776c9a14d",
+    "semantic_hash": ""
+  },
+  "apps/web/src/app/catalogue/page.tsx": {
+    "mtime": 1784977177.574337,
+    "ast_hash": "963dbaffa87b9ae543e7e842351c7ed8",
+    "semantic_hash": ""
+  },
+  "apps/web/src/app/checkout/page.tsx": {
+    "mtime": 1785003340.2884042,
+    "ast_hash": "e901db696232b42da04eed6765b09c0d",
+    "semantic_hash": ""
+  },
+  "apps/web/src/app/contact/page.tsx": {
+    "mtime": 1785003380.7204628,
+    "ast_hash": "b2a21eb9d13c09e8a2eb8b4874197b1e",
+    "semantic_hash": ""
+  },
+  "apps/web/src/app/dev/components/page.tsx": {
+    "mtime": 1785003359.5148356,
+    "ast_hash": "967f0a651b2d25691d19233704ec872a",
+    "semantic_hash": ""
+  },
+  "apps/web/src/app/order-confirmation/[id]/page.tsx": {
+    "mtime": 1785003189.146318,
+    "ast_hash": "a56fb97e4cc15228bc5bce4cc08834df",
+    "semantic_hash": ""
+  },
+  "apps/web/src/app/orders/[id]/page.tsx": {
+    "mtime": 1785003181.0328028,
+    "ast_hash": "aa27bf6ba81ee4789037f960b49bf5d7",
+    "semantic_hash": ""
+  },
+  "apps/web/src/app/orders/page.tsx": {
+    "mtime": 1785003172.4086018,
+    "ast_hash": "973429f22ce067d82767848e65dc8e6c",
+    "semantic_hash": ""
+  },
+  "apps/web/src/app/product/[id]/page.tsx": {
+    "mtime": 1785003209.7765958,
+    "ast_hash": "0129e6f3f8806b07902982263b12630c",
+    "semantic_hash": ""
+  },
+  "apps/web/src/app/register/page.tsx": {
+    "mtime": 1785003164.1947653,
+    "ast_hash": "a95a5b548a6f688b7d3b2b6b23bb7639",
+    "semantic_hash": ""
+  },
+  "apps/web/src/app/signin/page.tsx": {
+    "mtime": 1785003032.0470912,
+    "ast_hash": "2a755d174ecc9ccc7f086c33cbc17470",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/account/BusinessProfileTab.tsx": {
+    "mtime": 1784973554.4276872,
+    "ast_hash": "e15b9b73c3a610c45ee6d0d4266c52d2",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/account/CreditStatusCard.tsx": {
+    "mtime": 1784973518.0653062,
+    "ast_hash": "3b9a0b2f6676fd7e13ca16827a4caf14",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/account/NotificationPreferencesTab.tsx": {
+    "mtime": 1784973559.6499765,
+    "ast_hash": "42edd23b6185a7cce987253af57c5448",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/account/NotificationsFeedTab.tsx": {
+    "mtime": 1785003151.2380826,
+    "ast_hash": "f5bfa8400295ad6b80a098f5cff9a906",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/account/StaffTab.tsx": {
+    "mtime": 1785003156.2554386,
+    "ast_hash": "4870a302a8147429604f6fdb4c0dc32c",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/admin/AdminNav.tsx": {
+    "mtime": 1784973957.0621686,
+    "ast_hash": "eb5190cbcfa53f6be2882afe1efdba33",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/admin/DiscountRulesManager.tsx": {
+    "mtime": 1784973987.869243,
+    "ast_hash": "ec26b9ca39316cd60d66830e841937a1",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/admin/OrderOperationsTable.tsx": {
+    "mtime": 1784973980.6278,
+    "ast_hash": "52dac6f88053b0ee6986cc4417ffa164",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/admin/StaffManagementTable.tsx": {
+    "mtime": 1784973964.4530892,
+    "ast_hash": "0278c03c78d6dc2685ce88b729c431f1",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/admin/StockManagementPanel.tsx": {
+    "mtime": 1784973972.1634665,
+    "ast_hash": "45bf78b2e921944f1193d0bd0ee2f409",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/auth/PendingVerificationNotice.tsx": {
+    "mtime": 1785003047.5931945,
+    "ast_hash": "3a48de4fd87457f54d52147565f34118",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/auth/SignInModal.tsx": {
+    "mtime": 1785003063.7036037,
+    "ast_hash": "88f4544dd50094951ff2a5e85e1a105b",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/cart/CartLineItem.tsx": {
+    "mtime": 1785003218.707909,
+    "ast_hash": "60d1afe9b1fadd9f928ab4b72ecfe9ee",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/cart/CartSummary.tsx": {
+    "mtime": 1785003071.7063742,
+    "ast_hash": "01ec48eeb47fcbe44337003dd80facfb",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/catalogue/CataloguePagination.tsx": {
+    "mtime": 1784927553.92493,
+    "ast_hash": "0caee2ddc6b53555e4fcd38f2405c148",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/catalogue/CatalogueSearchInput.tsx": {
+    "mtime": 1784927541.6849172,
+    "ast_hash": "1710f28ef9ed1175c20b605b59417c8a",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/catalogue/CategoryFilter.tsx": {
+    "mtime": 1784927548.0966737,
+    "ast_hash": "bcdae949b916f1f6fe30143815e3bc33",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/catalogue/ProductCard.tsx": {
+    "mtime": 1785003227.2215915,
+    "ast_hash": "bf75c632ae9ef0209edd70a987f7ce76",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/catalogue/PurchaseTypeToggle.tsx": {
+    "mtime": 1784927535.9409883,
+    "ast_hash": "077cf535860a5a3c741121a5376c4626",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/checkout/DeliveryZoneNotice.tsx": {
+    "mtime": 1785003079.3238678,
+    "ast_hash": "7ffcfb526876271a5bd04552ac0e9fd8",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/checkout/MinOrderNotice.tsx": {
+    "mtime": 1784972938.7117634,
+    "ast_hash": "cedd4d9ea5381577c9b72b195c06638a",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/checkout/PaymentMethodPicker.tsx": {
+    "mtime": 1785003086.8582945,
+    "ast_hash": "5cbbfb80411f2a49e20df84644140505",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/home/CategorySection.tsx": {
+    "mtime": 1785003235.4553504,
+    "ast_hash": "a5e1b0c1c7320bfcec68df2a668be2e8",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/home/FeaturedSection.tsx": {
+    "mtime": 1785003095.4602041,
+    "ast_hash": "cef63ffc61961e61f3c8eca8b962a870",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/home/GuestCtaBanner.tsx": {
+    "mtime": 1785003103.0610726,
+    "ast_hash": "321dff7b85053d3b0fc9cf214af5541c",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/home/HeroSection.tsx": {
+    "mtime": 1785003039.8670237,
+    "ast_hash": "1fd255e22961bd394bc9fddf3997717f",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/motion/fade-in.tsx": {
+    "mtime": 1784926663.8241305,
+    "ast_hash": "6bc208c980c1e39a8babb76a749d17f8",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/motion/skeleton-block.tsx": {
+    "mtime": 1784926605.8748329,
+    "ast_hash": "f52aa56f5f7910ad5cba1da2af0be455",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/motion/stagger-list.tsx": {
+    "mtime": 1784926668.1400816,
+    "ast_hash": "d93dab19100aa9bb1399ed0f9634554a",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/orders/InvoiceView.tsx": {
+    "mtime": 1785003110.8266077,
+    "ast_hash": "c77d0ea71ea1fa1c13485191d37cc421",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/orders/OrderHistoryCard.tsx": {
+    "mtime": 1785003118.9963505,
+    "ast_hash": "cbbe782b0ba3a20466d04ba4856aa3e2",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/orders/OrderTrackingTimeline.tsx": {
+    "mtime": 1784973718.6450574,
+    "ast_hash": "7b5d81f2397249b74699f7dc6848ef50",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/product/AddToCartButton.tsx": {
+    "mtime": 1784927876.6459103,
+    "ast_hash": "e1aed98dc76d0f73454557d67749c03e",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/product/ProductUnitSelector.tsx": {
+    "mtime": 1784927862.3041835,
+    "ast_hash": "fb432b27858dd2c1e882de849591bfd2",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/product/QuantityStepper.tsx": {
+    "mtime": 1784927869.1231246,
+    "ast_hash": "da1eaf51cb27360e2739092f40dbb0a9",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/site/NotificationDropdown.tsx": {
+    "mtime": 1785003126.9134367,
+    "ast_hash": "d4af772cecd3d894c8aff9a858d9d610",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/site/SiteFooter.tsx": {
+    "mtime": 1784926899.0825725,
+    "ast_hash": "2bf53634dfc47ba751e6d1be617a99ac",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/site/SiteNav.tsx": {
+    "mtime": 1785003134.7144809,
+    "ast_hash": "7fcf9491c209906d2ac8411fa2191536",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/ui/badge.tsx": {
+    "mtime": 1784926554.4973805,
+    "ast_hash": "570903c7e14657bd13c9d3a8026cba43",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/ui/bilingual.tsx": {
+    "mtime": 1784926580.6709497,
+    "ast_hash": "6809a402595a662f1c10aefc44137de8",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/ui/card.tsx": {
+    "mtime": 1784926558.6573057,
+    "ast_hash": "67cb66e88c27e56503e0e440f8f30a1e",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/ui/dialog.tsx": {
+    "mtime": 1784926571.8406122,
+    "ast_hash": "ab5cb5830d6780f39532e8a58903d047",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/ui/empty-state.tsx": {
+    "mtime": 1784926589.3472688,
+    "ast_hash": "09098367655ddd6f8bd3b127ebfd68b1",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/ui/product-icon-block.tsx": {
+    "mtime": 1784926585.1833267,
+    "ast_hash": "9dbd58a735d9f05e1fff97fd46aec407",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/ui/sheet.tsx": {
+    "mtime": 1784926576.4334645,
+    "ast_hash": "10d646e6075232228fbb88459a2bc76c",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/ui/skeleton.tsx": {
+    "mtime": 1784926562.5734878,
+    "ast_hash": "ea1810cb2260f26fea446a48e81c1d7b",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/ui/tabs.tsx": {
+    "mtime": 1784926567.208805,
+    "ast_hash": "901e4fe10054ea165192d818956cbe57",
+    "semantic_hash": ""
+  },
+  "apps/web/src/components/ui/toast.tsx": {
+    "mtime": 1784926593.8378325,
+    "ast_hash": "345c866ab3998f1fea1bbd35f4ca4ec8",
+    "semantic_hash": ""
+  },
+  "apps/web/src/content/mock/admin-data.ts": {
+    "mtime": 1784973950.13767,
+    "ast_hash": "a1e63c2d45fe49660ce88180b86366ef",
+    "semantic_hash": ""
+  },
+  "apps/web/src/content/mock/orders.ts": {
+    "mtime": 1784973174.8217995,
+    "ast_hash": "db71ab182996842aeb28dc0ef65c2123",
+    "semantic_hash": ""
+  },
+  "apps/web/src/content/mock/products.ts": {
+    "mtime": 1784927083.681848,
+    "ast_hash": "824afc6f90ab4d678bbf83a58254f4fa",
+    "semantic_hash": ""
+  },
+  "apps/web/src/content/mock/units.ts": {
+    "mtime": 1784927855.7234795,
+    "ast_hash": "a70865bc3fee8b9842bab4470797e678",
+    "semantic_hash": ""
+  },
+  "apps/web/src/hooks/use-auth.tsx": {
+    "mtime": 1785002995.0430374,
+    "ast_hash": "53eaf33e57e01c0607ef3f7b33df6d34",
+    "semantic_hash": ""
+  },
+  "apps/web/src/hooks/use-cart.tsx": {
+    "mtime": 1784972590.09906,
+    "ast_hash": "7cf153a157a772a07ad8ffdbe1890bec",
+    "semantic_hash": ""
+  },
+  "apps/web/src/lib/admin-ops.ts": {
+    "mtime": 1784974025.661818,
+    "ast_hash": "75ce0f2cc68795019f0247926a670304",
+    "semantic_hash": ""
+  },
+  "apps/web/src/lib/cart-math.ts": {
+    "mtime": 1784972582.5982723,
+    "ast_hash": "9ab1814d7e32fec16d57575222a72d46",
+    "semantic_hash": ""
+  },
+  "apps/web/src/lib/pricing.ts": {
+    "mtime": 1784927077.2197864,
+    "ast_hash": "d9c6324ca7cd418cab076f7de4841049",
+    "semantic_hash": ""
+  },
+  "apps/web/src/lib/unit-conversion.ts": {
+    "mtime": 1784927849.5119271,
+    "ast_hash": "585d2502234308c5569c75b9f56398ba",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/animate/examples/animate-height.tsx": {
+    "mtime": 1784753143.0698066,
+    "ast_hash": "a92803e3386d6ce0f8e2d6b267e67f92",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/animate/examples/app-store-card.tsx": {
+    "mtime": 1784753143.0698066,
+    "ast_hash": "01395d0f875d8ccd88f93e848eb2e793",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/animate/examples/card-hover.tsx": {
+    "mtime": 1784753143.0698066,
+    "ast_hash": "252ec9f2cba3fa02f4cb4e097a02a5c4",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/animate/examples/feedback-popover.tsx": {
+    "mtime": 1784753143.0698066,
+    "ast_hash": "7aefbb4261f8764ea2decc05d913d740",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/animate/examples/multi-step-flow.tsx": {
+    "mtime": 1784753143.0698066,
+    "ast_hash": "52535da3cb40507c35ebe7b29d2e1adb",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/animate/examples/shared-layout.tsx": {
+    "mtime": 1784753143.0698066,
+    "ast_hash": "1f22b7663fa966f4c11be0c756f625f8",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/animate/examples/text-reveal.tsx": {
+    "mtime": 1784753143.073363,
+    "ast_hash": "0fbbcfbf6cdf1dd060060e553358930c",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/animate/examples/toast-stacking.tsx": {
+    "mtime": 1784753143.073363,
+    "ast_hash": "ce5cb18efd0990be59584b9fd0011a6d",
+    "semantic_hash": ""
+  },
+  "packages/.claude/settings.local.json": {
+    "mtime": 1784983760.4798725,
+    "ast_hash": "38866fd5bc9a5bf2c7c7fc7c2aa91df9",
+    "semantic_hash": ""
+  },
+  "packages/api/tsconfig.json": {
+    "mtime": 1784927360.5534587,
+    "ast_hash": "725ef260b1d780a207254d8bf078b5ae",
+    "semantic_hash": ""
+  },
+  "packages/apps/mobile/package.json": {
+    "mtime": 1784753675.4902837,
+    "ast_hash": "d121012daa4f1b99d0b3936aa082839b",
+    "semantic_hash": ""
+  },
+  "packages/apps/web/components.json": {
+    "mtime": 1784753278.0722406,
+    "ast_hash": "216720b3c896341ff290a2dadf8c4ed1",
+    "semantic_hash": ""
+  },
+  "packages/apps/web/eslint.config.mjs": {
+    "mtime": 1784753023.51365,
+    "ast_hash": "dfa1f5f6a7037bf39dc510f30b180002",
+    "semantic_hash": ""
+  },
+  "packages/apps/web/next.config.ts": {
+    "mtime": 1784753023.6477063,
+    "ast_hash": "9b77af189a21a7a64e4bd7a426f64176",
+    "semantic_hash": ""
+  },
+  "packages/apps/web/package.json": {
+    "mtime": 1784972924.1936195,
+    "ast_hash": "58bc3d85be6d836b5efdb7e11c462056",
+    "semantic_hash": ""
+  },
+  "packages/apps/web/postcss.config.mjs": {
+    "mtime": 1784753023.5335717,
+    "ast_hash": "239f3ebf717465dc636818a1a619398d",
+    "semantic_hash": ""
+  },
+  "packages/apps/web/tsconfig.json": {
+    "mtime": 1784753036.5356772,
+    "ast_hash": "ee17fd1c97c735e9f3564e3f5251f125",
+    "semantic_hash": ""
+  },
+  "packages/db/tsconfig.json": {
+    "mtime": 1784927364.5954397,
+    "ast_hash": "725ef260b1d780a207254d8bf078b5ae",
+    "semantic_hash": ""
+  },
+  "packages/types/tsconfig.json": {
+    "mtime": 1784927356.191032,
+    "ast_hash": "725ef260b1d780a207254d8bf078b5ae",
+    "semantic_hash": ""
+  },
+  "packages/validation/package.json": {
+    "mtime": 1784972899.770146,
+    "ast_hash": "e2eb538c2ae477837a366d27076be131",
+    "semantic_hash": ""
+  },
+  "packages/validation/src/index.ts": {
+    "mtime": 1784973936.5787158,
+    "ast_hash": "e7c60b03239d279722e3737dd3cce7fd",
+    "semantic_hash": ""
+  },
+  "packages/validation/tsconfig.json": {
+    "mtime": 1784972906.1657403,
+    "ast_hash": "725ef260b1d780a207254d8bf078b5ae",
+    "semantic_hash": ""
+  },
+  ".agents/AGENTS.md": {
+    "mtime": 1784766544.9588542,
+    "ast_hash": "2d922daa034b7081de0bcd1a1fd01040",
+    "semantic_hash": ""
+  },
+  ".agents/skills/animate/README.md": {
+    "mtime": 1784753143.0698066,
+    "ast_hash": "c7c48494387e370350a7e1008ffb871f",
+    "semantic_hash": ""
+  },
+  ".agents/skills/animate/SKILL.md": {
+    "mtime": 1784753143.0698066,
+    "ast_hash": "db0b8d2cae845c0821c8258be7d22a6f",
+    "semantic_hash": ""
+  },
+  ".agents/skills/animate/references/css-animations.md": {
+    "mtime": 1784753143.073363,
+    "ast_hash": "b0febee3a52df8f59b028c415db1975e",
+    "semantic_hash": ""
+  },
+  ".agents/skills/animate/references/easing-and-timing.md": {
+    "mtime": 1784753143.073363,
+    "ast_hash": "7d232ace3d57ffe6016597706c9160a4",
+    "semantic_hash": ""
+  },
+  ".agents/skills/animate/references/framer-motion.md": {
+    "mtime": 1784753143.0759702,
+    "ast_hash": "f79d40b8236f34814accca8b0a76cdaa",
+    "semantic_hash": ""
+  },
+  ".agents/skills/animate/references/performance-accessibility.md": {
+    "mtime": 1784753143.0759702,
+    "ast_hash": "6bbb22238eefca5a8b212a6e85c9974d",
+    "semantic_hash": ""
+  },
+  ".agents/skills/design-motion-principles/SKILL.md": {
+    "mtime": 1784753152.0058522,
+    "ast_hash": "b7ad443871da0815916d79676ac3d379",
+    "semantic_hash": ""
+  },
+  ".agents/skills/design-motion-principles/references/accessibility.md": {
+    "mtime": 1784753152.0066686,
+    "ast_hash": "2be45529d68f0f0be93ef990f879b048",
+    "semantic_hash": ""
+  },
+  ".agents/skills/design-motion-principles/references/anti-checklist.md": {
+    "mtime": 1784753152.0066686,
+    "ast_hash": "c4da133888cf98c8e1026b0412adb107",
+    "semantic_hash": ""
+  },
+  ".agents/skills/design-motion-principles/references/audit-checklist.md": {
+    "mtime": 1784753152.0086744,
+    "ast_hash": "e0a405878680d37f23abad6c47aa5b8a",
+    "semantic_hash": ""
+  },
+  ".agents/skills/design-motion-principles/references/creation-gotchas.md": {
+    "mtime": 1784753152.0086744,
+    "ast_hash": "698ef145458421ce970b8bd7629d499c",
+    "semantic_hash": ""
+  },
+  ".agents/skills/design-motion-principles/references/demo-shell.html": {
+    "mtime": 1784753152.0086744,
+    "ast_hash": "587e6ce85be1a5e26e39e33acb3f38ba",
+    "semantic_hash": ""
+  },
+  ".agents/skills/design-motion-principles/references/emil-kowalski.md": {
+    "mtime": 1784753152.0086744,
+    "ast_hash": "2741480fca47410b5a5e705556fde398",
+    "semantic_hash": ""
+  },
+  ".agents/skills/design-motion-principles/references/jakub-krehel.md": {
+    "mtime": 1784753152.0086744,
+    "ast_hash": "a12d1d68c0ac84af177080f49e736a5b",
+    "semantic_hash": ""
+  },
+  ".agents/skills/design-motion-principles/references/jhey-tompkins.md": {
+    "mtime": 1784753152.0086744,
+    "ast_hash": "e2532039e068c7fa99a9a0f848a9d039",
+    "semantic_hash": ""
+  },
+  ".agents/skills/design-motion-principles/references/motion-cookbook.md": {
+    "mtime": 1784753152.0086744,
+    "ast_hash": "a3ff21ed0fb44370ad5e59d83d9ff6f2",
+    "semantic_hash": ""
+  },
+  ".agents/skills/design-motion-principles/references/output-format.md": {
+    "mtime": 1784753152.0086744,
+    "ast_hash": "2203a929eff30284390afa731c20f21c",
+    "semantic_hash": ""
+  },
+  ".agents/skills/design-motion-principles/references/performance.md": {
+    "mtime": 1784753152.0086744,
+    "ast_hash": "038e80415dde4fe1f55cb935d471237c",
+    "semantic_hash": ""
+  },
+  ".agents/skills/design-motion-principles/references/report-template.html": {
+    "mtime": 1784753152.0086744,
+    "ast_hash": "b3385d272aee33a819862c3886715108",
+    "semantic_hash": ""
+  },
+  ".agents/skills/design-motion-principles/workflows/audit.md": {
+    "mtime": 1784753152.0232139,
+    "ast_hash": "2eb036d0d6e97e03c817ef093b9f14b9",
+    "semantic_hash": ""
+  },
+  ".agents/skills/design-motion-principles/workflows/create.md": {
+    "mtime": 1784753152.0232139,
+    "ast_hash": "ed2bb886cb74f4bf1b889ba518a45a5d",
+    "semantic_hash": ""
+  },
+  ".agents/skills/gsap/SKILL.md": {
+    "mtime": 1784753416.7576911,
+    "ast_hash": "98f6749c7286d0f159d66d62821b2a03",
+    "semantic_hash": ""
+  },
+  ".agents/skills/max-skill/SKILL.md": {
+    "mtime": 1784753495.0674672,
+    "ast_hash": "b123c7584d85202a96129b3a2b8a9ed5",
+    "semantic_hash": ""
+  },
+  ".agents/skills/ponytail-audit/SKILL.md": {
+    "mtime": 1784766553.7536378,
+    "ast_hash": "2a757432defa9d63639a3aca3bbbf23a",
+    "semantic_hash": ""
+  },
+  ".agents/skills/ponytail-debt/SKILL.md": {
+    "mtime": 1784766558.1037962,
+    "ast_hash": "33f49652fe513cf08082e9bcf8e2ecf2",
+    "semantic_hash": ""
+  },
+  ".agents/skills/ponytail-gain/SKILL.md": {
+    "mtime": 1784766562.1080048,
+    "ast_hash": "e0090358fafc0a4b01716b88399e8405",
+    "semantic_hash": ""
+  },
+  ".agents/skills/ponytail-help/SKILL.md": {
+    "mtime": 1784766566.3241916,
+    "ast_hash": "a89c89a1fec6a90c3751302574389d47",
+    "semantic_hash": ""
+  },
+  ".agents/skills/ponytail-review/SKILL.md": {
+    "mtime": 1784766570.4513545,
+    "ast_hash": "438e2414888145bc0108fa63f64314fd",
+    "semantic_hash": ""
+  },
+  ".agents/skills/ponytail/SKILL.md": {
+    "mtime": 1784766549.8218637,
+    "ast_hash": "421e40917db6cc732864011799da3235",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1784753023.4836876,
+    "ast_hash": "f15aaa42d5d299d091b1171097ea56ad",
+    "semantic_hash": ""
+  },
+  "RazaStationersWebsite/About.dc.html": {
+    "mtime": 1784926155.722582,
+    "ast_hash": "e23a75e7004314345a31773ae6feb529",
+    "semantic_hash": ""
+  },
+  "RazaStationersWebsite/Account.dc.html": {
+    "mtime": 1784926155.7298913,
+    "ast_hash": "460c78251b0dd6618ffe6cc5355a1cd0",
+    "semantic_hash": ""
+  },
+  "RazaStationersWebsite/Cart.dc.html": {
+    "mtime": 1784926155.7343202,
+    "ast_hash": "28c534ce6b792c3b99419df01f7b1a20",
+    "semantic_hash": ""
+  },
+  "RazaStationersWebsite/Catalogue.dc.html": {
+    "mtime": 1784926155.736688,
+    "ast_hash": "2e2e030989d7dae8007e8008d13f9397",
+    "semantic_hash": ""
+  },
+  "RazaStationersWebsite/Checkout.dc.html": {
+    "mtime": 1784926155.7438543,
+    "ast_hash": "f93fa3bf3b7b9a1f95db4f588749c4d1",
+    "semantic_hash": ""
+  },
+  "RazaStationersWebsite/Contact.dc.html": {
+    "mtime": 1784926155.7476585,
+    "ast_hash": "75600d08a1c0b8f2d6c3ddbb59cfcc3c",
+    "semantic_hash": ""
+  },
+  "RazaStationersWebsite/Home.dc.html": {
+    "mtime": 1784926155.752732,
+    "ast_hash": "53e21dd4fcc56738f055e165d3541189",
+    "semantic_hash": ""
+  },
+  "RazaStationersWebsite/Invoice.dc.html": {
+    "mtime": 1784926155.752732,
+    "ast_hash": "25b70353db516fb555ba4f760a0b0df8",
+    "semantic_hash": ""
+  },
+  "RazaStationersWebsite/OrderConfirmation.dc.html": {
+    "mtime": 1784926155.7613525,
+    "ast_hash": "cef0e8b30869a1ca8a66ddb180a82119",
+    "semantic_hash": ""
+  },
+  "RazaStationersWebsite/OrderHistory.dc.html": {
+    "mtime": 1784926155.7633576,
+    "ast_hash": "7721276790adaf3ce63b2681d4e8aac2",
+    "semantic_hash": ""
+  },
+  "RazaStationersWebsite/OrderTracking.dc.html": {
+    "mtime": 1784926155.7685633,
+    "ast_hash": "8845cc73ebefd5f880cea6eb8cbdd156",
+    "semantic_hash": ""
+  },
+  "RazaStationersWebsite/ProductDetail.dc.html": {
+    "mtime": 1784926155.7747796,
+    "ast_hash": "0a871bf5f0344f4cd2d6e14f2ce3fe08",
+    "semantic_hash": ""
+  },
+  "RazaStationersWebsite/SignIn.dc.html": {
+    "mtime": 1784926155.7786596,
+    "ast_hash": "41900cd5cc86cf211da2bbdf6326d697",
+    "semantic_hash": ""
+  },
+  "RazaStationersWebsite/SiteFooter.dc.html": {
+    "mtime": 1784926155.7812164,
+    "ast_hash": "d3f9987ce0ae3fc0eebb7f8174d7606b",
+    "semantic_hash": ""
+  },
+  "RazaStationersWebsite/SiteNav.dc.html": {
+    "mtime": 1784926155.7812164,
+    "ast_hash": "a5b6df256c242372f51da5998ab8a761",
+    "semantic_hash": ""
+  },
+  "RazaStationersWebsite/WholesaleRegistration.dc.html": {
+    "mtime": 1784926155.7812164,
+    "ast_hash": "498eb5c45deefae9529de6b6e76a0ac4",
+    "semantic_hash": ""
+  },
+  "RazaStationersWebsite/_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/readme.md": {
+    "mtime": 1784926155.810452,
+    "ast_hash": "3ce2cb8138a53875a0a6858fba7af478",
+    "semantic_hash": ""
+  },
+  "apps/web/src/lib/gsap/docs-link.html": {
+    "mtime": 1783768040.4953866,
+    "ast_hash": "b8bc39acd2840b073529e50cec0ee523",
+    "semantic_hash": ""
+  },
+  "apps/web/src/lib/gsap/getting-started-link.html": {
+    "mtime": 1783768040.4896717,
+    "ast_hash": "d776899d48acf9ad2a8c6688b685ddf6",
+    "semantic_hash": ""
+  },
+  "docs/BRD.md": {
+    "mtime": 1784825169.520927,
+    "ast_hash": "6701b3d2d9615c96d2f5d382ac9cd8d2",
+    "semantic_hash": ""
+  },
+  "docs/FRD.md": {
+    "mtime": 1784924359.786521,
+    "ast_hash": "0557b3ddc514d4c1fffa8779951a6179",
+    "semantic_hash": ""
+  },
+  "docs/PRD.md": {
+    "mtime": 1784825328.9182515,
+    "ast_hash": "0dd632b18765f41a90f80f53e230c5a4",
+    "semantic_hash": ""
+  },
+  "docs/TRD.md": {
+    "mtime": 1784924340.5152495,
+    "ast_hash": "ee43a39cad221c034d4b88b5a9ea7aad",
+    "semantic_hash": ""
+  },
+  "docs/architecture.md": {
+    "mtime": 1784924982.7734272,
+    "ast_hash": "c9e19185950c5c75ef045ed9124bff30",
+    "semantic_hash": ""
+  },
+  "docs/phases.md": {
+    "mtime": 1784925119.023627,
+    "ast_hash": "3f6de518499ea67c8e2714836526ae77",
+    "semantic_hash": ""
+  },
+  "docs/qa-report.md": {
+    "mtime": 1785003260.6027596,
+    "ast_hash": "e57d7e30cc6908cf65ceb94c5b4b0a51",
+    "semantic_hash": ""
+  },
+  "docs/qa_testing.md": {
+    "mtime": 1784975197.1938047,
+    "ast_hash": "79389587a7bb052b6fc4c7da03e31419",
+    "semantic_hash": ""
+  },
+  "packages/.agents/AGENTS.md": {
+    "mtime": 1784766544.9588542,
+    "ast_hash": "2d922daa034b7081de0bcd1a1fd01040",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/animate/README.md": {
+    "mtime": 1784753143.0698066,
+    "ast_hash": "c7c48494387e370350a7e1008ffb871f",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/animate/SKILL.md": {
+    "mtime": 1784753143.0698066,
+    "ast_hash": "db0b8d2cae845c0821c8258be7d22a6f",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/animate/references/css-animations.md": {
+    "mtime": 1784753143.073363,
+    "ast_hash": "b0febee3a52df8f59b028c415db1975e",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/animate/references/easing-and-timing.md": {
+    "mtime": 1784753143.073363,
+    "ast_hash": "7d232ace3d57ffe6016597706c9160a4",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/animate/references/framer-motion.md": {
+    "mtime": 1784753143.0759702,
+    "ast_hash": "f79d40b8236f34814accca8b0a76cdaa",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/animate/references/performance-accessibility.md": {
+    "mtime": 1784753143.0759702,
+    "ast_hash": "6bbb22238eefca5a8b212a6e85c9974d",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/design-motion-principles/SKILL.md": {
+    "mtime": 1784753152.0058522,
+    "ast_hash": "b7ad443871da0815916d79676ac3d379",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/design-motion-principles/references/accessibility.md": {
+    "mtime": 1784753152.0066686,
+    "ast_hash": "2be45529d68f0f0be93ef990f879b048",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/design-motion-principles/references/anti-checklist.md": {
+    "mtime": 1784753152.0066686,
+    "ast_hash": "c4da133888cf98c8e1026b0412adb107",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/design-motion-principles/references/audit-checklist.md": {
+    "mtime": 1784753152.0086744,
+    "ast_hash": "e0a405878680d37f23abad6c47aa5b8a",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/design-motion-principles/references/creation-gotchas.md": {
+    "mtime": 1784753152.0086744,
+    "ast_hash": "698ef145458421ce970b8bd7629d499c",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/design-motion-principles/references/demo-shell.html": {
+    "mtime": 1784753152.0086744,
+    "ast_hash": "587e6ce85be1a5e26e39e33acb3f38ba",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/design-motion-principles/references/emil-kowalski.md": {
+    "mtime": 1784753152.0086744,
+    "ast_hash": "2741480fca47410b5a5e705556fde398",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/design-motion-principles/references/jakub-krehel.md": {
+    "mtime": 1784753152.0086744,
+    "ast_hash": "a12d1d68c0ac84af177080f49e736a5b",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/design-motion-principles/references/jhey-tompkins.md": {
+    "mtime": 1784753152.0086744,
+    "ast_hash": "e2532039e068c7fa99a9a0f848a9d039",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/design-motion-principles/references/motion-cookbook.md": {
+    "mtime": 1784753152.0086744,
+    "ast_hash": "a3ff21ed0fb44370ad5e59d83d9ff6f2",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/design-motion-principles/references/output-format.md": {
+    "mtime": 1784753152.0086744,
+    "ast_hash": "2203a929eff30284390afa731c20f21c",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/design-motion-principles/references/performance.md": {
+    "mtime": 1784753152.0086744,
+    "ast_hash": "038e80415dde4fe1f55cb935d471237c",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/design-motion-principles/references/report-template.html": {
+    "mtime": 1784753152.0086744,
+    "ast_hash": "b3385d272aee33a819862c3886715108",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/design-motion-principles/workflows/audit.md": {
+    "mtime": 1784753152.0232139,
+    "ast_hash": "2eb036d0d6e97e03c817ef093b9f14b9",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/design-motion-principles/workflows/create.md": {
+    "mtime": 1784753152.0232139,
+    "ast_hash": "ed2bb886cb74f4bf1b889ba518a45a5d",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/gsap/SKILL.md": {
+    "mtime": 1784753416.7576911,
+    "ast_hash": "98f6749c7286d0f159d66d62821b2a03",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/max-skill/SKILL.md": {
+    "mtime": 1784753495.0674672,
+    "ast_hash": "b123c7584d85202a96129b3a2b8a9ed5",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/ponytail-audit/SKILL.md": {
+    "mtime": 1784766553.7536378,
+    "ast_hash": "2a757432defa9d63639a3aca3bbbf23a",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/ponytail-debt/SKILL.md": {
+    "mtime": 1784766558.1037962,
+    "ast_hash": "33f49652fe513cf08082e9bcf8e2ecf2",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/ponytail-gain/SKILL.md": {
+    "mtime": 1784766562.1080048,
+    "ast_hash": "e0090358fafc0a4b01716b88399e8405",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/ponytail-help/SKILL.md": {
+    "mtime": 1784766566.3241916,
+    "ast_hash": "a89c89a1fec6a90c3751302574389d47",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/ponytail-review/SKILL.md": {
+    "mtime": 1784766570.4513545,
+    "ast_hash": "438e2414888145bc0108fa63f64314fd",
+    "semantic_hash": ""
+  },
+  "packages/.agents/skills/ponytail/SKILL.md": {
+    "mtime": 1784766549.8218637,
+    "ast_hash": "421e40917db6cc732864011799da3235",
+    "semantic_hash": ""
+  },
+  "apps/web/public/file.svg": {
+    "mtime": 1784753023.5503101,
+    "ast_hash": "d09f95206c3fa0bb9bd9fefabfd0ea71",
+    "semantic_hash": ""
+  },
+  "apps/web/public/globe.svg": {
+    "mtime": 1784753023.5669622,
+    "ast_hash": "2aaafa6a49b6563925fe440891e32717",
+    "semantic_hash": ""
+  },
+  "apps/web/public/next.svg": {
+    "mtime": 1784753023.583573,
+    "ast_hash": "8e061864f388b47f33a1c3780831193e",
+    "semantic_hash": ""
+  },
+  "apps/web/public/vercel.svg": {
+    "mtime": 1784753023.6003785,
+    "ast_hash": "c0af2f507b369b085b35ef4bbe3bcf1e",
+    "semantic_hash": ""
+  },
+  "apps/web/public/window.svg": {
+    "mtime": 1784753023.616979,
+    "ast_hash": "a2760511c65806022ad20adf74370ff3",
+    "semantic_hash": ""
   }
 }

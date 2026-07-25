@@ -8,10 +8,9 @@ import { InvoiceView } from "@/components/orders/InvoiceView"
 import { useCart } from "@/hooks/use-cart"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Bilingual } from "@/components/ui/bilingual"
 import { Dialog } from "@/components/ui/dialog"
 import { formatPKR } from "@/lib/pricing"
-import { ArrowLeft, Phone, Truck, FileText, RotateCcw, Clock, MapPin } from "lucide-react"
+import { ArrowLeft, Phone, Truck, FileText, RotateCcw, Clock } from "lucide-react"
 
 interface OrderTrackingPageProps {
   params: Promise<{

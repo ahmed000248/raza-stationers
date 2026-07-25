@@ -24,7 +24,7 @@ const navLinks = [
 export function SiteNav() {
   const pathname = usePathname()
   const { totalItems } = useCart()
-  const { accountStatus, user } = useAuth()
+  const { accountStatus } = useAuth()
   const [scrolled, setScrolled] = React.useState(false)
   const [mobileOpen, setMobileOpen] = React.useState(false)
   const [signInOpen, setSignInOpen] = React.useState(false)

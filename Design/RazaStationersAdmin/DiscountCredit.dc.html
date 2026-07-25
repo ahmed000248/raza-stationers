@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet>
+  <link rel="stylesheet" href="../_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/fonts/fonts.css">
+  <link rel="stylesheet" href="../_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/colors.css">
+  <link rel="stylesheet" href="../_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/typography.css">
+  <link rel="stylesheet" href="../_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/spacing.css">
+  <link rel="stylesheet" href="../_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/radius.css">
+  <link rel="stylesheet" href="../_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/styles.css">
+  <script src="../_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/_ds_bundle.js"></script>
+  <style>
+    body{margin:0;background:var(--canvas)}
+    a{color:var(--evergreen-600)} a:hover{color:var(--forest-700)}
+    @keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes rowFade{from{opacity:.3}to{opacity:1}}
+  </style>
+</helmet>
+
+<div style="display:flex;min-height:100vh;font-family:var(--font-body);background:var(--canvas);color:var(--ink-900)">
+  <div style="width:240px;flex-shrink:0;background:var(--ink-900);display:flex;flex-direction:column;padding:24px 16px;position:sticky;top:0;height:100vh;box-sizing:border-box">
+    <div style="padding:0 8px 20px 8px">
+      <div style="font-family:var(--font-display);color:#fff;font-size:17px;font-weight:600">Raza Stationers</div>
+      <div style="color:var(--sage-400);font-size:11px;margin-top:3px">Admin Panel · انتظامی پینل</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:2px;flex:1;overflow-y:auto;overflow-x:hidden">
+      <sc-for list="{{ navList }}" as="item" hint-placeholder-count="11">
+        <a href="{{ item.href }}" onClick="{{ item.onClick }}" style="text-decoration:none;display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;margin-bottom:2px;cursor:pointer;transition:background 150ms;background:{{ item.bg }};color:{{ item.color }};opacity:{{ item.opacity }}">
+          <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="{{ item.icon }}" size="18" color="{{ item.color }}" hint-size="18px,18px"></x-import>
+          <span style="font-size:13.5px;font-weight:{{ item.weight }};flex:1">{{ item.label }}</span>
+          <sc-if value="{{ item.ownerOnly }}" hint-placeholder-val="{{ false }}"><span style="font-size:10px;color:var(--sage-400)">🔒</span></sc-if>
+        </a>
+      </sc-for>
+    </div>
+    <div style="border-top:1px solid rgba(255,255,255,.1);padding-top:14px;margin-top:10px">
+      <div style="font-size:10px;color:var(--sage-400);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;padding:0 8px">Viewing as</div>
+      <select value="{{ role }}" onChange="{{ onRoleChange }}" style="width:100%;background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:9px 10px;font-size:12.5px;font-family:var(--font-body)">
+        <sc-for list="{{ roleOptions }}" as="r" hint-placeholder-count="4"><option value="{{ r.key }}">{{ r.label }}</option></sc-for>
+      </select>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:14px;padding:0 8px">
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Avatar" initials="{{ initials }}" size="32" hint-size="32px,32px"></x-import>
+        <div style="min-width:0">
+          <div style="color:#fff;font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ userName }}</div>
+          <div style="color:var(--sage-400);font-size:11px">{{ roleLabel }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 32px;border-bottom:1px solid var(--border-subtle);background:var(--white)">
+      <div style="display:flex;align-items:center;gap:10px;background:var(--canvas);border-radius:999px;padding:9px 18px;width:300px">
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="search" size="16" color="var(--sage-400)" hint-size="16px,16px"></x-import>
+        <span style="font-size:13px;color:#8a938e">Search products, orders…</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:20px">
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="notification" size="21" color="var(--forest-700)" hint-size="21px,21px"></x-import>
+        <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Avatar" initials="{{ initials }}" size="36" hint-size="36px,36px"></x-import>
+      </div>
+    </div>
+
+    <div style="padding:32px;flex:1">
+      <sc-if value="{{ blocked }}" hint-placeholder-val="{{ false }}">
+        <div style="background:var(--white);border:1px solid var(--border-subtle);border-radius:16px;padding:48px;text-align:center;max-width:480px;margin:60px auto">
+          <div style="font-size:15px;font-weight:600;margin-bottom:8px">Owner only</div>
+          <div style="color:var(--text-muted);font-size:13px;margin-bottom:20px">Discount tiers and credit limits are managed by the business owner.</div>
+          <a href="./Dashboard.dc.html" style="text-decoration:none"><x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Button" variant="primary" hint-size="auto,44px">Back to dashboard</x-import></a>
+        </div>
+      </sc-if>
+      <sc-if value="{{ notBlocked }}" hint-placeholder-val="{{ true }}">
+      <div>
+      <h1 style="font-family:var(--font-display);font-size:26px;font-weight:600;margin:0">Discount &amp; Credit</h1>
+      <div style="color:var(--text-muted);font-size:13px;margin-top:4px;margin-bottom:24px">رعایت اور کریڈٹ · pricing tiers and client credit limits</div>
+
+      <div style="background:var(--white);border:1px solid var(--border-subtle);border-radius:16px;padding:24px;margin-bottom:20px">
+        <div style="font-size:14px;font-weight:600;margin-bottom:16px">Discount tiers</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
+          <sc-for list="{{ tiers }}" as="t" hint-placeholder-count="4">
+            <div style="border:1px solid var(--border-subtle);border-radius:12px;padding:16px">
+              <div style="font-size:13.5px;font-weight:700;margin-bottom:8px">{{ t.name }}</div>
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+                <input type="number" value="{{ t.pct }}" onChange="{{ t.onPctChange }}" style="width:56px;height:34px;border-radius:8px;border:1.5px solid var(--mist-100);padding:0 8px;font-family:var(--font-body);font-size:13px">
+                <span style="font-size:12.5px;color:var(--text-muted)">% off</span>
+              </div>
+              <div style="font-size:11.5px;color:var(--text-muted)">Min order {{ t.minOrderFmt }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="margin-top:16px"><x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Button" variant="primary" onClick="{{ saveTiers }}" hint-size="auto,42px">Save tier changes</x-import></div>
+      </div>
+
+      <div style="background:var(--white);border:1px solid var(--border-subtle);border-radius:16px;overflow:hidden">
+        <div style="padding:16px 20px;font-size:14px;font-weight:600;border-bottom:1px solid var(--border-subtle)">Credit limits by client</div>
+        <div style="display:table;width:100%;font-size:13px">
+          <div style="display:table-row;color:var(--sage-400);font-size:11px;text-transform:uppercase;background:var(--canvas)">
+            <div style="display:table-cell;padding:10px 20px;font-weight:600">Client</div>
+            <div style="display:table-cell;padding:10px 12px;font-weight:600">Credit limit</div>
+            <div style="display:table-cell;padding:10px 12px;font-weight:600">Outstanding</div>
+            <div style="display:table-cell;padding:10px 20px;font-weight:600">Adjust</div>
+          </div>
+          <sc-for list="{{ clientRows }}" as="c" hint-placeholder-count="5">
+            <div style="display:table-row;animation:rowFade 300ms ease-out">
+              <div style="display:table-cell;padding:12px 20px;border-top:1px solid var(--border-subtle);font-weight:600">{{ c.name }}</div>
+              <div style="display:table-cell;padding:12px 12px;border-top:1px solid var(--border-subtle)">{{ c.creditLimitFmt }}</div>
+              <div style="display:table-cell;padding:12px 12px;border-top:1px solid var(--border-subtle);color:{{ c.outstandingColor }};font-weight:600">{{ c.outstandingFmt }}</div>
+              <div style="display:table-cell;padding:12px 20px;border-top:1px solid var(--border-subtle)">
+                <div style="display:flex;gap:8px;align-items:center">
+                  <input type="number" step="5000" value="{{ c.newLimit }}" onChange="{{ c.onLimitChange }}" style="width:110px;height:34px;border-radius:8px;border:1.5px solid var(--mist-100);padding:0 8px;font-family:var(--font-body);font-size:12.5px">
+                  <span onClick="{{ c.onApply }}" style="cursor:pointer;font-size:12px;font-weight:600;text-decoration:underline">Update</span>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </div>
+      </sc-if>
+    </div>
+  </div>
+
+  <div style="position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:10px;z-index:400">
+    <sc-for list="{{ toasts }}" as="tst" hint-placeholder-count="0">
+      <div style="background:var(--white);border:1px solid var(--border-subtle);border-left:4px solid {{ tst.color }};border-radius:12px;padding:14px 18px;font-size:13px;font-weight:500;box-shadow:0 6px 20px rgba(5,31,32,.12);animation:toastIn 200ms ease-out;min-width:220px">{{ tst.msg }}</div>
+    </sc-for>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+
+class Component extends DCLogic {
+  state = { role: 'owner', data: null, tiers: [], clients: [], limits: {}, toasts: [] };
+
+  async componentDidMount() {
+    const mod = await import('./adminData.js');
+    this.mod = mod;
+    const role = mod.getRole();
+    this.setState({ role, data: mod, tiers: mod.DISCOUNT_TIERS.map(t => ({ ...t })), clients: mod.CLIENTS.filter(c => c.status !== 'pending').map(c => ({ ...c })) });
+  }
+
+  toast(msg, tone) {
+    const id = Date.now() + Math.random();
+    const color = tone === 'error' ? 'var(--red-500)' : tone === 'warning' ? 'var(--amber-500)' : 'var(--evergreen-600)';
+    this.setState(s => ({ toasts: [...s.toasts, { id, msg, color }] }));
+    setTimeout(() => this.setState(s => ({ toasts: s.toasts.filter(x => x.id !== id) })), 3000);
+  }
+  onRoleChange(e) { this.mod.setRole(e.target.value); this.setState({ role: e.target.value }); this.toast('Viewing as ' + e.target.value); }
+  onPctChange(name, v) { this.setState(s => ({ tiers: s.tiers.map(t => t.name === name ? { ...t, pct: Number(v) || 0 } : t) })); }
+  saveTiers() { this.toast('Discount tiers saved'); }
+  onLimitChange(id, v) { this.setState(s => ({ limits: { ...s.limits, [id]: v } })); }
+  applyLimit(id) {
+    const v = Number(this.state.limits[id]);
+    if (!v) return;
+    this.setState(s => ({ clients: s.clients.map(c => c.id === id ? { ...c, creditLimit: v } : c) }));
+    this.toast('Credit limit updated');
+  }
+
+  renderVals() {
+    const mod = this.mod, role = this.state.role, data = this.state.data;
+    const roleLabels = { owner: 'Owner', admin: 'Admin / Operator', packing: 'Packing Worker', delivery: 'Delivery Worker' };
+    const navList = data ? mod.NAV_ITEMS.map(it => {
+      const locked = it.ownerOnly && role !== 'owner';
+      return { ...it, href: locked ? '#' : it.href,
+        onClick: locked ? (e) => { e.preventDefault(); this.toast('Owner only — ask the business owner for access', 'warning'); } : undefined,
+        bg: it.key === 'discount' ? 'var(--accent-primary)' : 'transparent',
+        color: it.key === 'discount' ? '#fff' : (locked ? 'rgba(142,182,155,.5)' : 'var(--sage-400)'),
+        weight: it.key === 'discount' ? 600 : 400, opacity: locked ? 0.7 : 1 };
+    }) : [];
+
+    const blocked = data ? role !== 'owner' : false;
+    const tiers = data ? this.state.tiers.map(t => ({ ...t, minOrderFmt: mod.formatRs(t.minOrder), onPctChange: (e) => this.onPctChange(t.name, e.target.value) })) : [];
+    const clientRows = data ? this.state.clients.map(c => ({
+      ...c, creditLimitFmt: mod.formatRs(c.creditLimit), outstandingFmt: mod.formatRs(c.outstanding),
+      outstandingColor: c.outstanding > c.creditLimit * 0.7 ? 'var(--red-ink)' : 'var(--ink-900)',
+      newLimit: this.state.limits[c.id] ?? c.creditLimit, onLimitChange: (e) => this.onLimitChange(c.id, e.target.value), onApply: () => this.applyLimit(c.id),
+    })) : [];
+
+    return {
+      role, roleLabel: roleLabels[role], userName: role === 'owner' ? 'Rehan Raza' : role === 'admin' ? 'Sana Malik' : role === 'packing' ? 'Bilal Hussain' : 'Imran Sheikh',
+      initials: role === 'owner' ? 'RR' : role === 'admin' ? 'SM' : role === 'packing' ? 'BH' : 'IS',
+      navList, roleOptions: data ? mod.ROLES : [], onRoleChange: (e) => this.onRoleChange(e),
+      blocked, notBlocked: !blocked, tiers, saveTiers: () => this.saveTiers(), clientRows,
+      toasts: this.state.toasts,
+    };
+  }
+}
+
+</script>
+</body>
+</html>

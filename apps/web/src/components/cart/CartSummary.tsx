@@ -5,7 +5,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Bilingual } from "@/components/ui/bilingual"
 import { formatPKR } from "@/lib/pricing"
-import { ShoppingBag, ArrowRight, Truck, AlertCircle, ShieldCheck } from "lucide-react"
+import { ArrowRight, Truck, AlertCircle, ShieldCheck } from "lucide-react"
 
 interface CartSummaryProps {
   subtotal: number

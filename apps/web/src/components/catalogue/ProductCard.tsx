@@ -50,7 +50,7 @@ export function ProductCard({ product, pricingContext }: ProductCardProps) {
         <Link href={`/product/${product.id}`} className="block space-y-3 group/link">
           <div className="relative">
             <ProductIconBlock
-              category={product.categoryId.replace("cat-", "") as any}
+              category={(product.categoryId.replace("cat-", "") as "paper" | "pens" | "office" | "files" | "cutting" | "art" | "general")}
               size="md"
               aspectRatio="video"
               className="w-full rounded-xl"
