@@ -1615,8 +1615,8 @@
     "semantic_hash": ""
   },
   "apps/admin/next.config.ts": {
-    "mtime": 1785004801.907527,
-    "ast_hash": "9b77af189a21a7a64e4bd7a426f64176",
+    "mtime": 1785006387.9635909,
+    "ast_hash": "bb60c5b998ed15b65b0dcf00d2614995",
     "semantic_hash": ""
   },
   "apps/admin/package.json": {
@@ -1630,18 +1630,18 @@
     "semantic_hash": ""
   },
   "apps/admin/src/app/layout.tsx": {
-    "mtime": 1785004816.9225001,
-    "ast_hash": "382ccee8233671de797c5ccfb9d7a277",
+    "mtime": 1785006302.525894,
+    "ast_hash": "d27b2ac3dda704e42e8263f4f4bb8a02",
     "semantic_hash": ""
   },
   "apps/admin/src/app/page.tsx": {
-    "mtime": 1785006110.2886853,
-    "ast_hash": "0fa1cc42c9fe588ab235c024784eac36",
+    "mtime": 1785006307.2192564,
+    "ast_hash": "fc8ef4ad528b841fce89ea99f69f183b",
     "semantic_hash": ""
   },
   "apps/admin/tsconfig.json": {
-    "mtime": 1785004800.8076,
-    "ast_hash": "ee17fd1c97c735e9f3564e3f5251f125",
+    "mtime": 1785006408.0182033,
+    "ast_hash": "bd67a517762f07b60eda5abfaf1ed295",
     "semantic_hash": ""
   },
   "packages/ui/package.json": {
@@ -1902,6 +1902,81 @@
   "docs/website/qa_testing.md": {
     "mtime": 1785004872.4824262,
     "ast_hash": "5d6555176c634e2234156a6993818c01",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/app/accounting/page.tsx": {
+    "mtime": 1785006352.7711782,
+    "ast_hash": "80b64fbc7d8b9b19d23fdb4a52ee8e46",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/app/audit-log/page.tsx": {
+    "mtime": 1785006358.336073,
+    "ast_hash": "4878420487bdc0f6b5e841781aeddf71",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/app/catalogue/page.tsx": {
+    "mtime": 1785006337.0888584,
+    "ast_hash": "f3dbc8c6128845e8aa03c2bc63afee90",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/app/client-businesses/page.tsx": {
+    "mtime": 1785006317.0008574,
+    "ast_hash": "734b0296ced8cefc0854568ad8c1592f",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/app/dashboard/page.tsx": {
+    "mtime": 1785006312.1600137,
+    "ast_hash": "15426cb8204d5d61718fb64c79f4675c",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/app/delivery/page.tsx": {
+    "mtime": 1785006342.0571764,
+    "ast_hash": "6b10c9d0ec2b4808fc29395a93d7cd5f",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/app/discount-credit/page.tsx": {
+    "mtime": 1785006321.9037774,
+    "ast_hash": "3e5dd6387a73eb3b9d67973b765eb8b3",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/app/orders/page.tsx": {
+    "mtime": 1785006331.487802,
+    "ast_hash": "9ffe82674121cffb130e4113a8a66e6a",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/app/settings/page.tsx": {
+    "mtime": 1785006363.0664873,
+    "ast_hash": "00a7227477eda491d75c3a6ec8153945",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/app/staff/page.tsx": {
+    "mtime": 1785006346.9369433,
+    "ast_hash": "d26604dc9e6fee5e56d201ed60031684",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/app/stock/page.tsx": {
+    "mtime": 1785006326.6274674,
+    "ast_hash": "c7ef4c23ef26befffc596b41aaa3f7a6",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/components/shell/AdminNav.tsx": {
+    "mtime": 1785006279.5611718,
+    "ast_hash": "7af45c09b1461506ef8f97e3131dd587",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/components/shell/AdminShell.tsx": {
+    "mtime": 1785006295.5995903,
+    "ast_hash": "43196ce537cf23f52f16951cb0c69d64",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/components/shell/TopBar.tsx": {
+    "mtime": 1785006285.012962,
+    "ast_hash": "be1ac15f589cefaa542667e1866139ff",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/lib/role.ts": {
+    "mtime": 1785006272.7110634,
+    "ast_hash": "449f1e3f3e0b48099c8c9784a65bf5fd",
     "semantic_hash": ""
   }
 }
