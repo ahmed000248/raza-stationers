@@ -10,6 +10,8 @@ import { Bilingual } from "@/components/ui/bilingual"
 import { NotificationDropdown } from "@/components/site/NotificationDropdown"
 import { Sheet, SheetHeader, SheetTitle, SheetClose } from "@/components/ui/sheet"
 import { useCart } from "@/hooks/use-cart"
+import { useAuth } from "@/hooks/use-auth"
+import { SignInModal } from "@/components/auth/SignInModal"
 
 const navLinks = [
   { href: "/", en: "Home", ur: "صفحہ اول" },
@@ -22,8 +24,10 @@ const navLinks = [
 export function SiteNav() {
   const pathname = usePathname()
   const { totalItems } = useCart()
+  const { accountStatus, user } = useAuth()
   const [scrolled, setScrolled] = React.useState(false)
   const [mobileOpen, setMobileOpen] = React.useState(false)
+  const [signInOpen, setSignInOpen] = React.useState(false)
 
   // Ponytail: Lightweight 2-line scroll listener instead of heavy library
   React.useEffect(() => {
@@ -103,13 +107,30 @@ export function SiteNav() {
             )}
           </Link>
 
-          {/* Sign In CTA */}
-          <Link href="/sign-in" className="hidden sm:inline-flex">
-            <Button size="xs" variant="default" className="rounded-full px-3 gap-1">
+          {/* Sign In / Account Status Trigger */}
+          <button
+            type="button"
+            onClick={() => setSignInOpen(true)}
+            className="hidden sm:inline-flex"
+          >
+            <Button
+              size="xs"
+              variant={accountStatus === "approved" ? "secondary" : "default"}
+              className="rounded-full px-3 gap-1"
+            >
               <User className="size-3" />
-              <span>Sign In</span>
+              <span>
+                {accountStatus === "approved"
+                  ? "Wholesale Account"
+                  : accountStatus === "pending"
+                  ? "Pending Approval"
+                  : "Sign In"}
+              </span>
             </Button>
-          </Link>
+          </button>
+
+          {/* SignIn Modal Component */}
+          <SignInModal open={signInOpen} onOpenChange={setSignInOpen} />
 
           {/* Mobile Menu Toggle */}
           <button
