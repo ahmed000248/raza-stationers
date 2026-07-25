@@ -40,8 +40,8 @@
     "semantic_hash": "ce5cb18efd0990be59584b9fd0011a6d"
   },
   "package.json": {
-    "mtime": 1784926635.3457303,
-    "ast_hash": "e2113184c83f0e5ee40c9ac36cb0515f",
+    "mtime": 1785004830.0155754,
+    "ast_hash": "0cf37df8df06d5bdcc9fc6bddd3d0545",
     "semantic_hash": ""
   },
   "skills-lock.json": {
@@ -744,31 +744,6 @@
     "ast_hash": "7a327c4ed25fe862590be2c26025ca93",
     "semantic_hash": "7a327c4ed25fe862590be2c26025ca93"
   },
-  "RazaStationersWebsite/_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/_adherence.oxlintrc.json": {
-    "mtime": 1784926155.796569,
-    "ast_hash": "5b585a4a5e38639ec5ca24bae83a666b",
-    "semantic_hash": "5b585a4a5e38639ec5ca24bae83a666b"
-  },
-  "RazaStationersWebsite/_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/_ds_bundle.js": {
-    "mtime": 1784926155.796569,
-    "ast_hash": "e5709a1315250137e793e1f5c5c71648",
-    "semantic_hash": "e5709a1315250137e793e1f5c5c71648"
-  },
-  "RazaStationersWebsite/_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/_ds_manifest.json": {
-    "mtime": 1784926155.810452,
-    "ast_hash": "5028559c0d2439a4b2ad8c181d63e9bd",
-    "semantic_hash": "5028559c0d2439a4b2ad8c181d63e9bd"
-  },
-  "RazaStationersWebsite/shared/store.js": {
-    "mtime": 1784926155.889641,
-    "ast_hash": "b4a3d348b245366b2d64491ec0be6016",
-    "semantic_hash": "b4a3d348b245366b2d64491ec0be6016"
-  },
-  "RazaStationersWebsite/support.js": {
-    "mtime": 1784926155.7945614,
-    "ast_hash": "450f2a9297cd55032eb905780de3016b",
-    "semantic_hash": "450f2a9297cd55032eb905780de3016b"
-  },
   "apps/web/src/lib/motion-tokens.ts": {
     "mtime": 1784926258.7235,
     "ast_hash": "426429712bc5f6d6e00867122f4d4da2",
@@ -877,31 +852,6 @@
   "apps/web/src/components/account/StaffTab.tsx": {
     "mtime": 1785003156.2554386,
     "ast_hash": "4870a302a8147429604f6fdb4c0dc32c",
-    "semantic_hash": ""
-  },
-  "apps/web/src/components/admin/AdminNav.tsx": {
-    "mtime": 1784973957.0621686,
-    "ast_hash": "eb5190cbcfa53f6be2882afe1efdba33",
-    "semantic_hash": ""
-  },
-  "apps/web/src/components/admin/DiscountRulesManager.tsx": {
-    "mtime": 1784973987.869243,
-    "ast_hash": "ec26b9ca39316cd60d66830e841937a1",
-    "semantic_hash": ""
-  },
-  "apps/web/src/components/admin/OrderOperationsTable.tsx": {
-    "mtime": 1784973980.6278,
-    "ast_hash": "52dac6f88053b0ee6986cc4417ffa164",
-    "semantic_hash": ""
-  },
-  "apps/web/src/components/admin/StaffManagementTable.tsx": {
-    "mtime": 1784973964.4530892,
-    "ast_hash": "0278c03c78d6dc2685ce88b729c431f1",
-    "semantic_hash": ""
-  },
-  "apps/web/src/components/admin/StockManagementPanel.tsx": {
-    "mtime": 1784973972.1634665,
-    "ast_hash": "45bf78b2e921944f1193d0bd0ee2f409",
     "semantic_hash": ""
   },
   "apps/web/src/components/auth/PendingVerificationNotice.tsx": {
@@ -1409,91 +1359,6 @@
     "ast_hash": "f15aaa42d5d299d091b1171097ea56ad",
     "semantic_hash": ""
   },
-  "RazaStationersWebsite/About.dc.html": {
-    "mtime": 1784926155.722582,
-    "ast_hash": "e23a75e7004314345a31773ae6feb529",
-    "semantic_hash": ""
-  },
-  "RazaStationersWebsite/Account.dc.html": {
-    "mtime": 1784926155.7298913,
-    "ast_hash": "460c78251b0dd6618ffe6cc5355a1cd0",
-    "semantic_hash": ""
-  },
-  "RazaStationersWebsite/Cart.dc.html": {
-    "mtime": 1784926155.7343202,
-    "ast_hash": "28c534ce6b792c3b99419df01f7b1a20",
-    "semantic_hash": ""
-  },
-  "RazaStationersWebsite/Catalogue.dc.html": {
-    "mtime": 1784926155.736688,
-    "ast_hash": "2e2e030989d7dae8007e8008d13f9397",
-    "semantic_hash": ""
-  },
-  "RazaStationersWebsite/Checkout.dc.html": {
-    "mtime": 1784926155.7438543,
-    "ast_hash": "f93fa3bf3b7b9a1f95db4f588749c4d1",
-    "semantic_hash": ""
-  },
-  "RazaStationersWebsite/Contact.dc.html": {
-    "mtime": 1784926155.7476585,
-    "ast_hash": "75600d08a1c0b8f2d6c3ddbb59cfcc3c",
-    "semantic_hash": ""
-  },
-  "RazaStationersWebsite/Home.dc.html": {
-    "mtime": 1784926155.752732,
-    "ast_hash": "53e21dd4fcc56738f055e165d3541189",
-    "semantic_hash": ""
-  },
-  "RazaStationersWebsite/Invoice.dc.html": {
-    "mtime": 1784926155.752732,
-    "ast_hash": "25b70353db516fb555ba4f760a0b0df8",
-    "semantic_hash": ""
-  },
-  "RazaStationersWebsite/OrderConfirmation.dc.html": {
-    "mtime": 1784926155.7613525,
-    "ast_hash": "cef0e8b30869a1ca8a66ddb180a82119",
-    "semantic_hash": ""
-  },
-  "RazaStationersWebsite/OrderHistory.dc.html": {
-    "mtime": 1784926155.7633576,
-    "ast_hash": "7721276790adaf3ce63b2681d4e8aac2",
-    "semantic_hash": ""
-  },
-  "RazaStationersWebsite/OrderTracking.dc.html": {
-    "mtime": 1784926155.7685633,
-    "ast_hash": "8845cc73ebefd5f880cea6eb8cbdd156",
-    "semantic_hash": ""
-  },
-  "RazaStationersWebsite/ProductDetail.dc.html": {
-    "mtime": 1784926155.7747796,
-    "ast_hash": "0a871bf5f0344f4cd2d6e14f2ce3fe08",
-    "semantic_hash": ""
-  },
-  "RazaStationersWebsite/SignIn.dc.html": {
-    "mtime": 1784926155.7786596,
-    "ast_hash": "41900cd5cc86cf211da2bbdf6326d697",
-    "semantic_hash": ""
-  },
-  "RazaStationersWebsite/SiteFooter.dc.html": {
-    "mtime": 1784926155.7812164,
-    "ast_hash": "d3f9987ce0ae3fc0eebb7f8174d7606b",
-    "semantic_hash": ""
-  },
-  "RazaStationersWebsite/SiteNav.dc.html": {
-    "mtime": 1784926155.7812164,
-    "ast_hash": "a5b6df256c242372f51da5998ab8a761",
-    "semantic_hash": ""
-  },
-  "RazaStationersWebsite/WholesaleRegistration.dc.html": {
-    "mtime": 1784926155.7812164,
-    "ast_hash": "498eb5c45deefae9529de6b6e76a0ac4",
-    "semantic_hash": ""
-  },
-  "RazaStationersWebsite/_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/readme.md": {
-    "mtime": 1784926155.810452,
-    "ast_hash": "3ce2cb8138a53875a0a6858fba7af478",
-    "semantic_hash": ""
-  },
   "apps/web/src/lib/gsap/docs-link.html": {
     "mtime": 1783768040.4953866,
     "ast_hash": "b8bc39acd2840b073529e50cec0ee523",
@@ -1520,28 +1385,8 @@
     "semantic_hash": ""
   },
   "docs/TRD.md": {
-    "mtime": 1784924340.5152495,
-    "ast_hash": "ee43a39cad221c034d4b88b5a9ea7aad",
-    "semantic_hash": ""
-  },
-  "docs/architecture.md": {
-    "mtime": 1784924982.7734272,
-    "ast_hash": "c9e19185950c5c75ef045ed9124bff30",
-    "semantic_hash": ""
-  },
-  "docs/phases.md": {
-    "mtime": 1784925119.023627,
-    "ast_hash": "3f6de518499ea67c8e2714836526ae77",
-    "semantic_hash": ""
-  },
-  "docs/qa-report.md": {
-    "mtime": 1785003260.6027596,
-    "ast_hash": "e57d7e30cc6908cf65ceb94c5b4b0a51",
-    "semantic_hash": ""
-  },
-  "docs/qa_testing.md": {
-    "mtime": 1784975197.1938047,
-    "ast_hash": "79389587a7bb052b6fc4c7da03e31419",
+    "mtime": 1785004917.8770769,
+    "ast_hash": "5102d3cf9d37e29c1aac1ec5880f3578",
     "semantic_hash": ""
   },
   "packages/.agents/AGENTS.md": {
@@ -1717,6 +1562,421 @@
   "apps/web/public/window.svg": {
     "mtime": 1784753023.616979,
     "ast_hash": "a2760511c65806022ad20adf74370ff3",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersAdmin/adminData.js": {
+    "mtime": 1785004163.3082528,
+    "ast_hash": "0c9ed43a182e807fec508dd8138fe58d",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersAdmin/image-slot.js": {
+    "mtime": 1785004163.3388686,
+    "ast_hash": "ffd58db33ccba77f4418532eb598043f",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersAdmin/support.js": {
+    "mtime": 1785004163.3622642,
+    "ast_hash": "951ae391b8ae72ef12e671c2fad23353",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersWebsite/_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/_adherence.oxlintrc.json": {
+    "mtime": 1784926155.796569,
+    "ast_hash": "5b585a4a5e38639ec5ca24bae83a666b",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersWebsite/_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/_ds_bundle.js": {
+    "mtime": 1784926155.796569,
+    "ast_hash": "e5709a1315250137e793e1f5c5c71648",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersWebsite/_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/_ds_manifest.json": {
+    "mtime": 1784926155.810452,
+    "ast_hash": "5028559c0d2439a4b2ad8c181d63e9bd",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersWebsite/shared/store.js": {
+    "mtime": 1784926155.889641,
+    "ast_hash": "b4a3d348b245366b2d64491ec0be6016",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersWebsite/support.js": {
+    "mtime": 1784926155.7945614,
+    "ast_hash": "450f2a9297cd55032eb905780de3016b",
+    "semantic_hash": ""
+  },
+  "apps/admin/components.json": {
+    "mtime": 1785004806.3351817,
+    "ast_hash": "3d5d9c61b98c2adbe30f1684674efc05",
+    "semantic_hash": ""
+  },
+  "apps/admin/eslint.config.mjs": {
+    "mtime": 1785004804.4466355,
+    "ast_hash": "dfa1f5f6a7037bf39dc510f30b180002",
+    "semantic_hash": ""
+  },
+  "apps/admin/next.config.ts": {
+    "mtime": 1785006387.9635909,
+    "ast_hash": "bb60c5b998ed15b65b0dcf00d2614995",
+    "semantic_hash": ""
+  },
+  "apps/admin/package.json": {
+    "mtime": 1785004798.3485687,
+    "ast_hash": "e65bfb7375b89f90deb72627f019713c",
+    "semantic_hash": ""
+  },
+  "apps/admin/postcss.config.mjs": {
+    "mtime": 1785004802.8812792,
+    "ast_hash": "239f3ebf717465dc636818a1a619398d",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/app/layout.tsx": {
+    "mtime": 1785006302.525894,
+    "ast_hash": "d27b2ac3dda704e42e8263f4f4bb8a02",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/app/page.tsx": {
+    "mtime": 1785006307.2192564,
+    "ast_hash": "fc8ef4ad528b841fce89ea99f69f183b",
+    "semantic_hash": ""
+  },
+  "apps/admin/tsconfig.json": {
+    "mtime": 1785006408.0182033,
+    "ast_hash": "bd67a517762f07b60eda5abfaf1ed295",
+    "semantic_hash": ""
+  },
+  "packages/ui/package.json": {
+    "mtime": 1785004631.9508328,
+    "ast_hash": "9581eaed85d9d25faad19e95f5e92cd7",
+    "semantic_hash": ""
+  },
+  "packages/ui/src/badge.tsx": {
+    "mtime": 1785004674.2622404,
+    "ast_hash": "def5f84a47726d3d38b6d7b6b48e33e8",
+    "semantic_hash": ""
+  },
+  "packages/ui/src/bilingual.tsx": {
+    "mtime": 1785004712.423864,
+    "ast_hash": "9e4b96aeab110819425cfa60827642ce",
+    "semantic_hash": ""
+  },
+  "packages/ui/src/button.tsx": {
+    "mtime": 1785004666.6401348,
+    "ast_hash": "ef86bc5b35cfa0807b03e1d6d1ce94b0",
+    "semantic_hash": ""
+  },
+  "packages/ui/src/card.tsx": {
+    "mtime": 1785004679.6950839,
+    "ast_hash": "ba2b5d18e279e8dde2ba73a0ee78bca5",
+    "semantic_hash": ""
+  },
+  "packages/ui/src/dialog.tsx": {
+    "mtime": 1785004697.5370767,
+    "ast_hash": "1bccbcad2ee8f1336b19d27399d674c9",
+    "semantic_hash": ""
+  },
+  "packages/ui/src/empty-state.tsx": {
+    "mtime": 1785004716.1816652,
+    "ast_hash": "df31a396c243b7856c9225f793bc8f91",
+    "semantic_hash": ""
+  },
+  "packages/ui/src/index.ts": {
+    "mtime": 1785004741.5998607,
+    "ast_hash": "c3830f690eccd4b8a6e42081ae51a19a",
+    "semantic_hash": ""
+  },
+  "packages/ui/src/input.tsx": {
+    "mtime": 1785004669.9472132,
+    "ast_hash": "dfeae5caf568b0436d866f4da2cfb9e1",
+    "semantic_hash": ""
+  },
+  "packages/ui/src/lib/utils.ts": {
+    "mtime": 1785004632.6854174,
+    "ast_hash": "5a6fd53fdcf2be529e9cc0b718fde352",
+    "semantic_hash": ""
+  },
+  "packages/ui/src/motion/fade-in.tsx": {
+    "mtime": 1785004727.0275185,
+    "ast_hash": "391ae1596184a971625b0119d4db3957",
+    "semantic_hash": ""
+  },
+  "packages/ui/src/motion/skeleton-block.tsx": {
+    "mtime": 1785004734.5654678,
+    "ast_hash": "dd930513f907fccf234be14a5f26020e",
+    "semantic_hash": ""
+  },
+  "packages/ui/src/motion/stagger-list.tsx": {
+    "mtime": 1785004732.047007,
+    "ast_hash": "53f59f7d0b7d8b1e16a97fe190e6b3f8",
+    "semantic_hash": ""
+  },
+  "packages/ui/src/sheet.tsx": {
+    "mtime": 1785004706.96498,
+    "ast_hash": "9ab23212e0bb88e49fbb1d685ba240d1",
+    "semantic_hash": ""
+  },
+  "packages/ui/src/skeleton.tsx": {
+    "mtime": 1785004681.224846,
+    "ast_hash": "8071681e9ae2845d61a3cc1ac6837a0a",
+    "semantic_hash": ""
+  },
+  "packages/ui/src/tabs.tsx": {
+    "mtime": 1785004689.205084,
+    "ast_hash": "c005c89889918abb2fefa01473d120f3",
+    "semantic_hash": ""
+  },
+  "packages/ui/src/toast.tsx": {
+    "mtime": 1785004723.0388343,
+    "ast_hash": "20cca64ec0c42e190e8cb5e5c6a5763e",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersAdmin/AccountingReporting.dc.html": {
+    "mtime": 1785004163.3082528,
+    "ast_hash": "749a8b68d99eaf36a2757a1694da8898",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersAdmin/AuditLog.dc.html": {
+    "mtime": 1785004163.315016,
+    "ast_hash": "e3c5bcaba6d9af03ca5236caf3554afa",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersAdmin/ClientBusinesses.dc.html": {
+    "mtime": 1785004163.3190267,
+    "ast_hash": "c24b6c62acbf8958447a3e7c613a3ba1",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersAdmin/Dashboard.dc.html": {
+    "mtime": 1785004163.3190267,
+    "ast_hash": "785fb9cef2cb6480c40f32bdc5646c08",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersAdmin/DeliveryManagement.dc.html": {
+    "mtime": 1785004163.3303576,
+    "ast_hash": "5451d03ff835bfe50627946d1aaba8f7",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersAdmin/DiscountCredit.dc.html": {
+    "mtime": 1785004163.334452,
+    "ast_hash": "b3f3ae5e4bffda4a90f4192c6311f6a8",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersAdmin/OrderQueue.dc.html": {
+    "mtime": 1785004163.342878,
+    "ast_hash": "6a82128321ea10aae44aae7da8434218",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersAdmin/ProductCatalogue.dc.html": {
+    "mtime": 1785004163.34688,
+    "ast_hash": "b933e2e0dcc6e5d40650fbf1cd1d3d1a",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersAdmin/Settings.dc.html": {
+    "mtime": 1785004163.3513932,
+    "ast_hash": "3c526e5c811385101b8e40f90b70c38f",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersAdmin/StaffManagement.dc.html": {
+    "mtime": 1785004163.3542404,
+    "ast_hash": "c050512544c4305115073a0bb0c0ef2e",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersAdmin/StockManagement.dc.html": {
+    "mtime": 1785004163.360256,
+    "ast_hash": "338cc84795addfa428e84845c55c917b",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersWebsite/About.dc.html": {
+    "mtime": 1784926155.722582,
+    "ast_hash": "e23a75e7004314345a31773ae6feb529",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersWebsite/Account.dc.html": {
+    "mtime": 1784926155.7298913,
+    "ast_hash": "460c78251b0dd6618ffe6cc5355a1cd0",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersWebsite/Cart.dc.html": {
+    "mtime": 1784926155.7343202,
+    "ast_hash": "28c534ce6b792c3b99419df01f7b1a20",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersWebsite/Catalogue.dc.html": {
+    "mtime": 1784926155.736688,
+    "ast_hash": "2e2e030989d7dae8007e8008d13f9397",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersWebsite/Checkout.dc.html": {
+    "mtime": 1784926155.7438543,
+    "ast_hash": "f93fa3bf3b7b9a1f95db4f588749c4d1",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersWebsite/Contact.dc.html": {
+    "mtime": 1784926155.7476585,
+    "ast_hash": "75600d08a1c0b8f2d6c3ddbb59cfcc3c",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersWebsite/Home.dc.html": {
+    "mtime": 1784926155.752732,
+    "ast_hash": "53e21dd4fcc56738f055e165d3541189",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersWebsite/Invoice.dc.html": {
+    "mtime": 1784926155.752732,
+    "ast_hash": "25b70353db516fb555ba4f760a0b0df8",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersWebsite/OrderConfirmation.dc.html": {
+    "mtime": 1784926155.7613525,
+    "ast_hash": "cef0e8b30869a1ca8a66ddb180a82119",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersWebsite/OrderHistory.dc.html": {
+    "mtime": 1784926155.7633576,
+    "ast_hash": "7721276790adaf3ce63b2681d4e8aac2",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersWebsite/OrderTracking.dc.html": {
+    "mtime": 1784926155.7685633,
+    "ast_hash": "8845cc73ebefd5f880cea6eb8cbdd156",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersWebsite/ProductDetail.dc.html": {
+    "mtime": 1784926155.7747796,
+    "ast_hash": "0a871bf5f0344f4cd2d6e14f2ce3fe08",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersWebsite/SignIn.dc.html": {
+    "mtime": 1784926155.7786596,
+    "ast_hash": "41900cd5cc86cf211da2bbdf6326d697",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersWebsite/SiteFooter.dc.html": {
+    "mtime": 1784926155.7812164,
+    "ast_hash": "d3f9987ce0ae3fc0eebb7f8174d7606b",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersWebsite/SiteNav.dc.html": {
+    "mtime": 1784926155.7812164,
+    "ast_hash": "a5b6df256c242372f51da5998ab8a761",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersWebsite/WholesaleRegistration.dc.html": {
+    "mtime": 1784926155.7812164,
+    "ast_hash": "498eb5c45deefae9529de6b6e76a0ac4",
+    "semantic_hash": ""
+  },
+  "Design/RazaStationersWebsite/_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/readme.md": {
+    "mtime": 1784926155.810452,
+    "ast_hash": "3ce2cb8138a53875a0a6858fba7af478",
+    "semantic_hash": ""
+  },
+  "docs/admin/architecture.md": {
+    "mtime": 1785004988.9314716,
+    "ast_hash": "93b68eb89533c92a2b17360c7ba8d3ad",
+    "semantic_hash": ""
+  },
+  "docs/admin/phases.md": {
+    "mtime": 1785005076.994533,
+    "ast_hash": "105ee26647c46be4c374262f13891213",
+    "semantic_hash": ""
+  },
+  "docs/admin/qa_testing.md": {
+    "mtime": 1785005192.4921353,
+    "ast_hash": "dab06438b1b09927d85a386265ae70d5",
+    "semantic_hash": ""
+  },
+  "docs/website/architecture.md": {
+    "mtime": 1784924982.7734272,
+    "ast_hash": "c9e19185950c5c75ef045ed9124bff30",
+    "semantic_hash": ""
+  },
+  "docs/website/phases.md": {
+    "mtime": 1784925119.023627,
+    "ast_hash": "3f6de518499ea67c8e2714836526ae77",
+    "semantic_hash": ""
+  },
+  "docs/website/qa-report.md": {
+    "mtime": 1785004869.4692414,
+    "ast_hash": "b4f3ce0a3ee1c707f8552d9cb9b208c4",
+    "semantic_hash": ""
+  },
+  "docs/website/qa_testing.md": {
+    "mtime": 1785004872.4824262,
+    "ast_hash": "5d6555176c634e2234156a6993818c01",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/app/accounting/page.tsx": {
+    "mtime": 1785006352.7711782,
+    "ast_hash": "80b64fbc7d8b9b19d23fdb4a52ee8e46",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/app/audit-log/page.tsx": {
+    "mtime": 1785006358.336073,
+    "ast_hash": "4878420487bdc0f6b5e841781aeddf71",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/app/catalogue/page.tsx": {
+    "mtime": 1785006337.0888584,
+    "ast_hash": "f3dbc8c6128845e8aa03c2bc63afee90",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/app/client-businesses/page.tsx": {
+    "mtime": 1785006317.0008574,
+    "ast_hash": "734b0296ced8cefc0854568ad8c1592f",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/app/dashboard/page.tsx": {
+    "mtime": 1785006312.1600137,
+    "ast_hash": "15426cb8204d5d61718fb64c79f4675c",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/app/delivery/page.tsx": {
+    "mtime": 1785006342.0571764,
+    "ast_hash": "6b10c9d0ec2b4808fc29395a93d7cd5f",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/app/discount-credit/page.tsx": {
+    "mtime": 1785006321.9037774,
+    "ast_hash": "3e5dd6387a73eb3b9d67973b765eb8b3",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/app/orders/page.tsx": {
+    "mtime": 1785006331.487802,
+    "ast_hash": "9ffe82674121cffb130e4113a8a66e6a",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/app/settings/page.tsx": {
+    "mtime": 1785006363.0664873,
+    "ast_hash": "00a7227477eda491d75c3a6ec8153945",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/app/staff/page.tsx": {
+    "mtime": 1785006346.9369433,
+    "ast_hash": "d26604dc9e6fee5e56d201ed60031684",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/app/stock/page.tsx": {
+    "mtime": 1785006326.6274674,
+    "ast_hash": "c7ef4c23ef26befffc596b41aaa3f7a6",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/components/shell/AdminNav.tsx": {
+    "mtime": 1785006279.5611718,
+    "ast_hash": "7af45c09b1461506ef8f97e3131dd587",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/components/shell/AdminShell.tsx": {
+    "mtime": 1785006295.5995903,
+    "ast_hash": "43196ce537cf23f52f16951cb0c69d64",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/components/shell/TopBar.tsx": {
+    "mtime": 1785006285.012962,
+    "ast_hash": "be1ac15f589cefaa542667e1866139ff",
+    "semantic_hash": ""
+  },
+  "apps/admin/src/lib/role.ts": {
+    "mtime": 1785006272.7110634,
+    "ast_hash": "449f1e3f3e0b48099c8c9784a65bf5fd",
     "semantic_hash": ""
   }
 }

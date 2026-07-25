@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  transpilePackages: ["@raza-stationers/ui", "@raza-stationers/types", "@raza-stationers/api"],
 };
 
 export default nextConfig;

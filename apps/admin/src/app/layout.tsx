@@ -20,6 +20,8 @@ const fontUrdu = Noto_Nastaliq_Urdu({
   variable: "--font-urdu",
 });
 
+import { AdminShell } from "@/components/shell/AdminShell";
+
 export const metadata: Metadata = {
   title: "Raza Stationers Admin",
   description: "Operations dashboard for Raza Stationers staff.",
@@ -37,7 +39,7 @@ export default function RootLayout({
       className={`${fontSans.variable} ${fontHeading.variable} ${fontUrdu.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-[var(--color-canvas)] text-[var(--color-ink-900)]">
-        {children}
+        <AdminShell>{children}</AdminShell>
       </body>
     </html>
   );

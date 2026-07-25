@@ -19,7 +19,11 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@raza-stationers/ui": ["../../packages/ui/src/index.ts"],
+      "@raza-stationers/ui/*": ["../../packages/ui/src/*"],
+      "@raza-stationers/types": ["../../packages/types/src/index.ts"],
+      "@raza-stationers/api": ["../../packages/api/src/index.ts"]
     }
   },
   "include": [
