@@ -105,3 +105,29 @@ export const wholesaleRegistrationSchema = z.object({
 })
 
 export type WholesaleRegistrationFormData = z.infer<typeof wholesaleRegistrationSchema>
+
+/**
+ * Stock Manual Adjustment Validation Schema (FR-STK-07)
+ * Mandatory reason string required for stock corrections/adjustments.
+ */
+export const stockAdjustmentSchema = z.object({
+  productId: z.string().min(1, "Please select a product"),
+  quantityChange: z.number().refine((val) => val !== 0, {
+    message: "Quantity change must be non-zero",
+  }),
+  reason: z.string().min(5, "Mandatory reason required for stock adjustments (e.g. damaged stock, audit correction)"),
+})
+
+export type StockAdjustmentFormData = z.infer<typeof stockAdjustmentSchema>
+
+/**
+ * Discount Rule Override & Log Validation Schema (FR-PRC-05)
+ * Mandatory change reason string required for discount overrides.
+ */
+export const discountRuleSchema = z.object({
+  clientBusinessId: z.string().min(1, "Please select a client business"),
+  discountPercent: z.number().min(0).max(50, "Discount percentage cannot exceed 50%"),
+  reason: z.string().min(5, "Mandatory reason required for discount override changes (FR-PRC-05)"),
+})
+
+export type DiscountRuleFormData = z.infer<typeof discountRuleSchema>
