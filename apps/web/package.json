@@ -11,6 +11,8 @@
   "dependencies": {
     "@raza-stationers/types": "*",
     "@raza-stationers/api": "*",
+    "@raza-stationers/validation": "*",
+    "zod": "^3.24.2",
     "@base-ui/react": "^1.6.0",
     "@gsap/react": "^2.1.2",
     "@react-three/drei": "^10.7.7",
