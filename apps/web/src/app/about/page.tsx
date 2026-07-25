@@ -2,7 +2,7 @@ import * as React from "react"
 import Link from "next/link"
 import { Bilingual } from "@/components/ui/bilingual"
 import { Button } from "@/components/ui/button"
-import { BookOpen, ShieldCheck, Truck, Award, Users, MapPin, ArrowRight } from "lucide-react"
+import { BookOpen, ShieldCheck, Truck, Award, MapPin, ArrowRight } from "lucide-react"
 
 export const metadata = {
   title: "About Us | Raza Stationers",
@@ -28,7 +28,7 @@ export default function AboutPage() {
             رضا اسٹیشنرز — معیاری اور سستی ہول سیل اسٹیشنری کا بااعتماد نام
           </p>
           <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-            Founded in the heart of Karachi's historic Urdu Bazar, Raza Stationers has grown into one of Pakistan's most trusted wholesale paper merchants and office stationery suppliers.
+            Founded in the heart of Karachi&apos;s historic Urdu Bazar, Raza Stationers has grown into one of Pakistan&apos;s most trusted wholesale paper merchants and office stationery suppliers.
           </p>
         </div>
 
@@ -83,7 +83,7 @@ export default function AboutPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-xs sm:text-sm text-muted-foreground leading-relaxed">
             <div className="space-y-3">
               <p>
-                Urdu Bazar Karachi is the nerve center of Pakistan's stationery and book trade. Starting as a modest paper stall over 25 years ago, Raza Stationers established its reputation on honest pricing, strict quality standards, and genuine customer care.
+                Urdu Bazar Karachi is the nerve center of Pakistan&apos;s stationery and book trade. Starting as a modest paper stall over 25 years ago, Raza Stationers established its reputation on honest pricing, strict quality standards, and genuine customer care.
               </p>
               <p>
                 Today, we serve hundreds of retail stationery shops, educational institutions, book depots, and corporate offices with over 5,000 catalogued inventory items.

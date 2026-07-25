@@ -20,8 +20,8 @@ function CatalogueContent() {
   const searchParams = useSearchParams()
   const categoryParam = searchParams.get("category")
 
-  const [searchQuery, setSearchQuery] = React.useState("")
-  const [selectedCategory, setSelectedCategory] = React.useState<string | null>(categoryParam)
+  const [searchQuery, setSearchQueryRaw] = React.useState("")
+  const [selectedCategoryLocal, setSelectedCategoryLocal] = React.useState<string | null>(null)
   const [purchaseType, setPurchaseType] = React.useState<PurchaseTypeFilter>("all")
   const [currentPage, setCurrentPage] = React.useState(1)
   const [pricingMode, setPricingMode] = React.useState<"guest" | "wholesale">("guest")
@@ -32,17 +32,24 @@ function CatalogueContent() {
       : { isApprovedBusiness: false }
   }, [pricingMode])
 
-  // Sync category param from URL if present
-  React.useEffect(() => {
-    if (categoryParam) {
-      setSelectedCategory(categoryParam)
-    }
-  }, [categoryParam])
+  // Derive category from URL param or local state
+  const selectedCategory = categoryParam ?? selectedCategoryLocal
 
-  // Reset to page 1 whenever filters change
-  React.useEffect(() => {
+  // Wrapped setters that also reset page to 1
+  const setSelectedCategory = React.useCallback((cat: string | null) => {
+    setSelectedCategoryLocal(cat)
     setCurrentPage(1)
-  }, [searchQuery, selectedCategory, purchaseType])
+  }, [])
+
+  const setSearchQuery = React.useCallback((q: string) => {
+    setSearchQueryRaw(q)
+    setCurrentPage(1)
+  }, [])
+
+  const handlePurchaseTypeChange = React.useCallback((pt: PurchaseTypeFilter) => {
+    setPurchaseType(pt)
+    setCurrentPage(1)
+  }, [])
 
   // Filter products based on search, category, and purchase type
   const filteredProducts = React.useMemo(() => {
@@ -140,7 +147,7 @@ function CatalogueContent() {
         <div className="space-y-4 bg-card/40 p-4 sm:p-6 rounded-2xl border border-border">
           <div className="flex flex-col sm:flex-row items-center gap-4">
             <CatalogueSearchInput value={searchQuery} onChange={setSearchQuery} />
-            <PurchaseTypeToggle value={purchaseType} onChange={setPurchaseType} className="shrink-0" />
+            <PurchaseTypeToggle value={purchaseType} onChange={handlePurchaseTypeChange} className="shrink-0" />
           </div>
 
           <div className="flex items-center justify-between gap-4 pt-2 border-t border-border/40">

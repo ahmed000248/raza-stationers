@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import Link from "next/link"
+
 import { useSearchParams } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
 import { CreditStatusCard } from "@/components/account/CreditStatusCard"
@@ -16,8 +16,10 @@ function AccountPageContent() {
   const initialTab = searchParams.get("tab") || "profile"
 
   const { accountStatus, user, clientBusiness, logout } = useAuth()
-  const [activeTab, setActiveTab] = React.useState<"profile" | "credit" | "preferences" | "security">(
-    initialTab as any
+  const validTabs = ["profile", "credit", "preferences", "security"] as const
+  type TabId = typeof validTabs[number]
+  const [activeTab, setActiveTab] = React.useState<TabId>(
+    validTabs.includes(initialTab as TabId) ? (initialTab as TabId) : "profile"
   )
 
   return (
