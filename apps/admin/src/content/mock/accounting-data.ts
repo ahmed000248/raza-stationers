@@ -1,48 +1,73 @@
 export interface ExpenseItem {
-  id: string
-  category: string
-  date: string
-  note: string
-  amount: number
+  id: string;
+  category: string;
+  date: string; // ISO format
+  note: string;
+  amount: number; // positive values represent expense
 }
 
 export const MOCK_EXPENSES: ExpenseItem[] = [
   {
     id: "exp-1",
     category: "Restocking",
-    date: "2026-07-24",
-    note: "Dollar Industries invoice #940",
-    amount: 9000,
+    date: "2026-07-01",
+    note: "Purchased new ink cartridges",
+    amount: 120.5,
   },
   {
     id: "exp-2",
-    category: "Fuel & Delivery",
-    date: "2026-07-22",
-    note: "Bike fuel allowance - Imran & Bilal",
-    amount: 3500,
+    category: "Utilities",
+    date: "2026-07-05",
+    note: "Electricity bill",
+    amount: 85.0,
   },
   {
     id: "exp-3",
-    category: "Rent & Utilities",
-    date: "2026-07-05",
-    note: "Shop & warehouse electricity bill",
-    amount: 28000,
+    category: "Marketing",
+    date: "2026-07-10",
+    note: "Online ad campaign",
+    amount: 250.75,
   },
   {
     id: "exp-4",
-    category: "Packaging Supplies",
-    date: "2026-07-02",
-    note: "Carton boxes & sealing tapes",
-    amount: 6200,
+    category: "Travel",
+    date: "2026-07-12",
+    note: "Client meeting transportation",
+    amount: 45.0,
   },
-]
+  {
+    id: "exp-5",
+    category: "Supplies",
+    date: "2026-07-15",
+    note: "Office stationery",
+    amount: 30.2,
+  },
+];
 
-export const MOCK_SALES_TREND_POINTS = [
-  { day: "Mon", sales: 18000 },
-  { day: "Tue", sales: 34000 },
-  { day: "Wed", sales: 27000 },
-  { day: "Thu", sales: 52000 },
-  { day: "Fri", sales: 48000 },
-  { day: "Sat", sales: 65000 },
-  { day: "Sun", sales: 22000 },
-]
+export interface RevenueItem {
+  id: string;
+  source: string;
+  date: string; // ISO format
+  amount: number; // positive values represent revenue
+}
+
+export const MOCK_REVENUE: RevenueItem[] = [
+  {
+    id: "rev-1",
+    source: "Online Orders",
+    date: "2026-07-01",
+    amount: 1500.0,
+  },
+  {
+    id: "rev-2",
+    source: "In‑Store Sales",
+    date: "2026-07-03",
+    amount: 800.0,
+  },
+  {
+    id: "rev-3",
+    source: "Wholesale",
+    date: "2026-07-07",
+    amount: 1200.0,
+  },
+];
