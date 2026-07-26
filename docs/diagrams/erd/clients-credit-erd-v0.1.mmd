@@ -1,0 +1,65 @@
+%% Raza Stationers - Clients, credit and payments conceptual ERD v0.1
+%% Balances are ledger-derived. Payments and invoices are related through
+%% allocations so partial and cross-invoice payments remain traceable.
+
+erDiagram
+    USER ||--o{ BUSINESS_USER_LINK : holds
+    CLIENT_BUSINESS ||--o{ BUSINESS_USER_LINK : authorizes
+    CLIENT_BUSINESS ||--o{ CLIENT_APPROVAL_DECISION : undergoes
+    CLIENT_BUSINESS ||--o| CLIENT_CREDIT_ACCOUNT : may_have
+    CLIENT_CREDIT_ACCOUNT ||--o{ CREDIT_LEDGER_ENTRY : records
+    CLIENT_BUSINESS ||--o{ ORDER : places
+    ORDER ||--o| INVOICE : produces
+    CLIENT_BUSINESS ||--o{ PAYMENT : makes
+    PAYMENT ||--o{ PAYMENT_ALLOCATION : allocates
+    INVOICE ||--o{ PAYMENT_ALLOCATION : receives
+    RETURN ||--o{ REFUND : may_generate
+    REFUND ||--o{ CREDIT_LEDGER_ENTRY : may_record
+
+    CLIENT_BUSINESS {
+        string id
+        string businessName
+        string accountStatus
+    }
+    CLIENT_APPROVAL_DECISION {
+        string id
+        string decision
+        string reason
+        datetime decidedAt
+    }
+    CLIENT_CREDIT_ACCOUNT {
+        string id
+        decimal creditLimit
+        string creditStatus
+        string paymentTerms
+    }
+    INVOICE {
+        string id
+        string invoiceNumber
+        decimal total
+        date dueDate
+        string status
+    }
+    PAYMENT {
+        string id
+        decimal amount
+        string method
+        string status
+    }
+    PAYMENT_ALLOCATION {
+        string id
+        decimal amount
+        datetime allocatedAt
+    }
+    CREDIT_LEDGER_ENTRY {
+        string id
+        decimal amount
+        string entryType
+        datetime createdAt
+    }
+    REFUND {
+        string id
+        decimal amount
+        string method
+        string status
+    }

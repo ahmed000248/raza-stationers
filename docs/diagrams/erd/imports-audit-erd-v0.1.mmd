@@ -1,0 +1,58 @@
+%% Raza Stationers - Imports and audit conceptual ERD v0.1
+%% Raw rows and validation findings are retained. Only approved rows cross
+%% into canonical data, and every mapping remains traceable to its source.
+
+erDiagram
+    USER ||--o{ IMPORT_BATCH : uploads
+    IMPORT_BATCH ||--|{ IMPORT_ROW : contains
+    IMPORT_ROW ||--o{ IMPORT_ISSUE : reports
+    IMPORT_ROW ||--o{ SOURCE_RECORD_MAPPING : maps
+    PRODUCT ||--o{ SOURCE_RECORD_MAPPING : created_from
+    CATEGORY ||--o{ SOURCE_RECORD_MAPPING : created_from
+    PRODUCT_PACKAGING ||--o{ SOURCE_RECORD_MAPPING : created_from
+    PRODUCT_PRICE ||--o{ SOURCE_RECORD_MAPPING : created_from
+
+    USER ||--o{ AUDIT_LOG : acts_in
+    IMPORT_BATCH ||--o{ AUDIT_LOG : audited_by
+
+    IMPORT_BATCH {
+        string id
+        string filename
+        string sha256
+        string status
+        int totalRows
+        int validRows
+        int warningRows
+        int invalidRows
+        int importedRows
+    }
+    IMPORT_ROW {
+        string id
+        string sheetName
+        int sourceRow
+        json rawValues
+        string validationStatus
+        string importStatus
+    }
+    IMPORT_ISSUE {
+        string id
+        string code
+        string severity
+        string message
+        string resolutionStatus
+    }
+    SOURCE_RECORD_MAPPING {
+        string id
+        string canonicalEntityType
+        string canonicalEntityId
+        datetime mappedAt
+    }
+    AUDIT_LOG {
+        string id
+        string actionType
+        string entityType
+        string entityId
+        json previousValue
+        json newValue
+        datetime createdAt
+    }

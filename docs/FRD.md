@@ -239,8 +239,8 @@ Server-side enforcement is mandatory for every row above — see `FR-SEC-01`. No
 | ID | Requirement | Actor(s) | Priority | Related BR |
 |---|---|---|---|---|
 | FR-DLV-01 | Admin assigns a confirmed, packed order to a delivery worker (from the staff list, `FR-STF`) and marks it dispatched, recording dispatch time. | Admin, Owner | M | ST-02 |
-| FR-DLV-02 | System records delivery outcome: delivered (with delivery time and cash collected, if applicable) or failed (with a required reason field) or returned/damaged items. | Admin, Owner (on behalf of delivery worker in v1) | M | ST-02 |
-| FR-DLV-03 | Delivery worker-facing app/login to self-update delivery status. | Delivery Worker | Phase 2 (v1: admin updates on worker's behalf) | ST-02, ST-03 |
+| FR-DLV-02 | System records delivery outcome: delivered (with delivery time and cash collected, if applicable) or failed (with a required reason field) or returned/damaged items. Recorded either by the assigned Delivery Worker directly (own assignments only) or by Admin/Owner (any assignment, with override/reassignment rights). | Delivery Worker (own assignments), Admin, Owner (all assignments) | M | ST-02, BR-DEL-001 |
+| FR-DLV-03 | Delivery worker login to self-update the status of deliveries assigned to them (assigned/dispatched/out for delivery/delivered/failed/returned). *(v1.4 — decided per BR-DEL-001, 2026-07-26: this ships in v1, not Phase 2 as earlier drafts said. The admin panel's `/delivery` page was already built this way; the FRD text was stale, not the implementation.)* Every self-update, and every Admin/Owner correction or override, records the responsible user and timestamp. | Delivery Worker, Admin, Owner | M | ST-02, ST-03, BR-DEL-001 |
 | FR-DLV-04 | Live GPS tracking of delivery workers. | System | Phase 2 | Future Enhancements (BRD §19) |
 | FR-DLV-05 | Packing worker view (or printed picking slip in v1) lists items to pick per order, and supports marking the order as "Packed" before dispatch assignment. | Packing Worker, Admin | M | ST-02, ST-03 |
 
@@ -333,11 +333,12 @@ Every order must occupy exactly one of these statuses at a time. Transitions not
 | Change Requested | Confirmed (modified) | Admin approves an edit request | Admin, Owner |
 | Confirmed | Packed | Packing worker/admin marks order picked and packed | Packing Worker, Admin |
 | Packed | Out for Delivery | Admin dispatches order to a delivery worker | Admin, Owner |
-| Out for Delivery | Delivered | Delivery confirmed, payment (if applicable) collected | Admin (on behalf of Delivery Worker in v1) |
-| Out for Delivery | Failed Delivery | Delivery attempt unsuccessful; reason recorded | Admin (on behalf of Delivery Worker in v1) |
+| Packed | Cancelled | Admin/Owner approves cancellation of an already-packed order (reason required; reverses stock/reservation and any related financial records; audit-logged) — `BR-ORDER-001` | Admin, Owner |
+| Out for Delivery | Delivered | Delivery confirmed, payment (if applicable) collected | Delivery Worker (own assignment), Admin, Owner |
+| Out for Delivery | Failed Delivery | Delivery attempt unsuccessful; reason recorded | Delivery Worker (own assignment), Admin, Owner |
 | Failed Delivery | Out for Delivery | Redelivery attempt scheduled | Admin, Owner |
 
-Every transition is written to the audit log (`FR-SEC-02`) with actor and timestamp. Customers see a simplified version of this state machine (Placed → Confirmed → Preparing → Out for Delivery → Delivered), matching PRD §5.1's order tracking feature.
+Every transition is written to the audit log (`FR-SEC-02`) with actor and timestamp. Customers see a simplified version of this state machine (Placed → Confirmed → Preparing → Out for Delivery → Delivered), matching PRD §5.1's order tracking feature. *(v1.3: delivery-outcome and packed-cancellation rows updated per `docs/db/phase2answers.md` Section 10 — BR-DEL-001 and BR-ORDER-001.)*
 
 ---
 

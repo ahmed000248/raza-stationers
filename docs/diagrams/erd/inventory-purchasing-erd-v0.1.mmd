@@ -1,0 +1,61 @@
+%% Raza Stationers - Inventory and purchasing conceptual ERD v0.1
+%% Stock uses one active location in v1. Supplier and purchasing entities
+%% remain visible as a deferred boundary and are not demo implementation scope.
+
+erDiagram
+    PRODUCT ||--|{ PRODUCT_PACKAGING : sold_as
+    UNIT_OF_MEASURE ||--o{ PRODUCT_PACKAGING : defines
+    STOCK_LOCATION ||--o{ STOCK_BALANCE : holds
+    PRODUCT ||--o{ STOCK_BALANCE : summarized_by
+    STOCK_LOCATION ||--o{ STOCK_MOVEMENT : records
+    PRODUCT ||--o{ STOCK_MOVEMENT : changes
+    ORDER_ITEM ||--o{ STOCK_RESERVATION : creates
+    STOCK_LOCATION ||--o{ STOCK_RESERVATION : holds
+    PRODUCT ||--o{ STOCK_RESERVATION : reserves
+
+    SUPPLIER ||--o{ SUPPLIER_PRODUCT : offers
+    PRODUCT ||--o{ SUPPLIER_PRODUCT : sourced_as
+    SUPPLIER ||--o{ PURCHASE_ORDER : receives
+    PURCHASE_ORDER ||--|{ PURCHASE_ORDER_ITEM : contains
+    PURCHASE_ORDER ||--o{ GOODS_RECEIPT : fulfilled_by
+    GOODS_RECEIPT ||--|{ GOODS_RECEIPT_ITEM : contains
+    GOODS_RECEIPT_ITEM ||--o{ STOCK_MOVEMENT : posts
+
+    STOCK_LOCATION {
+        string id
+        string name
+        boolean isActive
+    }
+    STOCK_BALANCE {
+        string id
+        decimal onHand
+        decimal reserved
+        decimal damaged
+    }
+    STOCK_MOVEMENT {
+        string id
+        decimal quantity
+        string movementType
+        string condition
+        datetime createdAt
+    }
+    STOCK_RESERVATION {
+        string id
+        decimal baseQuantity
+        string status
+    }
+    SUPPLIER {
+        string id
+        string name
+        string status
+    }
+    PURCHASE_ORDER {
+        string id
+        string status
+        datetime orderedAt
+    }
+    GOODS_RECEIPT {
+        string id
+        string receiptNumber
+        datetime receivedAt
+    }

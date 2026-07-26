@@ -178,3 +178,87 @@ RECOMMENDED. Indefinite retention as the safe v1 default — no legal/regulatory
 4. Import rule to build, per father's answers: parse `Item Name` for "single"/container words/pack-count numbers to set the price basis (PRICE-Q01); drop rows with no name and route unclear names to a single "Others" category, merging the two generated catch-all categories into it (CAT-Q02); skip stock population entirely for this pass (STOCK-Q03).
 
 All 7 father-dependent questions are now answered — nothing left blocking Phase 3 conceptual modeling on the business-rule side. Remaining opens are just the exact delivery-charge Rupee amounts (#3 above) and the eventual real retail/buying prices, both already known to be coming later.
+
+---
+
+## Section 10 — Phase 2 Provisional Business Decisions (approved for Phase 3, 2026-07-26)
+
+**Status: approved by Ahmed to unblock Phase 3 schema design and demo implementation. Not production-final — every decision below must be reviewed with the business owner before production deployment.**
+
+### 1. Product Packaging and Sales Units
+
+**BR-PROD-001 — Individual product sales.** Whether a package may be opened and sold as individual pieces is configured separately per product (`allowIndividualSale` or equivalent, default `false`). Boxes, jars, packets, and other packages cannot be opened for individual sale unless this setting is enabled.
+
+**BR-PROD-002 — Individual piece pricing.** When a product can be sold by both package and individual piece, the individual piece price must be entered separately — never auto-divided from the package price. Individual sales cannot be activated until a valid piece price exists.
+
+**BR-PROD-003 — Unconfirmed product units.** If the source data doesn't clearly identify the selling unit or packaging quantity, import the record as an unconfirmed SKU, keep it inactive, and flag it for admin review. Never guess whether it's a piece, packet, jar, box, or carton.
+
+**BR-PROD-004 — Wholesale price basis.** The wholesale price from the source list applies to the complete selling unit described in the product name (a piece price belongs to one piece, a box price to one whole box, a jar price to one whole jar, etc.). If the selling unit is unclear, the product stays inactive until reviewed.
+
+**BR-PROD-005 — Package conversions.** Package relationships (e.g. one box = 12 pieces, one carton = 24 boxes) may only be created when the conversion quantity is explicitly available or manually confirmed. No AI guesses or default conversion quantities. Uncertain products may still be imported but stay unlinked until reviewed.
+
+### 2. Inventory Management
+
+**BR-STOCK-001 — Stock reservation.** Stock is reserved when an order is confirmed. Track at least: stock on hand, reserved stock, and available stock (`Available = On Hand − Reserved`).
+
+**BR-STOCK-002 — Stock deduction.** Reserved inventory is deducted from stock on hand only when the order is marked packed. Order confirmed → increase reserved quantity. Cancelled before packing → release reserved quantity. Packed → reduce stock on hand and reserved quantity together. Packed order later cancelled → create a reversal stock movement. Every stock change must create a traceable stock-movement record.
+
+### 3. Payments and Client Credit
+
+**BR-PAY-001 — Payment allocation.** When a client has multiple unpaid invoices, apply a payment to the oldest unpaid invoice by default; an authorised Admin/Owner may change the allocation, with who-changed-it-and-when recorded. The schema must support one payment being allocated across multiple invoices.
+
+**BR-PAY-002 — Overpayments.** Excess payment beyond the outstanding amount is stored as client credit, usable on future orders/invoices. Every credit increase, use, adjustment, or refund is recorded in a client-credit ledger — never a bare editable balance with no transaction history.
+
+### 4. Order Cancellation
+
+**BR-ORDER-001 — Packed-order cancellation.** A packed order may be cancelled only with Admin/Owner approval. The cancellation must record the reason and the approving user, restore deducted inventory, reverse any active reservation, reverse/adjust related financial records where necessary, and create an audit-log entry. The original order and its history are never deleted.
+
+### 5. Returns and Damaged Products
+
+**BR-RETURN-001 — Version-one return process.** *(Reverses my earlier RETURN-Q01 recommendation to defer returns to Phase 2 — returns are now in v1 scope.)* v1 includes a simple Admin/Owner-managed return process. Each return records: original order/invoice, client, product, returned quantity, reason, product condition, refund/credit amount, whether restocked, whether marked damaged, processing staff member, and timestamp. Returned sellable products may re-enter inventory; damaged products are recorded separately and never automatically return to sellable stock.
+
+### 6. Delivery Management
+
+**BR-DEL-001 — Delivery responsibility.** *(Resolves DEL-Q01/the Option A vs. B fork above — Option B is the chosen answer.)* Delivery workers may update only deliveries assigned to them (assigned/dispatched/out for delivery/delivered/failed/returned). Admin/Owner may review all deliveries, correct or override statuses, reassign deliveries, and view delivery-status history. Every update or override records the responsible user and timestamp.
+
+### 7. Record Deletion and Archiving
+
+**BR-DATA-001 — Transactional records.** Orders, order items, invoices, payments, payment allocations, client-credit transactions, returns, stock movements, delivery history, and audit logs are never permanently deleted — use cancellation, reversal, voiding, or status changes instead.
+
+**BR-DATA-002 — Master records.** Products, client businesses, and users may be permanently deleted only when they have zero related transactional history. If history exists: archive/deactivate, preserve historical relationships, never cascade-delete related transactions. *This explicitly replaces the schema's current cascading-delete behaviour on relations to transactional records — flagged as a required Phase 3 schema change, see below.*
+
+### 8. Product Import Validation
+
+**BR-IMPORT-001 — Duplicate names.** Duplicate product names are allowed when SKUs, units, package sizes, or variants differ. Import shows a duplicate warning, never auto-merges, and keeps enforcing SKU uniqueness.
+
+**BR-IMPORT-002 — Missing or zero price.** Products with a missing/zero wholesale price may import, but stay inactive, flagged for price review, and unavailable for ordering.
+
+**BR-IMPORT-003 — Import preview.** Every catalogue import uses a staged preview: valid rows, warning rows, invalid rows, duplicate-name warnings, missing-price warnings, unknown-unit warnings, and package-conversion warnings shown before commit. Admin approves valid rows; problem rows stay pending for correction.
+
+**BR-IMPORT-004 — Import history.** Every import creates an import-batch record: filename, uploaded by, timestamp, total/valid/warning/invalid/imported row counts, batch status, and validation results. Imports must be repeatable, reviewable, and auditable.
+
+### Phase 3 gate decision
+
+Phase 2 is provisionally accepted for demo development. Codex may proceed to Phase 3 database schema design using these rules, provided that: existing files are inspected before changes; no file is modified without Ahmed's explicit permission; proposed schema changes are presented before implementation; business-specific rules stay configurable where practical; and every decision in this section is marked for business-owner review before production.
+
+### Reconciliation with Sections 7–9 above
+
+This section supersedes or extends several earlier answers in this file — noted here so nothing is silently contradictory:
+
+- **RETURN-Q01** (Section 7): previously recommended deferring returns entirely to Phase 2. **Reversed by BR-RETURN-001** — a real return model is now v1 scope.
+- **DEL-Q01** (Section 7): left as an open Option A/B fork last review. **Resolved by BR-DEL-001** — Option B: delivery workers get real, scoped self-service on their own assigned deliveries. FRD FR-DLV-02/03 (which say v1 is admin-recorded-on-worker's-behalf) are now stale and should be updated to match — done as part of this pass.
+- **STOCK-Q01/Q02** (Section 7): previously recommended a simpler no-reservation, deduct-at-confirmation model. **Superseded by BR-STOCK-001/002** — a formal reserve-at-confirmation/deduct-at-packed model with an explicit reserved-quantity field.
+- **CREDIT-Q01** (Section 7): oldest-invoice-first was already the recommendation; **BR-PAY-001 formalizes it** and adds a hard requirement the current schema doesn't yet meet — one `Payment` needs to be allocatable across multiple orders/invoices, which the current `Payment.orderId` (single relation) can't express.
+- **AUDIT-Q01** (Section 7): "archive, never hard-delete" was already the stated principle; **BR-DATA-001/002 makes it enforceable** by calling out that the schema's existing `onDelete: Cascade` relations on transactional tables need to change to `Restrict` (block deletion of a master record with history) rather than `Cascade` (which would silently delete the history).
+- **IMPORT-Q01, PID-Q01, PRICE-Q04** (Sections 7–8): already-recommended SKU-identity, zero-price-inactive, and import-batch/hash ideas are all formalized and confirmed by BR-IMPORT-001 through 004 and BR-PROD-003.
+
+### Schema changes this section requires in Phase 3 (not yet made — for Codex to implement, per the gate decision above)
+
+1. `Product.allowIndividualSale` (boolean, default false) — distinct from the existing `purchaseType` field, which governs wholesale/retail *channel* eligibility, not whether a package can be broken into pieces.
+2. `ProductUnit` or `Product` needs an independent individual-piece price field (BR-PROD-002) — not derived from the package price.
+3. An "unconfirmed/inactive" SKU import state (BR-PROD-003) distinct from ordinary `isArchived`.
+4. `StockLevel.reservedQuantity` (BR-STOCK-001/002) — `availableQuantity` becomes a derived value, not stored.
+5. A `PaymentAllocation` join entity between `Payment` and `Order`/`CreditTransaction` (BR-PAY-001) — `Payment` can no longer assume one payment maps to exactly one order.
+6. `Return`/`ReturnItem` entities (BR-RETURN-001) — previously deferred, now needed.
+7. Review every `onDelete: Cascade` on a relation pointing at a transactional table (Order, Payment, CreditTransaction, StockMovement, DeliveryAssignment, AuditLog, etc.) and change to `Restrict` where the related model is a master record (BR-DATA-002).
+8. `ImportBatch`/`ImportRow`/`ImportError` staging entities (BR-IMPORT-003/004) — already flagged as a good addition in the Phase 0 prompt, now a firm requirement.

@@ -1,0 +1,62 @@
+%% Raza Stationers - Catalogue and pricing conceptual ERD v0.1
+%% Product is the SKU-level stock variant. Brand, ProductImage, PriceList,
+%% ClientPriceTier and a separate ProductVariant are outside the approved v1 model.
+
+erDiagram
+    CATEGORY ||--o{ PRODUCT : classifies
+    PRODUCT ||--o{ PRODUCT_ALIAS : has
+    PRODUCT ||--|{ PRODUCT_PACKAGING : offers
+    UNIT_OF_MEASURE ||--o{ PRODUCT_PACKAGING : types
+    PRODUCT_PACKAGING ||--o{ PRODUCT_PRICE : has
+    CLIENT_BUSINESS ||--o{ DISCOUNT_RULE : owns
+    CATEGORY o|--o{ DISCOUNT_RULE : may_target
+    PRODUCT o|--o{ DISCOUNT_RULE : may_target
+    CLIENT_BUSINESS ||--o{ CLIENT_SPECIFIC_PRICE : receives
+    PRODUCT_PACKAGING ||--o{ CLIENT_SPECIFIC_PRICE : overrides
+
+    CATEGORY {
+        string id
+        string name
+        string status
+    }
+    PRODUCT {
+        string id
+        string sku
+        string officialName
+        string activationStatus
+    }
+    PRODUCT_ALIAS {
+        string id
+        string alias
+        string aliasType
+    }
+    UNIT_OF_MEASURE {
+        string id
+        string code
+        string name
+    }
+    PRODUCT_PACKAGING {
+        string id
+        boolean isBase
+        decimal conversionToBase
+        boolean allowIndividualSale
+    }
+    PRODUCT_PRICE {
+        string id
+        string priceType
+        decimal amount
+        datetime effectiveFrom
+        datetime effectiveTo
+    }
+    DISCOUNT_RULE {
+        string id
+        string scope
+        decimal discountPercent
+        boolean isActive
+    }
+    CLIENT_SPECIFIC_PRICE {
+        string id
+        decimal amount
+        datetime effectiveFrom
+        datetime effectiveTo
+    }

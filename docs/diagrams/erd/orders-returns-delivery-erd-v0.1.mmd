@@ -1,0 +1,85 @@
+%% Raza Stationers - Orders, returns and delivery conceptual ERD v0.1
+%% Order lines preserve commercial snapshots. Cancellations, returns and
+%% delivery changes create history and reversals instead of deleting records.
+
+erDiagram
+    CLIENT_BUSINESS ||--o{ ORDER : places
+    USER ||--o{ ORDER : submits
+    ORDER ||--|{ ORDER_ITEM : contains
+    PRODUCT_PACKAGING ||--o{ ORDER_ITEM : snapshots
+    ORDER ||--o{ ORDER_STATUS_HISTORY : records
+    ORDER ||--o{ ORDER_CHANGE_REQUEST : receives
+    ORDER ||--o| CANCELLATION : may_have
+    ORDER ||--o| INVOICE : produces
+
+    ORDER ||--o{ RETURN : may_have
+    RETURN ||--|{ RETURN_ITEM : contains
+    ORDER_ITEM ||--o{ RETURN_ITEM : references
+    RETURN ||--o{ REFUND : resolves
+
+    ORDER ||--o{ DELIVERY : fulfilled_by
+    DELIVERY_ZONE ||--o{ DELIVERY : governs
+    DELIVERY ||--o{ DELIVERY_ASSIGNMENT : assigned_through
+    USER ||--o{ DELIVERY_ASSIGNMENT : worker
+    DELIVERY ||--o{ DELIVERY_STATUS_HISTORY : records
+    DELIVERY ||--o{ DELIVERY_PROOF : supports
+
+    ORDER {
+        string id
+        string orderNumber
+        string status
+        decimal total
+        string deliveryAddressSnapshot
+    }
+    ORDER_ITEM {
+        string id
+        string productNameSnapshot
+        string unitSnapshot
+        decimal unitPriceSnapshot
+        decimal discountSnapshot
+        string taxSnapshot
+    }
+    ORDER_STATUS_HISTORY {
+        string id
+        string fromStatus
+        string toStatus
+        datetime changedAt
+    }
+    CANCELLATION {
+        string id
+        string reason
+        datetime approvedAt
+    }
+    RETURN {
+        string id
+        string status
+        string resolution
+        datetime processedAt
+    }
+    RETURN_ITEM {
+        string id
+        decimal quantity
+        string condition
+        boolean restocked
+    }
+    DELIVERY {
+        string id
+        string status
+        string addressSnapshot
+    }
+    DELIVERY_ASSIGNMENT {
+        string id
+        datetime assignedAt
+        datetime endedAt
+    }
+    DELIVERY_STATUS_HISTORY {
+        string id
+        string status
+        string reason
+        datetime changedAt
+    }
+    DELIVERY_PROOF {
+        string id
+        string proofType
+        string reference
+    }
