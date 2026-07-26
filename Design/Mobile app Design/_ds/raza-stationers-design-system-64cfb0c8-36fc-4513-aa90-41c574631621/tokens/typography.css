@@ -1,0 +1,12 @@
+:root{
+--font-display:'Unbounded',sans-serif;
+--font-body:'Poppins',sans-serif;
+--font-urdu:'Noto Nastaliq Urdu',serif;
+--text-display-size:56px;--text-display-lh:64px;--text-display-weight:700;
+--text-h1-size:40px;--text-h1-lh:48px;--text-h1-weight:600;
+--text-h2-size:32px;--text-h2-lh:40px;--text-h2-weight:500;
+--text-h3-size:24px;--text-h3-lh:32px;--text-h3-weight:600;
+--text-body-size:16px;--text-body-lh:24px;--text-body-weight:400;
+--text-caption-size:13px;--text-caption-lh:18px;--text-caption-weight:500;
+--text-urdu-size:28px;--text-urdu-lh:44px;
+}

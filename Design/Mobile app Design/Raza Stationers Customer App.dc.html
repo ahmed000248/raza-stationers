@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/fonts/fonts.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/tokens/radius.css">
+  <link rel="stylesheet" href="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/styles.css">
+  <script src="_ds/raza-stationers-design-system-64cfb0c8-36fc-4513-aa90-41c574631621/_ds_bundle.js"></script>
+  <style>
+    *{box-sizing:border-box;}
+    body{margin:0;background:var(--canvas);font-family:var(--font-body);color:var(--text-primary);}
+    a{color:var(--evergreen-600);text-decoration:none;}
+    a:hover{color:var(--forest-700);}
+    .rz-scroll::-webkit-scrollbar{width:0;height:0;}
+  </style>
+</helmet>
+<div style="min-height:100vh;background:var(--canvas);display:flex;flex-direction:column;align-items:center;padding:36px 20px;gap:14px;">
+  <div style="display:flex;align-items:center;gap:4px;background:#fff;border:1px solid var(--border-subtle);border-radius:999px;padding:6px;">
+    <span style="font-size:11px;font-weight:600;color:var(--text-muted);padding:0 10px;">Preview state</span>
+    <button onClick="{{ setPriceGuest }}" style="{{ guestBtnStyle }}">Guest</button>
+    <button onClick="{{ setPricePending }}" style="{{ pendingBtnStyle }}">Pending</button>
+    <button onClick="{{ setPriceWholesale }}" style="{{ wholesaleBtnStyle }}">Wholesale</button>
+  </div>
+  <div style="width:390px;height:844px;background:var(--canvas);border-radius:36px;border:1px solid var(--border-subtle);box-shadow:0 24px 60px rgba(5,31,32,0.16);overflow:hidden;position:relative;">
+    <div key="{{ screen }}" class="rz-scroll" style="position:absolute;inset:0;overflow-y:auto;background:var(--canvas);">
+      <sc-if value="{{ showBackHeader }}" hint-placeholder-val="{{ false }}">
+        <div style="position:sticky;top:0;z-index:5;background:var(--canvas);display:flex;align-items:center;gap:12px;padding:16px 14px;border-bottom:1px solid var(--border-subtle);">
+          <div onClick="{{ headerBack }}" style="width:36px;height:36px;border-radius:50%;background:#fff;border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--ink-900);cursor:pointer;flex-shrink:0;">‹</div>
+          <div style="font-family:var(--font-display);font-size:16px;font-weight:600;color:var(--ink-900);">{{ headerTitle }}</div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isSplash }}" hint-placeholder-val="{{ true }}">
+        <div data-screen-label="Splash" style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:var(--ink-900);">
+          <div style="font-family:var(--font-display);font-weight:700;font-size:26px;color:#fff;">Raza Stationers</div>
+          <div dir="rtl" style="font-family:var(--font-urdu);font-size:20px;color:var(--sage-400);">راضا اسٹیشنرز</div>
+          <div style="width:120px;height:3px;background:rgba(255,255,255,0.15);border-radius:999px;margin-top:14px;overflow:hidden;">
+            <div style="width:60%;height:100%;background:var(--sage-400);border-radius:999px;"></div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isHome }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Home" style="padding-bottom:110px;">
+          <div style="display:flex;justify-content:center;padding:16px 14px 10px;">
+            <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.PillNavbar" brand="Raza" hint-size="300px,48px">
+              <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="search" size="16" color="#163832" onClick="{{ goCatalogue }}" hint-size="16px,16px"></x-import>
+              <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="cart" size="16" color="#163832" onClick="{{ goCart }}" hint-size="16px,16px"></x-import>
+            </x-import>
+          </div>
+          <sc-if value="{{ wholesalePromoVisible }}" hint-placeholder-val="{{ true }}">
+            <div style="margin:0 14px 16px;background:var(--forest-700);border-radius:16px;padding:20px;color:#fff;">
+              <div style="font-family:var(--font-display);font-size:17px;font-weight:600;">Wholesale Pricing</div>
+              <div style="font-size:12px;color:var(--mist-100);margin-top:8px;">Register your shop to unlock lower per-unit pricing.</div>
+              <div onClick="{{ goRegister }}" style="display:inline-block;margin-top:12px;font-size:12px;font-weight:600;color:var(--sage-400);text-decoration:underline;cursor:pointer;">Register a business account</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ pendingNoteVisible }}" hint-placeholder-val="{{ false }}">
+            <div style="margin:0 14px 16px;background:var(--amber-tint);border-radius:16px;padding:16px;color:var(--amber-ink);font-size:12px;font-weight:600;">Registration submitted — standard catalog prices apply until verification completes.</div>
+          </sc-if>
+          <div style="margin:0 14px 12px;font-size:13px;font-weight:600;">Shop by Category</div>
+          <div style="margin:0 14px 22px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+            <sc-for list="{{ homeCategories }}" as="cat" hint-placeholder-count="4">
+              <div onClick="{{ cat.go }}" style="text-align:center;cursor:pointer;">
+                <div style="width:52px;height:52px;border-radius:14px;background:#fff;border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;margin:0 auto;">
+                  <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="{{ cat.icon }}" color="var(--evergreen-600)" size="22" hint-size="22px,22px"></x-import>
+                </div>
+                <div style="font-size:10px;margin-top:6px;">{{ cat.name }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="margin:0 14px 10px;font-size:13px;font-weight:600;">New &amp; Restocked</div>
+          <div style="margin:0 14px;display:flex;flex-direction:column;gap:14px;">
+            <sc-for list="{{ homeFeatured }}" as="p" hint-placeholder-count="3">
+              <div style="background:#fff;border:1px solid var(--border-subtle);border-radius:16px;padding:16px;">
+                <div onClick="{{ p.open }}" style="display:flex;gap:12px;cursor:pointer;">
+                  <div style="width:52px;height:52px;border-radius:14px;background:var(--evergreen-600);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="{{ p.icon }}" color="#fff" size="22" hint-size="22px,22px"></x-import>
+                  </div>
+                  <div style="flex:1;min-width:0;">
+                    <div style="display:inline-block;font-size:10px;font-weight:600;color:var(--forest-700);background:var(--mist-100);padding:3px 10px;border-radius:999px;">{{ p.category }}</div>
+                    <div style="font-size:14px;font-weight:600;margin-top:6px;line-height:1.3;">{{ p.name }}</div>
+                    <div style="display:flex;align-items:baseline;gap:8px;margin-top:8px;">
+                      <div style="font-size:17px;font-weight:700;">{{ p.priceDisplay }}</div>
+                      <div style="font-size:11px;color:var(--text-muted);">{{ priceCaption }}</div>
+                    </div>
+                  </div>
+                </div>
+                <button onClick="{{ p.quickAdd }}" style="width:100%;height:40px;border-radius:999px;border:none;background:var(--accent-primary);color:#fff;font-family:var(--font-body);font-weight:600;font-size:13px;margin-top:12px;cursor:pointer;">Add to Cart</button>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isCatalogue }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Catalogue" style="padding-bottom:110px;">
+          <div style="padding:20px 14px 6px;font-family:var(--font-display);font-size:19px;font-weight:600;">Catalogue</div>
+          <div style="margin:0 14px 14px;">
+            <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.TextInput" placeholder="Search products" value="{{ searchQuery }}" onChange="{{ onSearchChange }}" hint-size="100%,48px"></x-import>
+          </div>
+          <div style="margin:0 14px 12px;display:flex;gap:8px;overflow-x:auto;">
+            <sc-for list="{{ catalogueCategoryChips }}" as="chip" hint-placeholder-count="5">
+              <div onClick="{{ chip.select }}" style="{{ chip.style }}">{{ chip.name }}</div>
+            </sc-for>
+          </div>
+          <div style="margin:0 14px 16px;display:flex;gap:8px;">
+            <sc-for list="{{ purchaseTypes }}" as="pt" hint-placeholder-count="3">
+              <div onClick="{{ pt.select }}" style="{{ pt.style }}">{{ pt.label }}</div>
+            </sc-for>
+          </div>
+          <sc-if value="{{ catalogueEmpty }}" hint-placeholder-val="{{ false }}">
+            <div style="margin:40px 14px;text-align:center;color:var(--text-muted);font-size:13px;">No products match your search.</div>
+          </sc-if>
+          <div style="margin:0 14px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <sc-for list="{{ catalogueList }}" as="p" hint-placeholder-count="6">
+              <div style="background:#fff;border:1px solid var(--border-subtle);border-radius:16px;padding:14px;">
+                <div onClick="{{ p.open }}" style="cursor:pointer;">
+                  <div style="width:40px;height:40px;border-radius:12px;background:var(--evergreen-600);display:flex;align-items:center;justify-content:center;margin-bottom:10px;">
+                    <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="{{ p.icon }}" color="#fff" size="18" hint-size="18px,18px"></x-import>
+                  </div>
+                  <div style="font-size:12px;font-weight:600;line-height:1.35;min-height:32px;">{{ p.name }}</div>
+                  <div style="font-size:14px;font-weight:700;margin-top:8px;">{{ p.priceDisplay }}</div>
+                  <div style="font-size:10px;color:var(--text-muted);">{{ p.unitLabel }} · {{ priceCaption }}</div>
+                  <div style="margin-top:8px;">
+                    <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.StatusBadge" tone="{{ p.stockTone }}" label="{{ p.stockLabel }}" hint-size="auto,32px"></x-import>
+                  </div>
+                </div>
+                <button onClick="{{ p.primaryAction }}" style="margin-top:10px;width:100%;height:36px;border-radius:999px;border:none;background:var(--accent-primary);color:#fff;font-size:11px;font-weight:600;cursor:pointer;">{{ p.addBtnLabel }}</button>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isProduct }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Product Detail" style="padding:20px 14px 40px;">
+          <div style="width:88px;height:88px;border-radius:20px;background:var(--evergreen-600);display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+            <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="{{ selectedProduct.icon }}" color="#fff" size="40" hint-size="40px,40px"></x-import>
+          </div>
+          <div style="display:inline-block;font-size:11px;font-weight:600;color:var(--forest-700);background:var(--mist-100);padding:4px 12px;border-radius:999px;">{{ selectedProduct.category }}</div>
+          <div style="font-family:var(--font-display);font-size:20px;font-weight:600;margin-top:10px;line-height:1.3;">{{ selectedProduct.name }}</div>
+          <div style="font-size:13px;color:var(--text-muted);margin-top:8px;line-height:1.5;">{{ selectedProduct.desc }}</div>
+          <div style="margin-top:14px;">
+            <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.StatusBadge" tone="{{ selectedStockTone }}" label="{{ selectedStockLabel }}" hint-size="auto,32px"></x-import>
+          </div>
+          <div style="margin-top:20px;font-size:13px;font-weight:600;">Unit</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+            <sc-for list="{{ unitsDisplay }}" as="u" hint-placeholder-count="3">
+              <div onClick="{{ u.selectUnit }}" style="{{ u.style }}">
+                <div style="font-size:12px;font-weight:600;">{{ u.label }}</div>
+                <div style="font-size:11px;margin-top:2px;">{{ u.priceDisplay }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:24px;">
+            <div>
+              <div style="font-size:24px;font-weight:700;">{{ selectedPriceDisplay }}</div>
+              <div style="font-size:12px;color:var(--text-muted);">{{ priceCaption }} · {{ selectedUnitLabel }}</div>
+            </div>
+            <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.QuantityStepper" value="{{ selectedQty }}" onChange="{{ setSelectedQty }}" hint-size="140px,48px"></x-import>
+          </div>
+          <sc-if value="{{ selectedIsOut }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ toggleSelectedNotify }}" style="width:100%;height:48px;border-radius:999px;border:2px solid var(--accent-primary);background:transparent;color:var(--accent-primary);font-weight:600;font-size:14px;margin-top:20px;cursor:pointer;">{{ notifyBtnLabel }}</button>
+          </sc-if>
+          <sc-if value="{{ selectedInStock }}" hint-placeholder-val="{{ true }}">
+            <button onClick="{{ addSelectedToCart }}" style="width:100%;height:48px;border-radius:999px;border:none;background:var(--accent-primary);color:#fff;font-weight:600;font-size:14px;margin-top:20px;cursor:pointer;">Add to Cart</button>
+          </sc-if>
+          <sc-if value="{{ addedFlash }}" hint-placeholder-val="{{ false }}">
+            <div style="text-align:center;font-size:12px;color:var(--evergreen-600);font-weight:600;margin-top:10px;">Added to cart</div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isCart }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Cart" style="padding-bottom:110px;">
+          <div style="padding:20px 14px 10px;font-family:var(--font-display);font-size:19px;font-weight:600;">Cart</div>
+          <sc-if value="{{ cartEmpty }}" hint-placeholder-val="{{ true }}">
+            <div style="margin:50px 14px;text-align:center;">
+              <div style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">Your cart is empty.</div>
+              <button onClick="{{ goCatalogue }}" style="height:44px;padding:0 24px;border-radius:999px;border:none;background:var(--accent-primary);color:#fff;font-weight:600;font-size:13px;cursor:pointer;">Browse Catalogue</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ cartHasItems }}" hint-placeholder-val="{{ false }}">
+            <div style="margin:0 14px;display:flex;flex-direction:column;gap:12px;">
+              <sc-for list="{{ cartLines }}" as="l" hint-placeholder-count="2">
+                <div style="background:#fff;border:1px solid var(--border-subtle);border-radius:16px;padding:14px;display:flex;gap:12px;align-items:center;">
+                  <div style="width:44px;height:44px;border-radius:12px;background:var(--evergreen-600);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="{{ l.icon }}" color="#fff" size="18" hint-size="18px,18px"></x-import>
+                  </div>
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:13px;font-weight:600;">{{ l.name }}</div>
+                    <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">{{ l.unitLabel }} · {{ l.priceDisplay }}</div>
+                  </div>
+                  <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.QuantityStepper" value="{{ l.qty }}" onChange="{{ l.setQty }}" hint-size="120px,44px"></x-import>
+                </div>
+              </sc-for>
+            </div>
+            <div style="margin:20px 14px;">
+              <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">{{ deliveryPreviewDisplay }}</div>
+              <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:700;margin-bottom:16px;"><span>Subtotal</span><span>{{ cartSubtotalDisplay }}</span></div>
+              <button onClick="{{ goCheckout }}" style="width:100%;height:48px;border-radius:999px;border:none;background:var(--accent-primary);color:#fff;font-weight:600;font-size:14px;cursor:pointer;">Checkout</button>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isCheckout }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Checkout" style="padding:16px 14px 40px;">
+          <div style="display:flex;gap:6px;margin-bottom:20px;">
+            <sc-for list="{{ checkoutStepChips }}" as="c" hint-placeholder-count="4">
+              <div style="{{ c.style }}">{{ c.label }}</div>
+            </sc-for>
+          </div>
+          <sc-if value="{{ isCheckoutStep0 }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;flex-direction:column;gap:14px;">
+              <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.TextInput" placeholder="Full name" value="{{ ckName }}" onChange="{{ setCkName }}" hint-size="100%,48px"></x-import>
+              <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.PhoneInput" value="{{ ckPhone }}" onChange="{{ setCkPhone }}" hint-size="100%,48px"></x-import>
+              <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.TextInput" placeholder="Address (shop / street / area)" value="{{ ckAddress }}" onChange="{{ setCkAddress }}" hint-size="100%,48px"></x-import>
+              <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Select" options="{{ cityOptions }}" value="{{ ckCity }}" onChange="{{ setCkCity }}" hint-size="100%,48px"></x-import>
+              <button onClick="{{ nextFromAddress }}" style="width:100%;height:48px;border-radius:999px;border:none;background:var(--accent-primary);color:#fff;font-weight:600;font-size:14px;cursor:pointer;margin-top:6px;">Continue</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ isCheckoutStep1 }}" hint-placeholder-val="{{ false }}">
+            <div>
+              <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.StatusBadge" tone="{{ zoneTone }}" label="{{ zoneLabel }}" hint-size="auto,32px"></x-import>
+              <div style="font-size:13px;color:var(--text-muted);margin-top:14px;line-height:1.6;">Delivery is free within Wah Cantt, Hassanabdal and Taxila. A flat Rs 150 delivery fee applies for Rawalpindi and Islamabad.</div>
+              <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700;margin-top:20px;"><span>Delivery to {{ ckCity }}</span><span>{{ deliveryFeeDisplay }}</span></div>
+              <button onClick="{{ nextFromZone }}" style="width:100%;height:48px;border-radius:999px;border:none;background:var(--accent-primary);color:#fff;font-weight:600;font-size:14px;cursor:pointer;margin-top:20px;">Continue</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ isCheckoutStep2 }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;gap:14px;">
+              <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.RadioOption" label="Cash on Delivery" checked="{{ isPayCod }}" onChange="{{ setPaymentCod }}" hint-size="auto,24px"></x-import>
+              <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.RadioOption" label="Bank / Wallet Transfer" checked="{{ isPayTransfer }}" onChange="{{ setPaymentTransfer }}" hint-size="auto,24px"></x-import>
+              <sc-if value="{{ showPayLater }}" hint-placeholder-val="{{ false }}">
+                <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.RadioOption" label="Pay-Later Credit" checked="{{ isPayCredit }}" onChange="{{ setPaymentCredit }}" hint-size="auto,24px"></x-import>
+              </sc-if>
+              <sc-if value="{{ isPayTransfer }}" hint-placeholder-val="{{ false }}">
+                <div style="background:var(--surface-tint);border-radius:14px;padding:14px;">
+                  <div style="font-size:12px;color:var(--forest-700);margin-bottom:10px;">Transfer to Raza Stationers — Meezan Bank 0110-XXXXXXX, then enter the reference number below.</div>
+                  <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.TextInput" placeholder="Transaction reference number" value="{{ transferRef }}" onChange="{{ setTransferRef }}" hint-size="100%,48px"></x-import>
+                  <div style="margin-top:10px;border:1.5px dashed var(--sage-400);border-radius:12px;padding:16px;text-align:center;color:var(--evergreen-600);font-size:12px;font-weight:600;cursor:pointer;">+ Upload receipt</div>
+                </div>
+              </sc-if>
+              <sc-if value="{{ isPayCredit }}" hint-placeholder-val="{{ false }}">
+                <div style="background:var(--surface-tint);border-radius:14px;padding:14px;display:flex;justify-content:space-between;font-size:12px;">
+                  <div><div style="color:var(--text-muted);">Limit</div><div style="font-weight:700;margin-top:4px;">{{ creditLimitDisplay }}</div></div>
+                  <div><div style="color:var(--text-muted);">Outstanding</div><div style="font-weight:700;margin-top:4px;">{{ creditOutstandingDisplay }}</div></div>
+                  <div><div style="color:var(--text-muted);">Available</div><div style="font-weight:700;margin-top:4px;color:var(--evergreen-600);">{{ creditAvailableDisplay }}</div></div>
+                </div>
+              </sc-if>
+              <button onClick="{{ nextFromPayment }}" style="width:100%;height:48px;border-radius:999px;border:none;background:var(--accent-primary);color:#fff;font-weight:600;font-size:14px;cursor:pointer;">Continue</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ isCheckoutStep3 }}" hint-placeholder-val="{{ false }}">
+            <div>
+              <div style="font-size:13px;font-weight:600;margin-bottom:10px;">Items</div>
+              <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px;">
+                <sc-for list="{{ cartLines }}" as="l" hint-placeholder-count="2">
+                  <div style="display:flex;justify-content:space-between;font-size:12px;">
+                    <span>{{ l.name }} × {{ l.qty }} ({{ l.unitLabel }})</span><span style="font-weight:600;">{{ l.lineTotalDisplay }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="border-top:1px solid var(--border-subtle);padding-top:14px;display:flex;flex-direction:column;gap:8px;font-size:12px;color:var(--text-muted);">
+                <div style="display:flex;justify-content:space-between;"><span>Deliver to</span><span style="color:var(--text-primary);font-weight:600;">{{ ckAddress }}, {{ ckCity }}</span></div>
+                <div style="display:flex;justify-content:space-between;"><span>Delivery fee</span><span style="color:var(--text-primary);font-weight:600;">{{ deliveryFeeDisplay }}</span></div>
+                <div style="display:flex;justify-content:space-between;"><span>Payment method</span><span style="color:var(--text-primary);font-weight:600;">{{ paymentMethodLabel }}</span></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:700;margin:16px 0;"><span>Total</span><span>{{ checkoutTotalDisplay }}</span></div>
+              <button onClick="{{ placeOrder }}" style="width:100%;height:48px;border-radius:999px;border:none;background:var(--accent-primary);color:#fff;font-weight:600;font-size:14px;cursor:pointer;">Place Order</button>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isConfirmation }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Order Confirmation" style="padding:32px 14px 40px;text-align:center;">
+          <div style="width:64px;height:64px;border-radius:50%;background:var(--mist-100);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px;color:var(--evergreen-600);">✓</div>
+          <div style="font-family:var(--font-display);font-size:18px;font-weight:600;">Order Placed</div>
+          <div style="font-size:13px;color:var(--text-muted);margin-top:6px;">Order {{ currentOrder.id }} · {{ confirmationTotalDisplay }}</div>
+          <div style="text-align:left;margin-top:24px;background:#fff;border:1px solid var(--border-subtle);border-radius:16px;padding:16px;">
+            <sc-for list="{{ orderStagesDisplay }}" as="st" hint-placeholder-count="5">
+              <div style="display:flex;align-items:center;gap:10px;padding:6px 0;">
+                <div style="{{ st.circleStyle }}">{{ st.mark }}</div>
+                <div style="{{ st.labelStyle }}">{{ st.label }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="text-align:left;margin-top:16px;">
+            <sc-for list="{{ confirmationLines }}" as="l" hint-placeholder-count="2">
+              <div style="font-size:12px;color:var(--text-muted);padding:4px 0;">{{ l.name }} × {{ l.qty }} ({{ l.unitLabel }})</div>
+            </sc-for>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:24px;">
+            <button onClick="{{ trackCurrentOrder }}" style="width:100%;height:48px;border-radius:999px;border:2px solid var(--accent-primary);background:transparent;color:var(--accent-primary);font-weight:600;font-size:14px;cursor:pointer;">Track Order</button>
+            <button onClick="{{ viewCurrentInvoice }}" style="width:100%;height:44px;border-radius:999px;border:none;background:transparent;color:var(--accent-primary);font-weight:600;font-size:13px;text-decoration:underline;cursor:pointer;">View Invoice</button>
+            <button onClick="{{ goHome }}" style="width:100%;height:44px;border-radius:999px;border:none;background:var(--accent-primary);color:#fff;font-weight:600;font-size:13px;cursor:pointer;">Back to Home</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isInvoice }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Invoice" style="padding:20px 14px 40px;">
+          <div style="text-align:center;margin-bottom:20px;">
+            <div style="font-family:var(--font-display);font-weight:700;font-size:16px;">Raza Stationers</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Shop 12, College Road, Wah Cantt · 0300 1234567</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:16px;">
+            <div><div style="color:var(--text-muted);">Invoice</div><div style="font-weight:700;">{{ invoiceOrder.id }}</div></div>
+            <div style="text-align:right;"><div style="color:var(--text-muted);">Date</div><div style="font-weight:700;">{{ invoiceOrder.date }}</div></div>
+          </div>
+          <div style="border-top:1px solid var(--border-subtle);border-bottom:1px solid var(--border-subtle);padding:12px 0;display:flex;flex-direction:column;gap:10px;">
+            <sc-for list="{{ invoiceLines }}" as="l" hint-placeholder-count="2">
+              <div style="display:flex;justify-content:space-between;font-size:12px;">
+                <div><div style="font-weight:600;">{{ l.name }}</div><div style="color:var(--text-muted);margin-top:2px;">{{ l.qty }} × {{ l.unitLabel }} @ {{ l.priceDisplay }}</div></div>
+                <div style="font-weight:700;">{{ l.lineTotalDisplay }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;margin-top:14px;">
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);">Subtotal</span><span>{{ invoiceSubtotalDisplay }}</span></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);">Delivery</span><span>{{ invoiceFeeDisplay }}</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:700;"><span>Total</span><span>{{ invoiceTotalDisplay }}</span></div>
+          </div>
+          <div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-size:12px;color:var(--text-muted);">{{ invoicePaymentLabel }}</div>
+            <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.StatusBadge" tone="success" label="{{ invoiceStageLabel }}" hint-size="auto,32px"></x-import>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isSignIn }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Sign In" style="padding:20px 14px 40px;">
+          <div style="font-family:var(--font-display);font-size:20px;font-weight:600;">Sign In</div>
+          <div dir="rtl" style="font-family:var(--font-urdu);font-size:16px;color:var(--text-muted);margin-top:4px;">سائن ان کریں</div>
+          <div style="display:flex;flex-direction:column;gap:14px;margin-top:24px;">
+            <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.PhoneInput" value="{{ signPhone }}" onChange="{{ setSignPhone }}" hint-size="100%,48px"></x-import>
+            <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.TextInput" type="password" placeholder="Password" value="{{ signPassword }}" onChange="{{ setSignPassword }}" hint-size="100%,48px"></x-import>
+            <button onClick="{{ submitSignIn }}" style="width:100%;height:48px;border-radius:999px;border:none;background:var(--accent-primary);color:#fff;font-weight:600;font-size:14px;cursor:pointer;margin-top:6px;">Sign In</button>
+          </div>
+          <div onClick="{{ goRegister }}" style="text-align:center;font-size:12px;color:var(--accent-primary);text-decoration:underline;margin-top:20px;cursor:pointer;">New business account? Register</div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isRegister }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Wholesale Registration" style="padding:20px 14px 40px;">
+          <sc-if value="{{ registrationSubmitted }}" hint-placeholder-val="{{ false }}">
+            <div style="text-align:center;padding-top:20px;">
+              <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.StatusBadge" tone="warning" label="Pending Approval" hint-size="auto,32px"></x-import>
+              <div style="font-size:13px;color:var(--text-muted);margin-top:16px;line-height:1.6;">Registration submitted. Standard catalog prices apply until verification completes. You will be notified once your account is approved.</div>
+              <button onClick="{{ goHome }}" style="width:100%;height:48px;border-radius:999px;border:none;background:var(--accent-primary);color:#fff;font-weight:600;font-size:14px;cursor:pointer;margin-top:24px;">Back to Home</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ registrationFormVisible }}" hint-placeholder-val="{{ true }}">
+            <div style="font-family:var(--font-display);font-size:18px;font-weight:600;margin-bottom:16px;">Wholesale Registration</div>
+            <div style="display:flex;flex-direction:column;gap:14px;">
+              <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.TextInput" placeholder="Business name" value="{{ regBusinessName }}" onChange="{{ setRegBusinessName }}" hint-size="100%,48px"></x-import>
+              <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.TextInput" placeholder="Contact person" value="{{ regContact }}" onChange="{{ setRegContact }}" hint-size="100%,48px"></x-import>
+              <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.PhoneInput" value="{{ regPhone }}" onChange="{{ setRegPhone }}" hint-size="100%,48px"></x-import>
+              <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.TextInput" placeholder="Address" value="{{ regAddress }}" onChange="{{ setRegAddress }}" hint-size="100%,48px"></x-import>
+              <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Select" options="{{ cityOptions }}" value="{{ regCity }}" onChange="{{ setRegCity }}" hint-size="100%,48px"></x-import>
+              <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Select" options="{{ businessTypes }}" value="{{ regType }}" onChange="{{ setRegType }}" hint-size="100%,48px"></x-import>
+              <sc-if value="{{ regRequiresDocs }}" hint-placeholder-val="{{ false }}">
+                <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.TextInput" type="email" placeholder="Email" value="{{ regEmail }}" onChange="{{ setRegEmail }}" hint-size="100%,48px"></x-import>
+                <div style="border:1.5px dashed var(--sage-400);border-radius:12px;padding:16px;text-align:center;color:var(--evergreen-600);font-size:12px;font-weight:600;cursor:pointer;">+ Upload NTN / CNIC document</div>
+              </sc-if>
+              <button onClick="{{ submitRegistration }}" style="width:100%;height:48px;border-radius:999px;border:none;background:var(--accent-primary);color:#fff;font-weight:600;font-size:14px;cursor:pointer;margin-top:6px;">Submit Registration</button>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isAccount }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Account" style="padding-bottom:110px;">
+          <div style="padding:20px 14px 10px;font-family:var(--font-display);font-size:19px;font-weight:600;">Account</div>
+          <sc-if value="{{ isGuest }}" hint-placeholder-val="{{ true }}">
+            <div style="margin:10px 14px;background:#fff;border:1px solid var(--border-subtle);border-radius:16px;padding:20px;text-align:center;">
+              <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Sign in to view your business account, credit status and order history.</div>
+              <button onClick="{{ goSignIn }}" style="width:100%;height:44px;border-radius:999px;border:none;background:var(--accent-primary);color:#fff;font-weight:600;font-size:13px;cursor:pointer;">Sign In</button>
+              <div onClick="{{ goRegister }}" style="margin-top:12px;font-size:12px;color:var(--accent-primary);text-decoration:underline;cursor:pointer;">Register a wholesale account</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ isSignedIn }}" hint-placeholder-val="{{ false }}">
+            <div style="margin:0 14px 16px;display:flex;align-items:center;gap:12px;">
+              <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Avatar" initials="AR" size="52" hint-size="52px,52px"></x-import>
+              <div>
+                <div style="font-size:14px;font-weight:600;">Al-Raza Traders</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">0300 1234567</div>
+              </div>
+            </div>
+            <sc-if value="{{ isPending }}" hint-placeholder-val="{{ false }}">
+              <div style="margin:0 14px 16px;background:var(--amber-tint);color:var(--amber-ink);border-radius:14px;padding:14px;font-size:12px;font-weight:600;">Registration submitted — standard catalog prices apply until verification completes.</div>
+            </sc-if>
+            <sc-if value="{{ isWholesale }}" hint-placeholder-val="{{ false }}">
+              <div style="margin:0 14px 16px;background:#fff;border:1px solid var(--border-subtle);border-radius:16px;padding:16px;display:flex;justify-content:space-between;">
+                <div><div style="font-size:11px;color:var(--text-muted);">Limit</div><div style="font-size:14px;font-weight:700;margin-top:4px;">{{ creditLimitDisplay }}</div></div>
+                <div><div style="font-size:11px;color:var(--text-muted);">Outstanding</div><div style="font-size:14px;font-weight:700;margin-top:4px;">{{ creditOutstandingDisplay }}</div></div>
+                <div><div style="font-size:11px;color:var(--text-muted);">Available</div><div style="font-size:14px;font-weight:700;margin-top:4px;color:var(--evergreen-600);">{{ creditAvailableDisplay }}</div></div>
+              </div>
+              <div style="margin:0 14px 16px;">
+                <div style="font-size:12px;font-weight:600;margin-bottom:8px;">Authorized Users</div>
+                <sc-for list="{{ staffList }}" as="st" hint-placeholder-count="2">
+                  <div style="display:flex;justify-content:space-between;font-size:12px;padding:8px 0;border-bottom:1px solid var(--border-subtle);">
+                    <span>{{ st.name }}</span><span style="color:var(--text-muted);">{{ st.role }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+            <div style="margin:0 14px 8px;font-size:12px;font-weight:600;">Subscription Preferences</div>
+            <div style="margin:0 14px 16px;background:#fff;border:1px solid var(--border-subtle);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:14px;">
+              <sc-for list="{{ subPrefsDisplay }}" as="sp" hint-placeholder-count="2">
+                <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.CheckboxOption" label="{{ sp.label }}" checked="{{ sp.checked }}" onChange="{{ sp.toggle }}" hint-size="auto,22px"></x-import>
+              </sc-for>
+            </div>
+            <div style="margin:0 14px 8px;font-size:12px;font-weight:600;">Notifications</div>
+            <div style="margin:0 14px 16px;display:flex;flex-direction:column;gap:8px;">
+              <sc-for list="{{ notifFeed }}" as="note" hint-placeholder-count="3">
+                <div style="background:#fff;border:1px solid var(--border-subtle);border-radius:12px;padding:12px;font-size:12px;">{{ note }}</div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <div style="margin:8px 14px 0;display:flex;flex-direction:column;">
+            <div onClick="{{ goOrders }}" style="padding:14px 4px;border-bottom:1px solid var(--border-subtle);font-size:13px;display:flex;justify-content:space-between;cursor:pointer;">Order History<span>›</span></div>
+            <div onClick="{{ goInfo }}" style="padding:14px 4px;border-bottom:1px solid var(--border-subtle);font-size:13px;display:flex;justify-content:space-between;cursor:pointer;">About &amp; Contact<span>›</span></div>
+            <sc-if value="{{ isSignedIn }}" hint-placeholder-val="{{ false }}">
+              <div onClick="{{ signOut }}" style="padding:14px 4px;font-size:13px;color:var(--red-ink);cursor:pointer;">Sign Out</div>
+            </sc-if>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isOrders }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Order History" style="padding:20px 14px 40px;">
+          <sc-if value="{{ ordersListVisible }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <sc-for list="{{ orderListDisplay }}" as="o" hint-placeholder-count="2">
+                <div onClick="{{ o.open }}" style="background:#fff;border:1px solid var(--border-subtle);border-radius:16px;padding:14px;cursor:pointer;">
+                  <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                    <div><div style="font-size:13px;font-weight:600;">{{ o.id }}</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px;">{{ o.date }} · {{ o.itemCount }} items</div></div>
+                    <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.StatusBadge" tone="{{ o.stageTone }}" label="{{ o.stageLabel }}" hint-size="auto,32px"></x-import>
+                  </div>
+                  <div style="font-size:14px;font-weight:700;margin-top:10px;">{{ o.totalDisplay }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ orderDetailVisible }}" hint-placeholder-val="{{ false }}">
+            <div>
+              <div style="font-size:14px;font-weight:600;">{{ selectedOrder.id }}</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">{{ selectedOrder.date }}</div>
+              <div style="margin-top:16px;background:#fff;border:1px solid var(--border-subtle);border-radius:16px;padding:16px;">
+                <sc-for list="{{ selectedOrderStagesDisplay }}" as="st" hint-placeholder-count="5">
+                  <div style="display:flex;align-items:center;gap:10px;padding:6px 0;">
+                    <div style="{{ st.circleStyle }}">{{ st.mark }}</div>
+                    <div style="{{ st.labelStyle }}">{{ st.label }}</div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="margin-top:16px;display:flex;flex-direction:column;gap:6px;">
+                <sc-for list="{{ selectedOrderLines }}" as="l" hint-placeholder-count="2">
+                  <div style="font-size:12px;color:var(--text-muted);">{{ l.name }} × {{ l.qty }} ({{ l.unitLabel }})</div>
+                </sc-for>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px;">
+                <button onClick="{{ reorderSelected }}" style="width:100%;height:44px;border-radius:999px;border:2px solid var(--accent-primary);background:transparent;color:var(--accent-primary);font-weight:600;font-size:13px;cursor:pointer;">Reorder</button>
+                <button onClick="{{ viewSelectedInvoice }}" style="width:100%;height:44px;border-radius:999px;border:none;background:var(--accent-primary);color:#fff;font-weight:600;font-size:13px;cursor:pointer;">View Invoice</button>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isInfo }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Informational" style="padding:20px 14px 40px;display:flex;flex-direction:column;gap:16px;">
+          <div style="background:#fff;border:1px solid var(--border-subtle);border-radius:16px;padding:16px;">
+            <div style="font-size:13px;font-weight:600;margin-bottom:8px;">About</div>
+            <div style="font-size:12px;color:var(--text-muted);line-height:1.6;">Raza Stationers supplies notebooks, pens, paper and office supplies at retail and wholesale prices. Registered shops receive discounted per-unit pricing after verification.</div>
+          </div>
+          <div style="background:#fff;border:1px solid var(--border-subtle);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;">
+            <div style="font-size:13px;font-weight:600;">Contact</div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:12px;">
+              <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="delivery" size="16" color="var(--evergreen-600)" hint-size="16px,16px"></x-import>
+              Shop 12, College Road, Wah Cantt
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:12px;">
+              <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="whatsapp" size="16" color="var(--evergreen-600)" hint-size="16px,16px"></x-import>
+              0300 1234567
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:12px;">
+              <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.Icon" name="support" size="16" color="var(--evergreen-600)" hint-size="16px,16px"></x-import>
+              Mon–Sat, 9:00 AM – 8:00 PM
+            </div>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+    <sc-if value="{{ showBottomNav }}" hint-placeholder-val="{{ false }}">
+      <x-import component-from-global-scope="RazaStationersDesignSystem_64cfb0.BottomNav" items="{{ tabItems }}" onItemClick="{{ onTabClick }}" width="{{ navWidth }}" hint-size="340px,60px" style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%)"></x-import>
+    </sc-if>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const PRODUCTS = [
+  { id: 'p1', category: 'Notebooks', icon: 'invoice', name: 'Classic Ruled Notebook — 200 Pages', stock: 'in', stockNote: '142 in stock', desc: 'Soft-cover ruled notebook, 200 pages, standard A5 size. Widely used for school and office note-taking.', units: [{ label: 'Piece', retail: 145, wholesale: 118 }, { label: 'Dozen', retail: 1650, wholesale: 1350 }, { label: 'Carton (20 dozen)', retail: 31500, wholesale: 26000 }] },
+  { id: 'p2', category: 'Notebooks', icon: 'invoice', name: 'Spiral Notebook — Single Line 120 Pages', stock: 'low', stockNote: '6 left', desc: 'Wire-bound single-line notebook, 120 pages, tear-resistant spiral.', units: [{ label: 'Piece', retail: 95, wholesale: 78 }, { label: 'Dozen', retail: 1080, wholesale: 900 }] },
+  { id: 'p3', category: 'Pens & Markers', icon: 'discount', name: 'Gel Pen — Blue (Pack of 10)', stock: 'in', stockNote: '88 in stock', desc: 'Smooth-writing 0.5mm blue gel pens, pack of 10.', units: [{ label: 'Pack of 10', retail: 320, wholesale: 265 }, { label: 'Dozen Packs', retail: 3600, wholesale: 3000 }] },
+  { id: 'p4', category: 'Pens & Markers', icon: 'discount', name: 'Ball Point Pen — Black', stock: 'in', stockNote: '340 in stock', desc: 'Standard black ballpoint pen, medium tip.', units: [{ label: 'Piece', retail: 20, wholesale: 15 }, { label: 'Dozen', retail: 220, wholesale: 170 }, { label: 'Carton (20 dozen)', retail: 4200, wholesale: 3300 }] },
+  { id: 'p5', category: 'Pens & Markers', icon: 'discount', name: 'Permanent Marker — Black', stock: 'out', stockNote: 'Out of stock', desc: 'Quick-dry permanent marker, bullet tip, black ink.', units: [{ label: 'Piece', retail: 85, wholesale: 68 }] },
+  { id: 'p6', category: 'Paper', icon: 'shop', name: 'A4 Copier Paper Ream', stock: 'in', stockNote: '64 in stock', desc: '80gsm A4 copier paper, 500 sheets per ream.', units: [{ label: 'Ream', retail: 980, wholesale: 840 }, { label: 'Carton (5 reams)', retail: 4750, wholesale: 4100 }] },
+  { id: 'p7', category: 'Paper', icon: 'shop', name: 'A3 Drawing Sheets (Pack of 50)', stock: 'low', stockNote: '4 left', desc: 'Heavyweight A3 drawing sheets for art and design work.', units: [{ label: 'Pack of 50', retail: 650, wholesale: 540 }] },
+  { id: 'p8', category: 'Paper', icon: 'shop', name: 'Chart Paper — Assorted Colours', stock: 'in', stockNote: '210 in stock', desc: 'Assorted colour chart paper for school projects and displays.', units: [{ label: 'Sheet', retail: 40, wholesale: 32 }, { label: 'Pack of 25', retail: 900, wholesale: 740 }] },
+  { id: 'p9', category: 'Office Supplies', icon: 'wallet', name: 'Heavy Duty Stapler', stock: 'in', stockNote: '27 in stock', desc: 'All-metal stapler, staples up to 40 sheets.', units: [{ label: 'Piece', retail: 610, wholesale: 520 }] },
+  { id: 'p10', category: 'Office Supplies', icon: 'wallet', name: 'Stapler Pins No.10 (Box of 20)', stock: 'in', stockNote: '96 in stock', desc: 'Standard No.10 staple pins, box of 20 strips.', units: [{ label: 'Box', retail: 35, wholesale: 28 }, { label: 'Dozen Boxes', retail: 390, wholesale: 310 }] },
+  { id: 'p11', category: 'Office Supplies', icon: 'wallet', name: 'Correction Tape', stock: 'out', stockNote: 'Out of stock', desc: '8m correction tape, quick single-line application.', units: [{ label: 'Piece', retail: 110, wholesale: 90 }] },
+  { id: 'p12', category: 'Office Supplies', icon: 'wallet', name: 'Transparent Tape Roll — 1 inch', stock: 'in', stockNote: '150 in stock', desc: '1 inch clear adhesive tape, 40 yard roll.', units: [{ label: 'Roll', retail: 55, wholesale: 42 }, { label: 'Dozen Rolls', retail: 600, wholesale: 480 }] },
+];
+const CATEGORY_LIST = ['All Categories', 'Notebooks', 'Pens & Markers', 'Paper', 'Office Supplies'];
+const CATEGORIES = [{ name: 'Notebooks', icon: 'invoice' }, { name: 'Pens & Markers', icon: 'discount' }, { name: 'Paper', icon: 'shop' }, { name: 'Office Supplies', icon: 'wallet' }];
+const CITY_OPTIONS = ['Wah Cantt', 'Hassanabdal', 'Taxila', 'Rawalpindi', 'Islamabad'];
+const FREE_CITIES = ['Wah Cantt', 'Hassanabdal', 'Taxila'];
+const ORDER_STAGES = ['Placed', 'Confirmed', 'Preparing', 'Out for Delivery', 'Delivered'];
+const BUSINESS_TYPES = ['Retail Shop (unregistered)', 'Registered Business', 'School / Institution'];
+function money(n) { return 'Rs ' + n.toLocaleString('en-US'); }
+function findProduct(id) { return PRODUCTS.find(p => p.id === id); }
+function chipStyle(active) { return { padding: '8px 14px', borderRadius: 999, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', cursor: 'pointer', background: active ? 'var(--accent-primary)' : '#fff', color: active ? '#fff' : 'var(--text-primary)', border: active ? 'none' : '1px solid var(--border-subtle)', flexShrink: 0 }; }
+
+class Component extends DCLogic {
+  state = {
+    screen: 'splash', prevScreen: 'home', priceState: 'guest', contentLoaded: false,
+    cart: [], selectedProductId: 'p1', selectedUnitIndex: 0, selectedQty: 1, addedFlash: false,
+    catalogFilter: 'All Categories', purchaseType: 'individual', searchQuery: '', notifySubscribed: {},
+    checkoutStep: 0, ckName: 'Ahmed Raza', ckPhone: '0300 1234567', ckAddress: 'Shop 12, College Road', ckCity: 'Wah Cantt',
+    paymentMethod: 'cod', transferRef: '',
+    orders: [
+      { id: 'RS-20458', date: '22 Jul 2026', stageIndex: 2, city: 'Rawalpindi', items: [{ productId: 'p6', unitIndex: 1, qty: 1 }], paymentMethod: 'transfer', address: '45 Commercial Market, Rawalpindi' },
+      { id: 'RS-20431', date: '12 Jul 2026', stageIndex: 4, city: 'Wah Cantt', items: [{ productId: 'p1', unitIndex: 1, qty: 2 }, { productId: 'p4', unitIndex: 1, qty: 5 }], paymentMethod: 'cod', address: 'Shop 12, College Road, Wah Cantt' },
+    ],
+    lastOrderId: null, selectedOrderId: null, invoiceOrderId: null,
+    signPhone: '', signPassword: '',
+    regBusinessName: '', regContact: '', regPhone: '', regAddress: '', regCity: 'Wah Cantt', regType: 'Retail Shop (unregistered)', regEmail: '', registrationSubmitted: false,
+    subPrefs: { notebooks: true, pens: false },
+  };
+
+  componentDidMount() {
+    setTimeout(() => this.setState({ contentLoaded: true }), 550);
+    setTimeout(() => { if (this.state.screen === 'splash') this.goto('home'); }, 1600);
+  }
+
+  goto = (screen, extra) => { this.setState(s => ({ prevScreen: s.screen, screen, ...(extra || {}) })); };
+  back = () => { this.goto(this.state.prevScreen || 'home'); };
+  handleBack = () => {
+    const s = this.state;
+    if (s.screen === 'checkout' && s.checkoutStep > 0) { this.setState({ checkoutStep: s.checkoutStep - 1 }); return; }
+    if (s.screen === 'orders' && s.selectedOrderId) { this.setState({ selectedOrderId: null }); return; }
+    this.back();
+  };
+  setPriceState = (v) => this.setState({ priceState: v });
+  setField = (key, val) => this.setState({ [key]: val });
+  defaultUnitIdx = (product) => this.state.purchaseType === 'bulk' ? product.units.length - 1 : 0;
+  priceFor = (product, unitIndex) => { const u = product.units[unitIndex]; return this.state.priceState === 'wholesale' ? u.wholesale : u.retail; };
+  priceCaption = () => this.state.priceState === 'wholesale' ? 'Wholesale price' : 'Standard price';
+
+  addToCart = (productId, unitIndex, qty) => {
+    qty = qty || 1;
+    this.setState(s => {
+      const cart = [...s.cart];
+      const idx = cart.findIndex(l => l.productId === productId && l.unitIndex === unitIndex);
+      if (idx >= 0) cart[idx] = { ...cart[idx], qty: cart[idx].qty + qty }; else cart.push({ productId, unitIndex, qty });
+      return { cart };
+    });
+  };
+  removeCartLine = (idx) => this.setState(s => ({ cart: s.cart.filter((_, i) => i !== idx) }));
+  setCartQty = (idx, n) => this.setState(s => {
+    if (n <= 0) return { cart: s.cart.filter((_, i) => i !== idx) };
+    const cart = [...s.cart]; cart[idx] = { ...cart[idx], qty: n }; return { cart };
+  });
+
+  openProduct = (id) => { this.setState({ selectedProductId: id, selectedUnitIndex: 0, selectedQty: 1, addedFlash: false }); this.goto('product'); };
+  selectUnit = (i) => this.setState({ selectedUnitIndex: i });
+  setQty = (n) => this.setState({ selectedQty: Math.max(1, n) });
+  addSelectedToCart = () => {
+    const s = this.state;
+    this.addToCart(s.selectedProductId, s.selectedUnitIndex, s.selectedQty);
+    this.setState({ addedFlash: true });
+    setTimeout(() => this.setState({ addedFlash: false }), 1400);
+  };
+  toggleNotify = (id) => this.setState(s => ({ notifySubscribed: { ...s.notifySubscribed, [id]: !s.notifySubscribed[id] } }));
+  addQuickToCart = (id) => { const p = findProduct(id); this.addToCart(id, this.defaultUnitIdx(p), 1); };
+
+  goCheckout = () => this.goto('checkout', { checkoutStep: 0 });
+  setCheckoutStep = (n) => this.setState({ checkoutStep: n });
+  setPaymentMethod = (m) => this.setState({ paymentMethod: m });
+
+  placeOrder = () => {
+    this.setState(s => {
+      const id = 'RS-' + (20500 + s.orders.length + 1);
+      const items = s.cart.map(l => ({ productId: l.productId, unitIndex: l.unitIndex, qty: l.qty }));
+      const order = { id, date: '26 Jul 2026', stageIndex: 0, city: s.ckCity, items, paymentMethod: s.paymentMethod, address: s.ckAddress + ', ' + s.ckCity };
+      return { orders: [order, ...s.orders], lastOrderId: id, cart: [] };
+    });
+    this.goto('confirmation');
+  };
+
+  openOrder = (id) => this.setState({ selectedOrderId: id });
+  reorderOrder = (order) => {
+    if (!order) return;
+    this.setState(s => {
+      const cart = [...s.cart];
+      order.items.forEach(it => {
+        const idx = cart.findIndex(l => l.productId === it.productId && l.unitIndex === it.unitIndex);
+        if (idx >= 0) cart[idx] = { ...cart[idx], qty: cart[idx].qty + it.qty }; else cart.push({ ...it });
+      });
+      return { cart };
+    });
+    this.goto('cart');
+  };
+  openInvoice = (id) => { this.setState({ invoiceOrderId: id }); this.goto('invoice'); };
+  submitRegistration = () => this.setState({ registrationSubmitted: true, priceState: 'pending' });
+  signOut = () => this.setState({ priceState: 'guest', registrationSubmitted: false });
+  toggleSubPref = (key) => this.setState(s => ({ subPrefs: { ...s.subPrefs, [key]: !s.subPrefs[key] } }));
+
+  filteredProducts = () => {
+    const s = this.state;
+    return PRODUCTS.filter(p => (s.catalogFilter === 'All Categories' || p.category === s.catalogFilter) && (!s.searchQuery || p.name.toLowerCase().includes(s.searchQuery.toLowerCase())));
+  };
+
+  buildStageDisplay = (currentIdx) => ORDER_STAGES.map((label, i) => ({
+    label,
+    mark: i <= currentIdx ? '✓' : String(i + 1),
+    circleStyle: { width: 20, height: 20, borderRadius: '50%', background: i <= currentIdx ? 'var(--evergreen-600)' : 'var(--sage-400)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 11, flexShrink: 0 },
+    labelStyle: { fontSize: 12, fontWeight: 600, color: i <= currentIdx ? 'var(--ink-900)' : 'var(--text-muted)' },
+  }));
+
+  renderVals() {
+    const s = this.state;
+    const screen = s.screen;
+    const isSplash = screen === 'splash', isHome = screen === 'home', isCatalogue = screen === 'catalogue', isProduct = screen === 'product',
+      isCart = screen === 'cart', isCheckout = screen === 'checkout', isConfirmation = screen === 'confirmation', isInvoice = screen === 'invoice',
+      isSignIn = screen === 'signin', isRegister = screen === 'register', isAccount = screen === 'account', isOrders = screen === 'orders', isInfo = screen === 'info';
+    const showBottomNav = isHome || isCatalogue || isCart || isAccount;
+    const showBackHeader = !isSplash && !showBottomNav && !isConfirmation;
+
+    let headerTitle = '';
+    if (isProduct) headerTitle = 'Product';
+    else if (isCheckout) headerTitle = ['Delivery Address', 'Delivery Zone', 'Payment Method', 'Review Order'][s.checkoutStep];
+    else if (isInvoice) headerTitle = 'Invoice';
+    else if (isSignIn) headerTitle = 'Sign In';
+    else if (isRegister) headerTitle = 'Wholesale Registration';
+    else if (isOrders) headerTitle = s.selectedOrderId ? 'Order Tracking' : 'Order History';
+    else if (isInfo) headerTitle = 'About & Contact';
+
+    const priceCaption = this.priceCaption();
+    const btnStyle = (active) => ({ padding: '8px 16px', borderRadius: 999, border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer', background: active ? 'var(--accent-primary)' : 'transparent', color: active ? '#fff' : 'var(--text-muted)' });
+
+    const cartCount = s.cart.reduce((sum, l) => sum + l.qty, 0);
+    const cartLines = s.cart.map((l, i) => {
+      const product = findProduct(l.productId); const unit = product.units[l.unitIndex]; const price = this.priceFor(product, l.unitIndex);
+      return { idx: i, id: product.id, name: product.name, icon: product.icon, unitLabel: unit.label, qty: l.qty, priceDisplay: money(price), lineTotalDisplay: money(price * l.qty), lineTotal: price * l.qty, setQty: (n) => this.setCartQty(i, n) };
+    });
+    const cartSubtotal = cartLines.reduce((sum, l) => sum + l.lineTotal, 0);
+    const isFreeDelivery = FREE_CITIES.includes(s.ckCity);
+    const deliveryFee = isFreeDelivery ? 0 : 150;
+    const deliveryFeeDisplay = isFreeDelivery ? 'Free' : money(deliveryFee);
+
+    const catalogueList = this.filteredProducts().map(p => {
+      const unitIdx = this.defaultUnitIdx(p); const canAdd = p.stock !== 'out';
+      return {
+        id: p.id, name: p.name, category: p.category, icon: p.icon,
+        stockLabel: p.stock === 'in' ? 'In Stock' : p.stock === 'low' ? p.stockNote : 'Out of Stock',
+        stockTone: p.stock === 'in' ? 'success' : p.stock === 'low' ? 'warning' : 'error',
+        unitLabel: p.units[unitIdx].label, priceDisplay: money(this.priceFor(p, unitIdx)),
+        addBtnLabel: canAdd ? 'Add to Cart' : 'Notify Me',
+        primaryAction: canAdd ? () => this.addQuickToCart(p.id) : () => this.toggleNotify(p.id),
+        open: () => this.openProduct(p.id),
+      };
+    });
+
+    const homeFeatured = ['p1', 'p3', 'p6'].map(id => {
+      const p = findProduct(id);
+      return { id: p.id, name: p.name, category: p.category, icon: p.icon, priceDisplay: money(this.priceFor(p, 0)), open: () => this.openProduct(p.id), quickAdd: () => this.addQuickToCart(p.id) };
+    });
+
+    const selectedProduct = findProduct(s.selectedProductId) || PRODUCTS[0];
+    const unitsDisplay = selectedProduct.units.map((u, i) => {
+      const active = i === s.selectedUnitIndex;
+      return { idx: i, label: u.label, priceDisplay: money(this.priceFor(selectedProduct, i)), selectUnit: () => this.selectUnit(i), style: { padding: '10px 14px', borderRadius: 14, border: active ? '2px solid var(--accent-primary)' : '1px solid var(--border-subtle)', background: active ? 'var(--mist-100)' : '#fff', cursor: 'pointer', textAlign: 'center', minWidth: 84 } };
+    });
+    const selectedUnitLabel = selectedProduct.units[s.selectedUnitIndex].label;
+    const selectedPriceDisplay = money(this.priceFor(selectedProduct, s.selectedUnitIndex));
+    const selectedIsOut = selectedProduct.stock === 'out';
+    const selectedInStock = !selectedIsOut;
+    const selectedStockLabel = selectedProduct.stock === 'in' ? 'In Stock' : selectedProduct.stock === 'low' ? selectedProduct.stockNote : 'Out of Stock';
+    const selectedStockTone = selectedProduct.stock === 'in' ? 'success' : selectedProduct.stock === 'low' ? 'warning' : 'error';
+    const isNotifySubscribed = !!s.notifySubscribed[selectedProduct.id];
+    const notifyBtnLabel = isNotifySubscribed ? 'Notified — tap to cancel' : 'Notify me when back in stock';
+
+    const currentOrder = s.orders.find(o => o.id === s.lastOrderId);
+    const confirmationLines = currentOrder ? currentOrder.items.map(it => { const p = findProduct(it.productId); return { name: p.name, unitLabel: p.units[it.unitIndex].label, qty: it.qty }; }) : [];
+    const confirmationTotalDisplay = currentOrder ? money(currentOrder.items.reduce((sum, it) => sum + this.priceFor(findProduct(it.productId), it.unitIndex) * it.qty, 0) + (FREE_CITIES.includes(currentOrder.city) ? 0 : 150)) : '';
+    const orderStagesDisplay = this.buildStageDisplay(0);
+
+    const orderListDisplay = s.orders.map(o => ({
+      id: o.id, date: o.date, stageLabel: ORDER_STAGES[o.stageIndex], stageTone: o.stageIndex >= 4 ? 'success' : o.stageIndex === 0 ? 'neutral' : 'info',
+      itemCount: o.items.reduce((sum, it) => sum + it.qty, 0),
+      totalDisplay: money(o.items.reduce((sum, it) => sum + this.priceFor(findProduct(it.productId), it.unitIndex) * it.qty, 0)),
+      open: () => this.openOrder(o.id),
+    }));
+    const selectedOrder = s.orders.find(o => o.id === s.selectedOrderId);
+    const selectedOrderLines = selectedOrder ? selectedOrder.items.map(it => { const p = findProduct(it.productId); return { name: p.name, unitLabel: p.units[it.unitIndex].label, qty: it.qty }; }) : [];
+    const selectedOrderStagesDisplay = selectedOrder ? this.buildStageDisplay(selectedOrder.stageIndex) : [];
+    const ordersListVisible = !s.selectedOrderId;
+    const orderDetailVisible = !!s.selectedOrderId;
+
+    const invoiceOrder = s.orders.find(o => o.id === s.invoiceOrderId);
+    const invoiceLines = invoiceOrder ? invoiceOrder.items.map(it => { const p = findProduct(it.productId); const price = this.priceFor(p, it.unitIndex); return { name: p.name, unitLabel: p.units[it.unitIndex].label, qty: it.qty, priceDisplay: money(price), lineTotalDisplay: money(price * it.qty), lineTotal: price * it.qty }; }) : [];
+    const invoiceSubtotal = invoiceLines.reduce((sum, l) => sum + l.lineTotal, 0);
+    const invoiceFee = invoiceOrder && !FREE_CITIES.includes(invoiceOrder.city) ? 150 : 0;
+    const invoiceFeeDisplay = invoiceFee ? money(invoiceFee) : 'Free';
+    const invoiceTotalDisplay = money(invoiceSubtotal + invoiceFee);
+    const invoicePaymentLabel = invoiceOrder ? ({ cod: 'Cash on Delivery', transfer: 'Bank / Wallet Transfer', credit: 'Pay-Later Credit' }[invoiceOrder.paymentMethod]) : '';
+    const invoiceStageLabel = invoiceOrder ? ORDER_STAGES[invoiceOrder.stageIndex] : '';
+
+    const checkoutStepChips = ['Address', 'Delivery', 'Payment', 'Review'].map((label, i) => ({ label, style: { flex: 1, textAlign: 'center', padding: '8px 4px', borderRadius: 999, fontSize: 10, fontWeight: 600, background: i === s.checkoutStep ? 'var(--accent-primary)' : 'var(--mist-100)', color: i === s.checkoutStep ? '#fff' : 'var(--forest-700)' } }));
+    const zoneTone = isFreeDelivery ? 'success' : 'warning';
+    const zoneLabel = isFreeDelivery ? 'Free Delivery Zone' : 'Delivery Charge Applies';
+    const checkoutTotalDisplay = money(cartSubtotal + deliveryFee);
+    const paymentMethodLabel = { cod: 'Cash on Delivery', transfer: 'Bank / Wallet Transfer', credit: 'Pay-Later Credit' }[s.paymentMethod];
+
+    return {
+      screen, isSplash, isHome, isCatalogue, isProduct, isCart, isCheckout, isConfirmation, isInvoice, isSignIn, isRegister, isAccount, isOrders, isInfo,
+      showBottomNav, showBackHeader, headerTitle, headerBack: this.handleBack,
+      priceState: s.priceState, isGuest: s.priceState === 'guest', isPending: s.priceState === 'pending', isWholesale: s.priceState === 'wholesale', isSignedIn: s.priceState !== 'guest',
+      setPriceGuest: () => this.setPriceState('guest'), setPricePending: () => this.setPriceState('pending'), setPriceWholesale: () => this.setPriceState('wholesale'),
+      guestBtnStyle: btnStyle(s.priceState === 'guest'), pendingBtnStyle: btnStyle(s.priceState === 'pending'), wholesaleBtnStyle: btnStyle(s.priceState === 'wholesale'),
+      tabItems: [{ label: 'Home', active: isHome }, { label: 'Catalogue', active: isCatalogue }, { label: cartCount ? `Cart (${cartCount})` : 'Cart', active: isCart }, { label: 'Account', active: isAccount }],
+      navWidth: 340, onTabClick: (i) => this.goto(['home', 'catalogue', 'cart', 'account'][i]),
+      goHome: () => this.goto('home'), goCatalogue: () => this.goto('catalogue'), goCart: () => this.goto('cart'), goAccount: () => this.goto('account'),
+      goSignIn: () => this.goto('signin'), goRegister: () => this.goto('register'), goInfo: () => this.goto('info'), goOrders: () => this.goto('orders', { selectedOrderId: null }),
+      goCheckout: this.goCheckout,
+      priceCaption,
+
+      homeCategories: CATEGORIES.map(c => ({ name: c.name, icon: c.icon, go: () => { this.setField('catalogFilter', c.name); this.goto('catalogue'); } })),
+      wholesalePromoVisible: s.priceState === 'guest', pendingNoteVisible: s.priceState === 'pending',
+      homeFeatured,
+
+      catalogueCategoryChips: CATEGORY_LIST.map(name => ({ name, select: () => this.setField('catalogFilter', name), style: chipStyle(s.catalogFilter === name) })),
+      purchaseTypes: [{ key: 'individual', label: 'Individual' }, { key: 'bulk', label: 'Bulk' }, { key: 'both', label: 'Both' }].map(pt => ({ label: pt.label, select: () => this.setField('purchaseType', pt.key), style: chipStyle(s.purchaseType === pt.key) })),
+      searchQuery: s.searchQuery, onSearchChange: (e) => this.setField('searchQuery', e.target.value),
+      catalogueList, catalogueEmpty: catalogueList.length === 0,
+
+      selectedProduct, unitsDisplay, selectedUnitLabel, selectedPriceDisplay, selectedStockLabel, selectedStockTone, selectedIsOut, selectedInStock, isNotifySubscribed, notifyBtnLabel,
+      selectedQty: s.selectedQty, setSelectedQty: (n) => this.setQty(n), addSelectedToCart: this.addSelectedToCart, addedFlash: s.addedFlash, toggleSelectedNotify: () => this.toggleNotify(selectedProduct.id),
+
+      cartLines, cartEmpty: cartLines.length === 0, cartHasItems: cartLines.length > 0, cartSubtotalDisplay: money(cartSubtotal),
+      deliveryPreviewDisplay: isFreeDelivery ? 'Free delivery to ' + s.ckCity : 'Delivery to ' + s.ckCity + ': ' + money(deliveryFee),
+
+      checkoutStepChips, isCheckoutStep0: s.checkoutStep === 0, isCheckoutStep1: s.checkoutStep === 1, isCheckoutStep2: s.checkoutStep === 2, isCheckoutStep3: s.checkoutStep === 3,
+      ckName: s.ckName, ckPhone: s.ckPhone, ckAddress: s.ckAddress, ckCity: s.ckCity,
+      setCkName: (e) => this.setField('ckName', e.target.value), setCkPhone: (e) => this.setField('ckPhone', e.target.value), setCkAddress: (e) => this.setField('ckAddress', e.target.value), setCkCity: (e) => this.setField('ckCity', e.target.value),
+      cityOptions: CITY_OPTIONS, nextFromAddress: () => this.setCheckoutStep(1),
+      isFreeDelivery, deliveryFeeDisplay, zoneTone, zoneLabel, nextFromZone: () => this.setCheckoutStep(2),
+      paymentMethod: s.paymentMethod, isPayCod: s.paymentMethod === 'cod', isPayTransfer: s.paymentMethod === 'transfer', isPayCredit: s.paymentMethod === 'credit',
+      setPaymentCod: () => this.setPaymentMethod('cod'), setPaymentTransfer: () => this.setPaymentMethod('transfer'), setPaymentCredit: () => this.setPaymentMethod('credit'),
+      showPayLater: s.priceState === 'wholesale', transferRef: s.transferRef, setTransferRef: (e) => this.setField('transferRef', e.target.value),
+      creditLimitDisplay: money(50000), creditOutstandingDisplay: money(12400), creditAvailableDisplay: money(37600),
+      nextFromPayment: () => this.setCheckoutStep(3), checkoutTotalDisplay, placeOrder: this.placeOrder, paymentMethodLabel,
+
+      currentOrder, confirmationLines, confirmationTotalDisplay, orderStagesDisplay,
+      trackCurrentOrder: () => { this.openOrder(s.lastOrderId); this.goto('orders'); }, viewCurrentInvoice: () => this.openInvoice(s.lastOrderId),
+
+      orderListDisplay, ordersListVisible, orderDetailVisible, selectedOrder, selectedOrderLines, selectedOrderStagesDisplay,
+      reorderSelected: () => this.reorderOrder(selectedOrder), viewSelectedInvoice: () => this.openInvoice(s.selectedOrderId),
+
+      invoiceOrder, invoiceLines, invoiceSubtotalDisplay: money(invoiceSubtotal), invoiceFeeDisplay, invoiceTotalDisplay, invoicePaymentLabel, invoiceStageLabel,
+
+      signPhone: s.signPhone, signPassword: s.signPassword, setSignPhone: (e) => this.setField('signPhone', e.target.value), setSignPassword: (e) => this.setField('signPassword', e.target.value), submitSignIn: () => this.goto('home'),
+
+      regBusinessName: s.regBusinessName, regContact: s.regContact, regPhone: s.regPhone, regAddress: s.regAddress, regCity: s.regCity, regType: s.regType, regEmail: s.regEmail,
+      setRegBusinessName: (e) => this.setField('regBusinessName', e.target.value), setRegContact: (e) => this.setField('regContact', e.target.value), setRegPhone: (e) => this.setField('regPhone', e.target.value),
+      setRegAddress: (e) => this.setField('regAddress', e.target.value), setRegCity: (e) => this.setField('regCity', e.target.value), setRegType: (e) => this.setField('regType', e.target.value), setRegEmail: (e) => this.setField('regEmail', e.target.value),
+      regRequiresDocs: s.regType === 'Registered Business', businessTypes: BUSINESS_TYPES, submitRegistration: this.submitRegistration, registrationSubmitted: s.registrationSubmitted, registrationFormVisible: !s.registrationSubmitted,
+
+      staffList: [{ name: 'Ahmed Raza', role: 'Owner' }, { name: 'Bilal Nawaz', role: 'Staff — Orders only' }],
+      subPrefsDisplay: [
+        { label: 'Restock alerts — Notebooks', checked: s.subPrefs.notebooks, toggle: () => this.toggleSubPref('notebooks') },
+        { label: 'Restock alerts — Pens & Markers', checked: s.subPrefs.pens, toggle: () => this.toggleSubPref('pens') },
+      ],
+      notifFeed: ['Order RS-20458 is now Preparing.', 'Payment reminder: Rs 12,400 outstanding on your account.', 'Your wholesale registration was approved.'],
+      signOut: this.signOut,
+    };
+  }
+}
+
+</script>
+</body>
+</html>
