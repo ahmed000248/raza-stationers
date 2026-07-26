@@ -6,6 +6,7 @@ build/
 **/.next/
 coverage/
 *.log
+.env*
 graphify-out/cost.json
 .impeccable/*.png
 .impeccable/live/
