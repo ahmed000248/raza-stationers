@@ -1,85 +1,130 @@
-%% Raza Stationers - Orders, returns and delivery conceptual ERD v0.1
-%% Order lines preserve commercial snapshots. Cancellations, returns and
-%% delivery changes create history and reversals instead of deleting records.
-
 erDiagram
     CLIENT_BUSINESS ||--o{ ORDER : places
-    USER ||--o{ ORDER : submits
-    ORDER ||--|{ ORDER_ITEM : contains
-    PRODUCT_PACKAGING ||--o{ ORDER_ITEM : snapshots
-    ORDER ||--o{ ORDER_STATUS_HISTORY : records
-    ORDER ||--o{ ORDER_CHANGE_REQUEST : receives
-    ORDER ||--o| CANCELLATION : may_have
-    ORDER ||--o| INVOICE : produces
-
-    ORDER ||--o{ RETURN : may_have
+    USER ||--o{ ORDER : acts_as
+    ORDER ||--|{ ORDER_ITEM : snapshots
+    ORDER ||--o{ ORDER_STATUS_HISTORY : status_history
+    ORDER ||--o{ ORDER_CHANGE_REQUEST : change_history
+    ORDER ||--o| CANCELLATION : cancellation_record
+    ORDER ||--o| INVOICE : invoiced_once
+    ORDER ||--o{ RETURN : may_have_partial_returns
+    INVOICE ||--o{ RETURN : financially_references
     RETURN ||--|{ RETURN_ITEM : contains
-    ORDER_ITEM ||--o{ RETURN_ITEM : references
-    RETURN ||--o{ REFUND : resolves
+    ORDER_ITEM ||--o{ RETURN_ITEM : original_line
+    RETURN ||--o{ REFUND : may_refund
+    INVOICE ||--o{ CREDIT_NOTE : adjusted_by
+    RETURN ||--o{ CREDIT_NOTE : may_generate
+    CANCELLATION ||--o{ CREDIT_NOTE : may_generate
 
-    ORDER ||--o{ DELIVERY : fulfilled_by
-    DELIVERY_ZONE ||--o{ DELIVERY : governs
-    DELIVERY ||--o{ DELIVERY_ASSIGNMENT : assigned_through
-    USER ||--o{ DELIVERY_ASSIGNMENT : worker
-    DELIVERY ||--o{ DELIVERY_STATUS_HISTORY : records
-    DELIVERY ||--o{ DELIVERY_PROOF : supports
+    ORDER ||--o| DELIVERY : fulfilled_by
+    DELIVERY_ZONE ||--o{ DELIVERY : configures
+    DELIVERY ||--|{ DELIVERY_ATTEMPT : attempted_as
+    DELIVERY_ATTEMPT ||--o{ DELIVERY_ASSIGNMENT : assignment_history
+    DELIVERY_ATTEMPT ||--o{ DELIVERY_ATTEMPT_STATUS_HISTORY : actor_history
 
     ORDER {
-        string id
-        string orderNumber
-        string status
-        decimal total
-        string deliveryAddressSnapshot
+        string id PK
+        string orderNumber UK
+        OrderStatus status
+        decimal grandTotal "14,2"
+        datetime createdAt
     }
     ORDER_ITEM {
-        string id
+        string id PK
+        string productId FK
+        string productPackagingId FK
+        decimal quantity
+        decimal baseQuantity
+        string skuSnapshot
         string productNameSnapshot
-        string unitSnapshot
         decimal unitPriceSnapshot
-        decimal discountSnapshot
-        string taxSnapshot
+        decimal lineTotalSnapshot
     }
     ORDER_STATUS_HISTORY {
-        string id
-        string fromStatus
-        string toStatus
-        datetime changedAt
+        string id PK
+        OrderStatus fromStatus
+        OrderStatus toStatus
+        string changedById FK
+        datetime createdAt
+    }
+    ORDER_CHANGE_REQUEST {
+        string id PK
+        ChangeRequestType requestType
+        ChangeRequestStatus status
+        string requestedById FK
+        string reviewedById FK
     }
     CANCELLATION {
-        string id
-        string reason
-        datetime approvedAt
+        string id PK
+        string orderId FK "unique"
+        CancellationStatus status
+        string requestedById FK
+        string approvedById FK
+        string stockConfirmedById FK
     }
     RETURN {
-        string id
-        string status
-        string resolution
-        datetime processedAt
+        string id PK
+        string orderId FK
+        string invoiceId FK
+        ReturnStatus status
     }
     RETURN_ITEM {
-        string id
+        string id PK
+        string orderItemId FK
         decimal quantity
-        string condition
-        boolean restocked
+        decimal baseQuantity
+        InventoryCondition condition
+        StockBucket destination
+    }
+    REFUND {
+        string id PK
+        RefundMethod method
+        RefundStatus status
+        decimal amount "14,2"
+    }
+    CREDIT_NOTE {
+        string id PK
+        string invoiceId FK
+        string creditNoteNumber UK
+        CreditNoteStatus status
+        decimal amount "14,2"
     }
     DELIVERY {
-        string id
-        string status
-        string addressSnapshot
+        string id PK
+        string orderId FK "unique"
+        DeliveryStatus status
+        string recipientConfirmation
+        string notes
+    }
+    DELIVERY_ATTEMPT {
+        string id PK
+        string deliveryId FK
+        int attemptNumber
+        DeliveryAttemptStatus status
+        string failureReason
+        datetime dispatchAt
+        datetime returnWarehouseAt
+        InventoryCondition inspectionOutcome
+        datetime completedAt
     }
     DELIVERY_ASSIGNMENT {
-        string id
+        string id PK
+        string deliveryAttemptId FK
+        string workerId FK
+        string assignedById FK
         datetime assignedAt
         datetime endedAt
     }
-    DELIVERY_STATUS_HISTORY {
-        string id
-        string status
+    DELIVERY_ATTEMPT_STATUS_HISTORY {
+        string id PK
+        string deliveryAttemptId FK
+        DeliveryAttemptStatus fromStatus
+        DeliveryAttemptStatus toStatus
+        string changedById FK
+        boolean isOverride
         string reason
-        datetime changedAt
+        datetime createdAt
     }
-    DELIVERY_PROOF {
-        string id
-        string proofType
-        string reference
-    }
+
+%% Packed/dispatched cancellations pass through return_pending_inspection.
+%% Failed-delivery stock remains unavailable/in-transit until receipt and inspection.
+%% DeliveryProof files are deferred; simple notes/recipient confirmation are allowed.

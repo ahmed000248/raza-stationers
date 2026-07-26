@@ -150,7 +150,7 @@ Server-side enforcement is mandatory for every row above — see `FR-SEC-01`. No
 |---|---|---|---|---|
 | FR-CB-01 | A registered user can submit a "Request Wholesale Account" form containing the business profile fields defined in BRD `CB-03`. | Client Business User | M | CB-01, CB-03 |
 | FR-CB-02 | Submitted business requests appear in an admin "Pending Client Businesses" queue with all submitted fields visible, plus a decision panel (Approve / Reject / Request more info). Admin can review the queue and flag issues; only the Owner can action Approve/Reject. | Owner (Admin: review only) | M | CB-06 |
-| FR-CB-03 | On approval, the owner must set: credit limit, payment terms, and account status, before the business becomes Active — these are Owner-only. The discount value (or tier default) may be set at approval by the Owner, or assigned/adjusted afterward by the Owner or Admin (`FR-PRC-02`). Fields cannot be left blank on approval. | Owner | M | CB-06, CD-01, PY-01 |
+| FR-CB-03 | On approval, the Owner sets account status and may configure pricing. Credit is optional: a `ClientCreditAccount` is created only when the Owner separately approves/configures a credit limit and credit days. A business without that record remains cash/manual-payment only. | Owner | M | CB-06, CD-01, PY-01 |
 | FR-CB-04 | Admin can manually create a client business profile (without a prior online request) to onboard existing long-term customers directly. | Admin, Owner | M | CB-06 |
 | FR-CB-05 | Multiple individual user logins can be linked to one client business. Linked users share the business's pricing, order history, credit balance, and outstanding invoices — none of these are tracked per individual login. | Client Business Owner (primary contact) | M | CB-05 |
 | FR-CB-06 | The primary contact of a client business can invite/add additional authorized users (manager, purchase officer, branch employee) to their business account. Admin can also add/remove linked users. | Client Business primary contact, Admin | M | CB-05 |
@@ -162,14 +162,14 @@ Server-side enforcement is mandatory for every row above — see `FR-SEC-01`. No
 
 | ID | Requirement | Actor(s) | Priority | Related BR |
 |---|---|---|---|---|
-| FR-CAT-01 | Admin can add, edit, and remove products individually, including name, category, description, wholesale price, retail price, unit(s) of sale, and SKU/barcode. No product images are captured or displayed anywhere in the system — the catalogue is description-based only, per the finalized design (icon block in place of a photo). | Admin, Owner | M | PR-02 |
+| FR-CAT-01 | Admin can create and edit a Product with a required system-generated `RS-000001`-format SKU, flat category, description, review/activation state and one or more ProductPackaging records. Each package has explicit unit/conversion data and independent effective-dated retail/wholesale prices. Products with history are archived, not deleted. Barcode, Brand and ProductImage are deferred. | Admin, Owner | M | PR-02 |
 | FR-CAT-02 | Admin can bulk-import/update products via CSV/Excel upload, with a validation preview step before committing changes. | Admin, Owner | M | PR-03 |
-| FR-CAT-03 | Each product may define multiple sale units (e.g. piece, dozen, carton) with defined conversion ratios; stock is tracked at the base unit and displayed/sold in whichever unit is configured per product. | Admin, Owner | M | PR-02 |
+| FR-CAT-03 | Every Product has at least one ProductPackaging record and exactly one confirmed base package. All packages share base inventory. Package conversions must be explicitly supplied or manually confirmed; prices are independent and must never be derived from conversion factors. | Admin, Owner | M | PR-02 |
 | FR-CAT-04 | Customer-facing catalogue supports category browsing, free-text search, and filters (category, price range, availability). Search must return results across the full 3,000–3,500 SKU catalogue within acceptable response time (see §10). | Guest, Client Business User | M | Scope §4.1 |
 | FR-CAT-05 | Each product displays a live stock status label: "In Stock", "Low Stock", or "Out of Stock", derived from current stock level vs. threshold (`FR-STK-03`). | Guest, Client Business User | M | SK-02, SK-03 |
 | FR-CAT-06 | Out-of-stock products remain visible and browsable but cannot be added to cart; a "Notify Me" option is shown instead of "Add to Cart". | Guest, Client Business User | M | SK-02 |
 | FR-CAT-07 | Admin can archive a product (removes it from customer-facing catalogue and search, retains historical order data). Archived products are not deleted. | Admin, Owner | M | SK-02 |
-| FR-CAT-08 | Every product is tagged as Individual, Bulk, or both — the catalogue's primary purchase-type split, shown as a toggle/filter on the customer-facing catalogue. A "Bulk" product may enforce carton/pack-only ordering (`FR-ORD-01`'s pack-only rule); an "Individual" product is sold in single units. Admin sets this when creating/editing a product. | Admin, Owner (set) · Guest, Client Business User (browse/filter) | M | PR-02 (retroactively documented — this was decided during the design phase, after BRD/FRD v1.0/v1.1, and is confirmed in the reviewed customer-site design) |
+| FR-CAT-08 | Individual/bulk/both may be retained only as provisional source/import classification and a browse hint. It never authorises a sale. Actual sale eligibility is derived from active Product and ProductPackaging status, `allowIndividualSale`, confirmed UOM/conversion data, stock and a positive applicable package price. | Admin, Owner (review) · Guest, Client Business User (browse/filter) | M | PR-02 |
 
 ### 6.4 Pricing & Discount Engine
 
@@ -177,7 +177,7 @@ Server-side enforcement is mandatory for every row above — see `FR-SEC-01`. No
 |---|---|---|---|---|
 | FR-PRC-01 | System resolves and displays a final price per product per logged-in customer according to the priority order defined in `§8` (this document) and BRD `PR-01`. Unapproved/guest users always see the standard price. | System | M | PR-01, CD-04 |
 | FR-PRC-02 | Admin can set a client business's account-wide default discount percentage. | Admin, Owner | M | CD-02 |
-| FR-PRC-03 | Admin can additionally set a category-level or product-level discount/fixed price override for a specific client business, which takes priority over the account-wide default. | Admin, Owner | M | CD-02, PR-01 |
+| FR-PRC-03 | Admin/Owner can set one final fixed client-specific ProductPackaging price or percentage rules at product, category or account scope. Fixed prices are already final; percentage rules do not stack and the most specific matching rule wins. | Admin, Owner | M | CD-02, PR-01 |
 | FR-PRC-04 | Before approval, a client business sees standard/retail catalogue prices (same as a guest) alongside a "pending approval" notice — never wholesale pricing. The discount percentage itself is never shown to the customer at any stage — only the resulting final price after approval. *(v1.3: corrected to match the implemented storefront, which shows retail prices with a pending banner, not a hidden-price state.)* | Client Business User | M | CD-04 |
 | FR-PRC-05 | Every discount change (create, increase, decrease, suspend, remove) is written to an immutable change log capturing: previous value, new value, changed by, timestamp, and reason (required free-text field). | Admin, Owner | M | CD-05 |
 | FR-PRC-06 | Changing a discount takes effect only on orders placed after the change; previously confirmed orders retain the price/discount at time of confirmation. | System | M | CD-05 |
@@ -190,9 +190,9 @@ Server-side enforcement is mandatory for every row above — see `FR-SEC-01`. No
 |---|---|---|---|---|
 | FR-CRT-01 | User can add/remove/adjust quantity of items in cart; cart persists across sessions for logged-in users. | Client Business User, Guest | M | Scope §4.1 |
 | FR-CRT-02 | At checkout, system validates cart against: current stock availability, minimum order rules (`FR-ORD-01`), and unit/pack constraints (e.g. carton-only items). | System | M | OF-01 |
-| FR-CRT-03 | Checkout requires selection of one payment method: Pay Online Now, Cash on Delivery, or Pay Later (Credit) — the last option shown only if the client business has an active, non-suspended credit status. | Client Business User | M | PY-01, PY-04 |
+| FR-CRT-03 | Checkout records a requested supported payment channel: Cash, Bank Transfer, Easypaisa, JazzCash or Cash on Delivery. Client credit is not a payment method; it is available only through an active optional ClientCreditAccount and its ledger. | Client Business User | M | PY-01, PY-04 |
 | FR-CRT-04 | If "Pay Later" is selected and the order total would exceed available credit, the order is placed in a special **Pending Owner Approval** sub-state rather than being rejected outright (see §9). | System | M | PY-01 |
-| FR-CRT-05 | If "Pay Online Now" is selected but no live gateway is active yet, checkout instead prompts for manual bank transfer details and a receipt/transaction-ID upload for admin verification. | System | M | PY-03 |
+| FR-CRT-05 | With no live gateway, checkout records manual payment instructions and an optional transaction/reference string for later verification. Version 1 does not require a receipt-file upload subsystem. | System | M | PY-03 |
 | FR-CRT-06 | Checkout supports partial payment (pay some now, remainder on credit) only for approved credit customers, per `PY-04`. | Client Business User | M | PY-04 |
 | FR-CRT-07 | On successful checkout, order status is set to **Pending Review** and a confirmation is shown to the customer and queued to the admin panel. | System | M | OF-02 |
 
@@ -213,36 +213,42 @@ Server-side enforcement is mandatory for every row above — see `FR-SEC-01`. No
 
 | ID | Requirement | Actor(s) | Priority | Related BR |
 |---|---|---|---|---|
-| FR-PAY-01 | Each client business has stored: credit limit, current outstanding balance, available credit (computed), payment terms, and credit status (Active/Suspended/Blocked). | System | M | PY-01 |
+| FR-PAY-01 | A client business has zero or one ClientCreditAccount. When present it stores the approved limit, credit days and status. Credit balance/exposure is derived from immutable ledger entries and invoice allocations; it is never directly edited. | System | M | PY-01 |
 | FR-PAY-02 | System automatically calculates available credit as `credit limit − outstanding balance` and blocks new pay-later orders that would push the balance negative, unless owner-approved (see §9). | System | M | PY-01 |
 | FR-PAY-03 | System sends automated reminders to the client business before and after a payment due date (channel: notification per `FR-NTF`). | System | M | PY-02 |
 | FR-PAY-04 | Owner can suspend credit privileges for a specific business (blocks new Pay Later orders only; cash/online orders remain available). Credit status changes are Owner-only, consistent with credit limit control (`PY-01`). | Owner | M | PY-02 |
-| FR-PAY-05 | Admin can record a payment received against an outstanding balance (full or partial), updating the balance and payment history immediately. | Admin, Owner | M | PY-04 |
-| FR-PAY-06 | For manual/offline payments, admin can verify a submitted transaction ID or receipt upload and mark the order/payment as Verified or Rejected. | Admin, Owner | M | PY-03 |
-| FR-PAY-07 | Live payment gateway integration (Easypaisa/JazzCash/NayaPay/bank APIs) with automatic payment confirmation. | System | Phase 2 (pending merchant account confirmation, `PY-03`) | PY-03 |
+| FR-PAY-05 | Admin/Owner can record a Payment and allocate a verified amount across one or more Invoices. Default allocation is oldest outstanding invoice first. Reallocation reverses prior allocation rows and creates replacements so history is retained. | Admin, Owner | M | PY-04 |
+| FR-PAY-06 | For manual/offline payments, admin can verify a submitted transaction/reference string and mark the Payment Verified or Rejected. File uploads are deferred. | Admin, Owner | M | PY-03 |
+| FR-PAY-07 | Live payment-gateway integration is deferred. Version 1 records Cash, Bank Transfer, Easypaisa, JazzCash and Cash on Delivery manually; unverified payments do not affect invoice or credit balances. | System | Deferred | PY-03 |
 | FR-PAY-08 | No automatic late fee/penalty is applied to overdue balances unless explicitly configured by the owner after confirming existing policy. | System | M | PY-02 |
 
 ### 6.8 Stock & Inventory Management
 
 | ID | Requirement | Actor(s) | Priority | Related BR |
 |---|---|---|---|---|
-| FR-STK-01 | Admin/authorized staff can record a **routine restock entry**: product, quantity, supplier/vendor, purchase price, invoice number, purchase date. Entry is timestamped and attributed to the entering user. | Admin, Owner, authorized staff | M | SK-01 |
+| FR-STK-01 | Admin/authorized staff can record a routine restock StockMovement in the Product's base unit, with quantity, reason, actor and timestamp. Formal supplier, purchasing, goods-receipt and buying-price workflows are deferred. | Admin, Owner, authorized staff | M | SK-01 |
 | FR-STK-02 | Stock level updates immediately and is reflected live on the customer-facing catalogue (`FR-CAT-05`). | System | M | SK-01, Core workflow |
 | FR-STK-03 | Each product/SKU has an independently configurable low-stock threshold; when current stock falls at or below the threshold, the product is flagged "Low Stock" and an admin alert is generated. | System | M | SK-03 |
 | FR-STK-04 | Admin dashboard lists all products currently at or below their low-stock threshold, sorted by urgency (e.g. stock/threshold ratio). | Admin, Owner | M | SK-03, AC-02 |
 | FR-STK-05 | Customers can opt in to a "Notify Me" restock alert on an out-of-stock product; system triggers a targeted notification (`FR-NTF-01`) when that product's stock is next updated above zero. | Client Business User | M | SK-02, NA-01 |
 | FR-STK-06 | Admin can archive a discontinued product, removing it from active stock tracking and the customer catalogue while preserving historical records. | Admin, Owner | M | SK-02 |
 | FR-STK-07 | Owner can make a **stock correction/adjustment** — a manual change to a product's recorded quantity outside the normal restock-entry or order-fulfilment flow (e.g. fixing a miscount, writing off damaged stock). Distinct from `FR-STK-01`'s routine restock entries, this is Owner-only and always written to the audit log (`FR-SEC-02`) with a required reason. | Owner | M | SK-01 |
+| FR-STK-08 | Order placement revalidates stock but does not reserve it. Confirmation atomically creates base-unit reservations for every line; all lines succeed or none do. | System | M | BR-STOCK-001 |
+| FR-STK-09 | Packing atomically consumes reservations, reduces sellable on-hand stock, moves the quantity to unavailable, appends StockMovement records and changes Order status. | Packing Worker, Admin / System | M | BR-STOCK-002 |
+| FR-STK-10 | `available = onHand - reserved` and is calculated, not stored. Reserved is a subset of onHand. Total business-owned stock is `onHand + unavailable + inTransit + damaged`; reserved is not added a second time. | System | M | BR-STOCK-001 |
+| FR-STK-11 | Packed/dispatched/failed-delivery stock does not become sellable until warehouse receipt and inspection. Inspection routes it to sellable, damaged or quarantined/unavailable stock. | Packing Worker, Admin / System | M | BR-STOCK-002, BR-DEL-001 |
+| FR-STK-12 | StockMovement and StockReservation are historical authority. StockBalance is a transactionally maintained projection and cannot be directly edited without a movement, reason, actor and audit event. Every quantity is stored in the Product base unit. | System | M | BR-STOCK-001, BR-DATA-001 |
 
 ### 6.9 Delivery & Fulfilment
 
 | ID | Requirement | Actor(s) | Priority | Related BR |
 |---|---|---|---|---|
-| FR-DLV-01 | Admin assigns a confirmed, packed order to a delivery worker (from the staff list, `FR-STF`) and marks it dispatched, recording dispatch time. | Admin, Owner | M | ST-02 |
-| FR-DLV-02 | System records delivery outcome: delivered (with delivery time and cash collected, if applicable) or failed (with a required reason field) or returned/damaged items. Recorded either by the assigned Delivery Worker directly (own assignments only) or by Admin/Owner (any assignment, with override/reassignment rights). | Delivery Worker (own assignments), Admin, Owner (all assignments) | M | ST-02, BR-DEL-001 |
-| FR-DLV-03 | Delivery worker login to self-update the status of deliveries assigned to them (assigned/dispatched/out for delivery/delivered/failed/returned). *(v1.4 — decided per BR-DEL-001, 2026-07-26: this ships in v1, not Phase 2 as earlier drafts said. The admin panel's `/delivery` page was already built this way; the FRD text was stale, not the implementation.)* Every self-update, and every Admin/Owner correction or override, records the responsible user and timestamp. | Delivery Worker, Admin, Owner | M | ST-02, ST-03, BR-DEL-001 |
+| FR-DLV-01 | Each Order has at most one Delivery fulfilment record. A Delivery has one or more numbered DeliveryAttempts, allowing retry history without overwriting an earlier failure. | Admin, Owner / System | M | ST-02 |
+| FR-DLV-02 | Each DeliveryAttempt records assignment history, dispatch/status events, failure reason, warehouse-return state, inspection outcome, completion time and responsible actors. | Delivery Worker (own current assignment), Admin, Owner | M | ST-02, BR-DEL-001 |
+| FR-DLV-03 | Delivery workers may update only their current assigned attempt. Admin/Owner may reassign or override with a mandatory reason. Every assignment and status change records actor and timestamp. | Delivery Worker, Admin, Owner | M | ST-02, ST-03, BR-DEL-001 |
 | FR-DLV-04 | Live GPS tracking of delivery workers. | System | Phase 2 | Future Enhancements (BRD §19) |
 | FR-DLV-05 | Packing worker view (or printed picking slip in v1) lists items to pick per order, and supports marking the order as "Packed" before dispatch assignment. | Packing Worker, Admin | M | ST-02, ST-03 |
+| FR-DLV-06 | File-based delivery proof is deferred. Version 1 may record plain-text recipient confirmation and delivery notes only. | Delivery Worker, Admin, Owner | M | BR-DEL-001 |
 
 ### 6.10 Staff & Role Management
 
@@ -268,7 +274,7 @@ Server-side enforcement is mandatory for every row above — see `FR-SEC-01`. No
 
 | ID | Requirement | Actor(s) | Priority | Related BR |
 |---|---|---|---|---|
-| FR-NTF-01 | Customers can opt in to follow specific products, categories, or brands; restock notifications are sent only to opted-in followers of the affected item, not broadcast to all customers. | Client Business User | M | NA-01 |
+| FR-NTF-01 | Customers can opt in to follow specific products or flat categories; restock notifications are sent only to matching opted-in followers. Brand targets are deferred with the Brand model. | Client Business User | M | NA-01 |
 | FR-NTF-02 | System sends order-status notifications (Confirmed, Out for Delivery, Delivered, Change Requested/Rejected) to the ordering customer. | System | M | Core workflow (PRD §4) |
 | FR-NTF-03 | System sends payment/credit notifications: payment received confirmation, upcoming due date reminder, overdue balance reminder. | System | M | PY-02, PY-03 |
 | FR-NTF-04 | Admin can broadcast important business announcements to opted-in customers (e.g. holiday closure, major restock). | Admin, Owner | S | NA-01 |
@@ -307,8 +313,8 @@ Server-side enforcement is mandatory for every row above — see `FR-SEC-01`. No
 
 | ID | Requirement | Actor(s) | Priority | Related BR |
 |---|---|---|---|---|
-| FR-MIG-01 | System provides a bulk import tool accepting CSV/Excel for products (name, category, price, unit(s), SKU, stock) and existing client businesses (per BRD `CB-03` fields). | Admin, Owner | M | PR-03 |
-| FR-MIG-02 | Import tool validates data before committing: required fields present, no duplicate SKUs, valid category references, valid numeric prices/quantities. Invalid rows are reported without blocking valid rows from importing. | System | M | PR-03 |
+| FR-MIG-01 | System stages approved catalogue CSV/Excel data as ImportBatch/ImportRow records containing source name, flat category, package/unit evidence and wholesale price. Opening stock and client import are separate later exercises. | Admin, Owner | M | PR-03 |
+| FR-MIG-02 | Import validates required fields, repeated-name warnings, prices, flat-category mappings, UOM/conversion evidence and existing source/SKU mappings before commit. A canonical Product receives a required generated SKU; an unapproved ImportRow need not have one. Invalid rows remain in staging. | System | M | PR-03 |
 | FR-MIG-03 | Import supports a test-batch mode (import a small subset first) so the business can verify accuracy before the full 3,000–3,500 product catalogue is committed. | Admin, Owner | M | PR-03 |
 | FR-MIG-04 | Existing long-term client businesses can be pre-registered by admin (per `FR-CB-04`) as part of migration, including their historical discount arrangement, so no relationship "restarts from zero" at launch. | Admin, Owner | M | PR-03, CB-06 |
 
@@ -327,16 +333,20 @@ Every order must occupy exactly one of these statuses at a time. Transitions not
 | Pending Review | Pending Owner Approval | Pay-Later order exceeds available credit (see §9) | System |
 | Pending Owner Approval | Confirmed | Owner approves the credit exception | Owner |
 | Pending Owner Approval | Rejected | Owner declines the credit exception | Owner |
+| Pending Owner Approval | Cancelled | Customer withdraws or Owner closes the request before confirmation | Client Business User, Owner |
 | Confirmed | Change Requested | Customer submits an edit/cancellation request | Client Business User |
 | Change Requested | Confirmed | Admin rejects the change request (order proceeds as-is) | Admin, Owner |
 | Change Requested | Cancelled | Admin approves a cancellation request | Admin, Owner |
 | Change Requested | Confirmed (modified) | Admin approves an edit request | Admin, Owner |
 | Confirmed | Packed | Packing worker/admin marks order picked and packed | Packing Worker, Admin |
 | Packed | Out for Delivery | Admin dispatches order to a delivery worker | Admin, Owner |
-| Packed | Cancelled | Admin/Owner approves cancellation of an already-packed order (reason required; reverses stock/reservation and any related financial records; audit-logged) — `BR-ORDER-001` | Admin, Owner |
+| Packed | Return Pending Inspection | Admin/Owner approves cancellation; stock remains unavailable until warehouse physical confirmation | Admin, Owner |
 | Out for Delivery | Delivered | Delivery confirmed, payment (if applicable) collected | Delivery Worker (own assignment), Admin, Owner |
 | Out for Delivery | Failed Delivery | Delivery attempt unsuccessful; reason recorded | Delivery Worker (own assignment), Admin, Owner |
+| Out for Delivery | Return Pending Inspection | Cancellation is approved after dispatch; goods remain in transit/unavailable | Admin, Owner |
 | Failed Delivery | Out for Delivery | Redelivery attempt scheduled | Admin, Owner |
+| Failed Delivery | Return Pending Inspection | Goods are being returned rather than retried | Admin, Owner |
+| Return Pending Inspection | Cancelled | Warehouse receipt, inspection, inventory movement and financial adjustments complete | Packing Worker, Admin, Owner |
 
 Every transition is written to the audit log (`FR-SEC-02`) with actor and timestamp. Customers see a simplified version of this state machine (Placed → Confirmed → Preparing → Out for Delivery → Delivered), matching PRD §5.1's order tracking feature. *(v1.3: delivery-outcome and packed-cancellation rows updated per `docs/db/phase2answers.md` Section 10 — BR-DEL-001 and BR-ORDER-001.)*
 
@@ -344,17 +354,18 @@ Every transition is written to the audit log (`FR-SEC-02`) with actor and timest
 
 ## 8. Pricing Resolution — Detailed Logic
 
-When any price is displayed or calculated (catalogue, cart, checkout, reorder), the system evaluates in this fixed order and stops at the first match:
+When any price is displayed or calculated (catalogue, cart, checkout, reorder), the backend evaluates the selected ProductPackaging in this fixed order and stops at the first match:
 
-1. **Customer-specific negotiated price** — an explicit fixed price set for this exact client business + product combination (`FR-PRC-03`).
-2. **Customer-group / category pricing rule** — a discount or fixed price set for this client business on a category or set of products (`FR-PRC-03`).
-3. **Customer's default account-wide discount** — the single percentage discount assigned at approval (`FR-PRC-02`), applied to the product's **wholesale price**.
-4. **Wholesale selling price** — an approved wholesale account with no extra negotiated discount pays this price directly.
-5. **Standard/retail selling price** — the fallback price, used for guests, unapproved accounts, and any product with no customer-specific rule.
+1. **Fixed client-specific price** — an explicit final price for the client business + ProductPackaging; no discount is added.
+2. **Product-level discount** — the matching percentage rule for the client business and Product.
+3. **Category-level discount** — the matching percentage rule for the client business and flat Category.
+4. **Account-level discount** — the matching percentage rule for the client business.
+5. **Wholesale price** — the positive effective wholesale ProductPackaging price for an approved wholesale account.
+6. **Retail fallback** — the positive effective retail ProductPackaging price. Wholesale-account fallback must expose an admin warning.
 
-Guests and pending/unapproved accounts always resolve to step 5 regardless of any rules that might exist (there should be none, since discounts are only assignable to approved businesses). This logic must be applied identically wherever a price is shown or calculated — catalogue listing, product detail, cart, checkout, invoice, and reorder — to prevent price mismatches between screens.
+Only one discount applies; discounts never stack. Percentage discounts use the appropriate positive base price. Guests and pending/unapproved accounts use a positive retail price. A package with no positive applicable price is not orderable. OrderItem permanently snapshots SKU/name, package, unit, conversion, base price, applied rule, tax treatment and totals so later catalogue changes cannot alter the order.
 
-*(v1.3 — database design pass: step 4 added. Product now stores `wholesalePrice` and `retailPrice` as two independent real numbers rather than one base price with a discount on top; see BRD PR-01/CD-01 and TRD §6.)*
+ProductPackaging prices are independently entered and effective-dated. Dividing or multiplying prices by the packaging conversion is prohibited backend behaviour.
 
 ---
 
@@ -436,4 +447,3 @@ This FRD should be reviewed alongside the BRD before the TRD (technical architec
 |---|---|---|---|
 | | Owner, Raza Stationers | | |
 | Ahmed | Product Owner | | |
-

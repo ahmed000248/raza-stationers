@@ -6,8 +6,8 @@
 %% - packages/api is the existing shared HTTP client, not the server.
 %% - apps/admin contains implemented pages but still reads mock data.
 %% - apps/mobile is a package placeholder; React Native/Expo is planned.
-%% - object storage is for payment receipts and client documents, not product photos.
-%% - Phase 2 has DECIDED/RECOMMENDED/UNKNOWN answers, not complete owner sign-off.
+%% - Phase 4 schema v0.1 has no active file-storage subsystem.
+%% - Ahmed approved demo rules; production still requires business-owner review.
 %% - the documented environment model is local + demo + production; separate staging is TBD.
 
 flowchart TB
@@ -90,20 +90,18 @@ flowchart TB
 
   subgraph DATA["4. Data layer"]
     direction LR
-    SCHEMA["Prisma schema<br/>Existing: 21 models<br/>packages/db/prisma/schema.prisma"]
+    SCHEMA["Phase 4 Prisma schema v0.1<br/>48 models / 39 enums<br/>formatted and validated; no migration"]
     PRISMA["Prisma ORM runtime<br/>Planned backend-only access"]
     POSTGRES[("PostgreSQL / Supabase<br/>Planned; no connected business DB")]
-    STORAGE[("Object storage<br/>Planned: payment receipts<br/>and client documents only")]
-    STAGING[("Import staging area<br/>Proposed: ImportBatch / ImportRow / ImportError<br/>not in the current schema")]
-    AUDITDATA[("Audit records<br/>AuditLog model exists in schema;<br/>runtime persistence planned")]
+    STORAGE[("File storage<br/>Deferred: documents, product images<br/>and delivery-proof files")]
+    STAGING[("Import staging models<br/>ImportBatch / ImportRow / ImportIssue<br/>SourceRecordMapping")]
+    AUDITDATA[("AuditLog event model<br/>creation, redaction and append-only<br/>require service + PostgreSQL work")]
   end
 
   SERVICES -->|all business data access| PRISMA
   SCHEMA -.->|defines generated client and migrations| PRISMA
   PRISMA -->|queries and transactions| POSTGRES
-  CLIENTM -->|document metadata and URLs| PRISMA
-  CLIENTM -.->|planned file upload| STORAGE
-  PAYM -.->|planned receipt upload| STORAGE
+  CLIENTM -.->|future separately approved files| STORAGE
   AUDITM -->|sensitive mutations| AUDITDATA
   AUDITDATA -->|stored with business data| POSTGRES
   IMPORTM -->|validate and review| STAGING
@@ -115,7 +113,7 @@ flowchart TB
     XLSX["RS-Database.xlsx<br/>Existing source<br/>2,156 products; 87 categories;<br/>136 review-queue rows"]
     INVO["Invo Retailer export<br/>TBD: stable codes, price units,<br/>package conversions and opening stock"]
     SUPAAUTH["Supabase Auth<br/>Planned demo provider<br/>MFA intended for Owner/Admin"]
-    PAYPROVIDERS["Easypaisa / JazzCash / NayaPay / bank<br/>TBD merchant accounts;<br/>manual proof flow for v1"]
+    PAYPROVIDERS["Easypaisa / JazzCash / bank<br/>Gateways deferred;<br/>manual verification in v1"]
     MESSAGES["SMS / WhatsApp / email provider<br/>TBD; OTP and external messaging deferred"]
     GITHUB["Private GitHub repository and Actions<br/>Documented external platform;<br/>local repository has an origin"]
     MONITOR["Sentry and uptime monitoring<br/>Optional/TBD for demo;<br/>required for production"]

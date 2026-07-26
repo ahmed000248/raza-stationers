@@ -40,13 +40,12 @@ Raza Stationers is a wholesale/retail stationery business (registers, stationery
 1. **Stock arrives** → admin logs it into the system → product marked "in stock" / "restocked" live on the site → optional push notification to subscribed customers (especially top-tier wholesale customers).
 2. **Customer browses catalog** (categories, search, filters) → adds items to cart → checks out.
 3. **At checkout, customer selects:**
-   - Pay online now (Easypaisa / JazzCash / NayaPay / bank app)
-   - Cash on delivery
-   - **Pay later (loan)** — requests credit from the owner; if approved, order proceeds and the amount owed is recorded against the customer's profile and in the admin panel as an outstanding balance/reminder.
+   - Cash, Bank Transfer, Easypaisa, JazzCash, or Cash on Delivery (manual verification in v1)
+   - **Approved client credit** — an optional ClientBusiness ledger facility, not a cash PaymentMethod; over-limit orders require recorded Owner approval.
 4. **Order appears in Admin Panel** → admin reviews and confirms → system generates a printable order slip (replaces the handwritten paper) → slip printed and handed to the delivery worker.
-5. **Delivery worker fulfills** the order using the printed slip (Phase 1 does not require the worker to use the app directly — see Phase 2+ in the roadmap for a worker-facing app view).
-6. **Payment status updates**: if paid online, marked paid automatically; if cash/loan, admin marks it manually once settled.
-7. **System updates stock, sales analytics, and accounting** automatically from the confirmed order.
+5. **Delivery worker fulfills** the currently assigned DeliveryAttempt and may update only that assignment; Admin/Owner can reassign or override with a recorded reason.
+6. **Payment status updates** are manually verified in v1; unverified payments do not affect invoice or client-credit balances.
+7. **System reserves stock on confirmation and deducts it on packing**, then updates sales/accounting records from preserved order and invoice events.
 
 ## 5. Feature List
 
@@ -57,7 +56,7 @@ Raza Stationers is a wholesale/retail stationery business (registers, stationery
 - Live stock status per product ("In Stock", "Low Stock", "Out of Stock")
 - Push notifications: restock alerts, order status updates (for customers using the app)
 - Cart & checkout
-- Payment method selection: online (Easypaisa/JazzCash/NayaPay), cash on delivery, pay-later request
+- Payment-channel selection: Cash, Bank Transfer, Easypaisa, JazzCash or Cash on Delivery; optional approved client credit is handled separately through its ledger
 - Order tracking (Placed → Confirmed → Out for Delivery → Delivered)
 - Order history
 - "Become a Verified Customer" request — customer submits basic profile info; goes to admin for approval
@@ -105,10 +104,10 @@ Raza Stationers is a wholesale/retail stationery business (registers, stationery
 ## 9. Open Questions (for your dad's input before finalizing)
 
 1. Should guests be able to see the catalog and prices without signing up, or is login required upfront? (Affects the sitemap.)
-2. Should "pay later" have a credit limit per customer, or is it fully case-by-case/manual each time?
+2. Resolved provisionally: credit is optional per ClientBusiness, Owner-approved, limit-based, ledger-derived, and over-limit Orders require a recorded Owner decision.
 3. Do you want fixed discount tier *names* (e.g. "Gold/Silver/Bronze") shown to customers, or just a raw percentage with no label?
 4. For accounting — is "money out" limited to restocking costs, or should it also include shop expenses (rent, salaries, utilities)?
-5. Should delivery workers get their own login to update "delivered" status, or does the admin mark that manually in v1?
+5. Resolved provisionally: delivery workers update only their current assigned attempt; Admin/Owner can reassign or override with history.
 
 ---
 

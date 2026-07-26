@@ -1,58 +1,89 @@
-%% Raza Stationers - Imports and audit conceptual ERD v0.1
-%% Raw rows and validation findings are retained. Only approved rows cross
-%% into canonical data, and every mapping remains traceable to its source.
-
 erDiagram
-    USER ||--o{ IMPORT_BATCH : uploads
-    IMPORT_BATCH ||--|{ IMPORT_ROW : contains
+    USER ||--o{ IMPORT_BATCH : uploads_approves_commits
+    IMPORT_BATCH ||--|{ IMPORT_ROW : retains_raw_rows
     IMPORT_ROW ||--o{ IMPORT_ISSUE : reports
-    IMPORT_ROW ||--o{ SOURCE_RECORD_MAPPING : maps
-    PRODUCT ||--o{ SOURCE_RECORD_MAPPING : created_from
-    CATEGORY ||--o{ SOURCE_RECORD_MAPPING : created_from
-    PRODUCT_PACKAGING ||--o{ SOURCE_RECORD_MAPPING : created_from
-    PRODUCT_PRICE ||--o{ SOURCE_RECORD_MAPPING : created_from
-
-    USER ||--o{ AUDIT_LOG : acts_in
-    IMPORT_BATCH ||--o{ AUDIT_LOG : audited_by
+    IMPORT_ROW ||--o{ SOURCE_RECORD_MAPPING : maps_to_canonical
+    SOURCE_RECORD_MAPPING }o--o| CATEGORY : one_possible_target
+    SOURCE_RECORD_MAPPING }o--o| PRODUCT : one_possible_target
+    SOURCE_RECORD_MAPPING }o--o| PRODUCT_PACKAGING : one_possible_target
+    SOURCE_RECORD_MAPPING }o--o| PRODUCT_PRICE : one_possible_target
+    USER ||--o{ AUDIT_LOG : actor
 
     IMPORT_BATCH {
-        string id
-        string filename
-        string sha256
-        string status
+        string id PK
+        string originalFilename
+        string sha256 "64 hex chars"
+        ImportBatchStatus status
         int totalRows
         int validRows
         int warningRows
         int invalidRows
-        int importedRows
+        string uploadedById FK
+        string approvedById FK
+        string committedById FK
+        datetime createdAt
+        datetime committedAt
     }
     IMPORT_ROW {
-        string id
-        string sheetName
-        int sourceRow
-        json rawValues
-        string validationStatus
-        string importStatus
+        string id PK
+        string importBatchId FK
+        string sourceSheet
+        int sourceRowNumber
+        json rawData
+        json normalizedData
+        ImportValidationStatus validationStatus
+        ImportCommitStatus commitStatus
     }
     IMPORT_ISSUE {
-        string id
+        string id PK
+        string importRowId FK
+        ImportIssueSeverity severity
         string code
-        string severity
+        string fieldName
         string message
-        string resolutionStatus
+        string resolvedById FK
+        datetime resolvedAt
     }
     SOURCE_RECORD_MAPPING {
-        string id
-        string canonicalEntityType
-        string canonicalEntityId
-        datetime mappedAt
+        string id PK
+        string importRowId FK
+        string categoryId FK
+        string productId FK
+        string productPackagingId FK
+        string productPriceId FK
+    }
+    PRODUCT {
+        string id PK
+        string sku UK "required after canonical commit"
+        ProductStatus status
+    }
+    PRODUCT_PACKAGING {
+        string id PK
+        ConfirmationStatus confirmationStatus
+        boolean isActive
+    }
+    PRODUCT_PRICE {
+        string id PK
+        decimal amount
+        datetime effectiveFrom
+        datetime effectiveTo
+    }
+    CATEGORY {
+        string id PK
+        string name UK
     }
     AUDIT_LOG {
-        string id
-        string actionType
+        string id PK
+        string actorId FK
+        string action
         string entityType
         string entityId
-        json previousValue
-        json newValue
+        json beforeData "service-redacted"
+        json afterData "service-redacted"
         datetime createdAt
     }
+
+%% Exactly one SourceRecordMapping target requires a future PostgreSQL CHECK.
+%% Exact duplicate committed SHA-256 values require a future partial unique index.
+%% Staging/history survives canonical transaction rollback.
+%% Prisma does not enforce audit creation, redaction or append-only behaviour.

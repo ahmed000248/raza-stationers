@@ -1,9 +1,9 @@
 flowchart TB
   subgraph ORIGINAL["Original Sources"]
     direction LR
-    OWNER["Business-owner knowledge<br/>Owner-confirmed source when documented<br/>No signed answer set available"]
+    OWNER["Ahmed-approved demo rules<br/>Business-owner production review pending<br/>No production values invented"]
     INVO["Invo Retailer export<br/>Missing / TBD<br/>Potential codes, stock and units"]
-    PDF["WS RATE LIST.pdf<br/>Primary business source<br/>Names + wholesale prices<br/>Not present in repository"]
+    PDF["WS RATE LIST.pdf<br/>Present: 60 pages<br/>Names + wholesale prices<br/>No reliable retail price or barcode"]
     IMAGES["Product images<br/>Not used in v1<br/>No-product-photography decision"]
     WEBMOCK["Storefront product mocks<br/>UI mock source only"]
     ADMINMOCK["Admin catalogue/import mocks<br/>UI mock source only"]
@@ -14,7 +14,7 @@ flowchart TB
     EXTRACT["PDF extraction<br/>2,156 displayed rows<br/>Names preserved as displayed"]
     WORKBOOK["RS-Database.xlsx<br/>Derived / cleaned workbook<br/>Not final source of truth"]
     CATEGORIES["87 inferred categories<br/>Provisional classification"]
-    SALESTYPE["Sales Type inference<br/>1,986 Both / 170 Wholesale-Bulk<br/>Owner confirmation required"]
+    SALESTYPE["Provisional source classification<br/>1,986 Both / 170 Wholesale-Bulk<br/>Does not authorise package sales"]
     REVIEWQ["Review Queue<br/>136 unique rows"]
     DOCS["PRD / BRD / FRD / TRD<br/>Requirements reference<br/>AI-assisted drafts"]
   end
@@ -34,7 +34,7 @@ flowchart TB
     FILECHECK["File validation<br/>type, headers, encoding,<br/>required columns"]
     HASH["SHA-256 file hash<br/>Repeatable file identity"]
     PRIOR["Previously imported?<br/>Compare file hash"]
-    BATCH["ImportBatch<br/>Proposed, not implemented"]
+    BATCH["ImportBatch<br/>Modelled in schema v0.1"]
     RAW["Raw ImportRows<br/>Preserve original values,<br/>file, sheet and row number"]
   end
 
@@ -87,7 +87,7 @@ flowchart TB
     CATMAP["Confirm category mapping"]
     UNITMAP["Confirm base units,<br/>packaging and conversions"]
     PRICEBASIS["Confirm price basis<br/>piece, pack, jar, box or carton"]
-    SKUCONFIRM["Confirm Invo code/barcode<br/>or approve generated SKU"]
+    SKUCONFIRM["Generate required stable SKU<br/>RS-000001 sequence<br/>never from name/category"]
     FINALAPPROVAL["Final import approval<br/>No automatic public activation"]
   end
 
@@ -106,13 +106,13 @@ flowchart TB
   subgraph CANONICAL["Canonical Catalogue - Conceptual Destination"]
     direction LR
     COMMIT["Approved import transaction<br/>Only approved rows cross boundary"]
-    CATDEST["Categories"]
+    CATDEST["Flat Categories<br/>hierarchy deferred"]
     PRODUCTDEST["Products / independent SKUs"]
-    UNITDEST["Units and packaging"]
-    PRICEDEST["Wholesale prices<br/>Retail/buying prices when supplied"]
+    UNITDEST["Confirmed UOM + ProductPackaging<br/>explicit base-unit conversions"]
+    PRICEDEST["Independent effective-dated<br/>package wholesale/retail prices"]
     ALIASDEST["Product aliases / shop names"]
     VARIANTNOTE["Variants<br/>Separate Product SKUs in v1<br/>No Variant table approved"]
-    BRANDNOTE["Brands<br/>No source column<br/>Structured brand is out of v1 scope"]
+    BRANDNOTE["Brand + barcode<br/>No reliable source columns<br/>Deferred from schema v0.1"]
     IMAGENOTE["Images<br/>Intentionally excluded from v1"]
     PROVENANCE["Source provenance<br/>batch, file hash, sheet,<br/>source row and approval"]
   end

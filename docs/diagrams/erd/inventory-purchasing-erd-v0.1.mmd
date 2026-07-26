@@ -1,61 +1,86 @@
-%% Raza Stationers - Inventory and purchasing conceptual ERD v0.1
-%% Stock uses one active location in v1. Supplier and purchasing entities
-%% remain visible as a deferred boundary and are not demo implementation scope.
-
 erDiagram
     PRODUCT ||--|{ PRODUCT_PACKAGING : sold_as
-    UNIT_OF_MEASURE ||--o{ PRODUCT_PACKAGING : defines
-    STOCK_LOCATION ||--o{ STOCK_BALANCE : holds
-    PRODUCT ||--o{ STOCK_BALANCE : summarized_by
-    STOCK_LOCATION ||--o{ STOCK_MOVEMENT : records
-    PRODUCT ||--o{ STOCK_MOVEMENT : changes
-    ORDER_ITEM ||--o{ STOCK_RESERVATION : creates
-    STOCK_LOCATION ||--o{ STOCK_RESERVATION : holds
-    PRODUCT ||--o{ STOCK_RESERVATION : reserves
+    PRODUCT ||--o{ STOCK_BALANCE : projected_for
+    STOCK_LOCATION ||--o{ STOCK_BALANCE : contains
+    ORDER_ITEM ||--o{ STOCK_RESERVATION : reserves
+    PRODUCT ||--o{ STOCK_RESERVATION : base_unit_quantity
+    STOCK_LOCATION ||--o{ STOCK_RESERVATION : held_at
+    PRODUCT ||--o{ STOCK_MOVEMENT : moves
+    STOCK_LOCATION ||--o{ STOCK_MOVEMENT : occurs_at
+    STOCK_RESERVATION ||--o{ STOCK_MOVEMENT : consumed_or_released_by
+    ORDER_ITEM ||--o{ STOCK_MOVEMENT : order_source
+    CANCELLATION ||--o{ STOCK_MOVEMENT : reversal_source
+    RETURN_ITEM ||--o{ STOCK_MOVEMENT : return_source
+    DELIVERY_ATTEMPT ||--o{ STOCK_MOVEMENT : delivery_source
 
-    SUPPLIER ||--o{ SUPPLIER_PRODUCT : offers
-    PRODUCT ||--o{ SUPPLIER_PRODUCT : sourced_as
-    SUPPLIER ||--o{ PURCHASE_ORDER : receives
-    PURCHASE_ORDER ||--|{ PURCHASE_ORDER_ITEM : contains
-    PURCHASE_ORDER ||--o{ GOODS_RECEIPT : fulfilled_by
-    GOODS_RECEIPT ||--|{ GOODS_RECEIPT_ITEM : contains
-    GOODS_RECEIPT_ITEM ||--o{ STOCK_MOVEMENT : posts
-
+    PRODUCT {
+        string id PK
+        string sku UK
+        ProductStatus status
+    }
+    PRODUCT_PACKAGING {
+        string id PK
+        string productId FK
+        decimal conversionToBase "explicit"
+        boolean isBase
+    }
     STOCK_LOCATION {
-        string id
-        string name
-        boolean isActive
+        string id PK
+        string code UK
+        boolean isActive "only one active in v1"
     }
     STOCK_BALANCE {
-        string id
-        decimal onHand
-        decimal reserved
-        decimal damaged
-    }
-    STOCK_MOVEMENT {
-        string id
-        decimal quantity
-        string movementType
-        string condition
-        datetime createdAt
+        string id PK
+        string productId FK
+        string stockLocationId FK
+        decimal onHandQuantity "sellable physical"
+        decimal reservedQuantity "subset of onHand"
+        decimal unavailableQuantity "packed or inspection pending"
+        decimal inTransitQuantity "dispatched business-owned"
+        decimal damagedQuantity "inspected damaged"
     }
     STOCK_RESERVATION {
-        string id
+        string id PK
+        string orderItemId FK
+        string productId FK
+        string stockLocationId FK
+        decimal quantityBase
+        StockReservationStatus status
+    }
+    STOCK_MOVEMENT {
+        string id PK
+        string productId FK
+        string stockLocationId FK
+        decimal quantityBase
+        StockBucket fromBucket
+        StockBucket toBucket
+        StockMovementType movementType
+        string createdById FK
+        datetime occurredAt
+    }
+    ORDER_ITEM {
+        string id PK
         decimal baseQuantity
-        string status
     }
-    SUPPLIER {
-        string id
-        string name
-        string status
+    CANCELLATION {
+        string id PK
+        CancellationStatus status
     }
-    PURCHASE_ORDER {
-        string id
-        string status
-        datetime orderedAt
+    RETURN_ITEM {
+        string id PK
+        decimal baseQuantity
+        InventoryCondition condition
+        StockBucket destination
     }
-    GOODS_RECEIPT {
-        string id
-        string receiptNumber
-        datetime receivedAt
+    DELIVERY_ATTEMPT {
+        string id PK
+        DeliveryAttemptStatus status
+        InventoryCondition inspectionOutcome
     }
+
+%% available is calculated as onHand - reserved and is not stored.
+%% total business-owned inventory is onHand + unavailable + inTransit + damaged.
+%% reserved is not added because it is already part of onHand.
+%% Every quantity and movement uses the Product base unit.
+%% Supplier, purchasing, purchase-order and goods-receipt systems are deferred
+%% and intentionally omitted from the active Phase 4 v0.1 ERD.

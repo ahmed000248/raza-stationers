@@ -1,57 +1,113 @@
-%% Raza Stationers - Phase 3 master conceptual ERD v0.1
-%% Approved for review only. This is not a physical Prisma schema.
-%% Product represents an independently stocked, SKU-level sellable item.
-
 erDiagram
     USER ||--o| STAFF_PROFILE : has
-    USER ||--o{ BUSINESS_USER_LINK : holds
-    CLIENT_BUSINESS ||--o{ BUSINESS_USER_LINK : authorizes
-    CLIENT_BUSINESS ||--o{ CLIENT_APPROVAL_DECISION : undergoes
-    CLIENT_BUSINESS ||--o| CLIENT_CREDIT_ACCOUNT : may_have
+    USER ||--o{ BUSINESS_USER_LINK : linked_by_history
+    CLIENT_BUSINESS ||--o{ BUSINESS_USER_LINK : has_users
+    CLIENT_BUSINESS ||--o{ CLIENT_BUSINESS_APPROVAL : reviewed_by_owner
+    CLIENT_BUSINESS ||--o| CLIENT_CREDIT_ACCOUNT : optionally_has
+    CLIENT_CREDIT_ACCOUNT ||--o{ CLIENT_CREDIT_LIMIT_CHANGE : retains
+    CLIENT_CREDIT_ACCOUNT ||--o{ CREDIT_LEDGER_ENTRY : derives_balance_from
 
-    CATEGORY ||--o{ PRODUCT : classifies
-    PRODUCT ||--o{ PRODUCT_ALIAS : has
+    CATEGORY ||--o{ PRODUCT : flat_classifies
+    PRODUCT ||--o{ PRODUCT_ALIAS : searchable_as
     PRODUCT ||--|{ PRODUCT_PACKAGING : sold_as
-    UNIT_OF_MEASURE ||--o{ PRODUCT_PACKAGING : defines
-    PRODUCT_PACKAGING ||--o{ PRODUCT_PRICE : priced_by
-
-    CLIENT_BUSINESS ||--o{ DISCOUNT_RULE : negotiates
+    UNIT_OF_MEASURE ||--o{ PRODUCT_PACKAGING : describes
+    PRODUCT_PACKAGING ||--o{ PRODUCT_PRICE : effective_prices
     CLIENT_BUSINESS ||--o{ CLIENT_SPECIFIC_PRICE : receives
-    PRODUCT_PACKAGING ||--o{ CLIENT_SPECIFIC_PRICE : overrides
+    PRODUCT_PACKAGING ||--o{ CLIENT_SPECIFIC_PRICE : fixed_for
+    CLIENT_BUSINESS ||--o{ DISCOUNT_RULE : owns
+    CATEGORY ||--o{ DISCOUNT_RULE : optional_target
+    PRODUCT ||--o{ DISCOUNT_RULE : optional_target
+
+    STOCK_LOCATION ||--o{ STOCK_BALANCE : projects
+    PRODUCT ||--o{ STOCK_BALANCE : balanced_in_base_unit
+    PRODUCT ||--o{ STOCK_RESERVATION : reserved_in_base_unit
+    STOCK_LOCATION ||--o{ STOCK_RESERVATION : reserves_at
+    PRODUCT ||--o{ STOCK_MOVEMENT : moves_in_base_unit
+    STOCK_LOCATION ||--o{ STOCK_MOVEMENT : occurs_at
 
     CLIENT_BUSINESS ||--o{ ORDER : places
-    USER ||--o{ ORDER : submits
-    ORDER ||--|{ ORDER_ITEM : contains
-    PRODUCT_PACKAGING ||--o{ ORDER_ITEM : snapshots
+    ORDER ||--|{ ORDER_ITEM : snapshots
     ORDER ||--o{ ORDER_STATUS_HISTORY : records
     ORDER ||--o{ ORDER_CHANGE_REQUEST : receives
     ORDER ||--o| CANCELLATION : may_have
-    ORDER ||--o| INVOICE : produces
+    ORDER_ITEM ||--o{ STOCK_RESERVATION : produces
+    ORDER_ITEM ||--o{ STOCK_MOVEMENT : sources
+    ORDER ||--o| ORDER_CREDIT_APPROVAL : may_require
 
-    CLIENT_BUSINESS ||--o{ PAYMENT : makes
-    PAYMENT ||--o{ PAYMENT_ALLOCATION : allocates
+    ORDER ||--o| INVOICE : invoiced_once
     INVOICE ||--o{ PAYMENT_ALLOCATION : receives
-    CLIENT_CREDIT_ACCOUNT ||--o{ CREDIT_LEDGER_ENTRY : records
-
-    STOCK_LOCATION ||--o{ STOCK_BALANCE : holds
-    PRODUCT ||--o{ STOCK_BALANCE : summarized_by
-    PRODUCT ||--o{ STOCK_MOVEMENT : changes
-    ORDER_ITEM ||--o{ STOCK_RESERVATION : reserves
-
-    ORDER ||--o{ RETURN : may_have
+    PAYMENT ||--o{ PAYMENT_ALLOCATION : allocates
+    INVOICE ||--o{ CREDIT_NOTE : adjusted_by
+    INVOICE ||--o{ RETURN : supports
+    ORDER ||--o{ RETURN : has
     RETURN ||--|{ RETURN_ITEM : contains
-    ORDER_ITEM ||--o{ RETURN_ITEM : references
-    RETURN ||--o{ REFUND : resolves
+    ORDER_ITEM ||--o{ RETURN_ITEM : returned_against
+    RETURN ||--o{ REFUND : may_generate
+    CREDIT_NOTE ||--o{ REFUND : may_fund
+    PAYMENT ||--o{ REFUND : original_method
 
-    ORDER ||--o{ DELIVERY : fulfilled_by
-    DELIVERY_ZONE ||--o{ DELIVERY : governs
-    DELIVERY ||--o{ DELIVERY_ASSIGNMENT : assigned_through
-    USER ||--o{ DELIVERY_ASSIGNMENT : receives
-    DELIVERY ||--o{ DELIVERY_STATUS_HISTORY : records
+    ORDER ||--o| DELIVERY : fulfilled_by
+    DELIVERY_ZONE ||--o{ DELIVERY : configures
+    DELIVERY ||--|{ DELIVERY_ATTEMPT : retries_as
+    DELIVERY_ATTEMPT ||--o{ DELIVERY_ASSIGNMENT : assignment_history
+    DELIVERY_ATTEMPT ||--o{ DELIVERY_ATTEMPT_STATUS_HISTORY : status_history
+    DELIVERY_ATTEMPT ||--o{ STOCK_MOVEMENT : traces_inventory
 
-    IMPORT_BATCH ||--|{ IMPORT_ROW : contains
+    IMPORT_BATCH ||--|{ IMPORT_ROW : stages
     IMPORT_ROW ||--o{ IMPORT_ISSUE : reports
     IMPORT_ROW ||--o{ SOURCE_RECORD_MAPPING : maps
-    PRODUCT ||--o{ SOURCE_RECORD_MAPPING : originates_from
+    SOURCE_RECORD_MAPPING }o--o| CATEGORY : canonical_target
+    SOURCE_RECORD_MAPPING }o--o| PRODUCT : canonical_target
+    SOURCE_RECORD_MAPPING }o--o| PRODUCT_PACKAGING : canonical_target
+    SOURCE_RECORD_MAPPING }o--o| PRODUCT_PRICE : canonical_target
 
+    USER ||--o{ NOTIFICATION : receives
+    USER ||--o{ NOTIFICATION_SUBSCRIPTION : configures
     USER ||--o{ AUDIT_LOG : acts_in
+    USER ||--o{ EXPENSE_ENTRY : records
+
+    CATEGORY {
+        string id PK
+        string name UK
+        string slug UK
+        boolean isActive
+    }
+    PRODUCT {
+        string id PK
+        bigint skuNumber UK
+        string sku UK "required RS-000001"
+        string categoryId FK
+        ProductStatus status
+        boolean allowIndividualSale
+    }
+    PRODUCT_PACKAGING {
+        string id PK
+        string productId FK
+        string unitOfMeasureId FK
+        decimal conversionToBase
+        boolean isBase
+        ConfirmationStatus confirmationStatus
+    }
+    STOCK_BALANCE {
+        decimal onHandQuantity
+        decimal reservedQuantity "subset of onHand"
+        decimal unavailableQuantity
+        decimal inTransitQuantity
+        decimal damagedQuantity
+    }
+    ORDER_ITEM {
+        decimal quantity
+        decimal baseQuantity
+        decimal unitPriceSnapshot
+        decimal lineTotalSnapshot
+    }
+    AUDIT_LOG {
+        string id PK
+        string actorId FK
+        json beforeData "redacted by service"
+        json afterData "redacted by service"
+        datetime createdAt
+    }
+
+%% Category hierarchy, Barcode, Brand, ProductImage, suppliers/purchasing,
+%% file uploads and multi-warehouse workflows are deferred from schema v0.1.

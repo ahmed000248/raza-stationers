@@ -93,7 +93,7 @@ The platform must:
 - Customer-facing website: catalogue, search/filter, cart, checkout, order history, reorder.
 - Customer accounts tied to **client businesses** (see Section 15), with owner-approval workflow.
 - Admin panel: order management, product/stock management, customer & business management, discount/credit management, delivery tracking, basic accounting and reports.
-- Manual/offline-verified payments (cash on delivery, bank transfer with receipt upload) from day one; direct payment gateway integration (Easypaisa/JazzCash/NayaPay) as soon as merchant accounts are available.
+- Manual/offline-verified payments (Cash, Bank Transfer, Easypaisa, JazzCash and Cash on Delivery) from day one; payment gateways and receipt-file uploads are deferred.
 - Pay-later (credit) tracking with credit limits and balances.
 - Low-stock and restock alerts for admin; opt-in restock notifications for customers.
 - Bilingual interface basics (simple English + Urdu on key elements).
@@ -164,7 +164,7 @@ This process has no digital record, no live stock visibility, and relies entirel
 
 In addition, the owner/admin can assign a **custom discount percentage or special price** to any individual customer, overriding the tier default. This reflects how real relationships (e.g. a 20-year customer) don't always map cleanly to a fixed tier.
 
-> **Database design update (v1.5):** each product now stores two independent, real prices — `retailPrice` and `wholesalePrice` — rather than a single base price with a discount percentage applied on top. Tier 1 (Standard Customer) resolves to `retailPrice`. Tier 2 (Regular Wholesale Customer) resolves to `wholesalePrice` by default. Tier 3 (Special/Long-Term Wholesale Customer) is `wholesalePrice` minus that account's negotiated discount/fixed price. This was decided once the real rate list (2,156 items) showed wholesale and retail are genuinely different observed numbers for the business, not one derived from the other by a formula. See PR-01 below.
+> **Phase 4 database design update (v0.1):** prices belong to a Product's confirmed selling package, not directly to Product. Retail and wholesale package prices are independently entered and effective-dated. A piece price is never derived by dividing a package price, and a package price is never calculated as `base price × conversion`. Product identifies the stock-distinguishing SKU; ProductPackaging defines the ways that shared base inventory can be sold. See PR-01 and PR-02 below.
 
 **CD-02 — Discount scope.** Every approved customer has a default account-wide discount percentage. In Version 1, this single account-wide discount is the primary mechanism. The admin can additionally set different discounts or special fixed prices for specific products or categories (e.g. 10% general discount, 5% on sports items, a fixed price on registers) — this product/category-level rule capability ships in v1 as a manual admin override, with a fully automated rules engine planned for a later phase.
 
@@ -205,7 +205,7 @@ Changing a discount does **not** retroactively affect orders that were already c
 
 **PY-02 — Late payment handling.** The system sends reminders before and after the due date. The owner can suspend further credit orders for a customer while still allowing cash or online payment orders to continue. No automatic penalty or late fee is applied unless Raza Stationers confirms it already follows such a policy.
 
-**PY-03 — Payment methods and merchant accounts.** It is not yet confirmed whether Raza Stationers has (or can open) business merchant accounts with Easypaisa, JazzCash, NayaPay, or bank transfer (e.g. Meezan Bank). Until direct gateway integration is approved and live, customers can manually transfer money and submit a transaction ID or upload a payment receipt for admin verification.
+**PY-03 — Payment methods and merchant accounts.** Version 1 supports Cash, Bank Transfer, Easypaisa, JazzCash and Cash on Delivery as manually recorded methods. Customers may submit a transaction/reference string for verification. Direct gateways and receipt-file uploads require separate future approval and are not part of schema v0.1. Client credit is a ledger facility, not a PaymentMethod.
 
 **PY-04 — Partial payment plus credit.** A customer may pay part of an order online/cash and put the remainder on credit, but only if they are an approved credit customer. The system records: total order amount, amount already paid, payment method, remaining balance, due date, and any later payments made against that balance. The remaining balance cannot exceed the customer's available credit without owner approval.
 
@@ -229,19 +229,20 @@ Changing a discount does **not** retroactively affect orders that were already c
 
 ## 11. Products & Catalogue
 
-**PR-01 — Price priority.** The system maintains two stored prices per product — a standard/retail selling price and a wholesale selling price — plus, once an approved customer has a negotiated discount, a further reduction off the wholesale price. When a customer views a price, the system applies this priority order:
+**PR-01 — Price priority.** The system stores independent, effective-dated retail and wholesale prices for each ProductPackaging record. When a customer views a price, the system applies this non-stacking priority order and stops at the first match:
 
 | Priority | Rule |
 |---|---|
-| 1 (highest) | Customer-specific negotiated price (fixed price for this business + product) |
-| 2 | Customer-group / category pricing rule (discount or fixed price for this business + category) |
-| 3 | Customer's default account-wide discount, applied to the **wholesale** price |
-| 4 | Wholesale selling price (approved wholesale account, no extra negotiated discount) |
-| 5 (lowest / fallback) | Standard/retail selling price (guest, walk-in, unapproved account) |
+| 1 (highest) | Fixed client-specific price for this business + ProductPackaging; this is already final |
+| 2 | Product-level percentage discount for this business |
+| 3 | Category-level percentage discount for this business |
+| 4 | Account-level percentage discount for this business |
+| 5 | Positive wholesale ProductPackaging price for an approved wholesale account |
+| 6 (fallback) | Positive retail ProductPackaging price; an approved-account fallback creates an admin warning |
 
-Only authorized users (owner/admin) can manually override a price outside these rules. *(v1.5: tier 4 added — previously an approved wholesale account with no custom discount had no distinct price and fell through to the standard/retail price, which didn't match CD-01's intent that Regular Wholesale Customers get their own tier.)*
+Only one discount applies; discounts never stack. Percentage discounts apply to the selected positive base price. A package with no positive applicable price is not orderable. Only authorized users can manage pricing rules, and all changes are historical/audited.
 
-**PR-02 — Variants and pack quantities.** Products may differ by brand, colour, size, page count, quality, and unit of sale (single unit, dozen, pack, bundle, carton). Every stock-tracked variation has its own SKU or barcode. The system understands unit conversions — e.g. 12 pieces per dozen, or a defined number of packs per carton — so stock and pricing stay consistent across units.
+**PR-02 — SKU, packaging and categories.** Every stock-distinguishing variation is a separate Product with a required, stable, unique business SKU such as `RS-000001`. The SKU is unrelated to name/category changes and is never reused. ProductPackaging records represent piece, dozen, packet, jar, box, ream or carton options sharing the Product's base inventory. Every Product has at least one package and exactly one confirmed base package. Conversions are explicitly supplied or manually confirmed and are never guessed. Sale eligibility comes from Product/ProductPackaging status, confirmed unit data, `allowIndividualSale`, stock and a positive applicable package price—not from the provisional import sales classification. Version 0.1 categories are flat. Category hierarchy, barcode, Brand, ProductImage and supplier/purchasing systems are future extensions only.
 
 **PR-03 — Bulk catalogue migration.** The existing 3,000–3,500 products will not be entered manually. Instead:
 
@@ -317,20 +318,18 @@ Admin can search and filter businesses by name, city, customer type, account sta
 - Phone and WhatsApp number
 - Email (if available)
 - Business address
-- Delivery addresses
+- One primary business/delivery address in v1; reusable address collections are deferred
 - City and delivery area
 - Business type (stationery shop, school, bookstore, office, distributor, etc.)
-- Tax/registration information (if applicable)
+- Optional NTN/CNIC tax/registration values when available
 - Customer relationship start date
 - Internal customer category
 - Assigned discount or special price list
-- Credit limit
-- Current outstanding balance
-- Available credit
-- Payment terms
+- Optional Owner-approved credit limit and credit days, stored only when credit is configured
+- Current exposure, available credit and balance derived from invoices, allocations and ledger entries
 - Account status
 - Internal notes
-- Uploaded documents (if required)
+- Document uploads are deferred from v1
 
 **CB-04 — Business history.** Every client business profile shows a complete history:
 
@@ -427,4 +426,3 @@ This document should be reviewed and approved by the business owner before desig
 |---|---|---|---|
 | | Owner, Raza Stationers | | |
 | Ahmed | Product Owner | | |
-

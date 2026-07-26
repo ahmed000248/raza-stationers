@@ -1,62 +1,95 @@
-%% Raza Stationers - Catalogue and pricing conceptual ERD v0.1
-%% Product is the SKU-level stock variant. Brand, ProductImage, PriceList,
-%% ClientPriceTier and a separate ProductVariant are outside the approved v1 model.
-
 erDiagram
-    CATEGORY ||--o{ PRODUCT : classifies
+    CATEGORY ||--o{ PRODUCT : flat_classifies
     PRODUCT ||--o{ PRODUCT_ALIAS : has
-    PRODUCT ||--|{ PRODUCT_PACKAGING : offers
-    UNIT_OF_MEASURE ||--o{ PRODUCT_PACKAGING : types
-    PRODUCT_PACKAGING ||--o{ PRODUCT_PRICE : has
-    CLIENT_BUSINESS ||--o{ DISCOUNT_RULE : owns
-    CATEGORY o|--o{ DISCOUNT_RULE : may_target
-    PRODUCT o|--o{ DISCOUNT_RULE : may_target
+    PRODUCT ||--|{ PRODUCT_PACKAGING : shares_base_inventory_across
+    UNIT_OF_MEASURE ||--o{ PRODUCT_PACKAGING : controls_fractional_quantity
+    PRODUCT_PACKAGING ||--o{ PRODUCT_PRICE : independently_priced_by_period
     CLIENT_BUSINESS ||--o{ CLIENT_SPECIFIC_PRICE : receives
-    PRODUCT_PACKAGING ||--o{ CLIENT_SPECIFIC_PRICE : overrides
+    PRODUCT_PACKAGING ||--o{ CLIENT_SPECIFIC_PRICE : final_fixed_price_for
+    CLIENT_BUSINESS ||--o{ DISCOUNT_RULE : owns
+    PRODUCT ||--o{ DISCOUNT_RULE : optional_product_target
+    CATEGORY ||--o{ DISCOUNT_RULE : optional_category_target
+    DISCOUNT_RULE ||--o{ DISCOUNT_CHANGE_LOG : retains_changes
 
     CATEGORY {
-        string id
-        string name
-        string status
+        string id PK
+        string name UK
+        string slug UK
+        boolean isActive
+        datetime archivedAt
     }
     PRODUCT {
-        string id
-        string sku
-        string officialName
-        string activationStatus
+        string id PK
+        bigint skuNumber UK
+        string sku UK "required stable SKU"
+        string categoryId FK
+        ProductStatus status
+        ConfirmationStatus unitConfirmationStatus
+        boolean allowIndividualSale "default false"
+        ProductPurchaseType purchaseType "provenance only"
     }
     PRODUCT_ALIAS {
-        string id
-        string alias
-        string aliasType
+        string id PK
+        string productId FK
+        string normalizedAlias
     }
     UNIT_OF_MEASURE {
-        string id
-        string code
-        string name
+        string id PK
+        string code UK
+        boolean allowsFractional
+        int decimalScale
     }
     PRODUCT_PACKAGING {
-        string id
-        boolean isBase
-        decimal conversionToBase
-        boolean allowIndividualSale
+        string id PK
+        string productId FK
+        string unitOfMeasureId FK
+        string code
+        decimal conversionToBase "explicit"
+        boolean isBase "exactly one per Product"
+        ConfirmationStatus confirmationStatus
+        boolean isActive
     }
     PRODUCT_PRICE {
-        string id
-        string priceType
-        decimal amount
+        string id PK
+        string productPackagingId FK
+        PriceType priceType
+        CurrencyCode currency "PKR"
+        decimal amount "14,2 positive"
+        datetime effectiveFrom
+        datetime effectiveTo
+    }
+    CLIENT_SPECIFIC_PRICE {
+        string id PK
+        string clientBusinessId FK
+        string productPackagingId FK
+        decimal amount "final nonstacking"
         datetime effectiveFrom
         datetime effectiveTo
     }
     DISCOUNT_RULE {
-        string id
-        string scope
-        decimal discountPercent
+        string id PK
+        string clientBusinessId FK
+        DiscountScope scope
+        string productId FK
+        string categoryId FK
+        decimal discountPercent "5,2"
         boolean isActive
     }
-    CLIENT_SPECIFIC_PRICE {
-        string id
-        decimal amount
-        datetime effectiveFrom
-        datetime effectiveTo
+    DISCOUNT_CHANGE_LOG {
+        string id PK
+        string discountRuleId FK
+        decimal oldPercent
+        decimal newPercent
+        string changedById FK
+        datetime createdAt
     }
+    CLIENT_BUSINESS {
+        string id PK
+        string businessName
+        string accountStatus
+    }
+
+%% Precedence: fixed client price, product discount, category discount,
+%% account discount, wholesale price, retail fallback. Only one discount.
+%% Package prices are never derived from conversion. Category is flat.
+%% Barcode, Brand and ProductImage are deferred from v0.1.

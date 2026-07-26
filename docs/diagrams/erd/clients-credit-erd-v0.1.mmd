@@ -1,65 +1,90 @@
-%% Raza Stationers - Clients, credit and payments conceptual ERD v0.1
-%% Balances are ledger-derived. Payments and invoices are related through
-%% allocations so partial and cross-invoice payments remain traceable.
-
 erDiagram
-    USER ||--o{ BUSINESS_USER_LINK : holds
-    CLIENT_BUSINESS ||--o{ BUSINESS_USER_LINK : authorizes
-    CLIENT_BUSINESS ||--o{ CLIENT_APPROVAL_DECISION : undergoes
-    CLIENT_BUSINESS ||--o| CLIENT_CREDIT_ACCOUNT : may_have
-    CLIENT_CREDIT_ACCOUNT ||--o{ CREDIT_LEDGER_ENTRY : records
+    USER ||--o{ BUSINESS_USER_LINK : linked_history
+    CLIENT_BUSINESS ||--o{ BUSINESS_USER_LINK : has_users
+    CLIENT_BUSINESS ||--o{ CLIENT_BUSINESS_APPROVAL : reviewed
+    CLIENT_BUSINESS ||--o| CLIENT_CREDIT_ACCOUNT : optionally_has
+    CLIENT_CREDIT_ACCOUNT ||--o{ CLIENT_CREDIT_LIMIT_CHANGE : limit_history
+    CLIENT_CREDIT_ACCOUNT ||--o{ ORDER_CREDIT_APPROVAL : exception_history
+    CLIENT_CREDIT_ACCOUNT ||--o{ CREDIT_LEDGER_ENTRY : derives_credit_balance
     CLIENT_BUSINESS ||--o{ ORDER : places
-    ORDER ||--o| INVOICE : produces
-    CLIENT_BUSINESS ||--o{ PAYMENT : makes
-    PAYMENT ||--o{ PAYMENT_ALLOCATION : allocates
-    INVOICE ||--o{ PAYMENT_ALLOCATION : receives
-    RETURN ||--o{ REFUND : may_generate
-    REFUND ||--o{ CREDIT_LEDGER_ENTRY : may_record
+    ORDER ||--o| ORDER_CREDIT_APPROVAL : may_require
+    ORDER ||--o| INVOICE : invoiced_once
+    CLIENT_BUSINESS ||--o{ PAYMENT : submits
+    PAYMENT ||--o{ PAYMENT_ALLOCATION : allocated_by
+    INVOICE ||--o{ PAYMENT_ALLOCATION : allocated_to
+    INVOICE ||--o{ CREDIT_NOTE : adjusted_by
+    CREDIT_NOTE ||--o{ REFUND : may_create
+    PAYMENT ||--o{ REFUND : original_method
+    REFUND ||--o{ CREDIT_LEDGER_ENTRY : may_credit
 
     CLIENT_BUSINESS {
-        string id
+        string id PK
         string businessName
+        string email "optional"
+        string ntn "optional"
+        string cnic "optional"
         string accountStatus
+        datetime archivedAt
     }
-    CLIENT_APPROVAL_DECISION {
-        string id
-        string decision
-        string reason
-        datetime decidedAt
+    BUSINESS_USER_LINK {
+        string id PK
+        string userId FK
+        string clientBusinessId FK
+        datetime linkedAt
+        datetime endedAt
     }
     CLIENT_CREDIT_ACCOUNT {
-        string id
-        decimal creditLimit
-        string creditStatus
-        string paymentTerms
+        string id PK
+        string clientBusinessId FK "unique optional relation"
+        decimal creditLimit "14,2"
+        int creditDays
+        CreditStatus status
     }
     INVOICE {
-        string id
-        string invoiceNumber
-        decimal total
-        date dueDate
-        string status
+        string id PK
+        string orderId FK "unique"
+        string invoiceNumber UK "RS-INV-YYYY-000001"
+        decimal totalAmount "14,2"
+        datetime issuedAt
+        datetime dueAt
     }
     PAYMENT {
-        string id
-        decimal amount
-        string method
-        string status
+        string id PK
+        PaymentMethod method
+        PaymentStatus status
+        decimal amount "14,2"
     }
     PAYMENT_ALLOCATION {
-        string id
-        decimal amount
+        string id PK
+        string paymentId FK
+        string invoiceId FK
+        decimal amount "14,2"
         datetime allocatedAt
+        datetime reversedAt
     }
     CREDIT_LEDGER_ENTRY {
-        string id
-        decimal amount
-        string entryType
+        string id PK
+        string clientCreditAccountId FK
+        CreditLedgerEntryType entryType
+        decimal amount "signed 14,2"
         datetime createdAt
     }
-    REFUND {
-        string id
-        decimal amount
-        string method
-        string status
+    CREDIT_NOTE {
+        string id PK
+        string invoiceId FK
+        string creditNoteNumber UK
+        decimal amount "14,2"
+        CreditNoteStatus status
     }
+    REFUND {
+        string id PK
+        RefundMethod method
+        RefundStatus status
+        decimal amount "14,2"
+        string approvedById FK
+        string processedById FK
+    }
+
+%% Credit is optional: ClientBusiness to ClientCreditAccount is 0..1.
+%% Unverified payments do not change Invoice or client-credit balances.
+%% Allocation reconfiguration reverses rows and adds replacements; history stays.

@@ -22,6 +22,7 @@
 | 1.4 | 2026-07-25 | Ahmed | `apps/admin` scaffolded as its own Next.js app (resolving part of v1.3's open question — a separate app, not a route inside `apps/web`); added `packages/ui` (shared shadcn primitives, Bilingual, motion wrappers, and design tokens, consumed by both `apps/web` and `apps/admin`); updated §5's repo tree; `docs/` split into `docs/website/` and `docs/admin/` for surface-specific documents, with PRD/BRD/FRD/TRD staying at `docs/` root as cross-cutting | Draft |
 | 1.5 | 2026-07-26 | Ahmed | First real database design pass, against the actual rate list (`RS-Database.xlsx`: 2,156 products, 87 categories, wholesale prices only — retail/buying prices pending). Wrote `packages/db/prisma/schema.prisma`, the first real Prisma schema for this project (previously only a placeholder service-layer stub existed). Split Product's single `base_price` into `buying_price`/`wholesale_price`/`retail_price` (§6 row updated below) — a genuine pricing-model correction, not just a rename: it closes a gap where an approved wholesale account with no extra discount had no distinct price and silently saw the same price as a guest. BRD PR-01/CD-01 and FRD §8 updated to match (now a 5-tier priority order); `packages/types` and `apps/web`'s pricing logic/mock data updated in lockstep. | Draft |
 | 1.6 | 2026-07-26 | Ahmed | Processed the business owner's answers to the 7 blocking database questions (`docs/phase2answers.md`) and Codex's independent Phase 2 verification of that file. Fixed two real schema gaps `StockMovement` was missing: `orderId` (traces a sale/reversal movement back to its order) and `purchaseDate` (BRD SK-01's own field, distinct from `createdAt`). Corrected BRD CD-04 and FRD FR-PRC-04, which described a "no price shown before approval" state that doesn't match the already-built, QA-passed storefront (pending accounts see retail prices plus a notice, never wholesale). Corrected BRD OF-01 (minimum orders: fully flexible, no MOQ engine needed) and OF-04 (delivery zones: free in Wah Cantt/Hassanabdal/Taxila, charged for Rawalpindi/Islamabad) with the owner's confirmed answers. Left one genuine open item: FR-DLV-02/03 (admin records delivery outcomes in v1) vs. the admin panel's `/delivery` page (built open to a `delivery`-role login directly) — needs an explicit choice before Phase 3 modeling of delivery continues. | Draft |
+| 1.7 | 2026-07-26 | Ahmed/Codex | Phase 4 physical-schema alignment: Product is the required-SKU stock identity; ProductPackaging carries explicit conversions and independent effective-dated prices; categories remain flat; barcode/Brand/supplier/file/multi-warehouse scope is deferred; confirmation reserves and packing deducts; invoice/allocation/ledger/return/delivery-attempt/import-provenance models are introduced; transactional cascades are prohibited. | Demo-approved, awaiting business-owner production review |
 
 ---
 
@@ -179,27 +180,23 @@ The schema below implements the FRD's functional modules. Field lists are repres
 
 | Entity | Key Fields | Relations | Implements |
 |---|---|---|---|
-| **User** | id, mobile_number, password_hash, name, role (owner/admin/packing/delivery/business_user), is_active | → StaffProfile (if staff) or → BusinessUserLink (if business user) | FR-AUTH, FR-STF |
-| **ClientBusiness** | id, business_name, owner_name, contact_person, phone, whatsapp, email, address, city, business_type, relationship_start_date, discount_percent, credit_limit, outstanding_balance, credit_status, account_status, internal_notes | → BusinessUserLink (many users), → Order (many), → DiscountChangeLog (many) | FR-CB (all), BRD CB-03 |
-| **BusinessUserLink** | id, user_id, client_business_id, business_role (owner/manager/purchase_officer/branch_employee) | User ↔ ClientBusiness (many-to-many) | FR-CB-05, FR-CB-06 |
-| **StaffProfile** | id, user_id, staff_role (admin/operator, packing, delivery), join_date | → User (1:1) | FR-STF |
-| **Category** | id, name, name_urdu, parent_category_id | → Product (many) | FR-CAT |
-| **Product** | id, name, name_urdu, shop_name, category_id, description, buying_price (nullable), wholesale_price, retail_price (nullable), sku, barcode, is_archived, purchase_type (individual/bulk/both) | → Category, → ProductUnit (many), → StockLevel (1:1), → DiscountRule (many) | FR-CAT, PR-02 |
-| **ProductUnit** | id, product_id, unit_name (piece/dozen/carton), conversion_to_base | → Product | FR-CAT-03, PR-02 |
-| **StockLevel** | id, product_id, current_quantity (base unit), low_stock_threshold | → Product (1:1), → StockMovement (many) | FR-STK-01 to 04 |
-| **StockMovement** | id, product_id, quantity_change, movement_type (restock/sale/adjustment), supplier, purchase_price, invoice_number, entered_by_user_id, created_at | → Product, → User | FR-STK-01 |
-| **DiscountRule** | id, client_business_id, scope (account_wide/category/product), category_id (nullable), product_id (nullable), discount_percent (nullable), fixed_price (nullable), is_active | → ClientBusiness, → Category (opt), → Product (opt) | FR-PRC-01 to 03 |
-| **DiscountChangeLog** | id, client_business_id, previous_value, new_value, changed_by_user_id, reason, created_at | → ClientBusiness, → User | FR-PRC-05 |
-| **Order** | id, client_business_id, placed_by_user_id, status (enum, §10), payment_method, subtotal, delivery_charge, total, delivery_address, created_at, confirmed_at | → ClientBusiness, → User, → OrderItem (many), → OrderStatusHistory (many), → Payment (many) | FR-ORD (all) |
-| **OrderItem** | id, order_id, product_id, unit, quantity, unit_price_at_order, line_total | → Order, → Product | FR-ORD, FR-PRC |
-| **OrderStatusHistory** | id, order_id, from_status, to_status, changed_by_user_id, reason, created_at | → Order, → User | FR-ORD-06, §10 |
-| **DeliveryAssignment** | id, order_id, delivery_worker_id, dispatched_at, delivered_at, delivery_status, cash_collected, failed_reason, returned_items | → Order, → User (delivery worker) | FR-DLV |
-| **Payment** | id, order_id, client_business_id, amount, method (online/cash/credit/partial), status (pending/submitted/verified/rejected), transaction_reference, receipt_url, verified_by_user_id, created_at | → Order, → ClientBusiness | FR-PAY-05, FR-PAY-06 |
-| **CreditTransaction** | id, client_business_id, order_id (nullable), amount, type (charge/payment/adjustment), balance_after, created_at, note | → ClientBusiness, → Order (opt) | FR-PAY-01 to 04, §11 |
-| **ExpenseEntry** | id, category (rent/salaries/utilities/etc.), amount, description, entered_by_user_id, expense_date | → User | FR-ACC-02 |
-| **NotificationSubscription** | id, user_id, scope (product/category/brand), target_id | → User | FR-NTF-01 |
-| **Notification** | id, user_id, type, message, is_read, created_at | → User | FR-NTF (all) |
-| **AuditLog** | id, actor_user_id, action_type, entity_type, entity_id, previous_value (JSON), new_value (JSON), created_at | → User | FR-SEC-02 |
+| **User / StaffProfile** | CUID id, required mobile/name/auth identity, optional email, role, deactivate metadata | Staff/User attribution is retained with `Restrict` | FR-AUTH, FR-STF |
+| **ClientBusiness / BusinessUserLink** | business profile, optional NTN/CNIC/email, account state, historical user links | ClientBusiness → users/orders/payments; links end without deletion | FR-CB |
+| **ClientCreditAccount** | optional 0..1 account per business, limit, credit days, status | → CreditLedgerEntry, limit-change and order-approval history | FR-PAY |
+| **Category** | id, name, slug, active/archive fields | Flat Category → Product; no parent field in v0.1 | FR-CAT |
+| **Product** | CUID id, required `RS-000001` SKU and sequence number, category, review/activation and individual-sale flags | → ProductPackaging, aliases, stock and orders | FR-CAT, PR-02 |
+| **UnitOfMeasure / ProductPackaging** | fractional capability, product-local package code, explicit conversion, base/confirmation/active state | Product → many packages, exactly one base | FR-CAT-03, PR-02 |
+| **ProductPrice / ClientSpecificPrice / DiscountRule** | fixed-precision PKR amounts, effective periods, price type, non-stacking percentage scopes | Prices target ProductPackaging; discounts target business/product/category | FR-PRC |
+| **StockLocation / StockBalance** | one active location in v1; on-hand, reserved, unavailable, in-transit, damaged base-unit quantities | Balance is a maintained projection | FR-STK |
+| **StockReservation / StockMovement** | immutable base-unit reservations and bucket-to-bucket movement history with source/actor/reason | Historical authority for inventory | FR-STK |
+| **Order / OrderItem / status/change/cancellation** | state machine plus immutable commercial line snapshots | Never hard-deleted; one optional cancellation | FR-ORD |
+| **Invoice / CreditNote** | one invoice per order, visible yearly numbers, due date, fixed-precision totals and adjustments | Original invoice retained | FR-PAY, FR-ACC |
+| **Payment / PaymentAllocation** | verified manual payment and reversible many-to-many allocations | Payment ↔ Invoice via allocation history | FR-PAY |
+| **CreditLedgerEntry / Refund** | append-only signed credit changes; separately approved/processed refunds | Client credit is ledger-derived | FR-PAY |
+| **Return / ReturnItem** | partial return, original order item, condition, destination and inspection actors | Multiple partial returns per order | FR-RET |
+| **Delivery / DeliveryAttempt / assignment/history** | one fulfilment, numbered attempts, current-worker assignment history and overrides | Retry/failure history retained | FR-DLV |
+| **ImportBatch / ImportRow / ImportIssue / SourceRecordMapping** | SHA-256, raw staging, preview state, issues and canonical provenance | Import history retained after rollback | FR-MIG |
+| **ExpenseEntry / Notification / NotificationSubscription / AuditLog** | voidable expenses, in-app product/category subscriptions, audit event shape | Brand target and file storage deferred | FR-ACC, FR-NTF, FR-SEC |
 
 **Indexing notes:** `Product.name`, `Product.shop_name`, and `Product.category_id` are indexed to keep catalogue search fast across 3,000–3,500 rows (FRD §10). `Order.status` and `Order.client_business_id` are indexed for the admin queue and business history views.
 
@@ -245,17 +242,19 @@ All list endpoints support pagination (`?page=&limit=`) given the 3,000+ product
 Implements FRD §8. A single backend service (`PricingService`) is the **only** place price resolution logic lives — called by the catalogue endpoint, cart, checkout, and reorder, so all four surfaces can never disagree on price.
 
 ```
-resolvePrice(productId, clientBusinessId):
-  1. look up DiscountRule where scope=product AND product_id=productId AND client_business_id=clientBusinessId AND is_active
-     → if found, return fixed_price or (base_price × (1 - discount_percent))
-  2. look up DiscountRule where scope=category AND category_id=product.category_id AND client_business_id=clientBusinessId AND is_active
-     → if found, return accordingly
-  3. look up ClientBusiness.discount_percent (account-wide default)
-     → if set and business is approved/active, return base_price × (1 - discount_percent)
-  4. return product.base_price (standard price) — used for guests, pending, and unapproved accounts
+resolvePrice(productPackagingId, clientBusinessId, at):
+  require active Product + active/confirmed ProductPackaging + confirmed conversion/UOM
+  select the one positive, effective wholesale/retail ProductPrice without overlapping periods
+  1. return a matching fixed ClientSpecificPrice as the final price
+  2. else apply one matching product-level percentage discount
+  3. else apply one matching category-level percentage discount
+  4. else apply one matching account-level percentage discount
+  5. else return positive wholesale price for an approved wholesale account
+  6. else return positive retail price; expose an admin warning for wholesale fallback
+  if no positive applicable price exists, mark the package not orderable
 ```
 
-This function is unit-tested directly (Jest) against all four branches, per FRD §17 requirements.
+Only one discount applies. Piece and package prices are independently entered; price division or `basePrice × conversion` is prohibited backend behaviour. The service is unit-tested against every branch and writes a full commercial snapshot to OrderItem.
 
 ---
 
@@ -263,7 +262,9 @@ This function is unit-tested directly (Jest) against all four branches, per FRD 
 
 Implements the state machine in FRD §7. `Order.status` is a Postgres enum; transitions are enforced in an `OrderStateMachine` service that whitelists valid `from → to` pairs (matching the FRD table exactly) and rejects anything else with a 409 error. Every transition writes an `OrderStatusHistory` row, which also feeds the `AuditLog`.
 
-Order confirmation triggers, in one transaction: stock decrement, picking-slip PDF generation, and a customer notification — this must be atomic so a confirmed order can never exist without a corresponding stock deduction.
+Order placement revalidates stock but does not reserve it. Order confirmation locks affected StockBalance rows in deterministic Product order and atomically creates base-unit StockReservation rows for every line; all reservations succeed or the transaction rolls back. Packing consumes those reservations, reduces sellable on-hand, increases unavailable stock, appends StockMovement and OrderStatusHistory records, and changes status atomically. Dispatch transfers unavailable to in-transit. Failed/cancelled deliveries remain in-transit or unavailable until warehouse receipt and inspection routes stock to sellable, damaged or quarantined.
+
+`available = onHand - reserved` and is calculated rather than stored. Reserved is already a subset of onHand. Total business-owned stock is `onHand + unavailable + inTransit + damaged`; reserved is not added again. Every balance and movement quantity uses the Product base unit. StockMovement and StockReservation are historical authority; StockBalance is a transactionally maintained projection, never an independently editable ledger.
 
 ---
 
@@ -271,18 +272,19 @@ Order confirmation triggers, in one transaction: stock decrement, picking-slip P
 
 Implements FRD §9. `CreditService.checkAvailability(clientBusinessId, orderTotal)`:
 
-1. Computes `available = credit_limit − outstanding_balance` from `ClientBusiness`.
-2. If `orderTotal <= available` and `credit_status = active` → checkout proceeds, a `CreditTransaction` (type: charge) is created on order confirmation.
-3. If `orderTotal > available` → order is created with status `pending_owner_approval`; Owner receives a notification with one-click approve/reject.
-4. If `credit_status != active` → "Pay Later" is excluded from the checkout payment-method options entirely (not shown, not just disabled).
+1. Returns unavailable when the ClientBusiness has no active ClientCreditAccount.
+2. When an account exists, derives current exposure from issued Invoices, active PaymentAllocations, CreditNotes and CreditLedgerEntries; it never trusts an editable balance field.
+3. If `orderTotal <= available credit` and status is active, checkout may use approved credit and the financial entries are created with the Invoice transaction.
+4. If `orderTotal > available credit`, Order is created with status `pending_owner_approval` and an OrderCreditApproval snapshot records the Owner decision.
+5. If credit status is not active, credit is excluded as a settlement option. Client credit remains a ledger facility, not a PaymentMethod enum value.
 
-`outstanding_balance` on `ClientBusiness` is a derived/cached value, recalculated from the sum of `CreditTransaction` rows on every write — never manually edited directly, to guarantee it always reconciles with the transaction log (supports FRD `FR-ACC-06` traceability).
+Credit is optional: `ClientBusiness` has zero or one `ClientCreditAccount`, created only after Owner approval/configuration. Payments allocate across Invoices through immutable/reversible PaymentAllocation rows. Overpayment and other client-credit changes create CreditLedgerEntry records; credit balance is derived from the ledger and is never directly edited. Unverified payments do not affect invoices or credit.
 
 ---
 
 ## 12. File & Image Storage
 
-The finalized design system has **no product photography** — the catalogue is description-based only, represented with a solid icon block rather than a photo, per the reviewed design (`_ds` bundle) and BRD/FRD's Individual/Bulk purchase-type split. Object storage (Supabase Storage in the demo; a dedicated bucket service in production) is therefore used only for **payment receipts** (`Payment.receiptUrl`, manual verification per §15) and **client business documents** (`ClientBusiness` uploaded documents, per BRD `CB-03`) — referenced by URL from the database, never stored as binary blobs in PostgreSQL. Files are kept small (compressed where the format allows) to control storage usage within the 1GB free tier.
+Phase 4 schema version 0.1 does not introduce file-storage entities. Product images, wholesale registration documents and delivery-proof files are deferred. A Payment may retain a plain external/receipt reference string for manual reconciliation, but no upload subsystem or binary/document model is active in this schema.
 
 ---
 
@@ -290,7 +292,7 @@ The finalized design system has **no product photography** — the catalogue is 
 
 Implements FRD §6.12. In both environments, notifications are triggered synchronously from the relevant API action (order confirmed, restock matching a subscription, payment reminder due) and written to the `Notification` table, then surfaced via the in-app notification center (FR-NTF-06). No message queue is required for this volume of activity — see §14.
 
-Payment/due-date reminders run on a scheduled job (a simple daily cron-style job in the NestJS app, e.g. via `@nestjs/schedule`) that scans for upcoming/overdue `CreditTransaction` due dates — this does not require Redis or a dedicated queue at this scale.
+Payment/due-date reminders run on a scheduled job (a simple daily cron-style job in the NestJS app, e.g. via `@nestjs/schedule`) that scans issued Invoice due dates and derived outstanding amounts — this does not require Redis or a dedicated queue at this scale.
 
 ---
 
@@ -302,9 +304,9 @@ Payment/due-date reminders run on a scheduled job (a simple daily cron-style job
 
 ## 15. Payments — Technical Implementation
 
-**Demo environment:** a `Payment` record supports a mock/manual flow only — `Payment Pending → Payment Submitted → Payment Verified/Rejected`. The customer uploads a receipt or enters a transaction reference; the admin manually verifies it via `POST /payments/:id/verify`. No real gateway is called.
+**Demo environment:** a `Payment` record supports a manual flow only — `Payment Pending → Payment Submitted → Payment Verified/Rejected`. The customer enters a transaction/reference string and the admin verifies it via `POST /payments/:id/verify`. No file upload or real gateway is called.
 
-**Production environment:** once merchant accounts exist (BRD `PY-03`), the same `Payment` entity and status flow is extended with real gateway callbacks (Easypaisa/JazzCash/NayaPay webhook → auto-transitions `Payment` to Verified and triggers the same downstream logic the manual path already uses). Because the manual and automated paths converge on the same `Payment` state machine, this is an additive change, not a redesign.
+**Future production extension:** separately approved merchant integrations may extend the same Payment status flow with authenticated gateway callbacks. Easypaisa/JazzCash/bank integration is deferred; NayaPay is not an active schema-v0.1 method.
 
 Real payment integration requires, before it is enabled: signed business documents, provider sandbox access, and a security review of the payment webhook handling (per FR-PAY-07 in the FRD).
 
@@ -317,7 +319,7 @@ Directly implements FRD §6.14 (`FR-SEC-01` to `FR-SEC-06`):
 - **Server-side authorization** on every endpoint via NestJS guards — never trust client-side role checks.
 - **Password hashing** via bcrypt/argon2 (never plaintext), enforced by the auth provider in both environments.
 - **HTTPS everywhere** — enforced by Vercel/Render in the demo, and by the production host's TLS termination.
-- **Audit log** (`AuditLog` table) written on every sensitive mutation: discount changes, credit limit/status changes, price overrides, stock edits, order confirmations, staff account changes.
+- **Audit log model:** `AuditLog` stores actor, action, entity, redacted before/after JSON, reason, correlation id and timestamp. `schema.prisma` does not guarantee that a sensitive mutation creates an audit record and cannot redact secrets by itself. Same-transaction audit creation, sensitive-field redaction, authorization and append-only database protection remain mandatory NestJS/PostgreSQL implementation work.
 - **Encryption at rest** for sensitive fields (customer contact info, financial balances) — handled at the managed-database level in both Supabase and production-grade Postgres hosting.
 - **Backups:** automated daily backups are a **production requirement, not present in the demo** (Supabase's free tier explicitly lacks this — see §20). The demo therefore must never hold real confidential business data, per the constraint in §20.
 - **Secrets management:** `.env` files, API keys, and service-role keys are never committed to the repository; `.gitignore` enforced from the first commit.
@@ -464,4 +466,3 @@ This TRD should be reviewed alongside the PRD, BRD, and FRD before design work (
 |---|---|---|---|
 | | Owner, Raza Stationers | | |
 | Ahmed | Product Owner / Developer | | |
-

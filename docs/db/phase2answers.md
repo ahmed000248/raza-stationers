@@ -262,3 +262,20 @@ This section supersedes or extends several earlier answers in this file — note
 6. `Return`/`ReturnItem` entities (BR-RETURN-001) — previously deferred, now needed.
 7. Review every `onDelete: Cascade` on a relation pointing at a transactional table (Order, Payment, CreditTransaction, StockMovement, DeliveryAssignment, AuditLog, etc.) and change to `Restrict` where the related model is a master record (BR-DATA-002).
 8. `ImportBatch`/`ImportRow`/`ImportError` staging entities (BR-IMPORT-003/004) — already flagged as a good addition in the Phase 0 prompt, now a firm requirement.
+
+---
+
+## Phase 4 physical-schema reconciliation (2026-07-26)
+
+Ahmed approved Phase 4 Stage B with the following mandatory clarifications. These refine the physical implementation without changing the provisional, pre-production status of the decisions above:
+
+- Version 0.1 Category is flat. Parent/child category hierarchy is deferred.
+- Every canonical Product has a required, nonblank, unique, permanent `RS-000001`-format SKU. Product name/category changes never change it and archived SKU values are never reused. An uncommitted ImportRow may have no canonical SKU.
+- Barcode is deferred because the inspected workbook/PDF provides no reliable barcode source.
+- Client credit is optional: `ClientBusiness` has zero or one `ClientCreditAccount`, created only when credit is approved/configured.
+- `ProductPurchaseType` is provisional source/import classification only. It cannot authorise sale. Product/ProductPackaging status, `allowIndividualSale`, confirmed conversion/UOM, stock and positive applicable packaging price determine orderability.
+- StockBalance quantities use the Product base unit: `onHand` is sellable warehouse stock; `reserved` is a subset of onHand; `available = onHand - reserved`; `unavailable` is packed or inspection-pending stock; `inTransit` is dispatched business-owned stock; `damaged` is inspected damaged stock. Total business-owned stock is `onHand + unavailable + inTransit + damaged`; reserved is not added again.
+- AuditLog models the event shape only. `schema.prisma` cannot guarantee audit creation, append-only behaviour or sensitive-value redaction; these remain NestJS authorization/transaction and future PostgreSQL enforcement work.
+- Category hierarchy, barcode, Brand, ProductImage, supplier/purchasing, document uploads, delivery-proof files and multi-warehouse workflows remain outside active schema version 0.1.
+
+The previously listed Phase 3 schema changes have now been translated into the Phase 4 physical schema proposal and approved schema-only implementation. No migration or catalogue import is part of Phase 4.
