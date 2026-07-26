@@ -1,0 +1,172 @@
+```mermaid
+flowchart TB
+  subgraph ORIGINAL["Original Sources"]
+    direction LR
+    OWNER["Business-owner knowledge<br/>Owner-confirmed source when documented<br/>No signed answer set available"]
+    INVO["Invo Retailer export<br/>Missing / TBD<br/>Potential codes, stock and units"]
+    PDF["WS RATE LIST.pdf<br/>Primary business source<br/>Names + wholesale prices<br/>Not present in repository"]
+    IMAGES["Product images<br/>Not used in v1<br/>No-product-photography decision"]
+    WEBMOCK["Storefront product mocks<br/>UI mock source only"]
+    ADMINMOCK["Admin catalogue/import mocks<br/>UI mock source only"]
+  end
+
+  subgraph DERIVED["Derived Sources"]
+    direction LR
+    EXTRACT["PDF extraction<br/>2,156 displayed rows<br/>Names preserved as displayed"]
+    WORKBOOK["RS-Database.xlsx<br/>Derived / cleaned workbook<br/>Not final source of truth"]
+    CATEGORIES["87 inferred categories<br/>Provisional classification"]
+    SALESTYPE["Sales Type inference<br/>1,986 Both / 170 Wholesale-Bulk<br/>Owner confirmation required"]
+    REVIEWQ["Review Queue<br/>136 unique rows"]
+    DOCS["PRD / BRD / FRD / TRD<br/>Requirements reference<br/>AI-assisted drafts"]
+  end
+
+  PDF -.->|"documented extraction source"| EXTRACT
+  EXTRACT --> WORKBOOK
+  WORKBOOK --> CATEGORIES
+  WORKBOOK --> SALESTYPE
+  CATEGORIES --> REVIEWQ
+  SALESTYPE --> REVIEWQ
+  WEBMOCK -.->|"UI reference only"| DOCS
+  ADMINMOCK -.->|"UI reference only"| DOCS
+
+  subgraph STAGING["Import Staging - Future Boundary"]
+    direction LR
+    INTAKE["Source-file intake<br/>CSV / Excel / approved export"]
+    FILECHECK["File validation<br/>type, headers, encoding,<br/>required columns"]
+    HASH["SHA-256 file hash<br/>Repeatable file identity"]
+    PRIOR["Previously imported?<br/>Compare file hash"]
+    BATCH["ImportBatch<br/>Proposed, not implemented"]
+    RAW["Raw ImportRows<br/>Preserve original values,<br/>file, sheet and row number"]
+  end
+
+  INVO -.->|"when available and verified"| INTAKE
+  WORKBOOK -->|"current candidate file"| INTAKE
+  OWNER -.->|"confirmed corrections only"| INTAKE
+  INTAKE --> FILECHECK
+  FILECHECK --> HASH
+  HASH --> PRIOR
+  PRIOR -->|"new file"| BATCH
+  PRIOR -->|"same file"| DUPFILE["Block duplicate batch"]
+  BATCH --> RAW
+
+  subgraph VALIDATION["Validation"]
+    direction LR
+    REQUIRED["Required-field checks<br/>name, wholesale price,<br/>category mapping, SKU policy"]
+    NUMERIC["Price and quantity checks<br/>missing, zero, negative,<br/>invalid numeric values"]
+    IDENTITY["Identity and conflict checks<br/>duplicate SKU, exact duplicate,<br/>same name with different prices"]
+    TEXTCHECK["Name-quality checks<br/>blank, truncated, malformed,<br/>conflicting aliases"]
+    CLASSCHECK["Classification checks<br/>unknown category, provisional sales type,<br/>brand unavailable"]
+    PACKCHECK["Unit and packaging checks<br/>unknown base unit, unit,<br/>pack size and conversion"]
+    RESULT{"Validation result"}
+  end
+
+  RAW --> REQUIRED
+  RAW --> NUMERIC
+  RAW --> IDENTITY
+  RAW --> TEXTCHECK
+  RAW --> CLASSCHECK
+  RAW --> PACKCHECK
+  REQUIRED --> RESULT
+  NUMERIC --> RESULT
+  IDENTITY --> RESULT
+  TEXTCHECK --> RESULT
+  CLASSCHECK --> RESULT
+  PACKCHECK --> RESULT
+
+  VALID["Valid<br/>Ready for approval"]
+  WARNING["Warning<br/>Manual review required"]
+  INVALID["Invalid<br/>Rejected or retained inactive"]
+
+  RESULT -->|"all required facts verified"| VALID
+  RESULT -->|"ambiguous but reviewable"| WARNING
+  RESULT -->|"unsafe or unusable"| INVALID
+
+  subgraph REVIEW["Manual Review"]
+    direction LR
+    ADMIN["Admin/operator review<br/>Inspect rows and source evidence"]
+    OWNERREVIEW["Business-owner confirmation"]
+    CATMAP["Confirm category mapping"]
+    UNITMAP["Confirm base units,<br/>packaging and conversions"]
+    PRICEBASIS["Confirm price basis<br/>piece, pack, jar, box or carton"]
+    SKUCONFIRM["Confirm Invo code/barcode<br/>or approve generated SKU"]
+    FINALAPPROVAL["Final import approval<br/>No automatic public activation"]
+  end
+
+  VALID --> ADMIN
+  WARNING --> ADMIN
+  ADMIN --> OWNERREVIEW
+  OWNERREVIEW --> CATMAP
+  OWNERREVIEW --> UNITMAP
+  OWNERREVIEW --> PRICEBASIS
+  OWNERREVIEW --> SKUCONFIRM
+  CATMAP --> FINALAPPROVAL
+  UNITMAP --> FINALAPPROVAL
+  PRICEBASIS --> FINALAPPROVAL
+  SKUCONFIRM --> FINALAPPROVAL
+
+  subgraph CANONICAL["Canonical Catalogue - Conceptual Destination"]
+    direction LR
+    COMMIT["Approved import transaction<br/>Only approved rows cross boundary"]
+    CATDEST["Categories"]
+    PRODUCTDEST["Products / independent SKUs"]
+    UNITDEST["Units and packaging"]
+    PRICEDEST["Wholesale prices<br/>Retail/buying prices when supplied"]
+    ALIASDEST["Product aliases / shop names"]
+    VARIANTNOTE["Variants<br/>Separate Product SKUs in v1<br/>No Variant table approved"]
+    BRANDNOTE["Brands<br/>No source column<br/>Structured brand is out of v1 scope"]
+    IMAGENOTE["Images<br/>Intentionally excluded from v1"]
+    PROVENANCE["Source provenance<br/>batch, file hash, sheet,<br/>source row and approval"]
+  end
+
+  FINALAPPROVAL --> COMMIT
+  COMMIT --> CATDEST
+  COMMIT --> PRODUCTDEST
+  COMMIT --> UNITDEST
+  COMMIT --> PRICEDEST
+  COMMIT --> ALIASDEST
+  COMMIT --> PROVENANCE
+  VARIANTNOTE -.-> PRODUCTDEST
+  BRANDNOTE -.-> PRODUCTDEST
+  IMAGENOTE -.-> PRODUCTDEST
+
+  subgraph RECON["Reconciliation and Audit"]
+    direction LR
+    VERIFIED["Verified source facts<br/>2,156 rows<br/>87 categories<br/>136 review rows"]
+    ISSUES["Verified issue counts<br/>1 blank name<br/>13 zero prices<br/>66 category-review rows"]
+    DUPCOUNTS["Identity warnings<br/>22 multi-price-name groups / 58 rows<br/>1 exact group / 2 affected rows"]
+    MISMATCH["Unresolved total<br/>Earlier rough estimate: about 2,160<br/>Extracted: 2,156<br/>Difference: 4"]
+    FUTURE["Post-import reconciliation<br/>Imported: TBD<br/>Rejected: TBD<br/>Inactive: TBD<br/>Missing-field count: generated at validation"]
+    HISTORY["Import history and audit records<br/>actor, time, decision, reason,<br/>counts and source provenance"]
+  end
+
+  WORKBOOK --> VERIFIED
+  REVIEWQ --> ISSUES
+  REVIEWQ --> DUPCOUNTS
+  VERIFIED --> MISMATCH
+  COMMIT --> FUTURE
+  INVALID --> FUTURE
+  DUPFILE --> HISTORY
+  PROVENANCE --> HISTORY
+  FUTURE --> HISTORY
+
+  NODIRECT["Boundary rule<br/>No source file writes directly<br/>to canonical catalogue data"]
+  INTAKE -.-> NODIRECT
+  NODIRECT -.-> COMMIT
+
+  classDef original fill:#dbeafe,stroke:#2563eb,color:#172033
+  classDef derived fill:#ede9fe,stroke:#7c3aed,color:#172033
+  classDef staging fill:#ffedd5,stroke:#ea580c,color:#172033
+  classDef review fill:#fef3c7,stroke:#ca8a04,color:#172033
+  classDef approved fill:#dcfce7,stroke:#16a34a,color:#172033
+  classDef rejected fill:#fee2e2,stroke:#dc2626,color:#172033
+  classDef missing fill:#e5e7eb,stroke:#6b7280,color:#172033
+
+  class PDF,WEBMOCK,ADMINMOCK original
+  class EXTRACT,WORKBOOK,CATEGORIES,SALESTYPE,REVIEWQ,DOCS derived
+  class INTAKE,FILECHECK,HASH,PRIOR,BATCH,RAW,REQUIRED,NUMERIC,IDENTITY,TEXTCHECK,CLASSCHECK,PACKCHECK,RESULT staging
+  class VALID,WARNING,ADMIN,OWNERREVIEW,CATMAP,UNITMAP,PRICEBASIS,SKUCONFIRM,FINALAPPROVAL review
+  class COMMIT,CATDEST,PRODUCTDEST,UNITDEST,PRICEDEST,ALIASDEST,PROVENANCE,VERIFIED approved
+  class INVALID,DUPFILE rejected
+  class OWNER,INVO,IMAGES,VARIANTNOTE,BRANDNOTE,IMAGENOTE,MISMATCH,FUTURE,NODIRECT missing
+  class ISSUES,DUPCOUNTS,HISTORY review
+```

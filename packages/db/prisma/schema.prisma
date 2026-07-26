@@ -417,6 +417,15 @@ model StockLevel {
 }
 
 /// SK-01/FR-STK-01: routine restock. SK-01+FR-STK-07: owner-only correction/adjustment.
+///
+/// v1.6 fix (Codex Phase 2 review, 2026-07-26): added `orderId` and
+/// `purchaseDate`, both real gaps caught by cross-checking this model
+/// against BRD SK-01 and the sale/reversal flow described in phase2answers.md
+/// — a `sale`/`adjustment` movement created at order confirmation had no way
+/// to trace back to the order that caused it, and SK-01 explicitly lists
+/// "purchase date" as its own field, distinct from `createdAt` (the record's
+/// entry time, which can differ from the date printed on the supplier
+/// invoice).
 model StockMovement {
   id              String            @id @default(cuid())
   productId       String            @map("product_id")
@@ -425,15 +434,24 @@ model StockMovement {
   supplier        String?
   purchasePrice   Decimal?          @db.Decimal(10, 2) @map("purchase_price")
   invoiceNumber   String?           @map("invoice_number")
+  /// SK-01: the date on the supplier invoice/receipt — not necessarily the
+  /// same day this row was entered into the system (see createdAt).
+  purchaseDate    DateTime?         @map("purchase_date")
   /// Required by FR-STK-07 when movementType = adjustment; enforced at the API/validation layer.
   reason          String?
+  /// Links a `sale`/`adjustment` movement back to the order that caused it
+  /// (e.g. deducted on confirmation, reversed on cancellation). Null for
+  /// ordinary restocks, which aren't tied to any order.
+  orderId         String?           @map("order_id")
   enteredByUserId String            @map("entered_by_user_id")
   createdAt       DateTime          @default(now()) @map("created_at")
 
   product        Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   enteredByUser  User    @relation(fields: [enteredByUserId], references: [id], onDelete: Restrict)
+  order          Order?  @relation(fields: [orderId], references: [id], onDelete: SetNull)
 
   @@index([productId])
+  @@index([orderId])
   @@map("stock_movements")
 }
 
@@ -504,6 +522,7 @@ model Order {
   deliveryAssignments DeliveryAssignment[]
   payments            Payment[]
   creditTransactions  CreditTransaction[]
+  stockMovements      StockMovement[]
 
   @@index([status])
   @@index([clientBusinessId])

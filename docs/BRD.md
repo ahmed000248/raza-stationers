@@ -170,7 +170,7 @@ In addition, the owner/admin can assign a **custom discount percentage or specia
 
 **CD-03 — Walk-in and unapproved customers.** Walk-in, occasional, and unapproved online customers see the standard selling price. An authorized admin may manually apply a one-off discount when needed.
 
-**CD-04 — Pricing visibility before approval.** A newly registered customer sees a message such as *"Your wholesale account and pricing are pending approval."* Once the owner approves the account, the customer sees their actual personalized prices directly — the system shows the **final price**, not the discount percentage, to keep things simple and avoid confusion.
+**CD-04 — Pricing visibility before approval.** *(Wording corrected v1.5 to match the already-built, QA-passed storefront — Codex Phase 2 review caught the original text describing a "no price shown" state that isn't what was actually implemented.)* A newly registered, pending customer sees standard/retail catalogue prices — the same prices a guest sees — plus a visible "pending verification" notice (e.g. *"Registration submitted... standard catalog prices apply until verification completes"*). They are never shown wholesale pricing before approval. Once the owner approves the account, the customer sees their actual personalized (wholesale/discounted) prices directly — the system shows the **final price**, not the discount percentage, to keep things simple and avoid confusion.
 
 **CD-05 — Changing or removing a discount.** The owner or admin can increase, reduce, suspend, or remove a customer's discount/pricing tier at any time. Every change is recorded with:
 

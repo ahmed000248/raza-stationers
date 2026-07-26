@@ -8,7 +8,15 @@ Answers to the 45 blocking / pilot-import / deferred questions from Codex's Phas
 - **RECOMMENDED** — a reasoned default consistent with existing docs, adopted as the working answer for Codex to build against. Should still get a quick yes/no from you or your father before it's treated as final.
 - **UNKNOWN — NEEDS FATHER** — a real fact about how the business actually operates that no document or prior conversation contains. Not answered here; flagged honestly instead of invented.
 
-Of the 45 questions: 19 are DECIDED, 19 are RECOMMENDED, 7 are UNKNOWN and genuinely need your father.
+Of the 45 questions: 19 were DECIDED from existing docs/schema, 19 are RECOMMENDED defaults, and the 7 that genuinely needed your father (PRICE-Q01, PKG-Q01, CAT-Q02, STOCK-Q03, ORDER-Q02, DEL-Q02, PID-Q02) are now **CONFIRMED BY FATHER** — see each entry below.
+
+**Codex's Phase 2 review (2026-07-26) caught real issues in this file, since corrected:**
+- Two genuine schema gaps, now fixed in `packages/db/prisma/schema.prisma`: `StockMovement` had no `orderId` (couldn't trace a sale/reversal back to its order) and no `purchaseDate` (BRD SK-01 lists it as its own field, distinct from `createdAt`).
+- I was wrong about **PRICE-Q03** (pending-account pricing) — the real, already-built code shows pending accounts retail prices plus a banner, not "no price"; BRD/FRD text corrected to match.
+- I was wrong about **DEL-Q01** (who records delivery outcomes) — FR-DLV-02/03 explicitly say v1 is admin-recorded-on-worker's-behalf, contradicting how the admin panel's `/delivery` page was actually built. Still an open decision — see that entry.
+- **CAT-Q02**'s count corrected from 63 to 66 uncertain-category rows.
+- **PKG-Q02** softened from "decided" to "provisional, same tier as categories" — the workbook's own methodology says these values were inferred, not confirmed.
+- **PKG-Q03** now notes `DiscountRule` can't express a general per-unit (box/carton) price override — a real limitation, currently not urgent given PRICE-Q01's answer.
 
 ---
 
@@ -24,22 +32,22 @@ RECOMMENDED. Keep the 87 generated categories as the v1 working taxonomy — the
 DECIDED. BRD PR-02: "every stock-tracked variation has its own SKU or barcode." Any independently priced or stocked variation is its own `Product` row — there's deliberately no separate variant sub-table.
 
 **PKG-Q01 — What is the base stock unit for each product?**
-Mechanism DECIDED, values UNKNOWN — NEEDS FATHER/INVO. Each product declares its own base unit and conversions via `ProductUnit.conversionToBase` (FR-CAT-03/PR-02); there's no single global unit. But the actual conversion numbers (is "JAR 24pcs" stocked as jars or 24 loose pieces?) need either an Invo export or your father's confirmation per packaging family.
+CONFIRMED BY FATHER. Jar-packaged items are tracked and stocked as 1 jar — not exploded into individual pieces. Combined with PRICE-Q01, this means for most jar/pack items the jar (or stated pack) *is* the base sellable/stockable unit; there's no separate piece-level breakdown unless a product is later specifically flagged otherwise.
 
 **PKG-Q02 — May boxes/jars/cartons be opened for individual sale?**
-Largely DECIDED already. The real workbook's "Sales Type" column already answers this per product for all 2,156 rows: `Both` (1,986) = yes, sellable individually; `Wholesale/Bulk` (170) = no, bulk-only. Only the ~63 rows with an uncertain *category* (not sales type) need a second look.
+CORRECTED (Codex Phase 2 review caught this): the *mechanism* is decided (the `purchaseType` field, driven by the workbook's "Sales Type" column), but the workbook's own Methodology tab says these `Both`/`Wholesale-Bulk` values were inferred from packaging wording, not owner-confirmed — so the per-product values are provisional, same tier as the category assignments, not yet a confirmed business fact. Spot-checking is still worthwhile, though lower priority than the 66 category-uncertain rows.
 
 **PKG-Q03 — Does each packaging level get its own SKU/barcode and price?**
-DECIDED. Follows from VAR-Q01/BRD PR-02: piece/box/carton of the same product share one `Product` row and stock, expressed as multiple `ProductUnit` rows — unless the bulk price doesn't scale linearly, in which case a `DiscountRule` (fixed price override) is used instead of a new SKU.
+DECIDED for the shared-stock mechanism, with one caveat Codex's review correctly caught: `DiscountRule.fixedPrice` is scoped to (client business + product), not to a specific `ProductUnit` — it cannot express a general "box always costs X regardless of piece price" rule for every customer, only a client-specific override. Right now this doesn't block anything, because your father's PRICE-Q01 answer means each row's price already applies to whatever pack size its name states — we're not computing box/carton prices from a piece price via formula. If a genuine need for a general non-linear per-unit price shows up later, `ProductUnit` will need its own optional price field; not needed today.
 
 **PRICE-Q01 — What does each wholesale price represent (per jar/piece/package)?**
-UNKNOWN — NEEDS FATHER. The workbook's own methodology confirms only name + one price were extracted from the PDF, with no unit stated. Only your father (or an Invo export) can confirm this per packaging family.
+CONFIRMED BY FATHER. Read the price basis directly off the item name at import time: name says "single" → price is per single piece; name names a container ("jar," etc.) → price is for the whole container; name states a pack count ("30 pcs," "40 pcs") → price is for the whole pack. This is a real import-parsing rule, not a per-product manual lookup — the importer should keyword-match each `Item Name` for these patterns to set `ProductUnit`/pricing correctly.
 
 **PRICE-Q02 — Are retail/wholesale prices independently entered per sale unit?**
 DECIDED (mechanism). Default: a bulk unit's price is a linear multiple of the base `wholesalePrice`/`retailPrice` (exactly what `apps/web`'s `calculateUnitPrice` already does), with an explicit override point (`DiscountRule.fixedPrice`) for the specific products where a carton/box price isn't a simple multiple. Which specific products need the override is unknown until flagged.
 
 **PRICE-Q03 — Do pending accounts see retail price or no price?**
-DECIDED — this isn't actually a contradiction. A **registered-but-pending** business account sees CD-04's "pending approval" message with no price at all. An **anonymous guest** browsing without registering sees the standard retail price (CD-03). FRD §8's "guests and pending accounts resolve to retail" describes the price-resolution function's safe fallback (never leak a wholesale rate to anyone unapproved) — the UI layer additionally hides pricing entirely for a pending account behind the approval banner. Both rules coexist; nothing needs to change.
+CORRECTED — I got this wrong the first time, and Codex's review was right to push back. I'd theorized guest vs. pending were gated differently without actually checking the built code. Having now checked `use-auth.tsx` and `PendingVerificationNotice.tsx`: a pending account resolves `isApprovedBusiness: false` — identical to a guest — and sees standard/retail prices with a banner on top reading *"Standard catalog prices apply until verification completes."* That's the real, already-built, already-QA-passed behavior. BRD CD-04 and FRD FR-PRC-04's wording ("sees a message instead of any price") were the stale part, not the code — both docs are now corrected to match what's actually implemented (retail price + pending notice, never wholesale before approval).
 
 **CLIENT-Q01 — Can one person act for multiple client businesses?**
 DECIDED. Already modeled as many-to-many: `BusinessUserLink` lets one `User` link to several `ClientBusiness` rows, each with its own `businessRole`. No schema change needed.
@@ -51,13 +59,13 @@ RECOMMENDED. Default: oldest-outstanding-invoice-first automatic allocation, wit
 DECIDED, already built. `OrderStatus.pending_owner_approval` exists specifically for this — an over-limit credit order routes to the owner for a manual decision rather than being auto-rejected (FRD §9).
 
 **STOCK-Q01 — When is stock reserved and deducted?**
-RECOMMENDED. No formal "reservation" hold while browsing/in-cart (keeps v1 simple); stock deducts at order **confirmation**, recorded as a `StockMovement(type=sale)` tied to the order. Needs your father's confirmation if he wants a stricter hold-at-cart behavior given repeat wholesale order volume.
+RECOMMENDED, and Codex's review caught a real schema gap in how I'd described it: `StockMovement` didn't actually have a field linking a movement back to the order that caused it, so "deducts at confirmation, tied to the order" wasn't actually traceable. Fixed — `StockMovement.orderId` (nullable, `onDelete: SetNull`) added to `schema.prisma`, so a sale/reversal movement can now be traced to its order while ordinary restocks stay untied to any order. The behavioral recommendation itself (deduct on confirmation, no cart-stage reservation) still needs your father's confirmation if he wants a stricter hold-at-cart behavior.
 
 **STOCK-Q02 — Shortage / cancellation / failed-delivery reversal?**
 RECOMMENDED. Full automatic reversal of the original sale movement on cancellation. Failed-delivery returns get a manual, reason-required adjustment (FR-STK-07) instead of an automatic one, since "resellable vs. damaged" needs a human judgment call.
 
 **SUP-Q01 — Does v1 need formal supplier/purchase-receipt records?**
-DECIDED — no. `StockMovement.supplier` (free text) + `purchasePrice` + `invoiceNumber` captured per restock (BRD SK-01) is already the right level of detail for a single-location wholesaler. A `Supplier`/`PurchaseReceipt` master-data system is out of locked scope.
+DECIDED — no, a `Supplier`/`PurchaseReceipt` master-data system is still out of locked scope. Codex's review did catch a real omission though: BRD SK-01 lists "purchase date" as its own field on a restock entry, distinct from the record's `createdAt` (entry timestamp) — the schema was missing it. Fixed — `StockMovement.purchaseDate` added.
 
 **ORDER-Q01 — Partial fulfilment / backorders?**
 DECIDED — no, not in v1. If a line can't be fully filled, admin adjusts or rejects it via the existing change-request workflow (FR-ORD-02) rather than the system auto-splitting shipments. No new order states needed.
@@ -66,7 +74,10 @@ DECIDED — no, not in v1. If a line can't be fully filled, admin adjusts or rej
 RECOMMENDED — defer to Phase 2. Returns have no FR-RET-* requirements anywhere in the locked FRD; treat them the same tier as the already-documented Phase 2 items (automated discount engine, live GPS). `DeliveryAssignment.returnedItems` already captures enough for v1 record-keeping. Needs your father's sign-off that manual/off-system return handling is acceptable for the pilot.
 
 **DEL-Q01 — Who records delivery status, what proof?**
-DECIDED — resolves the "contradiction" directly. The admin panel's `/delivery` page is already gated "blocked for Packing role, dispatch & outcome recording open to Delivery/Admin" per the admin QA report — meaning delivery workers are real staff users with their own login recording outcomes directly, not admin entering it on their behalf. Proof = `DeliveryAssignment`'s existing fields (cashCollected, failedReason, returnedItems, timestamps).
+NOT RESOLVED — I was wrong to call this decided, and Codex's review is right. I over-read the admin QA report's role-gating table (which just says the `/delivery` admin page isn't blocked for a `delivery`-role login) without checking the actual functional requirement. FR-DLV-02 and FR-DLV-03 are explicit and repeated three times in the FRD: **v1 = Admin/Owner records delivery outcomes on the worker's behalf; a delivery-worker-facing login to self-update status is Phase 2.** This is a genuine, still-open inconsistency between the FRD (admin-recorded) and how the admin panel's `/delivery` page was designed (open to a `delivery`-role login directly) — it needs an actual decision, not something I can resolve myself:
+- **Option A:** keep FR-DLV-03 as-is (Phase 2) and restrict `/delivery`'s recording actions to Admin/Owner only for v1, with the delivery worker just reporting outcomes verbally/by phone.
+- **Option B:** since the admin panel was already built allowing a `delivery`-role login to use that page, accept that v1 quietly delivers FR-DLV-03 early — a delivery worker gets a real (if minimal) login purely to record their own outcomes — and update FR-DLV-02/03 to match.
+Proof captured either way is the same: `DeliveryAssignment`'s existing fields (cashCollected, failedReason, returnedItems, timestamps).
 
 **AUTH-Q01 — Who can view/change wholesale, retail, buying price?**
 DECIDED. `buyingPrice` is Owner-only (matches FR-ACC's owner-only accounting scope). `wholesalePrice`/`retailPrice` are Admin+Owner editable (catalogue management is already an Admin-allowed action per TRD §7's permission matrix).
@@ -79,13 +90,13 @@ DECIDED on principle — no. Matches the pattern already used everywhere (`Produ
 ## Section 8 — Pilot-import questions (15)
 
 **PID-Q02 — Does Invo Retailer provide stable item codes/barcodes?**
-UNKNOWN — NEEDS FATHER. Nothing in this project so far describes what Invo Retailer actually exports. Needs a direct check.
+CONFIRMED BY FATHER. No barcodes for now — that's a future feature. Work with SKU as the identifier for now (matches the schema's existing design: `sku` is the required unique key, `barcode` stays optional/unused).
 
 **PID-Q03 — Is 2,156 the approved complete catalogue count?**
 RECOMMENDED — yes, treat 2,156 as the working baseline. The original "~2,160" was your own rough spoken estimate before extraction, not a verified count; a 4-item gap between an eyeballed number and a structured line-by-line extraction is normal, most likely a few non-product header/page-break rows in the PDF. Only worth reconciling exactly if you want to hand-check the PDF yourself.
 
-**CAT-Q02 — Which of the 63 uncertain categories should change?**
-UNKNOWN — NEEDS FATHER. I can't correctly categorize truncated/ambiguous product names I've never seen physically. Needs a look at the Review Queue tab specifically (mostly the two catch-alls: "Writing Instruments – Model Unclear" and "Unidentified/Truncated," 33 each).
+**CAT-Q02 — Which of the 66 uncertain-category rows should change?**
+CONFIRMED BY FATHER — a general rule, not a row-by-row fix. *(Count corrected by Codex's review: 63 rows are category-only issues, plus 3 more rows that combine a zero-price issue with a category issue — 66 total need a category decision, not 63.)* If a row has no item name at all, drop it from the import entirely. If the name is present but too unclear/truncated to categorize confidently, put it in a single generic **"Others"** category rather than forcing it into a specific guess. The two generated catch-alls ("Writing Instruments – Model Unclear," "Unidentified/Truncated Source Entries") merge into one real "Others" category at import — no manual per-row category assignment needed.
 
 **DUP-Q01 — How to resolve the 22 same-name/multiple-price groups?**
 RECOMMENDED. Default: treat each as a distinct product/variant with its own SKU (consistent with PID-Q01), unless your father recognizes a specific pair as a stale/superseded price — in which case the old one gets archived, not merged. Worth a quick skim of just these 22, not the whole catalogue.
@@ -100,7 +111,7 @@ DECIDED (source), pending (values). You already said these are coming directly f
 RECOMMENDED process. Computer operator drafts a first-pass `conversionToBase` per product using visible pack-size hints in the name (e.g., "24pcs"); owner only reviews the exceptions/unclear ones — same operator-drafts/owner-approves-exceptions pattern as categories.
 
 **STOCK-Q03 — Opening stock source?**
-UNKNOWN — NEEDS FATHER. The workbook has no stock quantities at all (methodology confirms only name + price were extracted). Needs either an Invo stock export or a dated physical count.
+CONFIRMED BY FATHER — explicitly deferred. Work on the items list only for now; stock quantities are a separate, later exercise. `StockLevel` rows can be created at zero/unset when products are imported and populated afterward — this is not a blocker for the catalogue/pricing pilot.
 
 **CLIENT-Q02 — Which registration fields/documents are actually required?**
 RECOMMENDED, and flags a real bug. Always required: business name, contact person, phone, address, city, business type. Tax/NTN document: conditional on business type, not mandatory for everyone — matches BRD's own "conditional" language. **`apps/web/src/app/register/page.tsx` currently hard-requires email + NTN/CNIC for every signup and advertises a flat "30-day credit terms," neither of which matches BRD** (terms are owner-set per business, not a fixed number). Worth a follow-up fix once your father confirms which business types genuinely need a tax document.
@@ -112,13 +123,13 @@ RECOMMENDED. At minimum, import an opening balance per existing long-term custom
 UNKNOWN, and not blocking — deferred per SUP-Q01, since margin reporting can wait.
 
 **ORDER-Q02 — Actual minimum-order/pack-only rules?**
-UNKNOWN — NEEDS FATHER. Real operational policy (e.g. "registers only sold by the dozen to wholesale accounts"). BRD's own OF-01 already flags this exact gap as needing confirmation — not a new question.
+CONFIRMED BY FATHER. Fully flexible — no fixed minimum-order-quantity engine needed. Most items sell in bulk (dozen, 30 pcs, 50 pcs, etc.) but the same item can also be sold individually to retail customers. This is exactly what `purchaseType` (individual/bulk/both) already models — no additional per-product MOQ field is needed for v1. Resolves BRD OF-01's open flag.
 
 **PAY-Q01 — Active payment methods/proof for the pilot?**
 DECIDED — already the documented v1 plan. COD, manual bank/wallet transfer with an admin-verified reference or receipt, and approved Pay-Later credit. Live gateway integration stays deferred per BRD PY-03 (merchant accounts not yet confirmed).
 
 **DEL-Q02 — Delivery areas/charges/free-delivery thresholds?**
-UNKNOWN — NEEDS FATHER. Real operational facts; BRD's own OF-04 already flags this as needing confirmation.
+CONFIRMED BY FATHER. Free delivery within Wah Cantt, Hassanabdal, and Taxila (the whole region). Delivery charges apply for Rawalpindi and Islamabad — exact charge amounts still to be set, but the zone split itself is confirmed. Resolves BRD OF-04's open flag; these four cities become the seed data for the delivery-zone configuration.
 
 **IMPORT-Q01 — Who approves an import batch, repeat-file detection?**
 RECOMMENDED. Operator/admin runs and reviews each test-batch preview; the owner gives final go-ahead only for the full/final catalogue import (FR-MIG's existing test-batch-mode language). Repeat-file detection via a SHA-256 file hash stored on the `ImportBatch` record, so re-uploading the identical file is caught regardless of filename.
@@ -163,4 +174,7 @@ RECOMMENDED. Indefinite retention as the safe v1 default — no legal/regulatory
 
 1. `apps/web/src/app/register/page.tsx` over-requires fields (mandatory email + NTN/CNIC for everyone) and advertises a fixed "30-day credit terms" that doesn't match BRD (terms are owner-set per business). Worth fixing once CLIENT-Q02 is confirmed.
 2. BRD's `ClientBusiness` model implies multiple addresses/documents per business; the current schema has a single `address` field. Recommend single address for the pilot, multiple addresses/document uploads as a tracked Phase 2 item unless your father says he needs it now.
-3. Seven questions above are true blockers only your father can answer (PRICE-Q01's unit basis, PKG-Q01's actual conversions, CAT-Q02's category corrections, STOCK-Q03's opening stock, ORDER-Q02's minimum-order rules, DEL-Q02's delivery zones/charges, PID-Q02's Invo capabilities) — everything else here is either already decided or a reasoned default ready for Codex to build against.
+3. Delivery-charge amounts for Rawalpindi/Islamabad are still needed (the free-vs-charged zone split is confirmed; the actual Rupee amounts aren't yet).
+4. Import rule to build, per father's answers: parse `Item Name` for "single"/container words/pack-count numbers to set the price basis (PRICE-Q01); drop rows with no name and route unclear names to a single "Others" category, merging the two generated catch-all categories into it (CAT-Q02); skip stock population entirely for this pass (STOCK-Q03).
+
+All 7 father-dependent questions are now answered — nothing left blocking Phase 3 conceptual modeling on the business-rule side. Remaining opens are just the exact delivery-charge Rupee amounts (#3 above) and the eventual real retail/buying prices, both already known to be coming later.

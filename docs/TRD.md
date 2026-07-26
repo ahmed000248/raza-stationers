@@ -4,7 +4,7 @@
 
 **Prepared for:** Raza Stationers
 **Prepared by:** Ahmed (Product Owner), drafted with AI assistance
-**Version:** 1.5 (Draft)
+**Version:** 1.6 (Draft)
 **Date:** July 25, 2026
 **Status:** Draft
 **Based on:** PRD v1.1, BRD v1.1, FRD v1.2
@@ -21,6 +21,7 @@
 | 1.3 | 2026-07-25 | Ahmed | Reconciled this document against the actual scaffolded repo: switched §3/§5 from pnpm+Turborepo to npm workspaces (matches what's built, functionally equivalent for this scale); updated §5's repo tree to reflect real package/app names and flag what's not yet scaffolded (`apps/admin`, `apps/api`); removed stale product-image references from §6/§12 (no product photography, per the finalized description-based catalogue design); added `purchase_type` to the Product schema row; flagged an open architecture question on whether `apps/api` (NestJS) is still needed given Next.js Route Handlers/Server Actions could serve the same role | Draft |
 | 1.4 | 2026-07-25 | Ahmed | `apps/admin` scaffolded as its own Next.js app (resolving part of v1.3's open question — a separate app, not a route inside `apps/web`); added `packages/ui` (shared shadcn primitives, Bilingual, motion wrappers, and design tokens, consumed by both `apps/web` and `apps/admin`); updated §5's repo tree; `docs/` split into `docs/website/` and `docs/admin/` for surface-specific documents, with PRD/BRD/FRD/TRD staying at `docs/` root as cross-cutting | Draft |
 | 1.5 | 2026-07-26 | Ahmed | First real database design pass, against the actual rate list (`RS-Database.xlsx`: 2,156 products, 87 categories, wholesale prices only — retail/buying prices pending). Wrote `packages/db/prisma/schema.prisma`, the first real Prisma schema for this project (previously only a placeholder service-layer stub existed). Split Product's single `base_price` into `buying_price`/`wholesale_price`/`retail_price` (§6 row updated below) — a genuine pricing-model correction, not just a rename: it closes a gap where an approved wholesale account with no extra discount had no distinct price and silently saw the same price as a guest. BRD PR-01/CD-01 and FRD §8 updated to match (now a 5-tier priority order); `packages/types` and `apps/web`'s pricing logic/mock data updated in lockstep. | Draft |
+| 1.6 | 2026-07-26 | Ahmed | Processed the business owner's answers to the 7 blocking database questions (`docs/phase2answers.md`) and Codex's independent Phase 2 verification of that file. Fixed two real schema gaps `StockMovement` was missing: `orderId` (traces a sale/reversal movement back to its order) and `purchaseDate` (BRD SK-01's own field, distinct from `createdAt`). Corrected BRD CD-04 and FRD FR-PRC-04, which described a "no price shown before approval" state that doesn't match the already-built, QA-passed storefront (pending accounts see retail prices plus a notice, never wholesale). Corrected BRD OF-01 (minimum orders: fully flexible, no MOQ engine needed) and OF-04 (delivery zones: free in Wah Cantt/Hassanabdal/Taxila, charged for Rawalpindi/Islamabad) with the owner's confirmed answers. Left one genuine open item: FR-DLV-02/03 (admin records delivery outcomes in v1) vs. the admin panel's `/delivery` page (built open to a `delivery`-role login directly) — needs an explicit choice before Phase 3 modeling of delivery continues. | Draft |
 
 ---
 
