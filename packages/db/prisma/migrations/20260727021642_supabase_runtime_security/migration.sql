@@ -12,19 +12,31 @@ BEGIN
         FROM pg_catalog.pg_roles
         WHERE rolname = 'raza_runtime'
     ) THEN
-        EXECUTE 'CREATE ROLE raza_runtime NOLOGIN NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS';
+        -- Supabase's managed postgres role can create restricted roles but is
+        -- intentionally not a true superuser. Safe attributes are defaults.
+        EXECUTE 'CREATE ROLE raza_runtime NOLOGIN INHERIT NOCREATEDB NOCREATEROLE';
     END IF;
 END;
 $role$;
 
 ALTER ROLE raza_runtime
     NOLOGIN
-    NOSUPERUSER
     INHERIT
     NOCREATEDB
-    NOCREATEROLE
-    NOREPLICATION
-    NOBYPASSRLS;
+    NOCREATEROLE;
+
+DO $role_safety$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM pg_catalog.pg_roles
+        WHERE rolname = 'raza_runtime'
+          AND (rolsuper OR rolreplication OR rolbypassrls)
+    ) THEN
+        RAISE EXCEPTION 'raza_runtime has a prohibited elevated role attribute';
+    END IF;
+END;
+$role_safety$;
 
 REVOKE CREATE ON SCHEMA public FROM PUBLIC, raza_runtime;
 GRANT USAGE ON SCHEMA public TO raza_runtime;
