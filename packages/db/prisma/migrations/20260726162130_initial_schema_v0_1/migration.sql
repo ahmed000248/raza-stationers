@@ -7,7 +7,8 @@ CREATE SCHEMA IF NOT EXISTS "public";
 -- Phase 5B custom SQL: Supabase-compatible extension placement.
 CREATE SCHEMA IF NOT EXISTS "extensions";
 CREATE EXTENSION IF NOT EXISTS "btree_gist" WITH SCHEMA "extensions";
-SET LOCAL search_path = "public", "extensions", "pg_catalog";
+-- pg_catalog remains implicitly first for lookup while public stays the CREATE target.
+SET LOCAL search_path = "public", "extensions";
 
 -- Prisma-generated enum, table, index and foreign-key DDL follows.
 
@@ -1727,11 +1728,11 @@ ALTER TABLE "stock_reservations"
             AND "consumed_by_id" IS NULL AND "consumed_at" IS NULL
             AND "released_by_id" IS NULL AND "released_at" IS NULL AND "release_reason" IS NULL)
         OR ("status" = 'consumed'::"stock_reservation_status"
-            AND "consumed_by_id" IS NOT NULL AND "consumed_at" IS NOT NULL
+            AND "consumed_by_id" IS NOT NULL AND "consumed_at" IS NOT NULL AND "consumed_at" >= "created_at"
             AND "released_by_id" IS NULL AND "released_at" IS NULL AND "release_reason" IS NULL)
         OR ("status" = 'released'::"stock_reservation_status"
             AND "consumed_by_id" IS NULL AND "consumed_at" IS NULL
-            AND "released_by_id" IS NOT NULL AND "released_at" IS NOT NULL
+            AND "released_by_id" IS NOT NULL AND "released_at" IS NOT NULL AND "released_at" >= "created_at"
             AND "release_reason" IS NOT NULL AND btrim("release_reason") <> '')
     );
 
@@ -1827,13 +1828,25 @@ ALTER TABLE "credit_notes"
         OR ("source_type" = 'manual_adjustment'::"credit_note_source_type" AND "cancellation_id" IS NULL AND "return_id" IS NULL)
     ),
     ADD CONSTRAINT "credit_notes_approval_metadata_check" CHECK (
-        ("approved_by_id" IS NULL AND "approved_at" IS NULL)
-        OR ("approved_by_id" IS NOT NULL AND "approved_at" IS NOT NULL)
+        ("status" = 'pending_approval'::"credit_note_status"
+            AND "approved_by_id" IS NULL AND "approved_at" IS NULL)
+        OR ("status" IN (
+                'approved'::"credit_note_status", 'issued'::"credit_note_status", 'voided'::"credit_note_status"
+            )
+            AND "approved_by_id" IS NOT NULL AND "approved_at" IS NOT NULL
+            AND "approved_at" >= "created_at")
     ),
     ADD CONSTRAINT "credit_notes_issue_metadata_check" CHECK (
-        (("issued_by_id" IS NULL AND "issued_at" IS NULL)
-        OR ("issued_by_id" IS NOT NULL AND "issued_at" IS NOT NULL))
-        AND ("issued_at" IS NULL OR "approved_at" IS NOT NULL)
+        ("status" IN ('pending_approval'::"credit_note_status", 'approved'::"credit_note_status")
+            AND "issued_by_id" IS NULL AND "issued_at" IS NULL)
+        OR ("status" = 'issued'::"credit_note_status"
+            AND "issued_by_id" IS NOT NULL AND "issued_at" IS NOT NULL
+            AND "issued_at" >= "created_at" AND "issued_at" >= "approved_at")
+        OR ("status" = 'voided'::"credit_note_status" AND (
+            ("issued_by_id" IS NULL AND "issued_at" IS NULL)
+            OR ("issued_by_id" IS NOT NULL AND "issued_at" IS NOT NULL
+                AND "issued_at" >= "created_at" AND "issued_at" >= "approved_at")
+        ))
     ),
     ADD CONSTRAINT "credit_notes_reason_nonblank_check" CHECK (btrim("reason") <> '');
 
@@ -1841,11 +1854,13 @@ ALTER TABLE "payments"
     ADD CONSTRAINT "payments_amount_positive_check" CHECK ("amount" > 0),
     ADD CONSTRAINT "payments_submission_metadata_check" CHECK (
         ("submitted_by_id" IS NULL AND "submitted_at" IS NULL)
-        OR ("submitted_by_id" IS NOT NULL AND "submitted_at" IS NOT NULL)
+        OR ("submitted_by_id" IS NOT NULL AND "submitted_at" IS NOT NULL AND "submitted_at" >= "created_at")
     ),
     ADD CONSTRAINT "payments_verification_metadata_check" CHECK (
         ("verified_by_id" IS NULL AND "verified_at" IS NULL)
-        OR ("verified_by_id" IS NOT NULL AND "verified_at" IS NOT NULL)
+        OR ("verified_by_id" IS NOT NULL AND "verified_at" IS NOT NULL
+            AND "submitted_by_id" IS NOT NULL AND "submitted_at" IS NOT NULL
+            AND "verified_at" >= "created_at" AND "verified_at" >= "submitted_at")
     );
 
 ALTER TABLE "payment_allocations"
@@ -1853,7 +1868,8 @@ ALTER TABLE "payment_allocations"
     ADD CONSTRAINT "payment_allocations_reversal_metadata_check" CHECK (
         ("reversed_by_id" IS NULL AND "reversal_reason" IS NULL AND "reversed_at" IS NULL)
         OR ("reversed_by_id" IS NOT NULL AND "reversal_reason" IS NOT NULL
-            AND btrim("reversal_reason") <> '' AND "reversed_at" IS NOT NULL)
+            AND btrim("reversal_reason") <> '' AND "reversed_at" IS NOT NULL
+            AND "reversed_at" >= "allocated_at")
     );
 
 ALTER TABLE "credit_ledger_entries"
@@ -1864,12 +1880,16 @@ ALTER TABLE "refunds"
     ADD CONSTRAINT "refunds_amount_positive_check" CHECK ("amount" > 0),
     ADD CONSTRAINT "refunds_approval_metadata_check" CHECK (
         ("approved_by_id" IS NULL AND "approved_at" IS NULL)
-        OR ("approved_by_id" IS NOT NULL AND "approved_at" IS NOT NULL)
+        OR ("approved_by_id" IS NOT NULL AND "approved_at" IS NOT NULL AND "approved_at" >= "requested_at")
     ),
     ADD CONSTRAINT "refunds_processing_metadata_check" CHECK (
         (("processed_by_id" IS NULL AND "processed_at" IS NULL)
         OR ("processed_by_id" IS NOT NULL AND "processed_at" IS NOT NULL))
-        AND ("processed_at" IS NULL OR "approved_at" IS NOT NULL)
+        AND ("processed_at" IS NULL OR (
+            "approved_at" IS NOT NULL
+            AND "processed_at" >= "requested_at"
+            AND "processed_at" >= "approved_at"
+        ))
     );
 
 ALTER TABLE "return_items"
@@ -1910,12 +1930,27 @@ ALTER TABLE "import_batches"
         AND "valid_rows" + "warning_rows" + "invalid_rows" <= "total_rows"
     ),
     ADD CONSTRAINT "import_batches_approval_metadata_check" CHECK (
-        ("approved_by_id" IS NULL AND "approved_at" IS NULL)
-        OR ("approved_by_id" IS NOT NULL AND "approved_at" IS NOT NULL)
+        ("status" IN (
+                'uploaded'::"import_batch_status", 'validating'::"import_batch_status", 'preview_ready'::"import_batch_status"
+            )
+            AND "approved_by_id" IS NULL AND "approved_at" IS NULL)
+        OR ("status" IN (
+                'approved'::"import_batch_status", 'committing'::"import_batch_status", 'committed'::"import_batch_status"
+            )
+            AND "approved_by_id" IS NOT NULL AND "approved_at" IS NOT NULL
+            AND "approved_at" >= "created_at")
+        OR ("status" IN ('failed'::"import_batch_status", 'cancelled'::"import_batch_status") AND (
+            ("approved_by_id" IS NULL AND "approved_at" IS NULL)
+            OR ("approved_by_id" IS NOT NULL AND "approved_at" IS NOT NULL AND "approved_at" >= "created_at")
+        ))
     ),
     ADD CONSTRAINT "import_batches_commit_metadata_check" CHECK (
-        ("committed_by_id" IS NULL AND "committed_at" IS NULL)
-        OR ("committed_by_id" IS NOT NULL AND "committed_at" IS NOT NULL)
+        ("status" = 'committed'::"import_batch_status"
+            AND "committed_by_id" IS NOT NULL AND "committed_at" IS NOT NULL
+            AND "approved_at" IS NOT NULL
+            AND "committed_at" >= "created_at" AND "committed_at" >= "approved_at")
+        OR ("status" <> 'committed'::"import_batch_status"
+            AND "committed_by_id" IS NULL AND "committed_at" IS NULL)
     );
 
 ALTER TABLE "import_rows"
@@ -2060,9 +2095,9 @@ BEGIN
     END IF;
 
     document_prefix := CASE p_document_type
-        WHEN 'order'::public."document_type" THEN 'ORD-'
-        WHEN 'invoice'::public."document_type" THEN 'INV-'
-        WHEN 'credit_note'::public."document_type" THEN 'CN-'
+        WHEN 'order'::public."document_type" THEN 'RS-ORD-'
+        WHEN 'invoice'::public."document_type" THEN 'RS-INV-'
+        WHEN 'credit_note'::public."document_type" THEN 'RS-CN-'
     END;
 
     RETURN QUERY
@@ -2154,17 +2189,41 @@ BEGIN
         RAISE EXCEPTION 'Credit-note number identity is immutable';
     END IF;
 
+    IF OLD."status" = 'voided'::public."credit_note_status"
+       AND NEW."status" <> OLD."status" THEN
+        RAISE EXCEPTION 'A voided credit note is terminal';
+    END IF;
+
+    IF OLD."status" = 'issued'::public."credit_note_status"
+       AND NEW."status" NOT IN ('issued'::public."credit_note_status", 'voided'::public."credit_note_status") THEN
+        RAISE EXCEPTION 'An issued credit note may only remain issued or become voided';
+    END IF;
+
     IF OLD."status" IN ('issued'::public."credit_note_status", 'voided'::public."credit_note_status")
        AND ROW(
            NEW."invoice_id", NEW."cancellation_id", NEW."return_id", NEW."source_type",
            NEW."amount", NEW."currency", NEW."reason", NEW."approved_by_id",
-           NEW."issued_by_id", NEW."approved_at", NEW."issued_at"
+           NEW."issued_by_id", NEW."approved_at", NEW."issued_at", NEW."created_at"
        ) IS DISTINCT FROM ROW(
            OLD."invoice_id", OLD."cancellation_id", OLD."return_id", OLD."source_type",
            OLD."amount", OLD."currency", OLD."reason", OLD."approved_by_id",
-           OLD."issued_by_id", OLD."approved_at", OLD."issued_at"
+           OLD."issued_by_id", OLD."approved_at", OLD."issued_at", OLD."created_at"
        ) THEN
         RAISE EXCEPTION 'Issued or voided credit-note snapshot is immutable';
+    END IF;
+
+    IF OLD."status" = 'approved'::public."credit_note_status"
+       AND NEW."status" IN ('issued'::public."credit_note_status", 'voided'::public."credit_note_status")
+       AND ROW(
+           NEW."invoice_id", NEW."cancellation_id", NEW."return_id", NEW."source_type",
+           NEW."amount", NEW."currency", NEW."reason", NEW."approved_by_id",
+           NEW."approved_at", NEW."created_at"
+       ) IS DISTINCT FROM ROW(
+           OLD."invoice_id", OLD."cancellation_id", OLD."return_id", OLD."source_type",
+           OLD."amount", OLD."currency", OLD."reason", OLD."approved_by_id",
+           OLD."approved_at", OLD."created_at"
+       ) THEN
+        RAISE EXCEPTION 'Approved credit-note evidence cannot change during issuance or voiding';
     END IF;
     RETURN NEW;
 END;
@@ -2211,6 +2270,76 @@ FOR EACH ROW EXECUTE FUNCTION "prevent_append_only_mutation"();
 CREATE TRIGGER "audit_logs_append_only"
 BEFORE UPDATE OR DELETE ON "audit_logs"
 FOR EACH ROW EXECUTE FUNCTION "prevent_append_only_mutation"();
+
+CREATE FUNCTION "prevent_hard_delete"()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = pg_catalog
+AS $$
+BEGIN
+    RAISE EXCEPTION '% is retained; hard deletion is not permitted', TG_TABLE_NAME;
+END;
+$$;
+
+CREATE TRIGGER "orders_prevent_hard_delete"
+BEFORE DELETE ON "orders"
+FOR EACH ROW EXECUTE FUNCTION "prevent_hard_delete"();
+
+CREATE TRIGGER "order_items_prevent_hard_delete"
+BEFORE DELETE ON "order_items"
+FOR EACH ROW EXECUTE FUNCTION "prevent_hard_delete"();
+
+CREATE TRIGGER "order_change_requests_prevent_hard_delete"
+BEFORE DELETE ON "order_change_requests"
+FOR EACH ROW EXECUTE FUNCTION "prevent_hard_delete"();
+
+CREATE TRIGGER "cancellations_prevent_hard_delete"
+BEFORE DELETE ON "cancellations"
+FOR EACH ROW EXECUTE FUNCTION "prevent_hard_delete"();
+
+CREATE TRIGGER "order_credit_approvals_prevent_hard_delete"
+BEFORE DELETE ON "order_credit_approvals"
+FOR EACH ROW EXECUTE FUNCTION "prevent_hard_delete"();
+
+CREATE TRIGGER "invoices_prevent_hard_delete"
+BEFORE DELETE ON "invoices"
+FOR EACH ROW EXECUTE FUNCTION "prevent_hard_delete"();
+
+CREATE TRIGGER "credit_notes_prevent_hard_delete"
+BEFORE DELETE ON "credit_notes"
+FOR EACH ROW EXECUTE FUNCTION "prevent_hard_delete"();
+
+CREATE TRIGGER "payments_prevent_hard_delete"
+BEFORE DELETE ON "payments"
+FOR EACH ROW EXECUTE FUNCTION "prevent_hard_delete"();
+
+CREATE TRIGGER "refunds_prevent_hard_delete"
+BEFORE DELETE ON "refunds"
+FOR EACH ROW EXECUTE FUNCTION "prevent_hard_delete"();
+
+CREATE TRIGGER "returns_prevent_hard_delete"
+BEFORE DELETE ON "returns"
+FOR EACH ROW EXECUTE FUNCTION "prevent_hard_delete"();
+
+CREATE TRIGGER "return_items_prevent_hard_delete"
+BEFORE DELETE ON "return_items"
+FOR EACH ROW EXECUTE FUNCTION "prevent_hard_delete"();
+
+CREATE TRIGGER "deliveries_prevent_hard_delete"
+BEFORE DELETE ON "deliveries"
+FOR EACH ROW EXECUTE FUNCTION "prevent_hard_delete"();
+
+CREATE TRIGGER "delivery_attempts_prevent_hard_delete"
+BEFORE DELETE ON "delivery_attempts"
+FOR EACH ROW EXECUTE FUNCTION "prevent_hard_delete"();
+
+CREATE TRIGGER "delivery_assignments_prevent_hard_delete"
+BEFORE DELETE ON "delivery_assignments"
+FOR EACH ROW EXECUTE FUNCTION "prevent_hard_delete"();
+
+CREATE TRIGGER "expense_entries_prevent_hard_delete"
+BEFORE DELETE ON "expense_entries"
+FOR EACH ROW EXECUTE FUNCTION "prevent_hard_delete"();
 
 -- Phase 5B custom SQL: controlled one-way lifecycle mutations.
 CREATE FUNCTION "protect_payment_allocation"()
@@ -2340,18 +2469,33 @@ RETURNS trigger
 LANGUAGE plpgsql
 SET search_path = pg_catalog, public
 AS $$
+DECLARE
+    parent_status public."import_batch_status";
 BEGIN
-    IF TG_OP = 'DELETE' THEN
-        RAISE EXCEPTION 'Import rows cannot be deleted';
+    IF TG_OP = 'UPDATE' AND NEW."import_batch_id" IS DISTINCT FROM OLD."import_batch_id" THEN
+        RAISE EXCEPTION 'Import rows cannot be moved between batches';
     END IF;
 
-    IF EXISTS (
-        SELECT 1
-        FROM public."import_batches" AS batch
-        WHERE batch."id" = OLD."import_batch_id"
-          AND batch."status" = 'committed'::public."import_batch_status"
-    ) THEN
+    -- Import child writers always lock the parent batch before the child mutation proceeds.
+    SELECT batch."status" INTO parent_status
+    FROM public."import_batches" AS batch
+    WHERE batch."id" = CASE WHEN TG_OP = 'INSERT' THEN NEW."import_batch_id" ELSE OLD."import_batch_id" END
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Import row parent batch does not exist';
+    END IF;
+
+    IF parent_status = 'committed'::public."import_batch_status" THEN
         RAISE EXCEPTION 'Rows of a committed import batch are immutable';
+    END IF;
+
+    IF TG_OP = 'INSERT' THEN
+        RETURN NEW;
+    END IF;
+
+    IF TG_OP = 'DELETE' THEN
+        RAISE EXCEPTION 'Import rows cannot be deleted';
     END IF;
 
     IF ROW(
@@ -2368,15 +2512,39 @@ END;
 $$;
 
 CREATE TRIGGER "import_rows_protect_lifecycle"
-BEFORE UPDATE OR DELETE ON "import_rows"
+BEFORE INSERT OR UPDATE OR DELETE ON "import_rows"
 FOR EACH ROW EXECUTE FUNCTION "protect_import_row"();
 
 CREATE FUNCTION "protect_import_issue"()
 RETURNS trigger
 LANGUAGE plpgsql
-SET search_path = pg_catalog
+SET search_path = pg_catalog, public
 AS $$
+DECLARE
+    parent_status public."import_batch_status";
 BEGIN
+    IF TG_OP = 'UPDATE' AND NEW."import_row_id" IS DISTINCT FROM OLD."import_row_id" THEN
+        RAISE EXCEPTION 'Import issues cannot be moved between rows';
+    END IF;
+
+    SELECT batch."status" INTO parent_status
+    FROM public."import_batches" AS batch
+    JOIN public."import_rows" AS import_row ON import_row."import_batch_id" = batch."id"
+    WHERE import_row."id" = CASE WHEN TG_OP = 'INSERT' THEN NEW."import_row_id" ELSE OLD."import_row_id" END
+    FOR UPDATE OF batch;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Import issue parent row or batch does not exist';
+    END IF;
+
+    IF parent_status = 'committed'::public."import_batch_status" THEN
+        RAISE EXCEPTION 'Issues of a committed import batch are immutable';
+    END IF;
+
+    IF TG_OP = 'INSERT' THEN
+        RETURN NEW;
+    END IF;
+
     IF TG_OP = 'DELETE' THEN
         RAISE EXCEPTION 'Import issues cannot be deleted';
     END IF;
@@ -2410,19 +2578,66 @@ END;
 $$;
 
 CREATE TRIGGER "import_issues_protect_lifecycle"
-BEFORE UPDATE OR DELETE ON "import_issues"
+BEFORE INSERT OR UPDATE OR DELETE ON "import_issues"
 FOR EACH ROW EXECUTE FUNCTION "protect_import_issue"();
+
+CREATE FUNCTION "protect_source_record_mapping"()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = pg_catalog, public
+AS $$
+DECLARE
+    parent_status public."import_batch_status";
+BEGIN
+    IF TG_OP = 'UPDATE' AND NEW."import_row_id" IS DISTINCT FROM OLD."import_row_id" THEN
+        RAISE EXCEPTION 'Source-record mappings cannot be moved between import rows';
+    END IF;
+
+    SELECT batch."status" INTO parent_status
+    FROM public."import_batches" AS batch
+    JOIN public."import_rows" AS import_row ON import_row."import_batch_id" = batch."id"
+    WHERE import_row."id" = CASE WHEN TG_OP = 'INSERT' THEN NEW."import_row_id" ELSE OLD."import_row_id" END
+    FOR UPDATE OF batch;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Source-record mapping parent row or batch does not exist';
+    END IF;
+
+    IF parent_status = 'committed'::public."import_batch_status" THEN
+        RAISE EXCEPTION 'Mappings of a committed import batch are immutable';
+    END IF;
+
+    IF TG_OP = 'INSERT' THEN
+        RETURN NEW;
+    END IF;
+
+    IF TG_OP = 'DELETE' THEN
+        RAISE EXCEPTION 'Source-record mappings cannot be deleted';
+    END IF;
+
+    IF NEW."created_at" IS DISTINCT FROM OLD."created_at" THEN
+        RAISE EXCEPTION 'Source-record mapping creation evidence is immutable';
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER "source_record_mappings_protect_lifecycle"
+BEFORE INSERT OR UPDATE OR DELETE ON "source_record_mappings"
+FOR EACH ROW EXECUTE FUNCTION "protect_source_record_mapping"();
 
 REVOKE ALL ON FUNCTION "prevent_product_sku_change"() FROM PUBLIC, anon, authenticated, service_role;
 REVOKE ALL ON FUNCTION "prevent_order_identity_change"() FROM PUBLIC, anon, authenticated, service_role;
 REVOKE ALL ON FUNCTION "prevent_invoice_snapshot_change"() FROM PUBLIC, anon, authenticated, service_role;
 REVOKE ALL ON FUNCTION "protect_credit_note_snapshot"() FROM PUBLIC, anon, authenticated, service_role;
 REVOKE ALL ON FUNCTION "prevent_append_only_mutation"() FROM PUBLIC, anon, authenticated, service_role;
+REVOKE ALL ON FUNCTION "prevent_hard_delete"() FROM PUBLIC, anon, authenticated, service_role;
 REVOKE ALL ON FUNCTION "protect_payment_allocation"() FROM PUBLIC, anon, authenticated, service_role;
 REVOKE ALL ON FUNCTION "protect_stock_reservation"() FROM PUBLIC, anon, authenticated, service_role;
 REVOKE ALL ON FUNCTION "protect_import_batch"() FROM PUBLIC, anon, authenticated, service_role;
 REVOKE ALL ON FUNCTION "protect_import_row"() FROM PUBLIC, anon, authenticated, service_role;
 REVOKE ALL ON FUNCTION "protect_import_issue"() FROM PUBLIC, anon, authenticated, service_role;
+REVOKE ALL ON FUNCTION "protect_source_record_mapping"() FROM PUBLIC, anon, authenticated, service_role;
 
 -- Phase 5B custom SQL: defense-in-depth RLS. No browser-access policies are created.
 ALTER TABLE "users" ENABLE ROW LEVEL SECURITY;
