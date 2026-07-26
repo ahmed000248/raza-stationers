@@ -44,3 +44,5 @@ next-env.d.ts
 *.zip
 graphify-out/cache/
 
+
+/generated/prisma
