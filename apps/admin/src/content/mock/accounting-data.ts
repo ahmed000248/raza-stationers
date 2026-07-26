@@ -71,3 +71,19 @@ export const MOCK_REVENUE: RevenueItem[] = [
     amount: 1200.0,
   },
 ];
+
+export interface SalesTrendPoint {
+  day: string;
+  sales: number;
+}
+
+export const MOCK_SALES_TREND_POINTS: SalesTrendPoint[] = [
+  { day: "Mon", sales: 45000 },
+  { day: "Tue", sales: 62000 },
+  { day: "Wed", sales: 58000 },
+  { day: "Thu", sales: 71000 },
+  { day: "Fri", sales: 89000 },
+  { day: "Sat", sales: 95000 },
+  { day: "Sun", sales: 40000 },
+];
+

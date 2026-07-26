@@ -162,7 +162,7 @@ Server-side enforcement is mandatory for every row above — see `FR-SEC-01`. No
 
 | ID | Requirement | Actor(s) | Priority | Related BR |
 |---|---|---|---|---|
-| FR-CAT-01 | Admin can add, edit, and remove products individually, including name, category, description, base price, unit(s) of sale, and SKU/barcode. No product images are captured or displayed anywhere in the system — the catalogue is description-based only, per the finalized design (icon block in place of a photo). | Admin, Owner | M | PR-02 |
+| FR-CAT-01 | Admin can add, edit, and remove products individually, including name, category, description, wholesale price, retail price, unit(s) of sale, and SKU/barcode. No product images are captured or displayed anywhere in the system — the catalogue is description-based only, per the finalized design (icon block in place of a photo). | Admin, Owner | M | PR-02 |
 | FR-CAT-02 | Admin can bulk-import/update products via CSV/Excel upload, with a validation preview step before committing changes. | Admin, Owner | M | PR-03 |
 | FR-CAT-03 | Each product may define multiple sale units (e.g. piece, dozen, carton) with defined conversion ratios; stock is tracked at the base unit and displayed/sold in whichever unit is configured per product. | Admin, Owner | M | PR-02 |
 | FR-CAT-04 | Customer-facing catalogue supports category browsing, free-text search, and filters (category, price range, availability). Search must return results across the full 3,000–3,500 SKU catalogue within acceptable response time (see §10). | Guest, Client Business User | M | Scope §4.1 |
@@ -347,10 +347,13 @@ When any price is displayed or calculated (catalogue, cart, checkout, reorder), 
 
 1. **Customer-specific negotiated price** — an explicit fixed price set for this exact client business + product combination (`FR-PRC-03`).
 2. **Customer-group / category pricing rule** — a discount or fixed price set for this client business on a category or set of products (`FR-PRC-03`).
-3. **Customer's default account-wide discount** — the single percentage discount assigned at approval (`FR-PRC-02`), applied to the standard price.
-4. **Standard selling price** — the fallback base price, used for guests, unapproved accounts, and any product with no customer-specific rule.
+3. **Customer's default account-wide discount** — the single percentage discount assigned at approval (`FR-PRC-02`), applied to the product's **wholesale price**.
+4. **Wholesale selling price** — an approved wholesale account with no extra negotiated discount pays this price directly.
+5. **Standard/retail selling price** — the fallback price, used for guests, unapproved accounts, and any product with no customer-specific rule.
 
-Guests and pending/unapproved accounts always resolve to step 4 regardless of any rules that might exist (there should be none, since discounts are only assignable to approved businesses). This logic must be applied identically wherever a price is shown or calculated — catalogue listing, product detail, cart, checkout, invoice, and reorder — to prevent price mismatches between screens.
+Guests and pending/unapproved accounts always resolve to step 5 regardless of any rules that might exist (there should be none, since discounts are only assignable to approved businesses). This logic must be applied identically wherever a price is shown or calculated — catalogue listing, product detail, cart, checkout, invoice, and reorder — to prevent price mismatches between screens.
+
+*(v1.3 — database design pass: step 4 added. Product now stores `wholesalePrice` and `retailPrice` as two independent real numbers rather than one base price with a discount on top; see BRD PR-01/CD-01 and TRD §6.)*
 
 ---
 

@@ -164,6 +164,8 @@ This process has no digital record, no live stock visibility, and relies entirel
 
 In addition, the owner/admin can assign a **custom discount percentage or special price** to any individual customer, overriding the tier default. This reflects how real relationships (e.g. a 20-year customer) don't always map cleanly to a fixed tier.
 
+> **Database design update (v1.5):** each product now stores two independent, real prices — `retailPrice` and `wholesalePrice` — rather than a single base price with a discount percentage applied on top. Tier 1 (Standard Customer) resolves to `retailPrice`. Tier 2 (Regular Wholesale Customer) resolves to `wholesalePrice` by default. Tier 3 (Special/Long-Term Wholesale Customer) is `wholesalePrice` minus that account's negotiated discount/fixed price. This was decided once the real rate list (2,156 items) showed wholesale and retail are genuinely different observed numbers for the business, not one derived from the other by a formula. See PR-01 below.
+
 **CD-02 — Discount scope.** Every approved customer has a default account-wide discount percentage. In Version 1, this single account-wide discount is the primary mechanism. The admin can additionally set different discounts or special fixed prices for specific products or categories (e.g. 10% general discount, 5% on sports items, a fixed price on registers) — this product/category-level rule capability ships in v1 as a manual admin override, with a fully automated rules engine planned for a later phase.
 
 **CD-03 — Walk-in and unapproved customers.** Walk-in, occasional, and unapproved online customers see the standard selling price. An authorized admin may manually apply a one-off discount when needed.
@@ -184,15 +186,14 @@ Changing a discount does **not** retroactively affect orders that were already c
 
 ## 8. Orders & Fulfilment
 
-**OF-01 — Minimum orders.** The system supports configurable minimum-order rules rather than one fixed minimum for everyone. Possible rule types include: minimum total order amount, minimum quantity per product, full pack/carton-only ordering for selected products, and a minimum amount required for free delivery.
-*Needs confirmation: the actual minimum-order values Raza Stationers currently uses (see Section 18).*
+**OF-01 — Minimum orders.** *(Confirmed by the business owner, 2026-07-26.)* Ordering is fully flexible, not governed by fixed minimum-quantity rules. Most products sell in bulk units (dozen, 30 pcs, 50 pcs, etc.), but the same product can also be sold individually to retail customers — this is exactly what `purchaseType` (individual/bulk/both) already models. No separate per-product minimum-order-quantity engine is needed for v1.
 
 **OF-02 — Editing and cancelling orders.** A customer can edit or cancel an order only while it is in **Pending Review** status. Once the admin confirms an order, the customer can no longer change it directly — instead, they submit a change or cancellation request, which the admin approves or rejects.
 
 **OF-03 — Order history and reorder.** Customers can view previous orders, download invoices, check payment/delivery status, and select "Order Again" with the ability to adjust quantities before checkout. Reordering always applies current prices and current stock availability, not the original order's prices.
 
 **OF-04 — Delivery zones.** Delivery is initially offered only in the areas the business already serves. The admin manages: delivery cities/areas, delivery charges, minimum order for delivery, free-delivery rules, and areas that require manual confirmation before dispatch.
-*Needs confirmation: the exact cities/areas currently covered (see Section 18).*
+*(Confirmed by the business owner, 2026-07-26.)* Free delivery within Wah Cantt, Hassanabdal, and Taxila (the whole region). Delivery charges apply for Rawalpindi and Islamabad. *Still needed: the exact Rupee charge amounts for Rawalpindi/Islamabad.*
 
 **OF-05 — Order volume.** Current order volume (orders/day, orders/week, busiest days, seasonal peaks, average products per order) is not yet known and needs confirmation from the owner or computer operator. Regardless of current volume, the system must be architected to handle future growth without requiring a rebuild.
 
@@ -228,16 +229,17 @@ Changing a discount does **not** retroactively affect orders that were already c
 
 ## 11. Products & Catalogue
 
-**PR-01 — Price priority.** The system maintains a standard/base selling price. Approved customers may receive customer-group prices, category-level discounts, or individually negotiated prices. When a customer views a price, the system applies this priority order:
+**PR-01 — Price priority.** The system maintains two stored prices per product — a standard/retail selling price and a wholesale selling price — plus, once an approved customer has a negotiated discount, a further reduction off the wholesale price. When a customer views a price, the system applies this priority order:
 
 | Priority | Rule |
 |---|---|
-| 1 (highest) | Customer-specific negotiated price |
-| 2 | Customer-group / category pricing rule |
-| 3 | Customer's default account-wide discount |
-| 4 (lowest / fallback) | Standard selling price |
+| 1 (highest) | Customer-specific negotiated price (fixed price for this business + product) |
+| 2 | Customer-group / category pricing rule (discount or fixed price for this business + category) |
+| 3 | Customer's default account-wide discount, applied to the **wholesale** price |
+| 4 | Wholesale selling price (approved wholesale account, no extra negotiated discount) |
+| 5 (lowest / fallback) | Standard/retail selling price (guest, walk-in, unapproved account) |
 
-Only authorized users (owner/admin) can manually override a price outside these rules.
+Only authorized users (owner/admin) can manually override a price outside these rules. *(v1.5: tier 4 added — previously an approved wholesale account with no custom discount had no distinct price and fell through to the standard/retail price, which didn't match CD-01's intent that Regular Wholesale Customers get their own tier.)*
 
 **PR-02 — Variants and pack quantities.** Products may differ by brand, colour, size, page count, quality, and unit of sale (single unit, dozen, pack, bundle, carton). Every stock-tracked variation has its own SKU or barcode. The system understands unit conversions — e.g. 12 pieces per dozen, or a defined number of packs per carton — so stock and pricing stay consistent across units.
 

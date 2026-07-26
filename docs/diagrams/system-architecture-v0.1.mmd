@@ -1,0 +1,164 @@
+%% Raza Stationers - Draft System Architecture v0.1
+%% Updated from repository evidence on 2026-07-26.
+%% Statuses describe implementation reality, not just the target design.
+%% Prompt corrections applied:
+%% - apps/api is the confirmed location for the planned NestJS server.
+%% - packages/api is the existing shared HTTP client, not the server.
+%% - apps/admin contains implemented pages but still reads mock data.
+%% - apps/mobile is a package placeholder; React Native/Expo is planned.
+%% - object storage is for payment receipts and client documents, not product photos.
+%% - Phase 2 has DECIDED/RECOMMENDED/UNKNOWN answers, not complete owner sign-off.
+%% - the documented environment model is local + demo + production; separate staging is TBD.
+
+flowchart TB
+  subgraph USERS["1. Users - documented roles"]
+    direction LR
+    RETAIL["Retail customer"]
+    WHOLESALE["Wholesale client"]
+    OWNER["Owner"]
+    ADMINUSER["Admin / operator"]
+    WAREHOUSE["Warehouse / packing worker"]
+    DELIVERYUSER["Delivery worker"]
+  end
+
+  subgraph CLIENTS["2. Client applications and shared client code"]
+    direction LR
+    WEB["Customer storefront<br/>apps/web - Existing<br/>Next.js; QA-passed; mock-driven"]
+    ADMINAPP["Admin panel<br/>apps/admin - Existing<br/>Next.js pages; mock-driven"]
+    MOBILE["Mobile application<br/>apps/mobile - Planned<br/>package placeholder only"]
+    APICLIENT["Shared HTTP client<br/>packages/api - Existing<br/>not yet wired to the frontends"]
+    MOCKS["Local mock fixtures<br/>Existing current data source"]
+    NODIRECT["Prohibited boundary<br/>No frontend import of packages/db<br/>No direct business-database writes"]
+  end
+
+  RETAIL -->|browse and order| WEB
+  WHOLESALE -->|business ordering| WEB
+  OWNER -->|owner-only operations| ADMINAPP
+  ADMINUSER -->|day-to-day operations| ADMINAPP
+  WAREHOUSE -->|packing and stock work| ADMINAPP
+  DELIVERYUSER -->|dispatch and outcomes| ADMINAPP
+  RETAIL -.->|future access| MOBILE
+  WHOLESALE -.->|future access| MOBILE
+  WEB -->|current reads| MOCKS
+  ADMINAPP -->|current reads| MOCKS
+  WEB -.->|planned HTTPS / JSON| APICLIENT
+  ADMINAPP -.->|planned HTTPS / JSON| APICLIENT
+  MOBILE -.->|planned HTTPS / JSON| APICLIENT
+
+  subgraph BACKEND["3. Backend application - confirmed design; not implemented"]
+    direction TB
+    API["NestJS REST API<br/>apps/api - Confirmed location<br/>not scaffolded"]
+    EDGE["Controllers, DTO validation,<br/>JWT authentication and server-side RBAC"]
+    SERVICES["NestJS service layer<br/>single source of business rules"]
+
+    subgraph MODULES["Planned backend modules"]
+      direction LR
+      AUTHM["Authentication"]
+      CATM["Catalogue"]
+      CLIENTM["Client business"]
+      PRICEM["Pricing"]
+      STOCKM["Inventory"]
+      ORDERM["Orders"]
+      PAYM["Payments and credit"]
+      DELM["Delivery"]
+      REPORTM["Reporting"]
+      AUDITM["Audit"]
+      IMPORTM["Catalogue import"]
+      NOTIFYM["Notifications"]
+      SCHED["Daily reminder scheduler<br/>No Redis/BullMQ in v1"]
+    end
+
+    API --> EDGE
+    EDGE --> SERVICES
+    SERVICES --- AUTHM
+    SERVICES --- CATM
+    SERVICES --- CLIENTM
+    SERVICES --- PRICEM
+    SERVICES --- STOCKM
+    SERVICES --- ORDERM
+    SERVICES --- PAYM
+    SERVICES --- DELM
+    SERVICES --- REPORTM
+    SERVICES --- AUDITM
+    SERVICES --- IMPORTM
+    SERVICES --- NOTIFYM
+    SCHED -->|due-date reminders| PAYM
+    SCHED -->|creates in-app notices| NOTIFYM
+  end
+
+  APICLIENT -.->|planned REST requests| API
+
+  subgraph DATA["4. Data layer"]
+    direction LR
+    SCHEMA["Prisma schema<br/>Existing: 21 models<br/>packages/db/prisma/schema.prisma"]
+    PRISMA["Prisma ORM runtime<br/>Planned backend-only access"]
+    POSTGRES[("PostgreSQL / Supabase<br/>Planned; no connected business DB")]
+    STORAGE[("Object storage<br/>Planned: payment receipts<br/>and client documents only")]
+    STAGING[("Import staging area<br/>Proposed: ImportBatch / ImportRow / ImportError<br/>not in the current schema")]
+    AUDITDATA[("Audit records<br/>AuditLog model exists in schema;<br/>runtime persistence planned")]
+  end
+
+  SERVICES -->|all business data access| PRISMA
+  SCHEMA -.->|defines generated client and migrations| PRISMA
+  PRISMA -->|queries and transactions| POSTGRES
+  CLIENTM -->|document metadata and URLs| PRISMA
+  CLIENTM -.->|planned file upload| STORAGE
+  PAYM -.->|planned receipt upload| STORAGE
+  AUDITM -->|sensitive mutations| AUDITDATA
+  AUDITDATA -->|stored with business data| POSTGRES
+  IMPORTM -->|validate and review| STAGING
+  STAGING -->|approved rows only| PRISMA
+  NODIRECT --- PRISMA
+
+  subgraph EXTERNAL["5. External systems and import sources"]
+    direction LR
+    XLSX["RS-Database.xlsx<br/>Existing source<br/>2,156 products; 87 categories;<br/>136 review-queue rows"]
+    INVO["Invo Retailer export<br/>TBD: stable codes, price units,<br/>package conversions and opening stock"]
+    SUPAAUTH["Supabase Auth<br/>Planned demo provider<br/>MFA intended for Owner/Admin"]
+    PAYPROVIDERS["Easypaisa / JazzCash / NayaPay / bank<br/>TBD merchant accounts;<br/>manual proof flow for v1"]
+    MESSAGES["SMS / WhatsApp / email provider<br/>TBD; OTP and external messaging deferred"]
+    GITHUB["Private GitHub repository and Actions<br/>Documented external platform;<br/>local repository has an origin"]
+    MONITOR["Sentry and uptime monitoring<br/>Optional/TBD for demo;<br/>required for production"]
+  end
+
+  XLSX -->|catalogue file| IMPORTM
+  INVO -.->|possible future export| IMPORTM
+  AUTHM -.->|sessions and JWTs| SUPAAUTH
+  PAYPROVIDERS -.->|future gateway callbacks| PAYM
+  MESSAGES -.->|future delivery channel| NOTIFYM
+  MONITOR -.->|errors and alerts| API
+
+  subgraph ENV["6. Environment boundary"]
+    direction LR
+    LOCAL["Local development - Existing<br/>source code and mock fixtures;<br/>local DB stack not created"]
+    DEMO["Demo / development - Planned<br/>Vercel + Render + Supabase;<br/>sample/fake data only"]
+    STAGE["Separate staging - TBD<br/>demo may later be retained as staging"]
+    PROD["Production - Future<br/>requires owner approval, paid hosting,<br/>backups, monitoring and security review"]
+  end
+
+  GITHUB -.->|CI/CD plan| DEMO
+  LOCAL -.->|deploy same architecture| DEMO
+  DEMO -.->|optional separation| STAGE
+  DEMO -->|configuration and data migration| PROD
+  STAGE -.->|if approved| PROD
+
+  subgraph LEGEND["Legend"]
+    direction LR
+    LEXIST["Existing"]
+    LPLAN["Confirmed / planned"]
+    LEXT["External"]
+    LTBD["Unresolved / TBD"]
+    LNO["Prohibited boundary"]
+  end
+
+  class RETAIL,WHOLESALE,OWNER,ADMINUSER,WAREHOUSE,DELIVERYUSER,WEB,ADMINAPP,APICLIENT,MOCKS,SCHEMA,XLSX,LOCAL,LEXIST existing
+  class MOBILE,API,EDGE,SERVICES,AUTHM,CATM,CLIENTM,PRICEM,STOCKM,ORDERM,PAYM,DELM,REPORTM,AUDITM,IMPORTM,NOTIFYM,SCHED,PRISMA,POSTGRES,STORAGE,AUDITDATA,DEMO,PROD,LPLAN planned
+  class SUPAAUTH,GITHUB,LEXT external
+  class STAGING,INVO,PAYPROVIDERS,MESSAGES,MONITOR,STAGE,LTBD tbd
+  class NODIRECT,LNO prohibited
+
+  classDef existing fill:#d9ead3,stroke:#38761d,color:#1f2937,stroke-width:1px
+  classDef planned fill:#d9eaf7,stroke:#2f6f9f,color:#1f2937,stroke-width:1px
+  classDef external fill:#e5e7eb,stroke:#6b7280,color:#1f2937,stroke-width:1px
+  classDef tbd fill:#fff2cc,stroke:#b7791f,color:#1f2937,stroke-width:1px
+  classDef prohibited fill:#f4cccc,stroke:#a61b1b,color:#1f2937,stroke-width:1px

@@ -15,6 +15,7 @@
     "lint": "npm run lint --workspaces --if-present"
   },
   "devDependencies": {
+    "@mermaid-js/mermaid-cli": "^11.16.0",
     "typescript": "^5"
   },
   "dependencies": {

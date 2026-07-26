@@ -4,7 +4,7 @@
 
 **Prepared for:** Raza Stationers
 **Prepared by:** Ahmed (Product Owner), drafted with AI assistance
-**Version:** 1.4 (Draft)
+**Version:** 1.5 (Draft)
 **Date:** July 25, 2026
 **Status:** Draft
 **Based on:** PRD v1.1, BRD v1.1, FRD v1.2
@@ -20,6 +20,7 @@
 | 1.2 | 2026-07-23 | Ahmed | Re-verified every demo-stack component against current provider pricing; confirmed all layers (including hosting) remain $0 for the demo phase; added Supabase's 7-day auto-pause caveat and a note on Vercel Hobby's non-commercial terms | Draft |
 | 1.3 | 2026-07-25 | Ahmed | Reconciled this document against the actual scaffolded repo: switched §3/§5 from pnpm+Turborepo to npm workspaces (matches what's built, functionally equivalent for this scale); updated §5's repo tree to reflect real package/app names and flag what's not yet scaffolded (`apps/admin`, `apps/api`); removed stale product-image references from §6/§12 (no product photography, per the finalized description-based catalogue design); added `purchase_type` to the Product schema row; flagged an open architecture question on whether `apps/api` (NestJS) is still needed given Next.js Route Handlers/Server Actions could serve the same role | Draft |
 | 1.4 | 2026-07-25 | Ahmed | `apps/admin` scaffolded as its own Next.js app (resolving part of v1.3's open question — a separate app, not a route inside `apps/web`); added `packages/ui` (shared shadcn primitives, Bilingual, motion wrappers, and design tokens, consumed by both `apps/web` and `apps/admin`); updated §5's repo tree; `docs/` split into `docs/website/` and `docs/admin/` for surface-specific documents, with PRD/BRD/FRD/TRD staying at `docs/` root as cross-cutting | Draft |
+| 1.5 | 2026-07-26 | Ahmed | First real database design pass, against the actual rate list (`RS-Database.xlsx`: 2,156 products, 87 categories, wholesale prices only — retail/buying prices pending). Wrote `packages/db/prisma/schema.prisma`, the first real Prisma schema for this project (previously only a placeholder service-layer stub existed). Split Product's single `base_price` into `buying_price`/`wholesale_price`/`retail_price` (§6 row updated below) — a genuine pricing-model correction, not just a rename: it closes a gap where an approved wholesale account with no extra discount had no distinct price and silently saw the same price as a guest. BRD PR-01/CD-01 and FRD §8 updated to match (now a 5-tier priority order); `packages/types` and `apps/web`'s pricing logic/mock data updated in lockstep. | Draft |
 
 ---
 
@@ -173,7 +174,7 @@ CI runs on GitHub Actions (free tier: 2,000 minutes/month is sufficient) — lin
 
 ## 6. Database Schema
 
-The schema below implements the FRD's functional modules. Field lists are representative, not exhaustive — the Prisma schema is the source of truth once implementation begins.
+The schema below implements the FRD's functional modules. Field lists are representative, not exhaustive — **`packages/db/prisma/schema.prisma` is the actual source of truth** as of v1.5 (this is no longer a "once implementation begins" placeholder — the real Prisma schema exists and mirrors this table plus `packages/types`, entity-for-entity).
 
 | Entity | Key Fields | Relations | Implements |
 |---|---|---|---|
@@ -182,7 +183,7 @@ The schema below implements the FRD's functional modules. Field lists are repres
 | **BusinessUserLink** | id, user_id, client_business_id, business_role (owner/manager/purchase_officer/branch_employee) | User ↔ ClientBusiness (many-to-many) | FR-CB-05, FR-CB-06 |
 | **StaffProfile** | id, user_id, staff_role (admin/operator, packing, delivery), join_date | → User (1:1) | FR-STF |
 | **Category** | id, name, name_urdu, parent_category_id | → Product (many) | FR-CAT |
-| **Product** | id, name, name_urdu, shop_name, category_id, description, base_price, sku, barcode, is_archived, purchase_type (individual/bulk/both) | → Category, → ProductUnit (many), → StockLevel (1:1), → DiscountRule (many) | FR-CAT, PR-02 |
+| **Product** | id, name, name_urdu, shop_name, category_id, description, buying_price (nullable), wholesale_price, retail_price (nullable), sku, barcode, is_archived, purchase_type (individual/bulk/both) | → Category, → ProductUnit (many), → StockLevel (1:1), → DiscountRule (many) | FR-CAT, PR-02 |
 | **ProductUnit** | id, product_id, unit_name (piece/dozen/carton), conversion_to_base | → Product | FR-CAT-03, PR-02 |
 | **StockLevel** | id, product_id, current_quantity (base unit), low_stock_threshold | → Product (1:1), → StockMovement (many) | FR-STK-01 to 04 |
 | **StockMovement** | id, product_id, quantity_change, movement_type (restock/sale/adjustment), supplier, purchase_price, invoice_number, entered_by_user_id, created_at | → Product, → User | FR-STK-01 |

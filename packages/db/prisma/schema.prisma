@@ -1,0 +1,676 @@
+// Raza Stationers — Prisma Schema
+//
+// Source of truth per TRD.md §6 (Database Schema, v1.5) — this file mirrors
+// packages/types/src/index.ts entity-for-entity. TypeScript fields there are
+// camelCase; the columns here are snake_case via @map, matching the naming
+// TRD §6 already documents (mobile_number, password_hash, etc.).
+//
+// Every model is tagged with the FR/BRD requirement(s) it implements, same
+// discipline as packages/types — if a field doesn't trace back to a doc, it
+// doesn't belong here; add it to the docs first.
+//
+// Real-data note (RS-Database.xlsx, 2026-07-26): 2,156 products across 87
+// categories were extracted from the business's actual rate list. That scale
+// directly informed: (1) Product needing wholesalePrice/retailPrice as two
+// independent stored numbers rather than one basePrice + formula (see the
+// pricing model note on Product below), and (2) the search indexes on
+// Product.name / Product.shopName / Product.categoryId, since 2,156 rows is
+// enough that an unindexed catalogue search would be noticeably slow.
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+/// Site-level role. Guests are never persisted as a User (BRD §5) — they only
+/// exist as an unauthenticated request.
+enum UserRole {
+  owner
+  admin
+  packing
+  delivery
+  business_user
+
+  @@map("user_role")
+}
+
+/// Subset of UserRole that can hold a StaffProfile (FR-STF-01).
+enum StaffRole {
+  admin
+  packing
+  delivery
+
+  @@map("staff_role")
+}
+
+enum BusinessType {
+  stationery_shop
+  school
+  bookstore
+  office
+  distributor
+  other
+
+  @@map("business_type")
+}
+
+/// CB-06 / FR-CB-02, FR-CB-03: approval workflow status.
+enum ClientBusinessAccountStatus {
+  pending
+  active
+  suspended
+  blocked
+
+  @@map("client_business_account_status")
+}
+
+/// PY-01 / FR-PAY-01, FR-PAY-04: credit privileges, distinct from account status.
+enum CreditStatus {
+  active
+  suspended
+  blocked
+
+  @@map("credit_status")
+}
+
+/// FR-CB-05/FR-CB-06 — role of a linked user within their client business.
+enum BusinessUserRole {
+  owner
+  manager
+  purchase_officer
+  branch_employee
+
+  @@map("business_user_role")
+}
+
+/// 'individual' | 'bulk' | 'both' — the design system's Individual/Bulk
+/// purchase-type toggle. Confirmed against real data: RS-Database.xlsx's
+/// "Sales Type" column has exactly two values ("Both" -> both, "Wholesale/
+/// Bulk" -> bulk); no product in the real catalogue is individual-only.
+enum ProductPurchaseType {
+  individual
+  bulk
+  both
+
+  @@map("product_purchase_type")
+}
+
+/// SK-01/FR-STK-07: routine restock vs. owner-only correction/adjustment.
+enum StockMovementType {
+  restock
+  sale
+  adjustment
+
+  @@map("stock_movement_type")
+}
+
+enum DiscountScope {
+  account_wide
+  category
+  product
+
+  @@map("discount_scope")
+}
+
+/// Full internal order state machine — FRD §7. Only the transitions listed
+/// there are valid; enforcement lives in the backend OrderStateMachine
+/// service, not in this enum.
+enum OrderStatus {
+  pending_review
+  confirmed
+  rejected
+  pending_owner_approval
+  change_requested
+  packed
+  out_for_delivery
+  delivered
+  failed_delivery
+  cancelled
+
+  @@map("order_status")
+}
+
+enum PaymentMethod {
+  ONLINE_EASYPAISA
+  ONLINE_JAZZCASH
+  ONLINE_NAYAPAY
+  ONLINE_BANK_TRANSFER
+  CASH_ON_DELIVERY
+  PAY_LATER_CREDIT
+
+  @@map("payment_method")
+}
+
+enum DeliveryStatus {
+  assigned
+  dispatched
+  delivered
+  failed
+
+  @@map("delivery_status")
+}
+
+/// TRD §15: manual/mock flow in the demo; the same states extend to live
+/// gateway callbacks later.
+enum PaymentStatus {
+  pending
+  submitted
+  verified
+  rejected
+
+  @@map("payment_status")
+}
+
+/// How a Payment was settled — distinct from Order.PaymentMethod, which is
+/// the customer's chosen channel at checkout.
+enum PaymentSettlementMethod {
+  online
+  cash
+  credit
+  partial
+
+  @@map("payment_settlement_method")
+}
+
+enum CreditTransactionType {
+  charge
+  payment
+  adjustment
+
+  @@map("credit_transaction_type")
+}
+
+enum ExpenseCategory {
+  restocking
+  salaries
+  rent
+  utilities
+  fuel
+  vehicle_maintenance
+  packaging
+  gateway_fees
+  returns_refunds
+  damaged_stock
+  taxes
+  other
+
+  @@map("expense_category")
+}
+
+enum NotificationSubscriptionScope {
+  product
+  category
+  brand
+
+  @@map("notification_subscription_scope")
+}
+
+enum NotificationType {
+  restock
+  order_status
+  payment_reminder
+  credit_status
+  account_status
+  announcement
+
+  @@map("notification_type")
+}
+
+// ---------------------------------------------------------------------------
+// Users & Staff — FR-AUTH, FR-STF, TRD §6 (User, StaffProfile)
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String   @id @default(cuid())
+  mobileNumber String   @unique @map("mobile_number")
+  passwordHash String   @map("password_hash")
+  name         String
+  role         UserRole
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  staffProfile             StaffProfile?
+  businessUserLinks        BusinessUserLink[]
+  stockMovementsEntered    StockMovement[]
+  discountChangeLogsMade   DiscountChangeLog[]
+  ordersPlaced             Order[]
+  orderStatusChangesMade   OrderStatusHistory[]
+  deliveryAssignments      DeliveryAssignment[]
+  paymentsVerified         Payment[]
+  expenseEntriesEntered    ExpenseEntry[]
+  notificationSubscriptions NotificationSubscription[]
+  notifications            Notification[]
+  auditLogs                AuditLog[]
+
+  @@map("users")
+}
+
+/// FR-STF-04 — basic staff profile info, independent of business linkage.
+model StaffProfile {
+  id        String    @id @default(cuid())
+  userId    String    @unique @map("user_id")
+  staffRole StaffRole @map("staff_role")
+  joinDate  DateTime  @map("join_date")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("staff_profiles")
+}
+
+// ---------------------------------------------------------------------------
+// Client Business Management (core feature) — BRD §15 (CB-01–CB-08), FR-CB-*
+// ---------------------------------------------------------------------------
+
+/// The wholesale customer record. BRD CB-07: "the client business is the
+/// primary wholesale customer record" — individual Users are just people
+/// authorized to act on its behalf via BusinessUserLink.
+model ClientBusiness {
+  id                     String                      @id @default(cuid())
+  businessName           String                      @map("business_name")
+  ownerName              String                      @map("owner_name")
+  contactPerson          String                      @map("contact_person")
+  phone                  String
+  whatsapp               String?
+  email                  String?
+  address                String
+  city                   String
+  businessType           BusinessType                @map("business_type")
+  /// BRD CB-01: relationship length drives tier/relationship decisions, not just discount %.
+  relationshipStartDate  DateTime?                   @map("relationship_start_date")
+  /// CD-01/CD-02 default account-wide discount, applied to wholesalePrice (v1.5) — never shown to the customer directly (CD-04).
+  discountPercent        Decimal                     @default(0) @db.Decimal(5, 2) @map("discount_percent")
+  /// PY-01: Owner-only to set/change.
+  creditLimit            Decimal                     @default(0) @db.Decimal(12, 2) @map("credit_limit")
+  /// Derived/cached from CreditTransaction sum — never edited directly (TRD §11).
+  outstandingBalance     Decimal                     @default(0) @db.Decimal(12, 2) @map("outstanding_balance")
+  creditStatus           CreditStatus                @default(active) @map("credit_status")
+  accountStatus          ClientBusinessAccountStatus  @default(pending) @map("account_status")
+  internalNotes          String?                     @map("internal_notes")
+  createdAt              DateTime                    @default(now()) @map("created_at")
+
+  businessUserLinks   BusinessUserLink[]
+  orders              Order[]
+  discountChangeLogs  DiscountChangeLog[]
+  discountRules       DiscountRule[]
+  payments            Payment[]
+  creditTransactions  CreditTransaction[]
+
+  @@index([accountStatus])
+  @@index([city])
+  @@map("client_businesses")
+}
+
+/// Many-to-many link between a User and the ClientBusiness they order on
+/// behalf of. Pricing, credit, and order history all belong to the
+/// ClientBusiness, never to the individual User (BRD CB-05).
+model BusinessUserLink {
+  id               String           @id @default(cuid())
+  userId           String           @map("user_id")
+  clientBusinessId String           @map("client_business_id")
+  businessRole     BusinessUserRole @map("business_role")
+
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clientBusiness ClientBusiness @relation(fields: [clientBusinessId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, clientBusinessId])
+  @@index([clientBusinessId])
+  @@map("business_user_links")
+}
+
+// ---------------------------------------------------------------------------
+// Catalogue — FR-CAT-*, FR-STK-*, TRD §6 (Category, Product, ProductUnit, StockLevel, StockMovement)
+// ---------------------------------------------------------------------------
+
+model Category {
+  id               String  @id @default(cuid())
+  name             String  @unique
+  nameUrdu         String? @map("name_urdu")
+  parentCategoryId String? @map("parent_category_id")
+
+  parentCategory Category?  @relation("CategoryToSubcategory", fields: [parentCategoryId], references: [id], onDelete: SetNull)
+  subcategories  Category[] @relation("CategoryToSubcategory")
+  products       Product[]
+  discountRules  DiscountRule[]
+
+  @@map("categories")
+}
+
+/// No imageUrl field — the catalogue is description-based only per the
+/// finalized design system (icon block in place of a photo).
+///
+/// Pricing model (v1.5, decided during database design against the real
+/// 2,156-item rate list — see BRD PR-01/CD-01, FRD §8):
+/// - wholesalePrice: required. What an approved wholesale ClientBusiness
+///   account pays by default (BRD CD-01 "Regular Wholesale Customer" tier).
+///   Sourced directly from RS-Database.xlsx today.
+/// - retailPrice: the standard/walk-in price (CD-01 "Standard Customer"
+///   tier) — optional for now, arriving from the business separately;
+///   nullable until every product has one, then should become required.
+/// - buyingPrice: cost from the supplier — Owner-only, accounting/margin
+///   reporting only (FR-ACC), never returned in a customer-facing response.
+///   Optional for now, arriving from the business separately.
+model Product {
+  id            String              @id @default(cuid())
+  name          String
+  nameUrdu      String?             @map("name_urdu")
+  /// NA-03: commonly-used local/shop name, also searchable (FR-LNG-02).
+  shopName      String?             @map("shop_name")
+  categoryId    String              @map("category_id")
+  description   String
+  buyingPrice   Decimal?            @db.Decimal(10, 2) @map("buying_price")
+  wholesalePrice Decimal            @db.Decimal(10, 2) @map("wholesale_price")
+  retailPrice   Decimal?            @db.Decimal(10, 2) @map("retail_price")
+  sku           String              @unique
+  barcode       String?
+  isArchived    Boolean             @default(false) @map("is_archived")
+  purchaseType  ProductPurchaseType @map("purchase_type")
+  createdAt     DateTime            @default(now()) @map("created_at")
+  updatedAt     DateTime            @updatedAt @map("updated_at")
+
+  category      Category       @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  units         ProductUnit[]
+  stockLevel    StockLevel?
+  stockMovements StockMovement[]
+  discountRules DiscountRule[]
+  orderItems    OrderItem[]
+
+  /// FRD §10 / TRD §6: catalogue search across 2,156+ rows needs these indexed.
+  @@index([name])
+  @@index([shopName])
+  @@index([categoryId])
+  @@map("products")
+}
+
+/// FR-CAT-03/PR-02 — unit of sale with conversion to the tracked base unit.
+model ProductUnit {
+  id               String @id @default(cuid())
+  productId        String @map("product_id")
+  /// 'piece' | 'dozen' | 'carton' | other business-defined unit name.
+  unitName         String @map("unit_name")
+  conversionToBase Decimal @db.Decimal(10, 2) @map("conversion_to_base")
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, unitName])
+  @@map("product_units")
+}
+
+/// FR-STK-01 to 04 — current level lives here; StockStatus (IN_STOCK/
+/// LOW_STOCK/OUT_OF_STOCK) is derived at query time, never stored.
+model StockLevel {
+  id               String @id @default(cuid())
+  productId        String @unique @map("product_id")
+  currentQuantity  Int    @default(0) @map("current_quantity")
+  lowStockThreshold Int   @default(0) @map("low_stock_threshold")
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("stock_levels")
+}
+
+/// SK-01/FR-STK-01: routine restock. SK-01+FR-STK-07: owner-only correction/adjustment.
+model StockMovement {
+  id              String            @id @default(cuid())
+  productId       String            @map("product_id")
+  quantityChange  Int               @map("quantity_change")
+  movementType    StockMovementType @map("movement_type")
+  supplier        String?
+  purchasePrice   Decimal?          @db.Decimal(10, 2) @map("purchase_price")
+  invoiceNumber   String?           @map("invoice_number")
+  /// Required by FR-STK-07 when movementType = adjustment; enforced at the API/validation layer.
+  reason          String?
+  enteredByUserId String            @map("entered_by_user_id")
+  createdAt       DateTime          @default(now()) @map("created_at")
+
+  product        Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  enteredByUser  User    @relation(fields: [enteredByUserId], references: [id], onDelete: Restrict)
+
+  @@index([productId])
+  @@map("stock_movements")
+}
+
+// ---------------------------------------------------------------------------
+// Pricing & Discounts — FR-PRC-*, TRD §6 (DiscountRule, DiscountChangeLog), TRD §9
+// ---------------------------------------------------------------------------
+
+/// FR-PRC-02/03 — a category- or product-level override for one client
+/// business. Whichever of discountPercent/fixedPrice is set, it is applied
+/// against that product's wholesalePrice (v1.5), never retailPrice.
+model DiscountRule {
+  id               String        @id @default(cuid())
+  clientBusinessId String        @map("client_business_id")
+  scope            DiscountScope
+  categoryId       String?       @map("category_id")
+  productId        String?       @map("product_id")
+  discountPercent  Decimal?      @db.Decimal(5, 2) @map("discount_percent")
+  fixedPrice       Decimal?      @db.Decimal(10, 2) @map("fixed_price")
+  isActive         Boolean       @default(true) @map("is_active")
+
+  clientBusiness ClientBusiness @relation(fields: [clientBusinessId], references: [id], onDelete: Cascade)
+  category       Category?      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  product        Product?       @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([clientBusinessId])
+  @@map("discount_rules")
+}
+
+/// FR-PRC-05 — immutable change log, reason required.
+model DiscountChangeLog {
+  id               String   @id @default(cuid())
+  clientBusinessId String   @map("client_business_id")
+  previousValue    String   @map("previous_value")
+  newValue         String   @map("new_value")
+  changedByUserId  String   @map("changed_by_user_id")
+  reason           String
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  clientBusiness ClientBusiness @relation(fields: [clientBusinessId], references: [id], onDelete: Cascade)
+  changedByUser  User           @relation(fields: [changedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([clientBusinessId])
+  @@map("discount_change_logs")
+}
+
+// ---------------------------------------------------------------------------
+// Orders — FR-ORD-*, FR-CRT-*, TRD §6 (Order, OrderItem, OrderStatusHistory), TRD §7/§10
+// ---------------------------------------------------------------------------
+
+model Order {
+  id               String        @id @default(cuid())
+  orderNumber      String        @unique @map("order_number")
+  clientBusinessId String        @map("client_business_id")
+  placedByUserId   String        @map("placed_by_user_id")
+  status           OrderStatus   @default(pending_review)
+  paymentMethod    PaymentMethod @map("payment_method")
+  subtotal         Decimal       @db.Decimal(12, 2)
+  deliveryCharge   Decimal       @default(0) @db.Decimal(10, 2) @map("delivery_charge")
+  total            Decimal       @db.Decimal(12, 2)
+  deliveryAddress  String        @map("delivery_address")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  confirmedAt      DateTime?     @map("confirmed_at")
+
+  clientBusiness      ClientBusiness       @relation(fields: [clientBusinessId], references: [id], onDelete: Restrict)
+  placedByUser        User                 @relation(fields: [placedByUserId], references: [id], onDelete: Restrict)
+  items               OrderItem[]
+  statusHistory       OrderStatusHistory[]
+  deliveryAssignments DeliveryAssignment[]
+  payments            Payment[]
+  creditTransactions  CreditTransaction[]
+
+  @@index([status])
+  @@index([clientBusinessId])
+  @@map("orders")
+}
+
+model OrderItem {
+  id                String  @id @default(cuid())
+  orderId           String  @map("order_id")
+  productId         String  @map("product_id")
+  unit              String
+  quantity          Int
+  /// FR-PRC-06: the resolved final price at the moment of order — never a discount %.
+  unitPriceAtOrder  Decimal @db.Decimal(10, 2) @map("unit_price_at_order")
+  lineTotal         Decimal @db.Decimal(12, 2) @map("line_total")
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+/// FR-ORD-06/§7 — every transition writes a row here, which also feeds AuditLog.
+model OrderStatusHistory {
+  id              String       @id @default(cuid())
+  orderId         String       @map("order_id")
+  fromStatus      OrderStatus? @map("from_status")
+  toStatus        OrderStatus  @map("to_status")
+  changedByUserId String       @map("changed_by_user_id")
+  reason          String?
+  createdAt       DateTime     @default(now()) @map("created_at")
+
+  order         Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  changedByUser User  @relation(fields: [changedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([orderId])
+  @@map("order_status_history")
+}
+
+/// FR-DLV-* — dispatch/delivery accountability record (ST-02).
+model DeliveryAssignment {
+  id               String         @id @default(cuid())
+  orderId          String         @map("order_id")
+  deliveryWorkerId String         @map("delivery_worker_id")
+  dispatchedAt     DateTime?      @map("dispatched_at")
+  deliveredAt      DateTime?      @map("delivered_at")
+  deliveryStatus   DeliveryStatus @default(assigned) @map("delivery_status")
+  cashCollected    Decimal?       @db.Decimal(10, 2) @map("cash_collected")
+  failedReason     String?        @map("failed_reason")
+  returnedItems    String?        @map("returned_items")
+
+  order          Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  deliveryWorker User  @relation(fields: [deliveryWorkerId], references: [id], onDelete: Restrict)
+
+  @@index([orderId])
+  @@map("delivery_assignments")
+}
+
+// ---------------------------------------------------------------------------
+// Payments & Credit — FR-PAY-*, TRD §6 (Payment, CreditTransaction), TRD §11/§15
+// ---------------------------------------------------------------------------
+
+model Payment {
+  id                   String                  @id @default(cuid())
+  orderId              String                  @map("order_id")
+  clientBusinessId     String                  @map("client_business_id")
+  amount               Decimal                 @db.Decimal(12, 2)
+  method               PaymentSettlementMethod
+  status               PaymentStatus           @default(pending)
+  transactionReference String?                 @map("transaction_reference")
+  receiptUrl           String?                 @map("receipt_url")
+  verifiedByUserId     String?                 @map("verified_by_user_id")
+  createdAt            DateTime                @default(now()) @map("created_at")
+
+  order          Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  clientBusiness ClientBusiness @relation(fields: [clientBusinessId], references: [id], onDelete: Cascade)
+  verifiedByUser User?          @relation(fields: [verifiedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([clientBusinessId])
+  @@map("payments")
+}
+
+/// TRD §11 — ClientBusiness.outstandingBalance is derived from the sum of these rows.
+model CreditTransaction {
+  id               String                @id @default(cuid())
+  clientBusinessId String                @map("client_business_id")
+  orderId          String?               @map("order_id")
+  amount           Decimal               @db.Decimal(12, 2)
+  type             CreditTransactionType
+  balanceAfter     Decimal               @db.Decimal(12, 2) @map("balance_after")
+  note             String?
+  createdAt        DateTime              @default(now()) @map("created_at")
+
+  clientBusiness ClientBusiness @relation(fields: [clientBusinessId], references: [id], onDelete: Cascade)
+  order          Order?         @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([clientBusinessId])
+  @@map("credit_transactions")
+}
+
+// ---------------------------------------------------------------------------
+// Accounting — FR-ACC-*, TRD §6 (ExpenseEntry), Owner-only per BRD §5/AC-02
+// ---------------------------------------------------------------------------
+
+model ExpenseEntry {
+  id              String          @id @default(cuid())
+  category        ExpenseCategory
+  amount          Decimal         @db.Decimal(12, 2)
+  description     String
+  enteredByUserId String          @map("entered_by_user_id")
+  expenseDate     DateTime        @map("expense_date")
+
+  enteredByUser User @relation(fields: [enteredByUserId], references: [id], onDelete: Restrict)
+
+  @@map("expense_entries")
+}
+
+// ---------------------------------------------------------------------------
+// Notifications — FR-NTF-*, TRD §6 (NotificationSubscription, Notification), TRD §13
+// ---------------------------------------------------------------------------
+
+/// FR-NTF-01 — opt-in, targeted subscriptions (never blanket-broadcast).
+model NotificationSubscription {
+  id       String                        @id @default(cuid())
+  userId   String                        @map("user_id")
+  scope    NotificationSubscriptionScope
+  targetId String                        @map("target_id")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, scope, targetId])
+  @@map("notification_subscriptions")
+}
+
+/// FR-NTF-06 — the notification feed itself, distinct from NotificationSubscription (preferences).
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String           @map("user_id")
+  type      NotificationType
+  message   String
+  isRead    Boolean          @default(false) @map("is_read")
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("notifications")
+}
+
+// ---------------------------------------------------------------------------
+// Audit Log — FR-SEC-02/03, TRD §6 (AuditLog), Owner-only per BRD §5
+// ---------------------------------------------------------------------------
+
+model AuditLog {
+  id            String   @id @default(cuid())
+  actorUserId   String   @map("actor_user_id")
+  actionType    String   @map("action_type")
+  entityType    String   @map("entity_type")
+  entityId      String   @map("entity_id")
+  previousValue Json?    @map("previous_value")
+  newValue      Json?    @map("new_value")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  actorUser User @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
+
+  @@index([entityType, entityId])
+  @@index([actorUserId])
+  @@map("audit_logs")
+}

@@ -164,7 +164,26 @@ export interface Product {
   shopName?: string;
   categoryId: string;
   description: string;
-  basePrice: number;
+  /**
+   * Three independently-set prices — decided during database design once the
+   * real 2,156-item rate list showed each is a genuinely observed number, not
+   * a formula derived from the others. BRD CD-01/PR-01 and FRD §8 updated to
+   * match (v1.5):
+   * - `retailPrice` is FRD §8's "standard selling price" — what guests,
+   *   walk-ins, and unapproved accounts see (BRD CD-01 "Standard Customer").
+   * - `wholesalePrice` is the default price for an approved "Regular
+   *   Wholesale Customer" account (BRD CD-01) with no extra negotiated
+   *   discount. Previously this tier had no distinct price and silently fell
+   *   through to retailPrice — this field closes that gap.
+   * - `buyingPrice` is cost from the supplier — Owner-only, accounting/margin
+   *   use only (FR-ACC), never included in a customer-facing API response.
+   * `wholesalePrice` is required (the source rate list always has it);
+   * `retailPrice`/`buyingPrice` are optional until the business supplies them
+   * (tracked follow-up: make required once every product has real values).
+   */
+  buyingPrice?: number;
+  wholesalePrice: number;
+  retailPrice?: number;
   sku: string;
   barcode?: string;
   isArchived: boolean;
