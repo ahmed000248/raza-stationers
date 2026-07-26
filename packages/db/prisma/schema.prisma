@@ -187,6 +187,7 @@ enum InvoiceStatus {
 }
 
 enum DocumentType {
+  order
   invoice
   credit_note
 
@@ -200,6 +201,14 @@ enum CreditNoteStatus {
   voided
 
   @@map("credit_note_status")
+}
+
+enum CreditNoteSourceType {
+  cancellation
+  return
+  manual_adjustment
+
+  @@map("credit_note_source_type")
 }
 
 enum PaymentMethod {
@@ -223,13 +232,14 @@ enum PaymentStatus {
 }
 
 enum CreditLedgerEntryType {
-  invoice_charge
-  payment_credit
   overpayment_credit
-  credit_applied
   refund_credit
-  manual_adjustment
-  reversal
+  manual_credit_adjustment
+  reversal_credit
+  credit_applied
+  credit_payout
+  manual_debit_adjustment
+  reversal_debit
 
   @@map("credit_ledger_entry_type")
 }
@@ -631,6 +641,7 @@ model Product {
   status                 ProductStatus       @default(pending_review)
   unitConfirmationStatus ConfirmationStatus  @default(unconfirmed) @map("unit_confirmation_status")
   allowIndividualSale    Boolean             @default(false) @map("allow_individual_sale")
+  lowStockThresholdBase  Decimal?            @map("low_stock_threshold_base") @db.Decimal(18, 3)
   reviewReason           String?             @map("review_reason")
   activatedAt            DateTime?           @map("activated_at") @db.Timestamptz(3)
   activatedById          String?             @map("activated_by_id")
@@ -905,6 +916,8 @@ model StockMovement {
 model Order {
   id                     String         @id @default(cuid())
   orderNumber            String         @unique @map("order_number")
+  orderYear              Int            @map("order_year")
+  sequenceNumber         Int            @map("sequence_number")
   clientBusinessId       String         @map("client_business_id")
   placedByUserId         String         @map("placed_by_user_id")
   status                 OrderStatus    @default(pending_review)
@@ -934,6 +947,7 @@ model Order {
   returns        Return[]
   delivery       Delivery?
 
+  @@unique([orderYear, sequenceNumber])
   @@index([clientBusinessId, createdAt])
   @@index([status, createdAt])
   @@map("orders")
@@ -1099,22 +1113,23 @@ model Invoice {
 }
 
 model CreditNote {
-  id               String           @id @default(cuid())
-  invoiceId        String           @map("invoice_id")
-  cancellationId   String?          @map("cancellation_id")
-  returnId         String?          @map("return_id")
-  creditNoteNumber String           @unique @map("credit_note_number")
-  documentYear     Int              @map("document_year")
-  sequenceNumber   Int              @map("sequence_number")
-  amount           Decimal          @db.Decimal(14, 2)
-  currency         CurrencyCode     @default(PKR)
-  status           CreditNoteStatus @default(pending_approval)
+  id               String               @id @default(cuid())
+  invoiceId        String               @map("invoice_id")
+  cancellationId   String?              @map("cancellation_id")
+  returnId         String?              @map("return_id")
+  sourceType       CreditNoteSourceType @map("source_type")
+  creditNoteNumber String               @unique @map("credit_note_number")
+  documentYear     Int                  @map("document_year")
+  sequenceNumber   Int                  @map("sequence_number")
+  amount           Decimal              @db.Decimal(14, 2)
+  currency         CurrencyCode         @default(PKR)
+  status           CreditNoteStatus     @default(pending_approval)
   reason           String
-  approvedById     String?          @map("approved_by_id")
-  issuedById       String?          @map("issued_by_id")
-  approvedAt       DateTime?        @map("approved_at") @db.Timestamptz(3)
-  issuedAt         DateTime?        @map("issued_at") @db.Timestamptz(3)
-  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  approvedById     String?              @map("approved_by_id")
+  issuedById       String?              @map("issued_by_id")
+  approvedAt       DateTime?            @map("approved_at") @db.Timestamptz(3)
+  issuedAt         DateTime?            @map("issued_at") @db.Timestamptz(3)
+  createdAt        DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
 
   invoice             Invoice             @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
   cancellation        Cancellation?       @relation(fields: [cancellationId], references: [id], onDelete: Restrict)

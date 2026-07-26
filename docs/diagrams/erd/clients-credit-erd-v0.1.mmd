@@ -72,6 +72,9 @@ erDiagram
     CREDIT_NOTE {
         string id PK
         string invoiceId FK
+        string cancellationId FK "nullable"
+        string returnId FK "nullable"
+        CreditNoteSourceType sourceType
         string creditNoteNumber UK
         decimal amount "14,2"
         CreditNoteStatus status
@@ -85,6 +88,8 @@ erDiagram
         string processedById FK
     }
 
-%% Credit is optional: ClientBusiness to ClientCreditAccount is 0..1.
-%% Unverified payments do not change Invoice or client-credit balances.
+  %% Credit is optional: ClientBusiness to ClientCreditAccount is 0..1.
+  %% CreditLedgerEntry is signed customer/store credit only; its sum is usable store credit.
+  %% Invoice debt is calculated separately from Invoice, non-reversed allocations and CreditNote.
+  %% Unverified payments do not change Invoice or client-credit balances.
 %% Allocation reconfiguration reverses rows and adds replacements; history stays.

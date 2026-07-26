@@ -4,8 +4,8 @@
 
 **Prepared for:** Raza Stationers
 **Prepared by:** Ahmed (Product Owner), drafted with AI assistance
-**Version:** 1.2 (Draft — Pending Review)
-**Date:** July 25, 2026
+**Version:** 1.3 (Draft — Phase 5B Reconciled)
+**Date:** July 26, 2026
 **Status:** Draft
 **Based on:** PRD v1.1, BRD v1.1
 
@@ -18,6 +18,7 @@
 | 1.0 | 2026-07-23 | Ahmed | Initial FRD derived from PRD and BRD | Draft |
 | 1.1 | 2026-07-23 | Ahmed | Aligned role/permission matrix and affected FRs with BRD v1.1's Owner-only split (account approval, credit limits/approval, payment history, accounting/reports, audit log, stock corrections); added `FR-STK-07` | Draft |
 | 1.2 | 2026-07-25 | Ahmed | Removed the stale "images" reference in `FR-CAT-01` — the finalized design has no product photography, catalogue is description-based only; added `FR-CAT-08` for the Individual/Bulk purchase-type split that the design phase introduced but was never written back into this document | Draft |
+| 1.3 | 2026-07-26 | Ahmed/Codex | Phase 5B reconciliation: optional base-unit low-stock threshold, stable yearly Order numbers, store-credit-only ledger semantics and explicit CreditNote source types | Demo-approved, production review pending |
 
 ---
 
@@ -208,12 +209,13 @@ Server-side enforcement is mandatory for every row above — see `FR-SEC-01`. No
 | FR-ORD-06 | Order status must follow the fixed state machine defined in §7 of this document; illegal status transitions are blocked by the system. | System | M | Core workflow (BRD §6.2) |
 | FR-ORD-07 | Delivery zone rules (city/area, delivery charge, minimum for delivery, free-delivery threshold, manual-confirmation areas) are enforced at checkout and configurable by admin. | Admin, Owner / System | M | OF-04 |
 | FR-ORD-08 | System captures order volume metrics (orders/day, /week, busiest days, products/order) automatically from day one to support future capacity planning. | System | M | OF-05 |
+| FR-ORD-09 | On creation, each Order receives a concurrency-safe visible number in the format `RS-ORD-YYYY-000001`, allocated from a yearly order sequence. The number is separate from the internal CUID and never changes. | System | M | OF-06 |
 
 ### 6.7 Payments & Pay-Later Credit
 
 | ID | Requirement | Actor(s) | Priority | Related BR |
 |---|---|---|---|---|
-| FR-PAY-01 | A client business has zero or one ClientCreditAccount. When present it stores the approved limit, credit days and status. Credit balance/exposure is derived from immutable ledger entries and invoice allocations; it is never directly edited. | System | M | PY-01 |
+| FR-PAY-01 | A client business has zero or one ClientCreditAccount. When present it stores the approved limit, credit days and status. Unpaid invoice debt is derived from Invoice, non-reversed PaymentAllocation and CreditNote records. Customer-owned/store credit is separately derived as the sum of signed CreditLedgerEntry amounts and is never directly edited. | System | M | PY-01, PY-05 |
 | FR-PAY-02 | System automatically calculates available credit as `credit limit − outstanding balance` and blocks new pay-later orders that would push the balance negative, unless owner-approved (see §9). | System | M | PY-01 |
 | FR-PAY-03 | System sends automated reminders to the client business before and after a payment due date (channel: notification per `FR-NTF`). | System | M | PY-02 |
 | FR-PAY-04 | Owner can suspend credit privileges for a specific business (blocks new Pay Later orders only; cash/online orders remain available). Credit status changes are Owner-only, consistent with credit limit control (`PY-01`). | Owner | M | PY-02 |
@@ -221,6 +223,8 @@ Server-side enforcement is mandatory for every row above — see `FR-SEC-01`. No
 | FR-PAY-06 | For manual/offline payments, admin can verify a submitted transaction/reference string and mark the Payment Verified or Rejected. File uploads are deferred. | Admin, Owner | M | PY-03 |
 | FR-PAY-07 | Live payment-gateway integration is deferred. Version 1 records Cash, Bank Transfer, Easypaisa, JazzCash and Cash on Delivery manually; unverified payments do not affect invoice or credit balances. | System | Deferred | PY-03 |
 | FR-PAY-08 | No automatic late fee/penalty is applied to overdue balances unless explicitly configured by the owner after confirming existing policy. | System | M | PY-02 |
+| FR-PAY-09 | CreditLedgerEntry stores customer-owned/store credit only. Positive entries add usable credit (for example overpayment or refund-to-credit); negative entries consume, pay out or reverse it. Invoice charges are excluded from this ledger. | System | M | PY-05 |
+| FR-PAY-10 | Every CreditNote has exactly one source type: cancellation, return or Owner-approved manual adjustment. Source relations must agree with the source type, and the original Invoice remains unchanged. | Owner / System | M | PY-05 |
 
 ### 6.8 Stock & Inventory Management
 
@@ -228,7 +232,7 @@ Server-side enforcement is mandatory for every row above — see `FR-SEC-01`. No
 |---|---|---|---|---|
 | FR-STK-01 | Admin/authorized staff can record a routine restock StockMovement in the Product's base unit, with quantity, reason, actor and timestamp. Formal supplier, purchasing, goods-receipt and buying-price workflows are deferred. | Admin, Owner, authorized staff | M | SK-01 |
 | FR-STK-02 | Stock level updates immediately and is reflected live on the customer-facing catalogue (`FR-CAT-05`). | System | M | SK-01, Core workflow |
-| FR-STK-03 | Each product/SKU has an independently configurable low-stock threshold; when current stock falls at or below the threshold, the product is flagged "Low Stock" and an admin alert is generated. | System | M | SK-03 |
+| FR-STK-03 | Each Product/SKU has an optional independently configurable low-stock threshold expressed in its base inventory unit. `null` means alerts are unconfigured, zero means out-of-stock-only, and negative values are rejected. When configured stock falls at or below it, the product is flagged "Low Stock" and an admin alert is generated. No real threshold values are currently approved. | System | M | SK-03 |
 | FR-STK-04 | Admin dashboard lists all products currently at or below their low-stock threshold, sorted by urgency (e.g. stock/threshold ratio). | Admin, Owner | M | SK-03, AC-02 |
 | FR-STK-05 | Customers can opt in to a "Notify Me" restock alert on an out-of-stock product; system triggers a targeted notification (`FR-NTF-01`) when that product's stock is next updated above zero. | Client Business User | M | SK-02, NA-01 |
 | FR-STK-06 | Admin can archive a discontinued product, removing it from active stock tracking and the customer catalogue while preserving historical records. | Admin, Owner | M | SK-02 |

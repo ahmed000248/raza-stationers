@@ -1,0 +1,16 @@
+flowchart LR
+    A["Approved Phase 4 schema"] --> B["Phase 5B: generate initial migration"]
+    B --> C["Add reviewed custom PostgreSQL SQL"]
+    C --> D["Independent Phase 5C SQL review"]
+    D --> E{"Ahmed approval"}
+    E -->|Approved| F["Configure development Supabase"]
+    E -->|Changes required| C
+    F --> G["Apply migration to development only"]
+    G --> H["Verify database constraints and security"]
+    H --> I["Generate Prisma Client"]
+    I --> J["Implement NestJS data-access boundary"]
+
+    classDef current fill:#fff3cd,stroke:#8a6d3b,color:#332701;
+    classDef future fill:#e8f1fb,stroke:#3b6ea5,color:#10253d;
+    class B,C current;
+    class D,E,F,G,H,I,J future;

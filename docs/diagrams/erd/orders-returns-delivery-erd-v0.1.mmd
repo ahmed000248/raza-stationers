@@ -24,6 +24,8 @@ erDiagram
     ORDER {
         string id PK
         string orderNumber UK
+        int orderYear
+        int sequenceNumber
         OrderStatus status
         decimal grandTotal "14,2"
         datetime createdAt
@@ -84,9 +86,17 @@ erDiagram
     CREDIT_NOTE {
         string id PK
         string invoiceId FK
+        string cancellationId FK "nullable"
+        string returnId FK "nullable"
+        CreditNoteSourceType sourceType
         string creditNoteNumber UK
         CreditNoteStatus status
         decimal amount "14,2"
+    }
+    DOCUMENT_SEQUENCE {
+        DocumentType documentType PK
+        int year PK
+        int nextValue
     }
     DELIVERY {
         string id PK
@@ -127,4 +137,6 @@ erDiagram
 
 %% Packed/dispatched cancellations pass through return_pending_inspection.
 %% Failed-delivery stock remains unavailable/in-transit until receipt and inspection.
+%% Order, Invoice and CreditNote visible numbers allocate by document type and year.
+%% Each CreditNote source is cancellation, return or Owner-approved manual adjustment.
 %% DeliveryProof files are deferred; simple notes/recipient confirmation are allowed.

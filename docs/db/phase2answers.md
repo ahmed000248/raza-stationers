@@ -279,3 +279,13 @@ Ahmed approved Phase 4 Stage B with the following mandatory clarifications. Thes
 - Category hierarchy, barcode, Brand, ProductImage, supplier/purchasing, document uploads, delivery-proof files and multi-warehouse workflows remain outside active schema version 0.1.
 
 The previously listed Phase 3 schema changes have now been translated into the Phase 4 physical schema proposal and approved schema-only implementation. No migration or catalogue import is part of Phase 4.
+
+## Phase 5B migration reconciliation (2026-07-26)
+
+Ahmed approved these additional clarifications before the initial migration is generated:
+
+- `Product.lowStockThresholdBase` is optional, nonnegative and measured in Product base units. `null` disables the alert, zero means out-of-stock-only, and no real thresholds are currently available for seeding.
+- Orders use stable yearly `RS-ORD-YYYY-000001` numbers allocated through `DocumentSequence`, independently of internal CUIDs.
+- `CreditLedgerEntry` stores signed customer/store credit only. Positive amounts add usable credit; negative amounts consume or pay it out. Invoice debt remains a separate calculation from Invoice, non-reversed PaymentAllocation and CreditNote records.
+- Every CreditNote selects exactly one source: cancellation, return or Owner-approved manual adjustment. Manual adjustment carries neither source relation; Owner-role enforcement remains NestJS work.
+- The Supabase target keeps tables in `public`, disables the Data API later, enables RLS without browser policies and revokes Data API role privileges. NestJS remains the application database boundary.

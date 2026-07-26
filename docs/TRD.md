@@ -23,6 +23,7 @@
 | 1.5 | 2026-07-26 | Ahmed | First real database design pass, against the actual rate list (`RS-Database.xlsx`: 2,156 products, 87 categories, wholesale prices only — retail/buying prices pending). Wrote `packages/db/prisma/schema.prisma`, the first real Prisma schema for this project (previously only a placeholder service-layer stub existed). Split Product's single `base_price` into `buying_price`/`wholesale_price`/`retail_price` (§6 row updated below) — a genuine pricing-model correction, not just a rename: it closes a gap where an approved wholesale account with no extra discount had no distinct price and silently saw the same price as a guest. BRD PR-01/CD-01 and FRD §8 updated to match (now a 5-tier priority order); `packages/types` and `apps/web`'s pricing logic/mock data updated in lockstep. | Draft |
 | 1.6 | 2026-07-26 | Ahmed | Processed the business owner's answers to the 7 blocking database questions (`docs/phase2answers.md`) and Codex's independent Phase 2 verification of that file. Fixed two real schema gaps `StockMovement` was missing: `orderId` (traces a sale/reversal movement back to its order) and `purchaseDate` (BRD SK-01's own field, distinct from `createdAt`). Corrected BRD CD-04 and FRD FR-PRC-04, which described a "no price shown before approval" state that doesn't match the already-built, QA-passed storefront (pending accounts see retail prices plus a notice, never wholesale). Corrected BRD OF-01 (minimum orders: fully flexible, no MOQ engine needed) and OF-04 (delivery zones: free in Wah Cantt/Hassanabdal/Taxila, charged for Rawalpindi/Islamabad) with the owner's confirmed answers. Left one genuine open item: FR-DLV-02/03 (admin records delivery outcomes in v1) vs. the admin panel's `/delivery` page (built open to a `delivery`-role login directly) — needs an explicit choice before Phase 3 modeling of delivery continues. | Draft |
 | 1.7 | 2026-07-26 | Ahmed/Codex | Phase 4 physical-schema alignment: Product is the required-SKU stock identity; ProductPackaging carries explicit conversions and independent effective-dated prices; categories remain flat; barcode/Brand/supplier/file/multi-warehouse scope is deferred; confirmation reserves and packing deducts; invoice/allocation/ledger/return/delivery-attempt/import-provenance models are introduced; transactional cascades are prohibited. | Demo-approved, awaiting business-owner production review |
+| 1.8 | 2026-07-26 | Ahmed/Codex | Phase 5B reconciliation: optional Product base-unit low-stock threshold; yearly Order numbering; store-credit-only signed ledger; explicit CreditNote source; public-schema Supabase defence-in-depth plan | Demo-approved, awaiting independent migration review |
 
 ---
 
@@ -184,15 +185,15 @@ The schema below implements the FRD's functional modules. Field lists are repres
 | **ClientBusiness / BusinessUserLink** | business profile, optional NTN/CNIC/email, account state, historical user links | ClientBusiness → users/orders/payments; links end without deletion | FR-CB |
 | **ClientCreditAccount** | optional 0..1 account per business, limit, credit days, status | → CreditLedgerEntry, limit-change and order-approval history | FR-PAY |
 | **Category** | id, name, slug, active/archive fields | Flat Category → Product; no parent field in v0.1 | FR-CAT |
-| **Product** | CUID id, required `RS-000001` SKU and sequence number, category, review/activation and individual-sale flags | → ProductPackaging, aliases, stock and orders | FR-CAT, PR-02 |
+| **Product** | CUID id, required `RS-000001` SKU and sequence number, optional nonnegative base-unit low-stock threshold, category, review/activation and individual-sale flags | → ProductPackaging, aliases, stock and orders | FR-CAT, FR-STK, PR-02 |
 | **UnitOfMeasure / ProductPackaging** | fractional capability, product-local package code, explicit conversion, base/confirmation/active state | Product → many packages, exactly one base | FR-CAT-03, PR-02 |
 | **ProductPrice / ClientSpecificPrice / DiscountRule** | fixed-precision PKR amounts, effective periods, price type, non-stacking percentage scopes | Prices target ProductPackaging; discounts target business/product/category | FR-PRC |
 | **StockLocation / StockBalance** | one active location in v1; on-hand, reserved, unavailable, in-transit, damaged base-unit quantities | Balance is a maintained projection | FR-STK |
 | **StockReservation / StockMovement** | immutable base-unit reservations and bucket-to-bucket movement history with source/actor/reason | Historical authority for inventory | FR-STK |
-| **Order / OrderItem / status/change/cancellation** | state machine plus immutable commercial line snapshots | Never hard-deleted; one optional cancellation | FR-ORD |
-| **Invoice / CreditNote** | one invoice per order, visible yearly numbers, due date, fixed-precision totals and adjustments | Original invoice retained | FR-PAY, FR-ACC |
+| **Order / OrderItem / status/change/cancellation** | CUID plus stable `RS-ORD-YYYY-000001` yearly number, state machine and immutable commercial line snapshots | Never hard-deleted; one optional cancellation | FR-ORD |
+| **Invoice / CreditNote** | one invoice per order, visible yearly numbers, due date, fixed-precision totals; each CreditNote has cancellation, return or manual-adjustment source | Original invoice retained | FR-PAY, FR-ACC |
 | **Payment / PaymentAllocation** | verified manual payment and reversible many-to-many allocations | Payment ↔ Invoice via allocation history | FR-PAY |
-| **CreditLedgerEntry / Refund** | append-only signed credit changes; separately approved/processed refunds | Client credit is ledger-derived | FR-PAY |
+| **CreditLedgerEntry / Refund** | append-only signed customer/store-credit changes only; positive adds usable credit and negative consumes/pays it out; invoice debt is separate | Store credit is ledger-derived | FR-PAY |
 | **Return / ReturnItem** | partial return, original order item, condition, destination and inspection actors | Multiple partial returns per order | FR-RET |
 | **Delivery / DeliveryAttempt / assignment/history** | one fulfilment, numbered attempts, current-worker assignment history and overrides | Retry/failure history retained | FR-DLV |
 | **ImportBatch / ImportRow / ImportIssue / SourceRecordMapping** | SHA-256, raw staging, preview state, issues and canonical provenance | Import history retained after rollback | FR-MIG |
@@ -273,12 +274,14 @@ Order placement revalidates stock but does not reserve it. Order confirmation lo
 Implements FRD §9. `CreditService.checkAvailability(clientBusinessId, orderTotal)`:
 
 1. Returns unavailable when the ClientBusiness has no active ClientCreditAccount.
-2. When an account exists, derives current exposure from issued Invoices, active PaymentAllocations, CreditNotes and CreditLedgerEntries; it never trusts an editable balance field.
+2. When an account exists, derives unpaid invoice debt from issued Invoices, non-reversed PaymentAllocations and CreditNotes; it never records invoice charges in CreditLedgerEntry.
 3. If `orderTotal <= available credit` and status is active, checkout may use approved credit and the financial entries are created with the Invoice transaction.
 4. If `orderTotal > available credit`, Order is created with status `pending_owner_approval` and an OrderCreditApproval snapshot records the Owner decision.
 5. If credit status is not active, credit is excluded as a settlement option. Client credit remains a ledger facility, not a PaymentMethod enum value.
 
-Credit is optional: `ClientBusiness` has zero or one `ClientCreditAccount`, created only after Owner approval/configuration. Payments allocate across Invoices through immutable/reversible PaymentAllocation rows. Overpayment and other client-credit changes create CreditLedgerEntry records; credit balance is derived from the ledger and is never directly edited. Unverified payments do not affect invoices or credit.
+Credit is optional: `ClientBusiness` has zero or one `ClientCreditAccount`, created only after Owner approval/configuration. Payments allocate across Invoices through immutable/reversible PaymentAllocation rows. Store credit is separately calculated as `sum(CreditLedgerEntry.amount)`: positive entries add customer-owned credit and negative entries consume or pay it out. Overpayments and refunds-to-credit create positive entries; credit application and cash/mobile/bank payout of stored credit create negative entries. Unverified payments do not affect invoice debt or store credit.
+
+Every CreditNote explicitly selects `cancellation`, `return` or `manual_adjustment`. The first two require exactly the matching relation; manual adjustment has neither relation and requires future NestJS Owner-role validation. Credit notes adjust invoice outstanding calculations without rewriting the original Invoice.
 
 ---
 
@@ -323,6 +326,7 @@ Directly implements FRD §6.14 (`FR-SEC-01` to `FR-SEC-06`):
 - **Encryption at rest** for sensitive fields (customer contact info, financial balances) — handled at the managed-database level in both Supabase and production-grade Postgres hosting.
 - **Backups:** automated daily backups are a **production requirement, not present in the demo** (Supabase's free tier explicitly lacks this — see §20). The demo therefore must never hold real confidential business data, per the constraint in §20.
 - **Secrets management:** `.env` files, API keys, and service-role keys are never committed to the repository; `.gitignore` enforced from the first commit.
+- **Supabase database boundary:** schema v0.1 keeps business tables in `public`, but the development Data API will be disabled. The migration enables RLS and revokes `anon`, `authenticated` and `service_role` table/function/sequence privileges as defence-in-depth, without browser policies. NestJS is the only application database boundary. A dedicated least-privilege runtime role and direct migration connection are deferred to Phase 5D; no database credentials are introduced in Phase 5B.
 
 ---
 

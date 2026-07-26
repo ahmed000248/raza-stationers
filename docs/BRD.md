@@ -4,8 +4,8 @@
 
 **Prepared for:** Raza Stationers
 **Prepared by:** Ahmed (Product Owner), drafted with AI assistance
-**Version:** 1.1 (Draft — Pending Owner Review)
-**Date:** July 23, 2026
+**Version:** 1.2 (Draft — Phase 5B Reconciled)
+**Date:** July 26, 2026
 **Status:** Draft
 
 ---
@@ -16,6 +16,7 @@
 |---|---|---|---|---|
 | 1.0 | 2026-07-23 | Ahmed | Initial BRD compiled from business workflow discussion and Q&A with stakeholder | Draft — pending owner sign-off |
 | 1.1 | 2026-07-23 | Ahmed | Refined Owner vs. Admin permission split after admin panel design review: account approval, credit limits/approval, payment history, staff management, accounting/reports, and audit log are now explicitly Owner-only | Draft — pending owner sign-off |
+| 1.2 | 2026-07-26 | Ahmed/Codex | Phase 5B reconciliation: optional base-unit low-stock threshold, yearly order numbering, separation of invoice debt from store credit, and explicit CreditNote sources | Demo-approved, production review pending |
 
 ---
 
@@ -197,6 +198,8 @@ Changing a discount does **not** retroactively affect orders that were already c
 
 **OF-05 — Order volume.** Current order volume (orders/day, orders/week, busiest days, seasonal peaks, average products per order) is not yet known and needs confirmation from the owner or computer operator. Regardless of current volume, the system must be architected to handle future growth without requiring a rebuild.
 
+**OF-06 — Stable order numbers.** Every Order receives a concurrency-safe, customer-visible number in the format `RS-ORD-YYYY-000001`. The sequence resets by year, is separate from the internal Order ID and remains unchanged after creation.
+
 ---
 
 ## 9. Payments & Credit (Pay-Later)
@@ -208,6 +211,8 @@ Changing a discount does **not** retroactively affect orders that were already c
 **PY-03 — Payment methods and merchant accounts.** Version 1 supports Cash, Bank Transfer, Easypaisa, JazzCash and Cash on Delivery as manually recorded methods. Customers may submit a transaction/reference string for verification. Direct gateways and receipt-file uploads require separate future approval and are not part of schema v0.1. Client credit is a ledger facility, not a PaymentMethod.
 
 **PY-04 — Partial payment plus credit.** A customer may pay part of an order online/cash and put the remainder on credit, but only if they are an approved credit customer. The system records: total order amount, amount already paid, payment method, remaining balance, due date, and any later payments made against that balance. The remaining balance cannot exceed the customer's available credit without owner approval.
+
+**PY-05 — Invoice debt, store credit and credit notes.** Unpaid invoice debt is calculated from Invoices, non-reversed PaymentAllocations and CreditNotes; it is not a store-credit ledger entry. `CreditLedgerEntry` contains only customer-owned/store credit, where positive signed amounts add usable credit and negative signed amounts consume, pay out or reverse it. Every CreditNote has exactly one source: cancellation, return or Owner-approved manual adjustment. The original Invoice remains unchanged.
 
 ---
 
@@ -224,6 +229,8 @@ Changing a discount does **not** retroactively affect orders that were already c
 | Registers | 200 units |
 | Expensive sports item | 5 units |
 | Pens | 10 cartons |
+
+The values above are illustrative only; no real threshold values are currently approved for import or seeding. The stored threshold is optional per Product/SKU, expressed in that Product's base inventory unit. `null` means alerts are not configured, zero enables an out-of-stock-only alert, and negative values are invalid.
 
 ---
 
