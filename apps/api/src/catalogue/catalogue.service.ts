@@ -14,9 +14,9 @@ export class CatalogueService {
 
     if (query.search) {
       where.OR = [
-        { name: { contains: query.search, mode: "insensitive" } },
-        { sku: { contains: query.search, mode: "insensitive" } },
-        { shopName: { contains: query.search, mode: "insensitive" } },
+        { name: { contains: query.search } },
+        { sku: { contains: query.search } },
+        { shopName: { contains: query.search } },
       ];
     }
 
