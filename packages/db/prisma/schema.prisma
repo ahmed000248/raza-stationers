@@ -1568,3 +1568,15 @@ model AuditLog {
   @@index([actorId, createdAt])
   @@map("audit_logs")
 }
+
+model BusinessSettings {
+  id              String  @id @default(cuid())
+  businessName    String  @default("Raza Stationers") @map("business_name")
+  contactPhone    String  @default("042-35678901") @map("contact_phone")
+  requireApproval Boolean @default(true) @map("require_approval")
+  stockAlert      Boolean @default(true) @map("stock_alert")
+  packingView     Boolean @default(true) @map("packing_view")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("business_settings")
+}

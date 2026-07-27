@@ -207,6 +207,10 @@ export class RazaAPIClient {
   async createExpense(data: { amount: number; category: string; description: string }) { return this.post("/accounting/expenses", data); }
   async getOutstandingClients() { return this.get("/accounting/outstanding"); }
 
+  // Settings
+  async getSettings() { return this.get("/settings"); }
+  async updateSettings(data: { businessName?: string; contactPhone?: string; requireApproval?: boolean; stockAlert?: boolean; packingView?: boolean }) { return this.put("/settings", data); }
+
   // Audit
   async getAuditLogs(params?: { page?: number; limit?: number; entityType?: string }) {
     const searchParams = new URLSearchParams();
