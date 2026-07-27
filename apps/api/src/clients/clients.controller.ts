@@ -47,6 +47,15 @@ export class ClientsController {
     return this.clientsService.approve(id, userId);
   }
 
+  @Put(":id/credit")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles("owner")
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Update credit limit for a client (owner only)" })
+  updateCredit(@Param("id") id: string, @Body() body: { creditLimit: number; creditDays?: number }) {
+    return this.clientsService.updateCredit(id, body);
+  }
+
   @Get(":id/credit")
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()

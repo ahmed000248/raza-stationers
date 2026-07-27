@@ -14,6 +14,12 @@ export class CatalogueController {
     return this.catalogueService.findProducts(query);
   }
 
+  @Get("products/id/:id")
+  @ApiOperation({ summary: "Get product by internal ID" })
+  getProductById(@Param("id") id: string) {
+    return this.catalogueService.findById(id);
+  }
+
   @Get("products/:sku")
   @ApiOperation({ summary: "Get product by SKU with packaging & prices" })
   getProduct(@Param("sku") sku: string) {

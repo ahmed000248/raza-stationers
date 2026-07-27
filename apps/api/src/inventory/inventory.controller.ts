@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body, UseGuards } from "@nestjs/common";
+import { Controller, Get, Post, Param, Query, Body, UseGuards } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
@@ -12,6 +12,12 @@ import { InventoryService } from "./inventory.service";
 @ApiBearerAuth()
 export class InventoryController {
   constructor(private inventoryService: InventoryService) {}
+
+  @Get("stock")
+  @ApiOperation({ summary: "List all stock balances" })
+  findAllStock(@Query() query: { page?: number; limit?: number }) {
+    return this.inventoryService.findAllStock(query);
+  }
 
   @Get("stock/:sku")
   @ApiOperation({ summary: "Get stock balance for a product by SKU" })

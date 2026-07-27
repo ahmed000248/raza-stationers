@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, UseGuards } from "@nestjs/common";
+import { Controller, Get, Post, Put, Param, Query, Body, UseGuards } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
@@ -12,6 +12,12 @@ import { DeliveryService } from "./delivery.service";
 @ApiBearerAuth()
 export class DeliveryController {
   constructor(private deliveryService: DeliveryService) {}
+
+  @Get("deliveries")
+  @ApiOperation({ summary: "List all deliveries" })
+  findAll(@Query() query: { page?: number; limit?: number }) {
+    return this.deliveryService.findAll(query);
+  }
 
   @Post("deliveries")
   @ApiOperation({ summary: "Create a delivery for an order" })

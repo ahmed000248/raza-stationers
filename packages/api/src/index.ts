@@ -118,8 +118,31 @@ export class RazaAPIClient {
   }
 
   // Stock
+  async getAllStock(params?: { page?: number }) {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.set("page", String(params.page));
+    const qs = searchParams.toString();
+    return this.get(`/stock${qs ? `?${qs}` : ""}`);
+  }
+
   async getStock(sku: string) {
     return this.get(`/stock/${sku}`);
+  }
+
+  // Delivery
+  async getAllDeliveries(params?: { page?: number }) {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.set("page", String(params.page));
+    const qs = searchParams.toString();
+    return this.get(`/deliveries${qs ? `?${qs}` : ""}`);
+  }
+
+  async getProductById(id: string) {
+    return this.get(`/products/id/${id}`);
+  }
+
+  async updateClientCredit(id: string, data: { creditLimit: number; creditDays?: number }) {
+    return this.put(`/clients/${id}/credit`, data);
   }
 
   // Invoices
@@ -150,6 +173,10 @@ export class RazaAPIClient {
     return this.put(`/notifications/${id}/read`, {});
   }
 
+  async post(path: string, body?: unknown) {
+    return this.postMethod(path, body);
+  }
+
   private async get(path: string) {
     const res = await fetch(`${this.baseUrl}${path}`, {
       headers: this.getHeaders(),
@@ -174,7 +201,7 @@ export class RazaAPIClient {
     return res.json();
   }
 
-  private async post(path: string, body: unknown) {
+  private async postMethod(path: string, body?: unknown) {
     const res = await fetch(`${this.baseUrl}${path}`, {
       method: "POST",
       headers: this.getHeaders(),

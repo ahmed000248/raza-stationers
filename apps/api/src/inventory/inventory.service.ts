@@ -5,6 +5,26 @@ import { PrismaService } from "../prisma/prisma.service";
 export class InventoryService {
   constructor(private prisma: PrismaService) {}
 
+  async findAllStock(query: { page?: number; limit?: number }) {
+    const page = query.page || 1;
+    const limit = query.limit || 20;
+
+    const [items, total] = await Promise.all([
+      this.prisma.stockBalance.findMany({
+        skip: (page - 1) * limit,
+        take: limit,
+        include: {
+          product: { select: { id: true, sku: true, name: true, status: true } },
+          stockLocation: { select: { id: true, name: true } },
+        },
+        orderBy: { updatedAt: "desc" },
+      }),
+      this.prisma.stockBalance.count(),
+    ]);
+
+    return { items, total, page, limit, totalPages: Math.ceil(total / limit) };
+  }
+
   async getStockBySku(sku: string) {
     const product = await this.prisma.product.findUnique({
       where: { sku },

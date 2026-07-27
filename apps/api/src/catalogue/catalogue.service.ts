@@ -9,7 +9,7 @@ export class CatalogueService {
 
   async findProducts(query: PaginationDto) {
     const where: Prisma.ProductWhereInput = {
-      status: "active",
+      status: { in: ["active", "pending_review"] },
     };
 
     if (query.search) {
@@ -69,6 +69,25 @@ export class CatalogueService {
       limit,
       totalPages: Math.ceil(total / limit),
     };
+  }
+
+  async findById(id: string) {
+    const product = await this.prisma.product.findUnique({
+      where: { id },
+      include: {
+        category: true,
+        packaging: {
+          where: { isActive: true },
+          include: {
+            unitOfMeasure: true,
+            prices: { orderBy: [{ priceType: "asc" }, { effectiveFrom: "desc" }] },
+          },
+        },
+        aliases: true,
+      },
+    });
+    if (!product) throw new NotFoundException("Product not found");
+    return product;
   }
 
   async findBySku(sku: string) {

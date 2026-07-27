@@ -98,6 +98,17 @@ export class ClientsService {
     });
   }
 
+  async updateCredit(id: string, data: { creditLimit: number; creditDays?: number }) {
+    const business = await this.prisma.clientBusiness.findUnique({ where: { id } });
+    if (!business) throw new NotFoundException("Client business not found");
+
+    return this.prisma.clientCreditAccount.upsert({
+      where: { clientBusinessId: id },
+      create: { clientBusinessId: id, creditLimit: data.creditLimit, creditDays: data.creditDays || 0 },
+      update: { creditLimit: data.creditLimit, creditDays: data.creditDays },
+    });
+  }
+
   async getCreditSummary(id: string) {
     const business = await this.prisma.clientBusiness.findUnique({
       where: { id },
