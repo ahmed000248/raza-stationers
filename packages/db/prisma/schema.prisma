@@ -113,6 +113,7 @@ enum CurrencyCode {
 enum PriceType {
   retail
   wholesale
+  buying
 
   @@map("price_type")
 }
