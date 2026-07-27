@@ -8,9 +8,16 @@ import { CatalogueModule } from "./catalogue/catalogue.module";
 import { ClientsModule } from "./clients/clients.module";
 import { OrdersModule } from "./orders/orders.module";
 import { InventoryModule } from "./inventory/inventory.module";
+import { PricingModule } from "./pricing/pricing.module";
+import { InvoicingModule } from "./invoicing/invoicing.module";
+import { AuditModule } from "./audit/audit.module";
 
 @Module({
-  imports: [PrismaModule, AuthModule, UsersModule, CatalogueModule, ClientsModule, OrdersModule, InventoryModule],
+  imports: [
+    PrismaModule, AuthModule, UsersModule, CatalogueModule,
+    ClientsModule, OrdersModule, InventoryModule, PricingModule,
+    InvoicingModule, AuditModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
