@@ -11,12 +11,16 @@ import { InventoryModule } from "./inventory/inventory.module";
 import { PricingModule } from "./pricing/pricing.module";
 import { InvoicingModule } from "./invoicing/invoicing.module";
 import { AuditModule } from "./audit/audit.module";
+import { DeliveryModule } from "./delivery/delivery.module";
+import { ReturnsModule } from "./returns/returns.module";
+import { NotificationsModule } from "./notifications/notifications.module";
 
 @Module({
   imports: [
     PrismaModule, AuthModule, UsersModule, CatalogueModule,
     ClientsModule, OrdersModule, InventoryModule, PricingModule,
-    InvoicingModule, AuditModule,
+    InvoicingModule, AuditModule, DeliveryModule, ReturnsModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
