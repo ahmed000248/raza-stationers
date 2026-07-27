@@ -21,13 +21,13 @@ export function OrderHistoryCard({ order }: OrderHistoryCardProps) {
   const [reordered, setReordered] = React.useState(false)
 
   const handleReorderAll = () => {
-    order.items.forEach((item) => {
+    order.items.forEach((item: any) => {
       addItem({
-        id: item.productId,
-        title: item.productName,
-        price: item.unitPriceAtOrder,
-        unit: item.unit,
-      }, item.quantity)
+        id: item.productId || item.skuSnapshot,
+        title: item.productName || item.productNameSnapshot,
+        price: Number(item.unitPriceAtOrder || item.unitPriceSnapshot),
+        unit: item.unit || item.unitCodeSnapshot,
+      }, Number(item.quantity))
     })
     setReordered(true)
     setTimeout(() => {

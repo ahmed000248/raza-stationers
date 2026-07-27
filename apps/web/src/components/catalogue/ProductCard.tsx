@@ -47,7 +47,7 @@ export function ProductCard({ product, pricingContext }: ProductCardProps) {
     <Card className="group relative flex flex-col justify-between overflow-hidden rounded-2xl transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
       <CardContent className="p-4 space-y-3">
         {/* Clickable Header & Icon Block leading to Product Detail */}
-        <Link href={`/product/${product.id}`} className="block space-y-3 group/link">
+        <Link href={`/product/${product.sku || product.id}`} className="block space-y-3 group/link">
           <div className="relative">
             <ProductIconBlock
               category={(product.categoryId.replace("cat-", "") as "paper" | "pens" | "office" | "files" | "cutting" | "art" | "general")}
