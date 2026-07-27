@@ -9,13 +9,17 @@
   "scripts": {
     "dev": "npm run dev --workspace=@raza-stationers/web",
     "dev:admin": "npm run dev --workspace=@raza-stationers/admin",
+    "dev:api": "npm run dev --workspace=@raza-stationers/api-server",
+    "dev:all": "concurrently \"npm run dev\" \"npm run dev:admin\" \"npm run dev:api\"",
     "build": "npm run build --workspaces --if-present",
     "build:web": "npm run build --workspace=@raza-stationers/web",
     "build:admin": "npm run build --workspace=@raza-stationers/admin",
+    "build:api": "npm run build --workspace=@raza-stationers/api-server",
     "lint": "npm run lint --workspaces --if-present"
   },
   "devDependencies": {
     "@mermaid-js/mermaid-cli": "^11.16.0",
+    "concurrently": "^9.1.0",
     "prisma": "^7.9.0",
     "typescript": "^5"
   },
