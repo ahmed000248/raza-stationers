@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Param, Body, UseGuards } from "@nestjs/common";
+import { Controller, Get, Post, Put, Param, Body, Query, UseGuards } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
@@ -10,6 +10,14 @@ import { ClientsService } from "./clients.service";
 @Controller("clients")
 export class ClientsController {
   constructor(private clientsService: ClientsService) {}
+
+  @Get()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "List all client businesses" })
+  findAll(@Query() query: { page?: number; limit?: number; status?: string }) {
+    return this.clientsService.findAll(query);
+  }
 
   @Post()
   @UseGuards(JwtAuthGuard)

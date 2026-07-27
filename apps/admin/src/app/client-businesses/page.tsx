@@ -1,79 +1,58 @@
 "use client"
 
 import * as React from "react"
-import { MOCK_CLIENTS, DetailedClientBusiness } from "@/content/mock/client-data"
 import { ClientFilterBar, ClientFilterType } from "@/components/clients/ClientFilterBar"
 import { ClientTable } from "@/components/clients/ClientTable"
 import { ClientDrawer } from "@/components/clients/ClientDrawer"
+import { createAPIClient } from "@raza-stationers/api"
+import { Loader2 } from "lucide-react"
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
 
 export default function ClientBusinessesPage() {
-  const [clients, setClients] = React.useState<DetailedClientBusiness[]>(MOCK_CLIENTS)
-  const [searchQuery, setSearchQuery] = React.useState<string>("")
+  const [clients, setClients] = React.useState<any[]>([])
+  const [loading, setLoading] = React.useState(true)
+  const [searchQuery, setSearchQuery] = React.useState("")
   const [activeFilter, setActiveFilter] = React.useState<ClientFilterType>("all")
-  const [selectedClient, setSelectedClient] = React.useState<DetailedClientBusiness | null>(null)
+  const [selectedClient, setSelectedClient] = React.useState<any>(null)
 
-  const handleUpdateClient = (updatedClient: DetailedClientBusiness) => {
-    setClients((prev) =>
-      prev.map((c) => (c.id === updatedClient.id ? updatedClient : c))
-    )
-    setSelectedClient(updatedClient)
+  const fetchClients = React.useCallback(async () => {
+    setLoading(true)
+    try {
+      const api = createAPIClient({ baseUrl: API_BASE })
+      const params: any = {}
+      if (activeFilter !== "all") params.status = activeFilter
+      const data = await api.listClients(params)
+      setClients(data.items || [])
+    } catch { setClients([]) } finally { setLoading(false) }
+  }, [activeFilter])
+
+  React.useEffect(() => { fetchClients() }, [fetchClients])
+
+  const filteredClients = clients.filter((c) => {
+    const q = searchQuery.toLowerCase().trim()
+    if (!q) return true
+    return c.businessName?.toLowerCase().includes(q) || c.city?.toLowerCase().includes(q) || c.contactPerson?.toLowerCase().includes(q) || c.mobileNumber?.toLowerCase().includes(q)
+  })
+
+  const handleApprove = async (id: string) => {
+    try {
+      const api = createAPIClient({ baseUrl: API_BASE })
+      await api.approveClient(id)
+      fetchClients()
+    } catch {}
   }
 
-  const filteredClients = React.useMemo(() => {
-    return clients.filter((c) => {
-      // Search check
-      const query = searchQuery.toLowerCase().trim()
-      if (
-        query &&
-        !c.businessName.toLowerCase().includes(query) &&
-        !c.city.toLowerCase().includes(query) &&
-        !c.contactPerson.toLowerCase().includes(query)
-      ) {
-        return false
-      }
-
-      // Filter check
-      if (activeFilter === "active" && c.accountStatus !== "active") return false
-      if (activeFilter === "pending" && c.accountStatus !== "pending") return false
-      if (activeFilter === "tier-a" && c.discountTier !== "Tier A") return false
-      if (activeFilter === "overdue" && c.outstandingBalance <= 60000) return false
-
-      return true
-    })
-  }, [clients, searchQuery, activeFilter])
-
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div>
-        <h1 className="font-heading text-2xl font-bold text-[var(--ink-900)]">
-          Client Businesses
-        </h1>
-        <div className="text-xs text-[var(--text-muted)] mt-1 font-sans">
-          کلائنٹ کاروبار · registered wholesale accounts
-        </div>
-      </div>
-
-      {/* Filter Bar */}
-      <ClientFilterBar
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        activeFilter={activeFilter}
-        onFilterChange={setActiveFilter}
-      />
-
-      {/* Client Table */}
-      <ClientTable
-        clients={filteredClients}
-        onSelectClient={(client) => setSelectedClient(client)}
-      />
-
-      {/* Client Drawer */}
-      <ClientDrawer
-        client={selectedClient}
-        onClose={() => setSelectedClient(null)}
-        onUpdateClient={handleUpdateClient}
-      />
+    <div className="space-y-6">
+      <h1 className="font-heading text-2xl font-bold">Client Businesses</h1>
+      <ClientFilterBar activeFilter={activeFilter} onFilterChange={setActiveFilter} searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+      {loading ? (
+        <div className="flex justify-center py-12"><Loader2 className="size-6 animate-spin text-muted-foreground" /></div>
+      ) : (
+        <ClientTable clients={filteredClients} onSelectClient={setSelectedClient} />
+      )}
+      {selectedClient && <ClientDrawer client={selectedClient} onClose={() => setSelectedClient(null)} onUpdateClient={(c) => { setSelectedClient(c); fetchClients() }} />}
     </div>
   )
 }

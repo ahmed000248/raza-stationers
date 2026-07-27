@@ -5,6 +5,26 @@ import { PrismaService } from "../prisma/prisma.service";
 export class ClientsService {
   constructor(private prisma: PrismaService) {}
 
+  async findAll(query: { page?: number; limit?: number; status?: string }) {
+    const page = query.page || 1;
+    const limit = query.limit || 20;
+    const where: any = {};
+    if (query.status) where.accountStatus = query.status;
+
+    const [items, total] = await Promise.all([
+      this.prisma.clientBusiness.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { createdAt: "desc" },
+        include: { _count: { select: { orders: true } } },
+      }),
+      this.prisma.clientBusiness.count({ where }),
+    ]);
+
+    return { items, total, page, limit, totalPages: Math.ceil(total / limit) };
+  }
+
   async register(userId: string, data: {
     businessName: string;
     businessType: string;

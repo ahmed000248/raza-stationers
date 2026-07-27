@@ -95,14 +95,77 @@ export class RazaAPIClient {
     return this.get(`/clients/${id}`);
   }
 
+  async updateOrderStatus(id: string, status: string) {
+    return this.put(`/orders/${id}/status`, { status });
+  }
+
+  // Dashboard
+  async getDashboardStats() {
+    return this.get("/dashboard/stats");
+  }
+
+  // Clients (admin)
+  async listClients(params?: { page?: number; status?: string }) {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.set("page", String(params.page));
+    if (params?.status) searchParams.set("status", params.status);
+    const qs = searchParams.toString();
+    return this.get(`/clients${qs ? `?${qs}` : ""}`);
+  }
+
+  async approveClient(id: string) {
+    return this.put(`/clients/${id}/approve`, {});
+  }
+
   // Stock
   async getStock(sku: string) {
     return this.get(`/stock/${sku}`);
   }
 
+  // Invoices
+  async getInvoice(id: string) {
+    return this.get(`/invoices/${id}`);
+  }
+
+  async getClientInvoices(clientBusinessId: string) {
+    return this.get(`/client-invoices/${clientBusinessId}`);
+  }
+
+  // Audit
+  async getAuditLogs(params?: { page?: number; limit?: number; entityType?: string }) {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.set("page", String(params.page));
+    if (params?.limit) searchParams.set("limit", String(params.limit));
+    if (params?.entityType) searchParams.set("entityType", params.entityType);
+    const qs = searchParams.toString();
+    return this.get(`/audit-logs${qs ? `?${qs}` : ""}`);
+  }
+
+  // Notifications
+  async getNotifications() {
+    return this.get("/notifications");
+  }
+
+  async markNotificationRead(id: string) {
+    return this.put(`/notifications/${id}/read`, {});
+  }
+
   private async get(path: string) {
     const res = await fetch(`${this.baseUrl}${path}`, {
       headers: this.getHeaders(),
+    });
+    if (!res.ok) {
+      const error = await res.text().catch(() => "Unknown error");
+      throw new Error(`${res.status} ${error}`);
+    }
+    return res.json();
+  }
+
+  private async put(path: string, body: unknown) {
+    const res = await fetch(`${this.baseUrl}${path}`, {
+      method: "PUT",
+      headers: this.getHeaders(),
+      body: JSON.stringify(body),
     });
     if (!res.ok) {
       const error = await res.text().catch(() => "Unknown error");

@@ -14,13 +14,14 @@ import { AuditModule } from "./audit/audit.module";
 import { DeliveryModule } from "./delivery/delivery.module";
 import { ReturnsModule } from "./returns/returns.module";
 import { NotificationsModule } from "./notifications/notifications.module";
+import { DashboardModule } from "./dashboard/dashboard.module";
 
 @Module({
   imports: [
     PrismaModule, AuthModule, UsersModule, CatalogueModule,
     ClientsModule, OrdersModule, InventoryModule, PricingModule,
     InvoicingModule, AuditModule, DeliveryModule, ReturnsModule,
-    NotificationsModule,
+    NotificationsModule, DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],
