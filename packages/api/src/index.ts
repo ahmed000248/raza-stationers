@@ -137,6 +137,28 @@ export class RazaAPIClient {
     return this.get(`/deliveries${qs ? `?${qs}` : ""}`);
   }
 
+  // Admin catalogue
+  async getAdminProducts(params?: { page?: number; limit?: number; status?: string; categorySlug?: string }) {
+    const sp = new URLSearchParams();
+    if (params?.page) sp.set("page", String(params.page));
+    if (params?.limit) sp.set("limit", String(params.limit));
+    if (params?.status) sp.set("status", params.status);
+    if (params?.categorySlug) sp.set("categorySlug", params.categorySlug);
+    return this.get(`/admin/products${sp.toString() ? `?${sp.toString()}` : ""}`);
+  }
+
+  async createProduct(data: { name: string; categoryId: string; purchaseType?: string; shopName?: string; description?: string; wholesalePrice?: number }) {
+    return this.post("/products", data);
+  }
+
+  async updateProduct(id: string, data: { name?: string; categoryId?: string; shopName?: string; description?: string; purchaseType?: string }) {
+    return this.put(`/products/${id}`, data);
+  }
+
+  async updateProductStatus(id: string, status: string) {
+    return this.put(`/products/${id}/status`, { status });
+  }
+
   async getProductById(id: string) {
     return this.get(`/products/id/${id}`);
   }
@@ -171,6 +193,19 @@ export class RazaAPIClient {
   async removeNotificationSubscription(id: string) {
     return this.delete(`/notifications/subscriptions/${id}`);
   }
+
+  // Staff
+  async listStaff() { return this.get("/staff"); }
+  async createStaff(data: { name: string; mobileNumber: string; password: string; role: string; staffRole?: string }) { return this.post("/staff", data); }
+  async toggleStaffActive(id: string) { return this.put(`/staff/${id}/toggle-active`, {}); }
+  async changeStaffRole(id: string, role: string) { return this.put(`/staff/${id}/change-role`, { role }); }
+
+  // Accounting
+  async getAccountingSummary() { return this.get("/accounting/summary"); }
+  async getAccountingRevenue() { return this.get("/accounting/revenue"); }
+  async getAccountingExpenses() { return this.get("/accounting/expenses"); }
+  async createExpense(data: { amount: number; category: string; description: string }) { return this.post("/accounting/expenses", data); }
+  async getOutstandingClients() { return this.get("/accounting/outstanding"); }
 
   // Audit
   async getAuditLogs(params?: { page?: number; limit?: number; entityType?: string }) {
