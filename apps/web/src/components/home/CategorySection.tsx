@@ -1,57 +1,36 @@
 import Link from "next/link"
-import { mockCategories } from "@/content/mock/products"
 import { ProductIconBlock } from "@/components/ui/product-icon-block"
 import { ArrowUpRight } from "lucide-react"
+
+const HOME_CATEGORIES = [
+  { id: "paper", name: "Paper" }, { id: "pens", name: "Pens" },
+  { id: "office", name: "Office" }, { id: "files", name: "Files" },
+  { id: "cutting", name: "Cutting" }, { id: "art", name: "Art" },
+  { id: "general", name: "General" }, { id: "books", name: "Books" },
+]
 
 export function CategorySection() {
   return (
     <section className="py-12 px-6 border-t border-border/40">
       <div className="mx-auto max-w-6xl space-y-8">
-        {/* Section Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-border pb-4">
-          <div>
-            <span className="text-xs font-semibold uppercase tracking-wider text-[var(--color-evergreen-600)]">
-              Catalogue Categories
-            </span>
-            <h2 className="font-heading text-2xl sm:text-3xl font-bold tracking-tight text-[var(--color-ink-900)] mt-1">
-              Browse by Product Category
-            </h2>
-          </div>
-          <Link
-            href="/catalogue"
-            className="inline-flex items-center gap-1 text-sm font-semibold text-[var(--color-evergreen-600)] hover:underline"
-          >
-            <span>View Full Catalogue</span>
-            <ArrowUpRight className="size-4" />
-          </Link>
+        <div className="text-center space-y-2">
+          <span className="text-xs font-semibold uppercase tracking-wider text-[var(--color-evergreen-600)]">FR-CAT-02 Browse Category</span>
+          <h2 className="font-heading text-2xl sm:text-3xl font-bold tracking-tight text-[var(--color-ink-900)]">Stationery Categories</h2>
+          <p className="text-sm text-muted-foreground max-w-lg mx-auto">Explore our wholesale catalogue sorted by product family.</p>
         </div>
-
-        {/* Category Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-          {mockCategories.map((cat) => {
-            const categoryKey = cat.id.replace("cat-", "") as "paper" | "pens" | "office" | "files" | "cutting" | "art" | "general"
-            return (
-              <Link
-                key={cat.id}
-                href={`/catalogue?category=${cat.id}`}
-                className="group flex flex-col items-center text-center p-4 rounded-2xl border border-border bg-card shadow-xs transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
-              >
-                <ProductIconBlock
-                  category={categoryKey}
-                  size="md"
-                  className="mb-3 w-full rounded-xl"
-                />
-                <h4 className="font-heading font-semibold text-xs text-[var(--color-ink-900)] group-hover:text-[var(--color-evergreen-600)] transition-colors">
-                  {cat.name}
-                </h4>
-                {cat.nameUrdu && (
-                  <span dir="rtl" className="font-urdu text-[11px] text-muted-foreground mt-0.5">
-                    {cat.nameUrdu}
-                  </span>
-                )}
-              </Link>
-            )
-          })}
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
+          {HOME_CATEGORIES.map((cat) => (
+            <Link key={cat.id} href={`/catalogue?category=${cat.id}`}
+              className="flex flex-col items-center gap-2 p-4 rounded-2xl border border-border hover:border-foreground/30 bg-card transition-all hover:shadow-xs group">
+              <ProductIconBlock category={cat.id as any} size="md" className="opacity-70 group-hover:opacity-100 transition-opacity" />
+              <span className="text-[11px] font-semibold text-center text-muted-foreground group-hover:text-foreground leading-tight">{cat.name}</span>
+            </Link>
+          ))}
+        </div>
+        <div className="text-center">
+          <Link href="/catalogue" className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--color-evergreen-600)] hover:underline">
+            <span>Browse Full Catalogue</span><ArrowUpRight className="size-3.5" />
+          </Link>
         </div>
       </div>
     </section>

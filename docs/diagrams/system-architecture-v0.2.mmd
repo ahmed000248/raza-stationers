@@ -1,0 +1,77 @@
+---
+title: Raza Stationers — System Architecture v0.2
+---
+flowchart TB
+  subgraph CLIENTS["Client Layer"]
+    WEB["Customer Storefront (Next.js 16 / :3000)"]
+    ADMIN["Admin Panel (Next.js 16 / :3001)"]
+    MOBILE["Mobile App (React Native / Expo)"]
+  end
+
+  subgraph API["Backend Layer"]
+    NEST["NestJS API (:4000)"]
+    subgraph MODULES["Domain Modules"]
+      AUTH["Auth Module"]
+      CAT["Catalogue Module"]
+      ORD["Order Module"]
+      INV["Inventory Module"]
+      PRC["Pricing Module"]
+      CLI["Client Module"]
+      DLV["Delivery Module"]
+      ACC["Invoicing & Accounting"]
+    end
+    NEST --- MODULES
+  end
+
+  subgraph DB_ACCESS["Database Access Layer"]
+    PRISMA["Prisma Client v7.9.0"]
+    TX_POOL["Transaction Pooler (:6543)<br/>DATABASE_URL"]
+    SESSION_POOL["Session Pooler (:5432)<br/>DIRECT_URL"]
+  end
+
+  subgraph SUPABASE["Supabase PostgreSQL 17.6"]
+    BUSINESS["Business Tables (48 models)"]
+    MIGRATIONS["Prisma Migration History"]
+    RLS["RLS Policies"]
+    CONSTRAINTS["Check Constraints & Indexes"]
+    AUDIT["Append-Only Audit Logs"]
+  end
+
+  subgraph SEC["Security Boundaries"]
+    SSL["SSL Enforcement Enabled"]
+    DATA_API["Data API Disabled"]
+    NET_RESTRICT["Network Restrictions Deferred"]
+  end
+
+  WEB -->|"/api/* proxy"| NEST
+  ADMIN -->|"/api/* proxy"| NEST
+  MOBILE -->|"HTTP"| NEST
+
+  NEST --> PRISMA
+  PRISMA --> TX_POOL
+  PRISMA --> SESSION_POOL
+
+  TX_POOL -->|"Runtime (raza_runtime role)"| BUSINESS
+  SESSION_POOL -->|"Migrations (admin role)"| BUSINESS
+  SESSION_POOL -->|"Migrations only"| MIGRATIONS
+
+  BUSINESS --- RLS
+  BUSINESS --- CONSTRAINTS
+  BUSINESS --- AUDIT
+
+  SSL -.->|"Enforced"| TX_POOL
+  SSL -.->|"Enforced"| SESSION_POOL
+  DATA_API -.->|"Disabled"| BUSINESS
+
+  classDef client fill:#2563eb,color:#fff,stroke:#1d4ed8
+  classDef backend fill:#7c3aed,color:#fff,stroke:#6d28d9
+  classDef db fill:#059669,color:#fff,stroke:#047857
+  classDef security fill:#dc2626,color:#fff,stroke:#b91c1c
+  classDef deferred fill:#9ca3af,color:#fff,stroke:#6b7280,stroke-dasharray: 5 5
+
+  class WEB,ADMIN,MOBILE client
+  class NEST,AUTH,CAT,ORD,INV,PRC,CLI,DLV,ACC backend
+  class PRISMA,TX_POOL,SESSION_POOL db
+  class BUSINESS,RLS,CONSTRAINTS,AUDIT db
+  class SSL,DATA_API security
+  class NET_RESTRICT deferred

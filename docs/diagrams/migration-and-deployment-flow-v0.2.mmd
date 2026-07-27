@@ -1,0 +1,112 @@
+---
+title: Raza Stationers — Migration & Deployment Flow v0.2
+---
+flowchart TB
+  subgraph DESIGN["Design Phase"]
+    PRD["PRD / BRD / FRD / TRD"]
+    MODEL["Phase 3: Logical Data Model"]
+    SCHEMA["Phase 4: Prisma Schema (48 models)"]
+    ERD["ERD Review"]
+  end
+
+  subgraph PREP["Migration Preparation"]
+    CHECKPOINT["Clean Git Checkpoint"]
+    ALIGN["Prisma Version Alignment (7.9.0)"]
+    VALIDATE["npx prisma validate"]
+    CREATE_MIG["npx prisma migrate dev --create-only"]
+    SQL_REVIEW["Manual SQL Review"]
+    HASH["Record Migration Hash"]
+  end
+
+  subgraph DISPOSABLE["Disposable PostgreSQL Testing"]
+    DOCKER["Start Isolated Docker PG 17"]
+    APPLY["Apply Migrations from Empty DB"]
+    VERIFY["Verify Tables, Enums, Indexes, Constraints"]
+    ROLLBACK_TEST["Test Rollback / Reapply"]
+    DESTROY["Destroy Disposable DB"]
+    DOCKER_GATE{"Tests Pass?"}
+  end
+
+  subgraph SUPABASE_DEPLOY["Supabase Development Deploy"]
+    LOAD_SECRETS["Load Secrets (DIRECT_URL)"]
+    STATUS_CHECK["prisma migrate status"]
+    MIGRATE_DEPLOY["prisma migrate deploy"]
+    RUNTIME_SEC["Apply Runtime-Security Migration"]
+    FUNC_DEFAULTS["Apply Function Default Privileges"]
+    VERIFY_DEPLOY["Verify 3 Migrations Applied"]
+    DEPLOY_GATE{"All Clean?"}
+    TAG_PHASE["Tag Milestone"]
+  end
+
+  subgraph RUNTIME["Runtime Application"]
+    NEST["NestJS API Starts"]
+    PRISMA_CONNECT["PrismaClient via DATABASE_URL"]
+    RUNTIME_POOL["Transaction Pooler (:6543)"]
+    RESTRICTED_ROLE["raza_runtime Role"]
+    NO_MIGRATE["❌ Cannot Run Migrations"]
+  end
+
+  subgraph FUTURE["Future Staging / Production"]
+    STAGING["Staging Environment"]
+    SMOKE["Smoke + Integration Tests"]
+    APPROVAL["Manual Approval Gate"]
+    MAINT_WINDOW["Production Maintenance Window"]
+    PROD_DEPLOY["prisma migrate deploy (Production)"]
+    POST_VERIFY["Post-Deployment Verification"]
+    PROD_GATE{"Verified?"}
+    MONITOR["Monitoring & Audit Review"]
+  end
+
+  PRD --> MODEL --> SCHEMA --> ERD
+  ERD --> CHECKPOINT
+  CHECKPOINT --> ALIGN --> VALIDATE
+  VALIDATE --> CREATE_MIG
+  CREATE_MIG --> SQL_REVIEW
+  SQL_REVIEW --> HASH
+
+  HASH --> DOCKER
+  DOCKER --> APPLY --> VERIFY
+  VERIFY --> ROLLBACK_TEST
+  ROLLBACK_TEST --> DOCKER_GATE
+  DOCKER_GATE -->|"PASS"| DESTROY
+  DOCKER_GATE -->|"FAIL → Fix & Recreate"| CREATE_MIG
+  DESTROY --> CHECKPOINT
+
+  CHECKPOINT --> LOAD_SECRETS
+  LOAD_SECRETS --> STATUS_CHECK
+  STATUS_CHECK --> MIGRATE_DEPLOY
+  MIGRATE_DEPLOY --> RUNTIME_SEC --> FUNC_DEFAULTS
+  FUNC_DEFAULTS --> VERIFY_DEPLOY
+  VERIFY_DEPLOY --> DEPLOY_GATE
+  DEPLOY_GATE -->|"PASS"| TAG_PHASE
+  DEPLOY_GATE -->|"FAIL → Fix"| STATUS_CHECK
+
+  TAG_PHASE --> NEST
+  NEST --> PRISMA_CONNECT --> RUNTIME_POOL
+  RUNTIME_POOL --> RESTRICTED_ROLE
+  RESTRICTED_ROLE -.-> NO_MIGRATE
+
+  TAG_PHASE -.->|"Future"| STAGING
+  STAGING -.-> SMOKE -.-> APPROVAL
+  APPROVAL -.-> MAINT_WINDOW -.-> PROD_DEPLOY
+  PROD_DEPLOY -.-> POST_VERIFY -.-> PROD_GATE
+  PROD_GATE -.->|"PASS"| MONITOR
+  PROD_GATE -.->|"FAIL → Roll Forward"| MAINT_WINDOW
+
+  classDef design fill:#6366f1,color:#fff,stroke:#4f46e5
+  classDef prep fill:#8b5cf6,color:#fff,stroke:#7c3aed
+  classDef test fill:#059669,color:#fff,stroke:#047857
+  classDef deploy fill:#2563eb,color:#fff,stroke:#1d4ed8
+  classDef runtime fill:#7c3aed,color:#fff,stroke:#6d28d9
+  classDef future fill:#9ca3af,color:#fff,stroke:#6b7280,stroke-dasharray: 5 5
+  classDef gate fill:#f59e0b,color:#000,stroke:#d97706
+  classDef deny fill:#dc2626,color:#fff,stroke:#b91c1c
+
+  class PRD,MODEL,SCHEMA,ERD design
+  class CHECKPOINT,ALIGN,VALIDATE,CREATE_MIG,SQL_REVIEW,HASH prep
+  class DOCKER,APPLY,VERIFY,ROLLBACK_TEST,DESTROY test
+  class LOAD_SECRETS,STATUS_CHECK,MIGRATE_DEPLOY,RUNTIME_SEC,FUNC_DEFAULTS,VERIFY_DEPLOY,TAG_PHASE deploy
+  class NEST,PRISMA_CONNECT,RUNTIME_POOL,RESTRICTED_ROLE runtime
+  class STAGING,SMOKE,APPROVAL,MAINT_WINDOW,PROD_DEPLOY,POST_VERIFY,MONITOR future
+  class DOCKER_GATE,DEPLOY_GATE,PROD_GATE gate
+  class NO_MIGRATE deny

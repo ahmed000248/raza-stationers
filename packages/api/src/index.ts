@@ -154,6 +154,24 @@ export class RazaAPIClient {
     return this.get(`/client-invoices/${clientBusinessId}`);
   }
 
+  // Auth
+  async changePassword(currentPassword: string, newPassword: string) {
+    return this.put("/auth/change-password", { currentPassword, newPassword });
+  }
+
+  // Notification subscriptions
+  async getNotificationSubscriptions() {
+    return this.get("/notifications/subscriptions");
+  }
+
+  async subscribeToNotifications(data: { scope: string; productId?: string; categoryId?: string }) {
+    return this.post("/notifications/subscriptions", data);
+  }
+
+  async removeNotificationSubscription(id: string) {
+    return this.delete(`/notifications/subscriptions/${id}`);
+  }
+
   // Audit
   async getAuditLogs(params?: { page?: number; limit?: number; entityType?: string }) {
     const searchParams = new URLSearchParams();
@@ -179,6 +197,18 @@ export class RazaAPIClient {
 
   private async get(path: string) {
     const res = await fetch(`${this.baseUrl}${path}`, {
+      headers: this.getHeaders(),
+    });
+    if (!res.ok) {
+      const error = await res.text().catch(() => "Unknown error");
+      throw new Error(`${res.status} ${error}`);
+    }
+    return res.json();
+  }
+
+  private async delete(path: string) {
+    const res = await fetch(`${this.baseUrl}${path}`, {
+      method: "DELETE",
       headers: this.getHeaders(),
     });
     if (!res.ok) {

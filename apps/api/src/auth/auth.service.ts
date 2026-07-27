@@ -47,6 +47,18 @@ export class AuthService {
     return this.generateToken(user);
   }
 
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new UnauthorizedException("User not found");
+
+    const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!isValid) throw new UnauthorizedException("Current password is incorrect");
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await this.prisma.user.update({ where: { id: userId }, data: { passwordHash: hashedPassword } });
+    return { success: true };
+  }
+
   private generateToken(user: { id: string; name: string; mobileNumber: string; role: string }) {
     const payload = { sub: user.id, mobileNumber: user.mobileNumber, role: user.role };
     return {

@@ -1,0 +1,92 @@
+---
+title: Raza Stationers — Supabase Roles & Security v0.1
+---
+flowchart LR
+  subgraph APP_USERS["Application Identities"]
+    GUEST["Guest / Public Browser"]
+    CUSTOMER["Authenticated Customer"]
+    WHOLESALE["Wholesale Business User"]
+    ADMIN_USER["Admin / Operator"]
+    PACKING["Packing Staff"]
+    DELIVERY["Delivery Worker"]
+    OWNER["Store Owner"]
+  end
+
+  subgraph NEST_AUTH["NestJS Authorization Layer"]
+    JWT["JWT AuthGuard + RolesGuard"]
+    ROLE_CHECK["@Roles() Decorator"]
+  end
+
+  subgraph DB_ROLES["PostgreSQL Roles"]
+    ANON["anon (public)"]
+    AUTHENTICATED["authenticated"]
+    SERVICE_ROLE["service_role"]
+    RUNTIME["raza_runtime (NestJS LOGIN role)"]
+    ADMIN_ROLE["Migration Admin (DIRECT_URL)"]
+  end
+
+  subgraph PERMISSIONS["Database Permissions"]
+    NO_ACCESS["❌ No Business-Table Access"]
+    RLS_POLICIES["✅ RLS Policies (where configured)"]
+    FULL_ACCESS["✅ Full Access (migrations only)"]
+    RUNTIME_GRANTS["✅ Controlled GRANTs via raza_runtime"]
+  end
+
+  subgraph PROTECTIONS["Protections"]
+    SSL["SSL Enforced"]
+    DATA_API_OFF["Data API Disabled"]
+    RESTRICT["All FK: onDelete Restrict"]
+    APPEND["Append-Only Ledger"]
+  end
+
+  subgraph PRISMA_MIG["Prisma Migration Ledger"]
+    MIG_TABLE["public._prisma_migrations"]
+    MIG_NOTE["⚠️ RLS Disabled<br/>Reviewed: Accepted Risk<br/>Data API is off, browser roles<br/>have no business-table access"]
+  end
+
+  GUEST -->|"Unauthenticated"| JWT
+  JWT -->|"401: No token"| GUEST
+
+  CUSTOMER -->|"JWT + business_user"| JWT
+  WHOLESALE -->|"JWT + business_user"| JWT
+  ADMIN_USER -->|"JWT + admin"| JWT
+  PACKING -->|"JWT + packing"| JWT
+  DELIVERY -->|"JWT + delivery"| JWT
+  OWNER -->|"JWT + owner"| JWT
+
+  JWT -->|"Authenticated"| ROLE_CHECK
+  ROLE_CHECK -->|"Pass"| RUNTIME
+
+  ANON --- NO_ACCESS
+  AUTHENTICATED --- NO_ACCESS
+  SERVICE_ROLE --- NO_ACCESS
+  RUNTIME --- RUNTIME_GRANTS
+  ADMIN_ROLE --- FULL_ACCESS
+
+  RUNTIME -->|"DATABASE_URL (pooler :6543)"| BUSINESS_TABLES["Business Tables"]
+  ADMIN_ROLE -->|"DIRECT_URL (pooler :5432)"| MIG_TABLE
+  ADMIN_ROLE --- PRISMA_MIG
+
+  NO_ACCESS -.->|"Blocked"| BUSINESS_TABLES
+  RUNTIME_GRANTS -.-> BUSINESS_TABLES
+  FULL_ACCESS -.->|"Migrations only"| BUSINESS_TABLES
+
+  SSL -.->|"All connections"| RUNTIME
+  SSL -.->|"All connections"| ADMIN_ROLE
+  DATA_API_OFF -.->|"Disabled"| BUSINESS_TABLES
+
+  classDef identity fill:#2563eb,color:#fff,stroke:#1d4ed8
+  classDef nest fill:#7c3aed,color:#fff,stroke:#6d28d9
+  classDef dbrole fill:#059669,color:#fff,stroke:#047857
+  classDef deny fill:#dc2626,color:#fff,stroke:#b91c1c
+  classDef security fill:#d97706,color:#fff,stroke:#b45309
+  classDef warning fill:#f59e0b,color:#000,stroke:#d97706,stroke-dasharray: 5 5
+  classDef migrated fill:#10b981,color:#fff,stroke:#059669
+
+  class GUEST,CUSTOMER,WHOLESALE,ADMIN_USER,PACKING,DELIVERY,OWNER identity
+  class JWT,ROLE_CHECK nest
+  class ANON,AUTHENTICATED,SERVICE_ROLE,RUNTIME,ADMIN_ROLE dbrole
+  class NO_ACCESS deny
+  class SSL,DATA_API_OFF,RESTRICT,APPEND security
+  class MIG_TABLE,MIG_NOTE warning
+  class BUSINESS_TABLES migrated

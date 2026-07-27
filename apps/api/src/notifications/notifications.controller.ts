@@ -1,4 +1,4 @@
-import { Controller, Get, Put, Param, Query, UseGuards } from "@nestjs/common";
+import { Controller, Get, Post, Delete, Put, Param, Query, Body, UseGuards } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
@@ -10,6 +10,24 @@ import { NotificationsService } from "./notifications.service";
 @ApiBearerAuth()
 export class NotificationsController {
   constructor(private notificationsService: NotificationsService) {}
+
+  @Post("subscriptions")
+  @ApiOperation({ summary: "Subscribe to product or category notifications" })
+  subscribe(@CurrentUser("id") userId: string, @Body() body: { scope: string; productId?: string; categoryId?: string }) {
+    return this.notificationsService.subscribe(userId, body);
+  }
+
+  @Get("subscriptions")
+  @ApiOperation({ summary: "Get notification subscriptions" })
+  getSubscriptions(@CurrentUser("id") userId: string) {
+    return this.notificationsService.getSubscriptions(userId);
+  }
+
+  @Delete("subscriptions/:id")
+  @ApiOperation({ summary: "Remove a notification subscription" })
+  removeSubscription(@Param("id") id: string, @CurrentUser("id") userId: string) {
+    return this.notificationsService.removeSubscription(id, userId);
+  }
 
   @Get()
   @ApiOperation({ summary: "List notifications for current user" })

@@ -11,7 +11,58 @@ import { NotificationsFeedTab } from "@/components/account/NotificationsFeedTab"
 import { StaffTab } from "@/components/account/StaffTab"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Building2, CreditCard, Bell, ShieldCheck, Lock, LogOut, Users, MessageSquare } from "lucide-react"
+import { Building2, CreditCard, Bell, ShieldCheck, Lock, LogOut, Users, MessageSquare, Loader2, Check } from "lucide-react"
+import { createAPIClient } from "@raza-stationers/api"
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
+
+function SecurityTab() {
+  const [currentPassword, setCurrentPassword] = React.useState("")
+  const [newPassword, setNewPassword] = React.useState("")
+  const [loading, setLoading] = React.useState(false)
+  const [message, setMessage] = React.useState("")
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!currentPassword || !newPassword || newPassword.length < 4) return
+    setLoading(true)
+    setMessage("")
+    try {
+      const api = createAPIClient({ baseUrl: API_BASE })
+      await api.changePassword(currentPassword, newPassword)
+      setMessage("Password changed successfully")
+      setCurrentPassword("")
+      setNewPassword("")
+    } catch (err: any) {
+      setMessage(err.message || "Failed to change password")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="p-6 rounded-2xl border border-border bg-card space-y-4">
+      <h3 className="font-heading font-bold text-base border-b border-border pb-3 flex items-center gap-2">
+        <Lock className="size-4 text-[var(--color-evergreen-600)]" /><span>Change Password</span>
+      </h3>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold">Current Password</label>
+          <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="w-full h-10 px-3 rounded-xl border border-border bg-background text-sm outline-none focus:ring-2 focus:ring-ring" />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold">New Password</label>
+          <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full h-10 px-3 rounded-xl border border-border bg-background text-sm outline-none focus:ring-2 focus:ring-ring" />
+        </div>
+        {message && <p className={`text-xs font-medium ${message.includes("success") ? "text-[var(--color-evergreen-600)]" : "text-destructive"}`}>{message}</p>}
+        <Button type="submit" disabled={loading} size="sm" className="rounded-full gap-2">
+          {loading ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+          <span>Update Password</span>
+        </Button>
+      </form>
+    </div>
+  )
+}
 
 function AccountPageContent() {
   const searchParams = useSearchParams()
@@ -153,15 +204,7 @@ function AccountPageContent() {
         {activeTab === "staff" && isOwnerOrManager && <StaffTab />}
 
         {activeTab === "security" && (
-          <div className="p-6 rounded-2xl border border-border bg-card space-y-4">
-            <h3 className="font-heading font-bold text-base text-[var(--color-ink-900)] border-b border-border pb-3 flex items-center gap-2">
-              <Lock className="size-4 text-[var(--color-evergreen-600)]" />
-              <span>Password & Security Credentials</span>
-            </h3>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Your account password was last changed on 15 Jan 2026. Contact wholesale support if you require a two-factor authentication reset.
-            </p>
-          </div>
+          <SecurityTab />
         )}
       </div>
     </div>
