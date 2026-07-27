@@ -1,10 +1,3 @@
-/**
- * Shared API Client & Service Methods — Raza Stationers
- * Used by Web (Next.js) and Mobile (React Native) clients
- */
-
-import { ProductCatalogueView, Order, CustomerProfileView, PaymentMethod } from '@raza-stationers/types';
-
 export interface APIClientOptions {
   baseUrl: string;
   authToken?: string;
@@ -23,53 +16,117 @@ export class RazaAPIClient {
     this.authToken = token;
   }
 
-  /** Returns pricing already resolved per FRD §8 — never a raw discount %, per CD-04. */
-  public async fetchCatalog(category?: string, search?: string): Promise<ProductCatalogueView[]> {
-    const params = new URLSearchParams();
-    if (category) params.append('category', category);
-    if (search) params.append('search', search);
+  // Auth
+  async login(mobileNumber: string, password: string) {
+    return this.post("/auth/login", { mobileNumber, password });
+  }
 
-    const res = await fetch(`${this.baseUrl}/api/products?${params.toString()}`, {
+  async register(data: { name: string; mobileNumber: string; password: string }) {
+    return this.post("/auth/register", data);
+  }
+
+  // Profile
+  async getProfile() {
+    return this.get("/users/me");
+  }
+
+  // Catalogue
+  async getProducts(params?: { page?: number; limit?: number; search?: string; categorySlug?: string }) {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.set("page", String(params.page));
+    if (params?.limit) searchParams.set("limit", String(params.limit));
+    if (params?.search) searchParams.set("search", params.search);
+    if (params?.categorySlug) searchParams.set("categorySlug", params.categorySlug);
+    const qs = searchParams.toString();
+    return this.get(`/products${qs ? `?${qs}` : ""}`);
+  }
+
+  async getProduct(sku: string) {
+    return this.get(`/products/${sku}`);
+  }
+
+  async getCategories() {
+    return this.get("/categories");
+  }
+
+  // Pricing
+  async getResolvedPrice(sku: string, clientBusinessId?: string) {
+    const qs = clientBusinessId ? `?clientBusinessId=${clientBusinessId}` : "";
+    return this.get(`/pricing/resolve/${sku}${qs}`);
+  }
+
+  // Orders
+  async createOrder(data: {
+    clientBusinessId: string;
+    items: Array<{ productPackagingId: string; quantity: number }>;
+    recipientName: string;
+    mobile: string;
+    address: string;
+    city: string;
+  }) {
+    return this.post("/orders", data);
+  }
+
+  async getOrders(params?: { page?: number; status?: string }) {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.set("page", String(params.page));
+    if (params?.status) searchParams.set("status", params.status);
+    const qs = searchParams.toString();
+    return this.get(`/orders${qs ? `?${qs}` : ""}`);
+  }
+
+  async getOrder(id: string) {
+    return this.get(`/orders/${id}`);
+  }
+
+  // Clients
+  async registerClient(data: {
+    businessName: string;
+    businessType: string;
+    contactPerson: string;
+    mobileNumber: string;
+    address: string;
+    city: string;
+  }) {
+    return this.post("/clients", data);
+  }
+
+  async getClient(id: string) {
+    return this.get(`/clients/${id}`);
+  }
+
+  // Stock
+  async getStock(sku: string) {
+    return this.get(`/stock/${sku}`);
+  }
+
+  private async get(path: string) {
+    const res = await fetch(`${this.baseUrl}${path}`, {
       headers: this.getHeaders(),
     });
-    if (!res.ok) throw new Error('Failed to fetch catalog');
+    if (!res.ok) {
+      const error = await res.text().catch(() => "Unknown error");
+      throw new Error(`${res.status} ${error}`);
+    }
     return res.json();
   }
 
-  /** GET /client-businesses/me equivalent — the logged-in user's own business profile (FR-CB). */
-  public async fetchOwnProfile(): Promise<CustomerProfileView> {
-    const res = await fetch(`${this.baseUrl}/api/me`, {
+  private async post(path: string, body: unknown) {
+    const res = await fetch(`${this.baseUrl}${path}`, {
+      method: "POST",
       headers: this.getHeaders(),
+      body: JSON.stringify(body),
     });
-    if (!res.ok) throw new Error('Failed to fetch profile');
-    return res.json();
-  }
-
-  /**
-   * POST /checkout — server validates stock, minimum-order rules, delivery
-   * zone, and credit availability before creating the Order (FR-CRT-02 to 07).
-   */
-  public async placeOrder(orderData: {
-    items: { productId: string; unit: string; quantity: number }[];
-    paymentMethod: PaymentMethod;
-    deliveryAddress: string;
-  }): Promise<Order> {
-    const res = await fetch(`${this.baseUrl}/api/checkout`, {
-      method: 'POST',
-      headers: this.getHeaders(),
-      body: JSON.stringify(orderData),
-    });
-    if (!res.ok) throw new Error('Failed to place order');
+    if (!res.ok) {
+      const error = await res.text().catch(() => "Unknown error");
+      throw new Error(`${res.status} ${error}`);
+    }
     return res.json();
   }
 
   private getHeaders(): Record<string, string> {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-    if (this.authToken) {
-      headers['Authorization'] = `Bearer ${this.authToken}`;
-    }
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (this.authToken) headers["Authorization"] = `Bearer ${this.authToken}`;
     return headers;
   }
 }
