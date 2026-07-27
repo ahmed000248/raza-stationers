@@ -21,6 +21,7 @@ const fontUrdu = Noto_Nastaliq_Urdu({
 });
 
 import { AdminShell } from "@/components/shell/AdminShell";
+import { AdminAuthProvider } from "@/hooks/use-admin-auth";
 
 export const metadata: Metadata = {
   title: "Raza Stationers Admin",
@@ -39,7 +40,7 @@ export default function RootLayout({
       className={`${fontSans.variable} ${fontHeading.variable} ${fontUrdu.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-[var(--color-canvas)] text-[var(--color-ink-900)]">
-        <AdminShell>{children}</AdminShell>
+        <AdminAuthProvider><AdminShell>{children}</AdminShell></AdminAuthProvider>
       </body>
     </html>
   );

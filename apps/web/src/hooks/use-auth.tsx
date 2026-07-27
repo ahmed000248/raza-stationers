@@ -3,6 +3,7 @@
 import * as React from "react"
 import { User, ClientBusiness, BusinessUserRole } from "@raza-stationers/types"
 import { UserPricingContext } from "@/lib/pricing"
+import { createAPIClient } from "@raza-stationers/api"
 
 export type AccountStatus = "guest" | "pending" | "approved"
 
@@ -12,68 +13,29 @@ interface AuthContextValue {
   clientBusiness: ClientBusiness | null
   businessRole: BusinessUserRole | null
   pricingContext: UserPricingContext
-  loginAs: (status: AccountStatus) => void
+  login: (mobileNumber: string, password: string) => Promise<void>
+  register: (data: {
+    name: string
+    mobileNumber: string
+    password: string
+    businessName: string
+    businessType: string
+    contactPerson: string
+    address: string
+    city: string
+  }) => Promise<void>
   logout: () => void
 }
 
 const AuthContext = React.createContext<AuthContextValue | null>(null)
 
-const AUTH_STORAGE_KEY = "raza_stationers_auth_status_v1"
+const TOKEN_KEY = "raza_stationers_jwt_v1"
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
 
-const mockApprovedUser: User = {
-  id: "user-101",
-  mobileNumber: "03001234567",
-  passwordHash: "",
-  name: "Ahmed Raza",
-  role: "business_user",
-  isActive: true,
-  createdAt: "2026-01-15T00:00:00Z",
-}
-
-const mockApprovedBusiness: ClientBusiness = {
-  id: "cb-101",
-  businessName: "Al-Raza Book Depot & Stationers",
-  ownerName: "Ahmed Raza",
-  contactPerson: "Ahmed Raza",
-  phone: "03001234567",
-  email: "ahmed@alrazabookdepot.com",
-  address: "Shop #42, Main Stationery Market, Urdu Bazar, Karachi",
-  city: "Karachi",
-  businessType: "bookstore",
-  accountStatus: "active",
-  creditLimit: 50000,
-  outstandingBalance: 12500,
-  creditStatus: "active",
-  discountPercent: 15,
-  createdAt: "2026-01-15T00:00:00Z",
-}
-
-const mockPendingUser: User = {
-  id: "user-102",
-  mobileNumber: "03219876543",
-  passwordHash: "",
-  name: "Tariq Mahmood",
-  role: "business_user",
-  isActive: true,
-  createdAt: "2026-07-24T00:00:00Z",
-}
-
-const mockPendingBusiness: ClientBusiness = {
-  id: "cb-102",
-  businessName: "Punjab Traders & Stationers",
-  ownerName: "Tariq Mahmood",
-  contactPerson: "Tariq Mahmood",
-  phone: "03219876543",
-  email: "tariq@punjabstationers.pk",
-  address: "Office #12, Commercial Area, Gulberg III, Lahore",
-  city: "Lahore",
-  businessType: "stationery_shop",
-  accountStatus: "pending",
-  creditLimit: 0,
-  outstandingBalance: 0,
-  creditStatus: "suspended",
-  discountPercent: 0,
-  createdAt: "2026-07-24T00:00:00Z",
+function getClient() {
+  if (typeof window === "undefined") return createAPIClient({ baseUrl: API_BASE })
+  const token = localStorage.getItem(TOKEN_KEY)
+  return createAPIClient({ baseUrl: API_BASE, authToken: token || undefined })
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -83,57 +45,189 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [businessRole, setBusinessRole] = React.useState<BusinessUserRole | null>(null)
   const [isLoaded, setIsLoaded] = React.useState(false)
 
-  // Load stored auth status on client mount
+  const api = getClient()
+
   React.useEffect(() => {
+    const token = localStorage.getItem(TOKEN_KEY)
+    if (!token) {
+      setIsLoaded(true)
+      return
+    }
+
+    api.setAuthToken(token)
+    api.getProfile()
+      .then((profile: any) => {
+        const u: User = {
+          id: profile.id,
+          name: profile.name,
+          mobileNumber: profile.mobileNumber,
+          passwordHash: "",
+          role: profile.role,
+          isActive: true,
+          createdAt: profile.createdAt,
+        }
+        setUser(u)
+
+        if (profile.businessUserLinks?.length > 0) {
+          const link = profile.businessUserLinks[0]
+          const biz = link.clientBusiness
+          setBusinessRole(link.role)
+          setClientBusiness({
+            id: biz.id,
+            businessName: biz.businessName,
+            ownerName: biz.contactPerson,
+            contactPerson: biz.contactPerson,
+            phone: biz.mobileNumber,
+            email: biz.email || "",
+            address: biz.address,
+            city: biz.city,
+            businessType: biz.businessType,
+            discountPercent: 0,
+            creditLimit: 0,
+            outstandingBalance: 0,
+            creditStatus: "active",
+            accountStatus: biz.accountStatus,
+            createdAt: biz.createdAt,
+          })
+          setAccountStatus(biz.accountStatus === "active" ? "approved" : "pending")
+        } else {
+          setAccountStatus("approved")
+        }
+      })
+      .catch(() => {
+        localStorage.removeItem(TOKEN_KEY)
+      })
+      .finally(() => setIsLoaded(true))
+  }, [])
+
+  const login = React.useCallback(async (mobileNumber: string, password: string) => {
+    const api = getClient()
+    const res: any = await api.login(mobileNumber, password)
+    localStorage.setItem(TOKEN_KEY, res.accessToken)
+    api.setAuthToken(res.accessToken)
+
+    const u: User = {
+      id: res.user.id,
+      name: res.user.name,
+      mobileNumber: res.user.mobileNumber,
+      passwordHash: "",
+      role: res.user.role,
+      isActive: true,
+      createdAt: "",
+    }
+    setUser(u)
+
     try {
-      const stored = localStorage.getItem(AUTH_STORAGE_KEY) as AccountStatus | null
-      if (stored && ["guest", "pending", "approved"].includes(stored)) {
-        loginAs(stored)
+      const profile: any = await api.getProfile()
+      if (profile.businessUserLinks?.length > 0) {
+        const link = profile.businessUserLinks[0]
+        const biz = link.clientBusiness
+        setBusinessRole(link.role)
+        setClientBusiness({
+          id: biz.id,
+          businessName: biz.businessName,
+          ownerName: biz.contactPerson,
+          contactPerson: biz.contactPerson,
+          phone: biz.mobileNumber,
+          email: biz.email || "",
+          address: biz.address,
+          city: biz.city,
+          businessType: biz.businessType,
+          discountPercent: 0,
+          creditLimit: 0,
+          outstandingBalance: 0,
+          creditStatus: "active",
+          accountStatus: biz.accountStatus,
+          createdAt: biz.createdAt,
+        })
+        setAccountStatus(biz.accountStatus === "active" ? "approved" : "pending")
       } else {
-        loginAs("guest")
+        setAccountStatus("approved")
       }
     } catch {
-      loginAs("guest")
-    } finally {
-      setIsLoaded(true)
+      setAccountStatus("approved")
     }
   }, [])
 
-  const loginAs = React.useCallback((status: AccountStatus) => {
-    setAccountStatus(status)
-    try {
-      localStorage.setItem(AUTH_STORAGE_KEY, status)
-    } catch {}
+  const register = React.useCallback(async (data: {
+    name: string
+    mobileNumber: string
+    password: string
+    businessName: string
+    businessType: string
+    contactPerson: string
+    address: string
+    city: string
+  }) => {
+    const api = getClient()
+    const regRes: any = await api.register({
+      name: data.name,
+      mobileNumber: data.mobileNumber,
+      password: data.password,
+    })
+    localStorage.setItem(TOKEN_KEY, regRes.accessToken)
+    api.setAuthToken(regRes.accessToken)
 
-    if (status === "approved") {
-      setUser(mockApprovedUser)
-      setClientBusiness(mockApprovedBusiness)
-      setBusinessRole("owner")
-    } else if (status === "pending") {
-      setUser(mockPendingUser)
-      setClientBusiness(mockPendingBusiness)
-      setBusinessRole("owner")
-    } else {
-      setUser(null)
-      setClientBusiness(null)
-      setBusinessRole(null)
+    await api.registerClient({
+      businessName: data.businessName,
+      businessType: data.businessType,
+      contactPerson: data.contactPerson,
+      mobileNumber: data.mobileNumber,
+      address: data.address,
+      city: data.city,
+    })
+
+    const u: User = {
+      id: regRes.user.id,
+      name: regRes.user.name,
+      mobileNumber: regRes.user.mobileNumber,
+      passwordHash: "",
+      role: regRes.user.role,
+      isActive: true,
+      createdAt: "",
     }
+    setUser(u)
+    setAccountStatus("pending")
+    setClientBusiness({
+      id: "",
+      businessName: data.businessName,
+      ownerName: data.contactPerson,
+      contactPerson: data.contactPerson,
+      phone: data.mobileNumber,
+      address: data.address,
+      city: data.city,
+      businessType: data.businessType as any,
+      discountPercent: 0,
+      creditLimit: 0,
+      outstandingBalance: 0,
+      creditStatus: "active",
+      accountStatus: "pending",
+      createdAt: new Date().toISOString(),
+    })
+    setBusinessRole("owner")
   }, [])
 
   const logout = React.useCallback(() => {
-    loginAs("guest")
-  }, [loginAs])
+    localStorage.removeItem(TOKEN_KEY)
+    setUser(null)
+    setClientBusiness(null)
+    setBusinessRole(null)
+    setAccountStatus("guest")
+  }, [])
 
-  // Resolve CD-04 Pricing Context
   const pricingContext: UserPricingContext = React.useMemo(() => {
     if (accountStatus === "approved" && clientBusiness?.accountStatus === "active") {
       return {
         isApprovedBusiness: true,
-        businessDiscountPercent: clientBusiness.discountPercent || 15,
+        businessDiscountPercent: clientBusiness.discountPercent || 0,
       }
     }
     return { isApprovedBusiness: false }
   }, [accountStatus, clientBusiness])
+
+  if (!isLoaded) {
+    return <div className="flex items-center justify-center min-h-screen"><p className="text-sm text-muted-foreground">Loading...</p></div>
+  }
 
   return (
     <AuthContext.Provider
@@ -143,7 +237,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         clientBusiness,
         businessRole,
         pricingContext,
-        loginAs,
+        login,
+        register,
         logout,
       }}
     >

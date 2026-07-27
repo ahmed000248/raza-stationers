@@ -15,9 +15,11 @@ import {
   FileText,
   ShieldAlert,
   Settings,
+  LogOut,
 } from "lucide-react"
 import { AdminRole, ROLE_OPTIONS, OWNER_ONLY_ROUTES, isOwner } from "@/lib/role"
 import { useAdminShell } from "./AdminShell"
+import { useAdminAuth } from "@/hooks/use-admin-auth"
 
 interface NavItem {
   label: string
@@ -43,7 +45,8 @@ const NAV_ITEMS: NavItem[] = [
 export function AdminNav() {
   const pathname = usePathname()
   const router = useRouter()
-  const { role, setRole, addToast, userName } = useAdminShell()
+  const { role, addToast, userName } = useAdminShell()
+  const { logout } = useAdminAuth()
 
   const currentRoleOption = ROLE_OPTIONS.find((r) => r.key === role) || ROLE_OPTIONS[0]
   const initials = userName
@@ -108,32 +111,13 @@ export function AdminNav() {
         })}
       </nav>
 
-      {/* Dev Role Switcher & User Profile */}
+      {/* User Profile & Logout */}
       <div className="border-t border-white/10 pt-3.5 mt-2.5">
-        {process.env.NODE_ENV !== "production" && (
-          <div className="mb-3">
-            <div className="text-[10px] uppercase tracking-wider text-[var(--sage-400)] font-medium mb-1.5 px-2">
-              Viewing as
-            </div>
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value as AdminRole)}
-              className="w-full bg-white/10 text-white border border-white/15 rounded-[10px] px-2.5 py-2 text-[12.5px] font-sans focus:outline-none focus:ring-1 focus:ring-[var(--sage-400)] cursor-pointer"
-            >
-              {ROLE_OPTIONS.map((r) => (
-                <option key={r.key} value={r.key} className="bg-[#051F20] text-white">
-                  {r.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
         <div className="flex items-center gap-2.5 px-2 pt-1">
           <div className="w-8 h-8 rounded-full bg-[var(--evergreen-600)] text-white text-xs font-semibold flex items-center justify-center border border-white/20">
             {initials}
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="text-white text-[12.5px] font-semibold truncate leading-tight">
               {userName}
             </div>
@@ -141,6 +125,9 @@ export function AdminNav() {
               {currentRoleOption.roleLabel}
             </div>
           </div>
+          <button onClick={() => { logout(); router.push("/login"); }} className="text-white/60 hover:text-white transition-colors" title="Sign out">
+            <LogOut size={16} />
+          </button>
         </div>
       </div>
     </aside>

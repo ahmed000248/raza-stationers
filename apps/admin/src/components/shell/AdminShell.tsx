@@ -5,6 +5,7 @@ import { AdminRole } from "@/lib/role"
 import { AdminNav } from "./AdminNav"
 import { TopBar } from "./TopBar"
 import { ToastContainer, ToastItem, ToastVariant } from "@raza-stationers/ui"
+import { useAdminAuth } from "@/hooks/use-admin-auth"
 
 interface AddToastInput {
   title: string
@@ -14,7 +15,6 @@ interface AddToastInput {
 
 interface AdminShellContextValue {
   role: AdminRole
-  setRole: (role: AdminRole) => void
   userName: string
   alertCount: number
   addToast: (input: AddToastInput) => void
@@ -31,36 +31,27 @@ export function useAdminShell() {
 }
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
-  const [role, setRole] = React.useState<AdminRole>("owner")
-  const [userName] = React.useState<string>("Ahmed Raza")
-  const [alertCount] = React.useState<number>(3)
+  const { user, role: adminRole, loading } = useAdminAuth()
   const [toasts, setToasts] = React.useState<ToastItem[]>([])
 
   const addToast = React.useCallback(({ title, description, type = "info" }: AddToastInput) => {
     const id = Math.random().toString(36).substring(2, 9)
     const variant: ToastVariant = type === "error" ? "error" : type === "success" ? "success" : "info"
-    
     setToasts((prev) => [...prev, { id, title, description, variant }])
-
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id))
-    }, 3000)
+    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3000)
   }, [])
 
   const handleDismissToast = React.useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id))
   }, [])
 
-  const contextValue = React.useMemo(
-    () => ({
-      role,
-      setRole,
-      userName,
-      alertCount,
-      addToast,
-    }),
-    [role, userName, alertCount, addToast]
-  )
+  const role: AdminRole = adminRole || (process.env.NODE_ENV !== "production" ? "owner" : "owner")
+
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen"><p className="text-sm text-muted-foreground">Loading...</p></div>
+  }
+
+  const contextValue = React.useMemo(() => ({ role, userName: user?.name || "Staff", alertCount: 3, addToast }), [role, user, addToast])
 
   return (
     <AdminShellContext.Provider value={contextValue}>
