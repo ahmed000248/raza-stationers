@@ -25,7 +25,7 @@ export default function DeliveryManagementPage() {
   }, [role])
 
   if (role === "packing") {
-    return <div className="bg-[var(--white)] border border-[var(--border-subtle)] rounded-2xl p-12 text-center max-w-md mx-auto my-16 shadow-xs"><h2 className="text-base font-semibold mb-2">This section isn't part of your role</h2><Link href="/dashboard"><Button variant="default" className="h-10 text-xs px-5">Back to dashboard</Button></Link></div>
+    return <div className="bg-[var(--white)] border border-[var(--border-subtle)] rounded-2xl p-12 text-center max-w-md mx-auto my-16 shadow-xs"><h2 className="text-base font-semibold mb-2">This section isn&apos;t part of your role</h2><Link href="/dashboard"><Button variant="default" className="h-10 text-xs px-5">Back to dashboard</Button></Link></div>
   }
   if (role === "delivery") {
     const myDeliveries = deliveries.filter((d) => d.status === "dispatched" || d.status === "out_for_delivery")

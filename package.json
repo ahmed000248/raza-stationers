@@ -15,7 +15,16 @@
     "build:web": "npm run build --workspace=@raza-stationers/web",
     "build:admin": "npm run build --workspace=@raza-stationers/admin",
     "build:api": "npm run build --workspace=@raza-stationers/api-server",
-    "lint": "npm run lint --workspaces --if-present"
+    "db:validate": "npx prisma validate --schema=packages/db/prisma/schema.prisma",
+    "db:generate": "npx prisma generate --schema=packages/db/prisma/schema.prisma",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "echo \"Testing is NOT CONFIGURED for this workspace. See docs/stabilization/phase-1-reproducibility.md\"",
+    "verify": "npm run db:validate && npm run db:generate && npm run typecheck && npm run lint && npm run build"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
   },
   "devDependencies": {
     "@mermaid-js/mermaid-cli": "^11.16.0",

@@ -46,12 +46,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   }, [])
 
   const role: AdminRole = adminRole || (process.env.NODE_ENV !== "production" ? "owner" : "owner")
+  const contextValue = React.useMemo(() => ({ role, userName: user?.name || "Staff", alertCount: 3, addToast }), [role, user, addToast])
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen"><p className="text-sm text-muted-foreground">Loading...</p></div>
   }
-
-  const contextValue = React.useMemo(() => ({ role, userName: user?.name || "Staff", alertCount: 3, addToast }), [role, user, addToast])
 
   return (
     <AdminShellContext.Provider value={contextValue}>

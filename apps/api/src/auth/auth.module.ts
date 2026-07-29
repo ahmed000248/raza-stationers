@@ -8,9 +8,17 @@ import { JwtStrategy } from "./strategies/jwt.strategy";
 @Module({
   imports: [
     PassportModule.register({ defaultStrategy: "jwt" }),
-    JwtModule.register({
-      secret: process.env.JWT_SECRET || "raza-stationers-jwt-secret-dev",
-      signOptions: { expiresIn: "7d" },
+    JwtModule.registerAsync({
+      useFactory: () => {
+        const secret = process.env.JWT_SECRET;
+        if (!secret || secret.trim() === "") {
+          throw new Error("JWT_SECRET environment variable is missing and must be provided.");
+        }
+        return {
+          secret,
+          signOptions: { expiresIn: "7d" },
+        };
+      },
     }),
   ],
   controllers: [AuthController],
