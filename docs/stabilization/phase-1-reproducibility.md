@@ -96,7 +96,7 @@ ESLint execution produces **0 ERRORS** and **143 TOTAL WARNINGS** across the mon
 
 | Warning Category | Rule ID | Count | Root Cause / Context |
 | :--- | :--- | :--- | :--- |
-| **TypeScript Any Usage** | `@typescript-eslint/no-explicit-any` | 69 | Explicit `any` type annotations in React component handlers awaiting domain DTO refinements in Phase 2 |
+| **TypeScript Any Usage** | `@typescript-eslint/no-explicit-any` | 69 | Explicit `any` type annotations in React component handlers recorded for a later code-quality/application phase (Phase 2 is strictly catalogue certification) |
 | **React 19 Effect State** | `react-hooks/set-state-in-effect` | 17 | React 19 compiler hints for calling `setState` inside mount effects to synchronize local storage or props |
 | **Unused Variables** | `@typescript-eslint/no-unused-vars` | 51 | Unused import or function parameter names not prefixed with `_` |
 | **Effect Dependencies** | `react-hooks/exhaustive-deps` | 5 | React Hook dependency array recommendations |
