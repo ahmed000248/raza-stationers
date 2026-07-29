@@ -7,15 +7,20 @@ const eslintConfig = defineConfig([
   ...nextTs,
   {
     rules: {
+      // Critical correctness rules (Enforced as errors)
+      "react-hooks/rules-of-hooks": "error",
+      "react/no-unescaped-entities": "error",
+
+      // Code quality & performance rules (Categorized as warnings for Phase 1 baseline)
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
       "react-hooks/set-state-in-effect": "warn",
-      "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
       "react-hooks/preserve-manual-memoization": "warn",
     },
   },
   globalIgnores([
+    // Exclude build outputs & third-party vendored library output
     ".next/**",
     "out/**",
     "build/**",

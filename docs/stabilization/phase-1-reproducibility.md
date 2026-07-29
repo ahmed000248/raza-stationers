@@ -9,7 +9,7 @@
 
 ## 1. Supported Prerequisites
 
-- **Node.js**: `>=18.0.0` (Verified on `v24.16.0`)
+- **Node.js**: `>=20.19.0` (Required by Prisma 7.9; verified on `v24.16.0`)
 - **npm**: `>=9.0.0` (Verified on `11.13.0`)
 - **Prisma CLI / Client**: `7.9.0`
 - **Lockfile Authority**: `package-lock.json` (npm Workspaces)
@@ -82,7 +82,7 @@ The application requires the following environment variables defined in `.env`:
 
 ## 6. Testing Infrastructure Status
 
-- **Status**: `NOT CONFIGURED`
+- **Status**: `OPEN / DEFERRED (NOT CONFIGURED)`
 - **Details**: No automated unit/integration test framework (Jest/Vitest) is currently configured in `package.json`.
 - **Honest Reporting**: `npm run test` explicitly outputs:  
   `Testing is NOT CONFIGURED for this workspace. See docs/stabilization/phase-1-reproducibility.md`
@@ -90,7 +90,21 @@ The application requires the following environment variables defined in `.env`:
 
 ---
 
-## 7. Troubleshooting Setup Failures
+## 7. Categorization of 143 Remaining Warnings
+
+ESLint execution produces **0 ERRORS** and **143 TOTAL WARNINGS** across the monorepo (72 in `@raza-stationers/admin`, 71 in `@raza-stationers/web`):
+
+| Warning Category | Rule ID | Count | Root Cause / Context |
+| :--- | :--- | :--- | :--- |
+| **TypeScript Any Usage** | `@typescript-eslint/no-explicit-any` | 69 | Explicit `any` type annotations in React component handlers awaiting domain DTO refinements in Phase 2 |
+| **React 19 Effect State** | `react-hooks/set-state-in-effect` | 17 | React 19 compiler hints for calling `setState` inside mount effects to synchronize local storage or props |
+| **Unused Variables** | `@typescript-eslint/no-unused-vars` | 51 | Unused import or function parameter names not prefixed with `_` |
+| **Effect Dependencies** | `react-hooks/exhaustive-deps` | 5 | React Hook dependency array recommendations |
+| **Memoization Optimization** | `react-hooks/preserve-manual-memoization` | 1 | React 19 compiler note on manual memoization in `action-search-bar.tsx` |
+
+---
+
+## 8. Troubleshooting Setup Failures
 
 | Failure / Error | Cause | Solution |
 | :--- | :--- | :--- |
@@ -101,21 +115,22 @@ The application requires the following environment variables defined in `.env`:
 
 ---
 
-## 8. Phase 1 Issue Resolution Table
+## 9. Phase 1 Issue Resolution Table
 
 | Issue ID | Description | Resolution Status | Phase 1 Evidence / Outcome |
 | :--- | :--- | :--- | :--- |
 | **ISSUE-02** | JWT fallback secret in backend | **RESOLVED** | Removed hardcoded fallback `"raza-stationers-jwt-secret-dev"` from `auth.module.ts` and `jwt.strategy.ts`. App now throws clear startup error if `JWT_SECRET` is missing. |
 | **ISSUE-04** | Admin panel ESLint errors | **RESOLVED** | Fixed 49 ESLint errors in `@raza-stationers/admin` (unescaped entities, conditional hooks, strict rules). **0 errors remaining**. |
 | **ISSUE-05** | Storefront ESLint errors | **RESOLVED** | Excluded vendored GSAP code (`src/lib/gsap/**`) in `eslint.config.mjs` and resolved code defects in `@raza-stationers/web`. **0 errors remaining**. |
-| **ISSUE-06** | Lack of test script & testing report | **RESOLVED** | Standardized `npm run test` to report `NOT CONFIGURED` honestly without faking passing test metrics. |
+| **ISSUE-06** | Lack of test script & testing report | **OPEN / DEFERRED** | Standardized `npm run test` to report `NOT CONFIGURED` honestly. Automated test framework setup deferred to future task. |
 
 ---
 
-## 9. Deferred Issues Summary
+## 10. Deferred Issues Summary
 
 - **ISSUE-01**: Catalogue Importer Incompatibility → Deferred to **Phase 3** (Dry-run reconciliation & importer refactoring).
 - **ISSUE-03**: Browser `localStorage` Authentication Tokens → Deferred to **Phase 5** (Security hardening & httpOnly session cookies).
+- **ISSUE-06**: Automated Unit & Integration Test Framework → **OPEN / DEFERRED** (Future task logged for Vitest/Jest).
 - **ISSUE-07**: Admin Mock Category Fallback → Deferred to later application phase.
 - **ISSUE-08**: Customer Multi-Device Cart Persistence → Deferred to later storefront phase.
 - **ISSUE-09**: Branded Placeholder Imagery → Deferred to later UI phase.

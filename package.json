@@ -23,7 +23,7 @@
     "verify": "npm run db:validate && npm run db:generate && npm run typecheck && npm run lint && npm run build"
   },
   "engines": {
-    "node": ">=18.0.0",
+    "node": ">=20.19.0",
     "npm": ">=9.0.0"
   },
   "devDependencies": {
