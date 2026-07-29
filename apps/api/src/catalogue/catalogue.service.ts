@@ -24,8 +24,8 @@ export class CatalogueService {
       where.category = { slug: query.categorySlug };
     }
 
-    const page = query.page ?? 1;
-    const limit = query.limit ?? 20;
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 20;
 
     const [items, total] = await Promise.all([
       this.prisma.product.findMany({
@@ -80,14 +80,17 @@ export class CatalogueService {
           where: { isActive: true },
           include: {
             unitOfMeasure: true,
-            prices: { orderBy: [{ priceType: "asc" }, { effectiveFrom: "desc" }] },
+            prices: {
+              where: { priceType: { not: "buying" } },
+              orderBy: [{ priceType: "asc" }, { effectiveFrom: "desc" }],
+            },
           },
         },
         aliases: true,
       },
     });
     if (!product) throw new NotFoundException("Product not found");
-    return product;
+    return JSON.parse(JSON.stringify(product, (k, v) => (typeof v === "bigint" ? v.toString() : v)));
   }
 
   async findBySku(sku: string) {
@@ -100,6 +103,7 @@ export class CatalogueService {
           include: {
             unitOfMeasure: true,
             prices: {
+              where: { priceType: { not: "buying" } },
               orderBy: [{ priceType: "asc" }, { effectiveFrom: "desc" }],
             },
           },
@@ -109,12 +113,12 @@ export class CatalogueService {
     });
 
     if (!product) throw new NotFoundException("Product not found");
-    return product;
+    return JSON.parse(JSON.stringify(product, (k, v) => (typeof v === "bigint" ? v.toString() : v)));
   }
 
   async findAllAdmin(query: { page?: number; limit?: number; status?: string; categorySlug?: string }) {
-    const page = query.page || 1;
-    const limit = query.limit || 50;
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 50;
     const where: Prisma.ProductWhereInput = {};
     if (query.status) where.status = query.status as any;
     if (query.categorySlug) where.category = { slug: query.categorySlug };
@@ -129,7 +133,8 @@ export class CatalogueService {
       }),
       this.prisma.product.count({ where }),
     ]);
-    return { items, total, page, limit, totalPages: Math.ceil(total / limit) };
+    const result = { items, total, page, limit, totalPages: Math.ceil(total / limit) };
+    return JSON.parse(JSON.stringify(result, (k, v) => (typeof v === "bigint" ? v.toString() : v)));
   }
 
   async createProduct(data: { name: string; categoryId: string; purchaseType?: string; shopName?: string; description?: string; wholesalePrice?: number }, userId: string) {
