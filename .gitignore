@@ -47,3 +47,5 @@ graphify-out/cache/
 
 /generated/prisma
 .codex-phase7-tmp/
+
+tools/__pycache__/
