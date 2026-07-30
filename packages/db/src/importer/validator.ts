@@ -39,7 +39,7 @@ export function validateCatalogueRows(rawRows: RawCatalogueRow[], sourcePath: st
 
   // First pass: count exact duplicates and name frequencies
   for (const row of rawRows) {
-    const isRowEmpty = !row.name && !row.category && !row.salesType && (row.priceRaw == null || String(row.priceRaw).trim() === "");
+    const isRowEmpty = !row.sku && !row.name && !row.category && !row.salesType && (row.wholesalePriceRaw == null || String(row.wholesalePriceRaw).trim() === "");
     if (isRowEmpty) {
       emptyCount++;
       continue;
@@ -48,7 +48,7 @@ export function validateCatalogueRows(rawRows: RawCatalogueRow[], sourcePath: st
 
     const normName = normalizeText(row.name);
     const normCategory = normalizeText(row.category);
-    const exactKey = JSON.stringify([normName, normCategory, row.salesType.trim(), String(row.priceRaw).trim()]);
+    const exactKey = JSON.stringify([row.sku.trim(), normName, normCategory, row.salesType.trim()]);
 
     exactCounts.set(exactKey, (exactCounts.get(exactKey) ?? 0) + 1);
     if (normName) {
@@ -58,7 +58,7 @@ export function validateCatalogueRows(rawRows: RawCatalogueRow[], sourcePath: st
 
   // Second pass: validate each row
   for (const row of rawRows) {
-    const isRowEmpty = !row.name && !row.category && !row.salesType && (row.priceRaw == null || String(row.priceRaw).trim() === "");
+    const isRowEmpty = !row.sku && !row.name && !row.category && !row.salesType && (row.wholesalePriceRaw == null || String(row.wholesalePriceRaw).trim() === "");
     if (isRowEmpty) continue;
 
     const issues: RowIssueData[] = [];
@@ -84,22 +84,32 @@ export function validateCatalogueRows(rawRows: RawCatalogueRow[], sourcePath: st
       });
     }
 
+    // Check SKU
+    if (!row.sku.trim()) {
+      issues.push({
+        severity: ImportIssueSeverity.error,
+        code: "MISSING_SKU",
+        fieldName: "sku",
+        message: "Product SKU is missing",
+      });
+    }
+
     // Price parsing
-    let price: number | null = null;
+    let wholesalePrice: number | null = null;
     let hasPrice = false;
     let isValidPrice = false;
     let isZeroPrice = false;
     let isNegativePrice = false;
 
-    if (row.priceRaw != null && String(row.priceRaw).trim() !== "") {
+    if (row.wholesalePriceRaw != null && String(row.wholesalePriceRaw).trim() !== "") {
       hasPrice = true;
-      const parsedNum = typeof row.priceRaw === "number" ? row.priceRaw : Number(String(row.priceRaw).replace(/,/g, "").trim());
+      const parsedNum = typeof row.wholesalePriceRaw === "number" ? row.wholesalePriceRaw : Number(String(row.wholesalePriceRaw).replace(/,/g, "").trim());
       if (Number.isFinite(parsedNum)) {
-        price = parsedNum;
-        if (price > 0) {
+        wholesalePrice = parsedNum;
+        if (wholesalePrice > 0) {
           isValidPrice = true;
           validPriceCount++;
-        } else if (price === 0) {
+        } else if (wholesalePrice === 0) {
           isZeroPrice = true;
           zeroPriceCount++;
           issues.push({
@@ -123,7 +133,7 @@ export function validateCatalogueRows(rawRows: RawCatalogueRow[], sourcePath: st
           severity: ImportIssueSeverity.error,
           code: "MALFORMED_WHOLESALE_PRICE",
           fieldName: "wholesalePrice",
-          message: `Unparseable price value: ${String(row.priceRaw)}`,
+          message: `Unparseable price value: ${String(row.wholesalePriceRaw)}`,
         });
       }
     } else {
@@ -136,19 +146,20 @@ export function validateCatalogueRows(rawRows: RawCatalogueRow[], sourcePath: st
       });
     }
 
-    // Packaging check
-    const packMatch = PACKAGING_PATTERN.exec(origName);
-    const hasPackagingKeyword = packMatch !== null;
-    const detectedPackagingUnit = packMatch ? packMatch[1].toLowerCase() : null;
+    let buyingPrice: number | null = null;
+    if (row.buyingPriceRaw != null && String(row.buyingPriceRaw).trim() !== "") {
+      const parsedBuying = typeof row.buyingPriceRaw === "number" ? row.buyingPriceRaw : Number(String(row.buyingPriceRaw).replace(/,/g, "").trim());
+      if (Number.isFinite(parsedBuying)) {
+        buyingPrice = parsedBuying;
+      }
+    }
 
-    if (!hasPackagingKeyword) {
-      ambiguousPackagingCount++;
-      issues.push({
-        severity: ImportIssueSeverity.warning,
-        code: "AMBIGUOUS_PACKAGING",
-        fieldName: "name",
-        message: "Item name does not state packaging unit explicitly; defaulting to standard unit",
-      });
+    let packQuantity: number | null = null;
+    if (row.packQuantityRaw != null && String(row.packQuantityRaw).trim() !== "") {
+      const parsedPackQty = typeof row.packQuantityRaw === "number" ? row.packQuantityRaw : parseInt(String(row.packQuantityRaw).replace(/,/g, "").trim(), 10);
+      if (Number.isFinite(parsedPackQty) && parsedPackQty > 0) {
+        packQuantity = parsedPackQty;
+      }
     }
 
     if (VARIANT_PATTERN.test(origName)) {
@@ -156,7 +167,7 @@ export function validateCatalogueRows(rawRows: RawCatalogueRow[], sourcePath: st
     }
 
     // Duplicate checks
-    const exactKey = JSON.stringify([normName, normCategory, salesTypeTrimmed, String(row.priceRaw).trim()]);
+    const exactKey = JSON.stringify([row.sku.trim(), normName, normCategory, salesTypeTrimmed]);
     if ((exactCounts.get(exactKey) ?? 0) > 1) {
       issues.push({
         severity: ImportIssueSeverity.warning,
@@ -184,19 +195,24 @@ export function validateCatalogueRows(rawRows: RawCatalogueRow[], sourcePath: st
     parsedRows.push({
       sourceRowNumber: row.sourceRowNumber,
       sourceSheet: row.sourceSheet,
+      sku: row.sku.trim(),
       originalName: origName,
       normalizedName: normName,
       originalCategory: origCategory,
       normalizedCategory: normCategory,
       salesType: salesTypeTrimmed,
       purchaseType,
-      price,
+      unitOfMeasure: row.unitOfMeasure.toLowerCase().trim() || "piece",
+      packQuantity,
+      currency: row.currency.trim() || "PKR",
+      wholesalePrice,
+      buyingPrice,
+      isActive: String(row.activeRaw).trim().toLowerCase() === "true",
+      sourceKey: row.sourceKey.trim(),
       hasPrice,
       isValidPrice,
       isZeroPrice,
       isNegativePrice,
-      hasPackagingKeyword,
-      detectedPackagingUnit,
       validationStatus,
       issues,
     });

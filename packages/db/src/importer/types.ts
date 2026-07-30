@@ -3,28 +3,43 @@ import { ImportBatchStatus, ImportValidationStatus, ImportIssueSeverity, Product
 export interface RawCatalogueRow {
   sourceRowNumber: number;
   sourceSheet: string;
+  sku: string;
   name: string;
   category: string;
   salesType: string;
-  priceRaw: unknown;
+  unitOfMeasure: string;
+  packQuantityRaw: unknown;
+  currency: string;
+  wholesalePriceRaw: unknown;
+  buyingPriceRaw: unknown;
+  profitRaw: unknown;
+  profitMarginRaw: unknown;
+  markupRaw: unknown;
+  activeRaw: unknown;
+  sourceKey: string;
 }
 
 export interface ParsedCatalogueRow {
   sourceRowNumber: number;
   sourceSheet: string;
+  sku: string;
   originalName: string;
   normalizedName: string;
   originalCategory: string;
   normalizedCategory: string;
   salesType: string;
   purchaseType: ProductPurchaseType;
-  price: number | null;
+  unitOfMeasure: string;
+  packQuantity: number | null;
+  currency: string;
+  wholesalePrice: number | null;
+  buyingPrice: number | null;
+  isActive: boolean;
+  sourceKey: string;
   hasPrice: boolean;
   isValidPrice: boolean;
   isZeroPrice: boolean;
   isNegativePrice: boolean;
-  hasPackagingKeyword: boolean;
-  detectedPackagingUnit: string | null;
   validationStatus: ImportValidationStatus;
   issues: RowIssueData[];
 }

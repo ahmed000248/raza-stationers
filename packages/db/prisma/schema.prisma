@@ -706,6 +706,7 @@ model ProductPackaging {
   code               String
   label              String
   conversionToBase   Decimal            @map("conversion_to_base") @db.Decimal(18, 6)
+  packQuantity       Int?               @map("pack_quantity")
   isBase             Boolean            @default(false) @map("is_base")
   confirmationStatus ConfirmationStatus @default(unconfirmed) @map("confirmation_status")
   isActive           Boolean            @default(false) @map("is_active")
@@ -1470,6 +1471,8 @@ model ImportIssue {
 model SourceRecordMapping {
   id                 String   @id @default(cuid())
   importRowId        String   @map("import_row_id")
+  sourceSystem       String   @map("source_system")
+  sourceKey          String   @map("source_key")
   categoryId         String?  @map("category_id")
   productId          String?  @map("product_id")
   productPackagingId String?  @map("product_packaging_id")
@@ -1482,6 +1485,7 @@ model SourceRecordMapping {
   productPackaging ProductPackaging? @relation(fields: [productPackagingId], references: [id], onDelete: Restrict)
   productPrice     ProductPrice?     @relation(fields: [productPriceId], references: [id], onDelete: Restrict)
 
+  @@unique([sourceSystem, sourceKey])
   @@index([importRowId])
   @@index([categoryId])
   @@index([productId])

@@ -29,13 +29,10 @@ export function generateSlug(name: string): string {
 }
 
 export class CatalogueImporter {
-  /**
-   * Helper to create a Prisma client instance using the PrismaPg adapter.
-   */
   private static createPrismaClient(): { prisma: PrismaClient; pool: pg.Pool } {
-    const connectionString = process.env.DATABASE_URL;
+    const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL;
     if (!connectionString) {
-      throw new Error("DATABASE_URL environment variable is not defined");
+      throw new Error("DIRECT_URL environment variable is not defined");
     }
 
     const pool = new pg.Pool({
@@ -50,77 +47,57 @@ export class CatalogueImporter {
     return { prisma, pool };
   }
 
-  /**
-   * Main entry point to run dry-run or commit import pipelines.
-   */
-  public static async execute(options: ImportExecutionOptions): Promise<ImportExecutionResult> {
-    const { sourcePath, dryRun = true, commit = false, chunkSize = 25 } = options;
-
+  public static async generatePlan(sourcePath: string): Promise<{ parsedRows: ParsedCatalogueRow[]; result: ImportExecutionResult }> {
     if (!sourcePath) {
       throw new Error("Source path must be specified for catalogue import");
     }
 
-    // Read source and compute SHA-256
     const fileBytes = await fs.readFile(sourcePath);
     const fileSha256 = createHash("sha256").update(fileBytes).digest("hex");
 
-    // Parse and validate rows
     const rawRows = await parseCatalogueCsv(sourcePath);
     const { parsedRows, profile } = validateCatalogueRows(rawRows, sourcePath, fileSha256);
 
-    // If dry run, perform zero database writes and return immediately
-    if (dryRun || !commit) {
-      const proposedProducts = parsedRows.filter((r) => r.validationStatus !== "invalid").length;
-      const proposedCategories = profile.uniqueCategories;
-      const proposedPackaging = proposedProducts;
-      const proposedPrices = parsedRows.filter((r) => r.hasPrice && r.price !== null && r.price > 0).length;
+    const proposedProducts = parsedRows.filter((r) => r.validationStatus !== "invalid").length;
+    const proposedCategories = profile.uniqueCategories;
+    const proposedPackaging = proposedProducts;
+    const proposedPrices = parsedRows.filter((r) => r.hasPrice && r.wholesalePrice !== null && r.wholesalePrice > 0).length;
 
-      return {
-        sha256: fileSha256,
-        dryRun: true,
-        committed: false,
-        profile,
-        createdCounts: {
-          categories: proposedCategories,
-          products: proposedProducts,
-          packaging: proposedPackaging,
-          prices: proposedPrices,
-          sourceMappings: proposedProducts * 3 + proposedPrices,
-          rows: parsedRows.length,
-          issues: parsedRows.reduce((sum, r) => sum + r.issues.length, 0),
-        },
-      };
+    const result: ImportExecutionResult = {
+      sha256: fileSha256,
+      dryRun: true,
+      committed: false,
+      profile,
+      createdCounts: {
+        categories: proposedCategories,
+        products: proposedProducts,
+        packaging: proposedPackaging,
+        prices: proposedPrices,
+        sourceMappings: proposedProducts,
+        rows: parsedRows.length,
+        issues: parsedRows.reduce((sum, r) => sum + r.issues.length, 0),
+      },
+    };
+
+    return { parsedRows, result };
+  }
+
+  public static async commit(
+    parsedRows: ParsedCatalogueRow[],
+    profile: ImportExecutionResult["profile"],
+    uploaderId: string,
+    chunkSize = 25
+  ): Promise<ImportExecutionResult> {
+    if (!uploaderId) {
+      throw new Error("A valid authenticated Admin user ID is required to commit an import.");
     }
 
-    // Commit mode: execute database writes
     const { prisma, pool } = CatalogueImporter.createPrismaClient();
 
     try {
-      // 1. Ensure System Importer User exists
-      let uploaderId = options.uploadedById;
-      if (!uploaderId) {
-        let systemUser = await prisma.user.findFirst({
-          where: { mobileNumber: "+920000000000" },
-        });
-
-        if (!systemUser) {
-          systemUser = await prisma.user.create({
-            data: {
-              mobileNumber: "+920000000000",
-              email: "system.importer@razastationers.local",
-              name: "System Importer",
-              role: UserRole.owner,
-              passwordHash: "system-importer-placeholder-hash",
-            },
-          });
-        }
-        uploaderId = systemUser.id;
-      }
-
-      // 2. Check Idempotency: Check if this file has already been committed
       const existingCommittedBatch = await prisma.importBatch.findFirst({
         where: {
-          sha256: fileSha256,
+          sha256: profile.fileSha256,
           status: ImportBatchStatus.committed,
         },
       });
@@ -128,7 +105,7 @@ export class CatalogueImporter {
       if (existingCommittedBatch) {
         return {
           batchId: existingCommittedBatch.id,
-          sha256: fileSha256,
+          sha256: profile.fileSha256,
           dryRun: false,
           committed: true,
           alreadyCommitted: true,
@@ -145,12 +122,11 @@ export class CatalogueImporter {
         };
       }
 
-      // 3. Create ImportBatch record (fulfilling approval constraints)
       const now = new Date();
       const importBatch = await prisma.importBatch.create({
         data: {
-          originalFilename: sourcePath.split(/[/\\]/).pop() || "catalogue.csv",
-          sha256: fileSha256,
+          originalFilename: profile.sourcePath.split(/[/\\]/).pop() || "catalogue.csv",
+          sha256: profile.fileSha256,
           status: ImportBatchStatus.committing,
           totalRows: profile.totalSourceRows,
           validRows: profile.validRows,
@@ -171,8 +147,7 @@ export class CatalogueImporter {
       let createdRowsCount = 0;
       let createdIssuesCount = 0;
 
-      // 4. Pre-create/resolve unique Categories
-      const categoryMap = new Map<string, string>(); // normalizedCategory -> categoryId
+      const categoryMap = new Map<string, string>();
       const uniqueCategoryNames = new Set(parsedRows.map((r) => r.originalCategory));
 
       for (const catName of uniqueCategoryNames) {
@@ -195,12 +170,11 @@ export class CatalogueImporter {
         categoryMap.set(norm, cat.id);
       }
 
-      // 5. Pre-create/resolve ALL Units of Measure referenced in parsedRows
-      const uomMap = new Map<string, string>(); // uomCode -> uomId
-      const allUomCodes = new Set<string>(["unit"]);
+      const uomMap = new Map<string, string>();
+      const allUomCodes = new Set<string>(["piece"]);
       for (const row of parsedRows) {
-        if (row.detectedPackagingUnit) {
-          allUomCodes.add(row.detectedPackagingUnit);
+        if (row.unitOfMeasure) {
+          allUomCodes.add(row.unitOfMeasure);
         }
       }
 
@@ -221,25 +195,29 @@ export class CatalogueImporter {
         uomMap.set(uomCode, uom.id);
       }
 
-      // 6. Process single row handler helper
       const processSingleRow = async (row: ParsedCatalogueRow) => {
-        // Create ImportRow
         const importRow = await prisma.importRow.create({
           data: {
             importBatchId: importBatch.id,
             sourceSheet: row.sourceSheet,
             sourceRowNumber: row.sourceRowNumber,
             rawData: {
+              sku: row.sku,
               name: row.originalName,
               category: row.originalCategory,
               salesType: row.salesType,
-              price: row.price,
+              wholesalePrice: row.wholesalePrice,
+              buyingPrice: row.buyingPrice,
+              sourceKey: row.sourceKey,
             },
             normalizedData: {
+              sku: row.sku,
               name: row.normalizedName,
               category: row.normalizedCategory,
               purchaseType: row.purchaseType,
-              price: row.price,
+              wholesalePrice: row.wholesalePrice,
+              buyingPrice: row.buyingPrice,
+              sourceKey: row.sourceKey,
             },
             validationStatus: row.validationStatus,
             commitStatus: row.validationStatus === "invalid" ? ImportCommitStatus.failed : ImportCommitStatus.imported,
@@ -276,20 +254,23 @@ export class CatalogueImporter {
           throw new Error(`Category ID not resolved for category: ${row.originalCategory}`);
         }
 
-        // Allocate SKU via PostgreSQL allocator function
-        const skuResult = await prisma.$queryRaw<Array<{ sku_number: bigint; sku: string }>>`SELECT * FROM public.allocate_product_sku()`;
-        const skuNumber = skuResult[0]?.sku_number;
-        const sku = skuResult[0]?.sku;
-
-        if (!sku || skuNumber == null) {
-          throw new Error(`Failed to allocate SKU for row ${row.sourceRowNumber}`);
+        const skuNumParsed = parseInt(row.sku.replace(/\D/g, ""), 10);
+        if (isNaN(skuNumParsed)) {
+          throw new Error(`Failed to extract numeric SKU from ${row.sku}`);
         }
 
-        // Create Product record
-        const product = await prisma.product.create({
-          data: {
-            skuNumber,
-            sku,
+        const product = await prisma.product.upsert({
+          where: { skuNumber: BigInt(skuNumParsed) },
+          update: {
+            sku: row.sku,
+            name: row.originalName,
+            status: ProductStatus.pending_review,
+            purchaseType: row.purchaseType,
+            categoryId,
+          },
+          create: {
+            skuNumber: BigInt(skuNumParsed),
+            sku: row.sku,
             name: row.originalName,
             status: ProductStatus.pending_review,
             purchaseType: row.purchaseType,
@@ -297,36 +278,43 @@ export class CatalogueImporter {
           },
         });
 
-        // Resolve Unit of Measure from pre-populated map
-        const uomCode = row.detectedPackagingUnit || "unit";
+        const uomCode = row.unitOfMeasure || "piece";
         const uomId = uomMap.get(uomCode);
         if (!uomId) {
           throw new Error(`Unit of measure ID not resolved for code: ${uomCode}`);
         }
 
-        // Create base ProductPackaging
-        const packaging = await prisma.productPackaging.create({
-          data: {
+        const packaging = await prisma.productPackaging.upsert({
+          where: { productId_code: { productId: product.id, code: `${product.sku}-BASE` } },
+          update: {
+            label: `Standard ${row.unitOfMeasure || "Piece"}`,
+            conversionToBase: 1.0,
+            packQuantity: row.packQuantity,
+            isBase: true,
+            confirmationStatus: ConfirmationStatus.unconfirmed,
+            isActive: row.isActive,
+          },
+          create: {
             productId: product.id,
             unitOfMeasureId: uomId,
             code: `${product.sku}-BASE`,
-            label: row.detectedPackagingUnit ? `Standard ${row.detectedPackagingUnit}` : "Standard Unit",
+            label: `Standard ${row.unitOfMeasure || "Piece"}`,
             conversionToBase: 1.0,
+            packQuantity: row.packQuantity,
             isBase: true,
             confirmationStatus: ConfirmationStatus.unconfirmed,
-            isActive: true,
+            isActive: row.isActive,
           },
         });
 
-        // Create ProductPrice if price exists and is strictly positive (> 0 per product_prices_amount_positive_check)
         let productPriceId: string | null = null;
         let pricesCreated = 0;
-        if (row.price !== null && row.price > 0) {
+        if (row.wholesalePrice !== null && row.wholesalePrice > 0) {
           const productPrice = await prisma.productPrice.create({
             data: {
               productPackagingId: packaging.id,
               priceType: PriceType.wholesale,
-              amount: row.price,
+              amount: row.wholesalePrice,
               currency: CurrencyCode.PKR,
               effectiveFrom: now,
               createdById: uploaderId,
@@ -336,41 +324,44 @@ export class CatalogueImporter {
           pricesCreated = 1;
         }
 
-        // Create SourceRecordMapping entries
-        let mappingsCreated = 0;
-        await prisma.sourceRecordMapping.create({
-          data: { importRowId: importRow.id, categoryId },
-        });
-        mappingsCreated++;
-
-        await prisma.sourceRecordMapping.create({
-          data: { importRowId: importRow.id, productId: product.id },
-        });
-        mappingsCreated++;
-
-        await prisma.sourceRecordMapping.create({
-          data: { importRowId: importRow.id, productPackagingId: packaging.id },
-        });
-        mappingsCreated++;
-
-        if (productPriceId) {
-          await prisma.sourceRecordMapping.create({
-            data: { importRowId: importRow.id, productPriceId },
+        if (row.buyingPrice !== null && row.buyingPrice > 0) {
+          const buyingPrice = await prisma.productPrice.create({
+            data: {
+              productPackagingId: packaging.id,
+              priceType: PriceType.buying,
+              amount: row.buyingPrice,
+              currency: CurrencyCode.PKR,
+              effectiveFrom: now,
+              createdById: uploaderId,
+            },
           });
-          mappingsCreated++;
+          pricesCreated++;
         }
+
+        await prisma.sourceRecordMapping.upsert({
+          where: { sourceSystem_sourceKey: { sourceSystem: "Excel", sourceKey: row.sourceKey } },
+          update: {
+            importRowId: importRow.id,
+            productId: product.id,
+          },
+          create: {
+            importRowId: importRow.id,
+            sourceSystem: "Excel",
+            sourceKey: row.sourceKey,
+            productId: product.id,
+          },
+        });
 
         return {
           products: 1,
           packaging: 1,
           prices: pricesCreated,
-          mappings: mappingsCreated,
+          mappings: 1,
           rows: 1,
           issues: issuesCount,
         };
       };
 
-      // Concurrent chunk processing
       for (let i = 0; i < parsedRows.length; i += chunkSize) {
         const chunk = parsedRows.slice(i, i + chunkSize);
         const results = await Promise.all(chunk.map((row) => processSingleRow(row)));
@@ -385,7 +376,6 @@ export class CatalogueImporter {
         }
       }
 
-      // 7. Update ImportBatch status to committed
       const commitTime = new Date();
       await prisma.importBatch.update({
         where: { id: importBatch.id },
@@ -398,7 +388,7 @@ export class CatalogueImporter {
 
       return {
         batchId: importBatch.id,
-        sha256: fileSha256,
+        sha256: profile.fileSha256,
         dryRun: false,
         committed: true,
         profile,

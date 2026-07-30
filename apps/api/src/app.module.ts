@@ -18,6 +18,7 @@ import { DashboardModule } from "./dashboard/dashboard.module";
 import { StaffModule } from "./staff/staff.module";
 import { AccountingModule } from "./accounting/accounting.module";
 import { SettingsModule } from "./settings/settings.module";
+import { ImportsModule } from "./imports/imports.module";
 
 @Module({
   imports: [
@@ -25,7 +26,7 @@ import { SettingsModule } from "./settings/settings.module";
     ClientsModule, OrdersModule, InventoryModule, PricingModule,
     InvoicingModule, AuditModule, DeliveryModule, ReturnsModule,
     NotificationsModule, DashboardModule, StaffModule, AccountingModule,
-    SettingsModule,
+    SettingsModule, ImportsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

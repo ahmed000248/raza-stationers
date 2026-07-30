@@ -35,11 +35,14 @@ async function main() {
   console.log(`Source: ${sourcePath}`);
   console.log(`====================================================\n`);
 
-  const result = await CatalogueImporter.execute({
-    sourcePath,
-    dryRun,
-    commit,
-  });
+  let result;
+  if (commit) {
+    console.error("Commit mode is no longer supported via CLI. Use the protected Admin API endpoint instead.");
+    process.exit(1);
+  } else {
+    const { result: planResult } = await CatalogueImporter.generatePlan(sourcePath);
+    result = planResult;
+  }
 
   console.log(`Import Execution Complete.`);
   console.log(`File SHA-256: ${result.sha256}`);

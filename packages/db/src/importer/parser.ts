@@ -54,9 +54,6 @@ export function parseCsvText(csvContent: string): string[][] {
   return rows;
 }
 
-/**
- * Reads and parses raw catalogue CSV rows.
- */
 export async function parseCatalogueCsv(filePath: string): Promise<RawCatalogueRow[]> {
   const content = await fs.readFile(filePath, "utf8");
   const rawRows = parseCsvText(content);
@@ -65,11 +62,11 @@ export async function parseCatalogueCsv(filePath: string): Promise<RawCatalogueR
     return [];
   }
 
-  // Find header row or assume standard: Item Name, Category, Sales Type, Wholesale Price
+  // Find header row based on SKU or Product Name
   let headerIndex = -1;
   for (let i = 0; i < Math.min(5, rawRows.length); i++) {
     const rowStr = rawRows[i].map((c) => c.toLowerCase().trim()).join(",");
-    if (rowStr.includes("item name") || rowStr.includes("product name")) {
+    if (rowStr.includes("sku") && (rowStr.includes("item name") || rowStr.includes("product name"))) {
       headerIndex = i;
       break;
     }
@@ -84,18 +81,38 @@ export async function parseCatalogueCsv(filePath: string): Promise<RawCatalogueR
       continue;
     }
 
-    const name = cells[0] ? cells[0].trim() : "";
-    const category = cells[1] ? cells[1].trim() : "";
-    const salesType = cells[2] ? cells[2].trim() : "";
-    const priceStr = cells[3] ? cells[3].trim() : "";
+    const sku = cells[0] ? cells[0].trim() : "";
+    const name = cells[1] ? cells[1].trim() : "";
+    const category = cells[2] ? cells[2].trim() : "";
+    const salesType = cells[3] ? cells[3].trim() : "";
+    const unitOfMeasure = cells[4] ? cells[4].trim() : "";
+    const packQuantityRaw = cells[5] ? cells[5].trim() : "";
+    const currency = cells[6] ? cells[6].trim() : "";
+    const wholesalePriceRaw = cells[7] ? cells[7].trim() : "";
+    const buyingPriceRaw = cells[8] ? cells[8].trim() : "";
+    const profitRaw = cells[9] ? cells[9].trim() : "";
+    const profitMarginRaw = cells[10] ? cells[10].trim() : "";
+    const markupRaw = cells[11] ? cells[11].trim() : "";
+    const activeRaw = cells[12] ? cells[12].trim() : "";
+    const sourceKey = cells[13] ? cells[13].trim() : "";
 
     catalogueRows.push({
       sourceRowNumber: i + 1,
       sourceSheet: "Products",
+      sku,
       name,
       category,
       salesType,
-      priceRaw: priceStr,
+      unitOfMeasure,
+      packQuantityRaw,
+      currency,
+      wholesalePriceRaw,
+      buyingPriceRaw,
+      profitRaw,
+      profitMarginRaw,
+      markupRaw,
+      activeRaw,
+      sourceKey,
     });
   }
 
