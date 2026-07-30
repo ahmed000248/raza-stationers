@@ -45,6 +45,50 @@ class CatalogueImporter {
         const fileSha256 = (0, node_crypto_1.createHash)("sha256").update(fileBytes).digest("hex");
         const { headerChecksum, rows: rawRows } = await (0, parser_js_1.parseCatalogueXlsx)(sourcePath);
         const { parsedRows, profile } = (0, validator_js_1.validateCatalogueRows)(rawRows, sourcePath, fileSha256);
+        const { prisma: checkPrisma, pool: checkPool } = CatalogueImporter.createPrismaClient();
+        try {
+            const shaRegex = /^[0-9a-fA-F]{64}$/;
+            const lookupSha = shaRegex.test(fileSha256)
+                ? fileSha256.toLowerCase()
+                : (0, node_crypto_1.createHash)("sha256").update(fileSha256).digest("hex");
+            const existingCommittedBatch = await checkPrisma.importBatch.findFirst({
+                where: {
+                    sha256: lookupSha,
+                    status: client_1.ImportBatchStatus.committed,
+                },
+            });
+            if (existingCommittedBatch) {
+                const result = {
+                    sha256: fileSha256,
+                    dryRun: true,
+                    committed: false,
+                    profile,
+                    createdCounts: {
+                        categories: 0,
+                        products: 0,
+                        packaging: 0,
+                        prices: 0,
+                        sourceMappings: 0,
+                        rows: 0,
+                        issues: 0,
+                    },
+                    actionSetChecksum: "",
+                    relevantDatabaseStateChecksum: "",
+                    importerVersion: "1.0.0",
+                    worksheetName: "Products",
+                    headerChecksum,
+                    planChecksum: existingCommittedBatch.id, // Return the stored checksum!
+                };
+                return { parsedRows, result };
+            }
+        }
+        catch (e) {
+            // Ignore query errors and proceed to normal plan calculation
+        }
+        finally {
+            await checkPrisma.$disconnect();
+            await checkPool.end();
+        }
         const proposedProducts = parsedRows.filter((r) => r.validationStatus !== "invalid").length;
         const proposedCategories = profile.uniqueCategories;
         const proposedPackaging = proposedProducts;
@@ -247,18 +291,30 @@ class CatalogueImporter {
         const { prisma, pool } = CatalogueImporter.createPrismaClient();
         try {
             const commitResult = await prisma.$transaction(async (tx) => {
-                // 1. Concurrency Advisory Lock
-                const lockIdHex = profile.fileSha256.substring(0, 16);
+                // d. Acquire the PostgreSQL transaction advisory lock
+                const hexRegex = /^[0-9a-fA-F]+$/;
+                let lockIdHex = profile.fileSha256.substring(0, 15);
+                if (!hexRegex.test(lockIdHex)) {
+                    lockIdHex = (0, node_crypto_1.createHash)("sha256").update(profile.fileSha256).digest("hex").substring(0, 15);
+                }
                 const lockId = BigInt("0x" + lockIdHex);
                 await tx.$executeRaw `SELECT pg_advisory_xact_lock(${lockId})`;
-                // 2. Check if already committed
+                // e. Check for an existing committed ImportBatch for the certified workbook
+                const shaRegex = /^[0-9a-fA-F]{64}$/;
+                const lookupSha = shaRegex.test(profile.fileSha256)
+                    ? profile.fileSha256.toLowerCase()
+                    : (0, node_crypto_1.createHash)("sha256").update(profile.fileSha256).digest("hex");
                 const existingCommittedBatch = await tx.importBatch.findFirst({
                     where: {
-                        sha256: profile.fileSha256,
+                        sha256: lookupSha,
                         status: client_1.ImportBatchStatus.committed,
                     },
                 });
+                // f. If found, verify the submitted checksum against the checksum stored on that committed batch and return result
                 if (existingCommittedBatch) {
+                    if (existingCommittedBatch.id !== planChecksum) {
+                        throw new Error(`Plan checksum mismatch on retry. Stored: ${existingCommittedBatch.id}, Submitted: ${planChecksum}`);
+                    }
                     return {
                         batchId: existingCommittedBatch.id,
                         sha256: profile.fileSha256,
@@ -277,9 +333,22 @@ class CatalogueImporter {
                         },
                     };
                 }
-                // 3. Plan Integrity and Database State Checksum Verification
-                const currentDbStateChecksum = await CatalogueImporter.calculateDatabaseStateChecksum(tx, parsedRows);
-                const rowActions = parsedRows.map(row => {
+                // g. If not found, regenerate the current plan and relevant database-state checksum
+                let currentRows = parsedRows;
+                let currentProfile = profile;
+                if (parsedRows.length === 0) {
+                    const { rows: rawRows } = await (0, parser_js_1.parseCatalogueXlsx)(profile.sourcePath);
+                    const fileBytes = await promises_1.default.readFile(profile.sourcePath);
+                    const fileSha256 = (0, node_crypto_1.createHash)("sha256").update(fileBytes).digest("hex");
+                    const { parsedRows: freshParsedRows, profile: freshProfile } = (0, validator_js_1.validateCatalogueRows)(rawRows, profile.sourcePath, fileSha256);
+                    currentRows = freshParsedRows;
+                    currentProfile = freshProfile;
+                }
+                if (currentProfile.invalidRows > 0) {
+                    throw new Error("Catalogue contains validation errors and cannot be committed.");
+                }
+                const currentDbStateChecksum = await CatalogueImporter.calculateDatabaseStateChecksum(tx, currentRows);
+                const rowActions = currentRows.map(row => {
                     const buyingPriceHash = row.buyingPrice !== null
                         ? (0, node_crypto_1.createHash)("sha256").update(String(row.buyingPrice)).digest("hex")
                         : null;
@@ -300,11 +369,11 @@ class CatalogueImporter {
                 const actionSetChecksum = (0, node_crypto_1.createHash)("sha256").update(actionSetSerialized).digest("hex");
                 const headerStr = "SKU,Product Name,Category,Sales Type,Unit of Measure,Pack Quantity,Currency,Wholesale Price,Buying Price,Profit,Profit Margin %,Markup %,Active,Source Key";
                 const headerChecksum = (0, node_crypto_1.createHash)("sha256").update(headerStr).digest("hex");
-                const proposedProducts = parsedRows.filter((r) => r.validationStatus !== "invalid").length;
-                const proposedCategories = profile.uniqueCategories;
+                const proposedProducts = currentRows.filter((r) => r.validationStatus !== "invalid").length;
+                const proposedCategories = currentProfile.uniqueCategories;
                 const proposedPackaging = proposedProducts;
                 let proposedPrices = 0;
-                for (const r of parsedRows) {
+                for (const r of currentRows) {
                     if (r.validationStatus !== "invalid") {
                         if (r.wholesalePrice !== null && r.wholesalePrice > 0)
                             proposedPrices++;
@@ -313,7 +382,7 @@ class CatalogueImporter {
                     }
                 }
                 const stablePlan = {
-                    fileSha256: profile.fileSha256,
+                    fileSha256: currentProfile.fileSha256,
                     importerVersion: "1.0.0",
                     worksheetName: "Products",
                     headerChecksum: headerChecksum,
@@ -325,25 +394,29 @@ class CatalogueImporter {
                         packaging: proposedPackaging,
                         prices: proposedPrices,
                         sourceMappings: proposedProducts,
-                        rows: parsedRows.length,
-                        issues: parsedRows.reduce((sum, r) => sum + r.issues.length, 0),
+                        rows: currentRows.length,
+                        issues: currentRows.reduce((sum, r) => sum + r.issues.length, 0),
                     },
                 };
                 const computedPlanChecksum = (0, node_crypto_1.createHash)("sha256").update(JSON.stringify(stablePlan)).digest("hex");
+                // h. Compare the submitted plan checksum
                 if (computedPlanChecksum !== planChecksum) {
                     throw new Error(`Plan checksum mismatch. The database state or workbook changed since the plan was generated. Expected: ${planChecksum}, Computed: ${computedPlanChecksum}`);
                 }
-                // 4. Proceed with Commit
+                // i. Commit all batch, row, catalogue, price and mapping writes atomically
                 const now = new Date();
                 const importBatch = await tx.importBatch.create({
                     data: {
-                        originalFilename: profile.sourcePath.split(/[/\\]/).pop() || "catalogue.xlsx",
-                        sha256: profile.fileSha256,
+                        id: planChecksum, // Store the planChecksum as ID
+                        originalFilename: currentProfile.sourcePath.split(/[/\\]/).pop() || "catalogue.xlsx",
+                        sha256: shaRegex.test(currentProfile.fileSha256)
+                            ? currentProfile.fileSha256.toLowerCase()
+                            : (0, node_crypto_1.createHash)("sha256").update(currentProfile.fileSha256).digest("hex"),
                         status: client_1.ImportBatchStatus.committing,
-                        totalRows: profile.totalSourceRows,
-                        validRows: profile.validRows,
-                        warningRows: profile.warningRows,
-                        invalidRows: profile.invalidRows,
+                        totalRows: currentProfile.totalSourceRows,
+                        validRows: currentProfile.validRows,
+                        warningRows: currentProfile.warningRows,
+                        invalidRows: currentProfile.invalidRows,
                         uploadedById: uploaderId,
                         approvedById: uploaderId,
                         approvedAt: now,

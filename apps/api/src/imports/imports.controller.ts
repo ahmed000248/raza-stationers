@@ -1,4 +1,4 @@
-import { Controller, Post, UseGuards, UseInterceptors, UploadedFile, BadRequestException, Query } from '@nestjs/common';
+import { Controller, Post, UseGuards, UseInterceptors, UploadedFile, BadRequestException, ConflictException, Query } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -89,14 +89,44 @@ export class ImportsController {
     await fs.writeFile(tempPath, file.buffer);
 
     try {
-      const { parsedRows, result } = await CatalogueImporter.generatePlan(tempPath);
-      
-      if (result.profile.invalidRows > 0) {
-        throw new BadRequestException({ message: 'Catalogue contains validation errors', profile: result.profile });
-      }
+      const fileSha256 = crypto.createHash('sha256').update(file.buffer).digest('hex');
+      const dummyProfile = {
+        sourcePath: tempPath,
+        fileSha256: fileSha256,
+        totalSourceRows: 0,
+        nonEmptyRows: 0,
+        emptyRows: 0,
+        validRows: 0,
+        warningRows: 0,
+        invalidRows: 0,
+        exactDuplicateGroups: 0,
+        possibleDuplicateNameGroups: 0,
+        uniqueProductNames: 0,
+        uniqueCategories: 0,
+        validWholesalePrices: 0,
+        missingPrices: 0,
+        zeroPrices: 0,
+        negativePrices: 0,
+        ambiguousPackagingRows: 0,
+        possibleVariantRows: 0,
+        classifications: {},
+        unparseableRows: 0,
+      };
 
-      const commitResult = await CatalogueImporter.commit(parsedRows, result.profile, userId, planChecksum);
+      const commitResult = await CatalogueImporter.commit([], dummyProfile, userId, planChecksum);
       return commitResult;
+    } catch (error: any) {
+      const msg = error.message || '';
+      if (msg.includes('Plan checksum mismatch') || msg.includes('checksum mismatch') || msg.includes('stale') || msg.includes('Stale')) {
+        throw new BadRequestException(msg);
+      }
+      if (msg.includes('validation errors') || msg.includes('validation error')) {
+        throw new BadRequestException(msg);
+      }
+      if (msg.includes('already committed') || msg.includes('Already committed') || msg.includes('lock') || msg.includes('conflict')) {
+        throw new ConflictException(msg);
+      }
+      throw error;
     } finally {
       await fs.unlink(tempPath).catch(() => {});
     }

@@ -5,9 +5,11 @@ import fs from 'fs';
 import axios from 'axios';
 import path from 'path';
 import assert from 'assert/strict';
+import crypto from 'crypto';
 import { PrismaClient, PriceType, ImportBatchStatus, CurrencyCode, ProductStatus } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
+import { CatalogueImporter } from '@raza-stationers/db';
 
 const JWT_SECRET = "raza-stationers-test-secret-1234567890";
 const WORKBOOK_PATH = path.resolve('data/final/Raza-Stationers-Final-Supabase-Catalogue.xlsx');
@@ -204,8 +206,8 @@ async function runTests() {
     headers: { ...form.getHeaders(), Authorization: `Bearer ${adminToken}` },
     validateStatus: () => true
   });
-  assert.equal(res.status, 500, "Commit with invalid planChecksum must fail/be rejected");
-  console.log("  ✔ Mismatched planChecksum rejected (500)");
+  assert.equal(res.status, 400, `Commit with invalid planChecksum must be rejected with 400 Bad Request, got ${res.status}`);
+  console.log("  ✔ Mismatched planChecksum rejected with controlled 400");
 
   // --- TEST 5: Canonical XLSX Commit ---
   console.log("\n[5] Executing Canonical Commit...");
@@ -264,6 +266,9 @@ async function runTests() {
     const originalPrice = pkg.prices.find(p => p.priceType === PriceType.wholesale);
     console.log(`  Original wholesale price: ${originalPrice?.amount}`);
 
+    const testRunToken = `mock-hash-${Date.now()}`;
+    const uniqueKey = `EXCEL_KEY_1_${Date.now()}`;
+
     // Create a mock parsed row set with a changed price for RS-000001
     const mockRows = [{
       sourceRowNumber: 1,
@@ -281,7 +286,7 @@ async function runTests() {
       wholesalePrice: Number(originalPrice.amount) + 10, // Changed Price!
       buyingPrice: 80,
       isActive: true,
-      sourceKey: 'EXCEL_KEY_1',
+      sourceKey: uniqueKey,
       hasPrice: true,
       isValidPrice: true,
       isZeroPrice: false,
@@ -292,7 +297,7 @@ async function runTests() {
 
     const mockProfile = {
       sourcePath: 'data/final/Raza-Stationers-Final-Supabase-Catalogue.xlsx',
-      fileSha256: 'mock-price-update-hash',
+      fileSha256: testRunToken,
       totalSourceRows: 1,
       nonEmptyRows: 1,
       emptyRows: 0,
@@ -315,7 +320,7 @@ async function runTests() {
 
     // We will compute the EXACT plan checksum for our mock input below.
     const stablePlan = {
-      fileSha256: 'mock-price-update-hash',
+      fileSha256: testRunToken,
       importerVersion: "1.0.0",
       worksheetName: "Products",
       headerChecksum: "d4df4b25d2e071727c62bb1cd1a97d956dfa28f8f8b8f8b8f8b8f8b8f8b8f8b8", // dummy
@@ -378,7 +383,7 @@ async function runTests() {
     const dbStateChecksum = crypto.createHash("sha256").update(JSON.stringify({ products: dbState, mappings: [] })).digest("hex");
 
     const stablePlanMock = {
-      fileSha256: 'mock-price-update-hash',
+      fileSha256: testRunToken,
       importerVersion: "1.0.0",
       worksheetName: "Products",
       headerChecksum: headerChecksum,
@@ -429,11 +434,14 @@ async function runTests() {
   console.log("\n[8] Testing Forced Rollback...");
   const countsBeforeRollback = await getTableCounts();
 
+  const failRunToken = `mock-fail-hash-${Date.now()}`;
+  const failSuffix = Date.now();
+
   // Create a synthetic row set to import
   const failRows = Array.from({ length: 15 }, (_, i) => ({
     sourceRowNumber: i + 1,
     sourceSheet: 'Products',
-    sku: `RS-FAIL-${i}`,
+    sku: `RS-FAIL-${i}-${failSuffix}`,
     originalName: `FAILED PRODUCT ${i}`,
     normalizedName: `failed product ${i}`,
     originalCategory: 'Pens & Pencils',
@@ -446,7 +454,7 @@ async function runTests() {
     wholesalePrice: 100,
     buyingPrice: 80,
     isActive: true,
-    sourceKey: `FAIL_KEY_${i}`,
+    sourceKey: `FAIL_KEY_${i}_${failSuffix}`,
     hasPrice: true,
     isValidPrice: true,
     isZeroPrice: false,
@@ -457,7 +465,7 @@ async function runTests() {
 
   const failProfile = {
     sourcePath: 'data/final/Raza-Stationers-Final-Supabase-Catalogue.xlsx',
-    fileSha256: 'mock-fail-rollback-hash',
+    fileSha256: failRunToken,
     totalSourceRows: 15,
     nonEmptyRows: 15,
     emptyRows: 0,
@@ -499,13 +507,18 @@ async function runTests() {
   const actionSetChecksumFail = crypto.createHash("sha256").update(JSON.stringify(rowActionsFail)).digest("hex");
   const headerChecksum = crypto.createHash("sha256").update("SKU,Product Name,Category,Sales Type,Unit of Measure,Pack Quantity,Currency,Wholesale Price,Buying Price,Profit,Profit Margin %,Markup %,Active,Source Key").digest("hex");
 
+  // Since these are new SKUs, their database state check will result in empty arrays.
+  // Let's compute it properly:
+  const dbStateFail = [];
+  const dbStateChecksumFail = crypto.createHash("sha256").update(JSON.stringify({ products: dbStateFail, mappings: [] })).digest("hex");
+
   const stablePlanFail = {
-    fileSha256: 'mock-fail-rollback-hash',
+    fileSha256: failRunToken,
     importerVersion: "1.0.0",
     worksheetName: "Products",
     headerChecksum: headerChecksum,
     actionSetChecksum: actionSetChecksumFail,
-    relevantDatabaseStateChecksum: "dummyDbChecksumForFail",
+    relevantDatabaseStateChecksum: dbStateChecksumFail,
     createdCounts: {
       categories: 1,
       products: 15,
@@ -530,7 +543,7 @@ async function runTests() {
     );
     throw new Error("Commit should have failed but succeeded!");
   } catch (err) {
-    assert.equal(err.message, "FORCE_FAILURE_FOR_TEST", "Expected FORCE_FAILURE_FOR_TEST error");
+    assert.equal(err.message, "FORCE_FAILURE_FOR_TEST", `Expected FORCE_FAILURE_FOR_TEST error, got ${err.message}`);
     console.log("  ✔ Direct commit failed as expected mid-transaction.");
   }
 
