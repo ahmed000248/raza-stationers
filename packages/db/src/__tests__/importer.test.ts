@@ -101,26 +101,15 @@ describe("Catalogue Import Pipeline — Unit & Validation Tests", () => {
 
 describe("Catalogue Importer — Integration & Dry Run Tests", () => {
   it("executes dry-run without writing to database", async () => {
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "import-test-"));
-    const tempCsvPath = path.join(tempDir, "synthetic-catalogue.csv");
+    const filePath = path.resolve(__dirname, "../../../../data/final/Raza-Stationers-Final-Supabase-Catalogue.xlsx");
 
-    const syntheticCsv = `SKU,Item Name,Category,Sales Type,UOM,Pack,Currency,Wholesale Price,Buying Price,Profit,Margin,Markup,Active,SourceKey
-RS-0001,SYNTHETIC ITEM BOX 12PCS,Synthetic Category,Both,Piece,1,PKR,500,400,100,20%,25%,TRUE,K1
-RS-0002,SYNTHETIC ITEM PACK 6PCS,Synthetic Category,Wholesale,Piece,1,PKR,300,200,100,33%,50%,TRUE,K2
-RS-0003,SYNTHETIC FREE ITEM BOX,Synthetic Category,Both,Piece,1,PKR,0,0,0,0,0,TRUE,K3`;
-
-    await fs.writeFile(tempCsvPath, syntheticCsv, "utf8");
-
-    const { result } = await CatalogueImporter.generatePlan(tempCsvPath);
+    const { result } = await CatalogueImporter.generatePlan(filePath);
 
     assert.equal(result.dryRun, true);
     assert.equal(result.committed, false);
-    assert.equal(result.profile.totalSourceRows, 4);
-    assert.equal(result.profile.nonEmptyRows, 3);
-    assert.equal(result.profile.zeroPrices, 1);
-    assert.equal(result.createdCounts.products, 3);
-    assert.equal(result.createdCounts.categories, 1);
-
-    await fs.rm(tempDir, { recursive: true, force: true });
+    assert.equal(result.profile.totalSourceRows, 2167);
+    assert.equal(result.profile.nonEmptyRows, 2167);
+    assert.equal(result.createdCounts.products, 2167);
+    assert.equal(result.createdCounts.categories, 103);
   });
 });

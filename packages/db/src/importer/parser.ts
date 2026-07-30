@@ -1,4 +1,7 @@
 import fs from "node:fs/promises";
+import { existsSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import path from "node:path";
 import { RawCatalogueRow } from "./types.js";
 
 /**
@@ -118,3 +121,34 @@ export async function parseCatalogueCsv(filePath: string): Promise<RawCatalogueR
 
   return catalogueRows;
 }
+
+export async function parseCatalogueXlsx(filePath: string): Promise<{ headerChecksum: string; rows: RawCatalogueRow[] }> {
+  let scriptPath = path.join(__dirname, "parse_xlsx.py");
+  if (!existsSync(scriptPath)) {
+    scriptPath = path.resolve(__dirname, "../../src/importer/parse_xlsx.py");
+  }
+
+  const result = spawnSync("python", [scriptPath, filePath], {
+    maxBuffer: 10 * 1024 * 1024, // 10MB
+    encoding: "utf-8"
+  });
+
+  if (result.status !== 0 || result.error) {
+    let errMessage = result.stderr?.trim();
+    if (!errMessage && result.error) {
+      errMessage = result.error.message;
+    }
+    throw new Error(errMessage || `Python parse_xlsx.py failed with exit code ${result.status}`);
+  }
+
+  try {
+    const data = JSON.parse(result.stdout.trim());
+    return {
+      headerChecksum: data.headerChecksum,
+      rows: data.rows
+    };
+  } catch (err) {
+    throw new Error(`Failed to parse python output JSON: ${err instanceof Error ? err.message : String(err)}`);
+  }
+}
+

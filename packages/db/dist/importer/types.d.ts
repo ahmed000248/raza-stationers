@@ -92,4 +92,10 @@ export interface ImportExecutionResult {
         rows: number;
         issues: number;
     };
+    planChecksum?: string;
+    actionSetChecksum?: string;
+    relevantDatabaseStateChecksum?: string;
+    importerVersion?: string;
+    worksheetName?: string;
+    headerChecksum?: string;
 }

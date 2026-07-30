@@ -6,5 +6,6 @@ export declare class CatalogueImporter {
         parsedRows: ParsedCatalogueRow[];
         result: ImportExecutionResult;
     }>;
-    static commit(parsedRows: ParsedCatalogueRow[], profile: ImportExecutionResult["profile"], uploaderId: string, chunkSize?: number): Promise<ImportExecutionResult>;
+    private static calculateDatabaseStateChecksum;
+    static commit(parsedRows: ParsedCatalogueRow[], profile: ImportExecutionResult["profile"], uploaderId: string, planChecksum: string, chunkSize?: number, forceFailureForTest?: boolean): Promise<ImportExecutionResult>;
 }

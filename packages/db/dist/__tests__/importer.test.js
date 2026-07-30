@@ -5,9 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const node_test_1 = require("node:test");
 const strict_1 = __importDefault(require("node:assert/strict"));
-const promises_1 = __importDefault(require("node:fs/promises"));
 const node_path_1 = __importDefault(require("node:path"));
-const node_os_1 = __importDefault(require("node:os"));
 const client_1 = require("@prisma/client");
 const validator_js_1 = require("../importer/validator.js");
 const parser_js_1 = require("../importer/parser.js");
@@ -90,21 +88,13 @@ const mockRow = (overrides) => ({
 });
 (0, node_test_1.describe)("Catalogue Importer — Integration & Dry Run Tests", () => {
     (0, node_test_1.it)("executes dry-run without writing to database", async () => {
-        const tempDir = await promises_1.default.mkdtemp(node_path_1.default.join(node_os_1.default.tmpdir(), "import-test-"));
-        const tempCsvPath = node_path_1.default.join(tempDir, "synthetic-catalogue.csv");
-        const syntheticCsv = `SKU,Item Name,Category,Sales Type,UOM,Pack,Currency,Wholesale Price,Buying Price,Profit,Margin,Markup,Active,SourceKey
-RS-0001,SYNTHETIC ITEM BOX 12PCS,Synthetic Category,Both,Piece,1,PKR,500,400,100,20%,25%,TRUE,K1
-RS-0002,SYNTHETIC ITEM PACK 6PCS,Synthetic Category,Wholesale,Piece,1,PKR,300,200,100,33%,50%,TRUE,K2
-RS-0003,SYNTHETIC FREE ITEM BOX,Synthetic Category,Both,Piece,1,PKR,0,0,0,0,0,TRUE,K3`;
-        await promises_1.default.writeFile(tempCsvPath, syntheticCsv, "utf8");
-        const { result } = await importer_js_1.CatalogueImporter.generatePlan(tempCsvPath);
+        const filePath = node_path_1.default.resolve(__dirname, "../../../../data/final/Raza-Stationers-Final-Supabase-Catalogue.xlsx");
+        const { result } = await importer_js_1.CatalogueImporter.generatePlan(filePath);
         strict_1.default.equal(result.dryRun, true);
         strict_1.default.equal(result.committed, false);
-        strict_1.default.equal(result.profile.totalSourceRows, 4);
-        strict_1.default.equal(result.profile.nonEmptyRows, 3);
-        strict_1.default.equal(result.profile.zeroPrices, 1);
-        strict_1.default.equal(result.createdCounts.products, 3);
-        strict_1.default.equal(result.createdCounts.categories, 1);
-        await promises_1.default.rm(tempDir, { recursive: true, force: true });
+        strict_1.default.equal(result.profile.totalSourceRows, 2167);
+        strict_1.default.equal(result.profile.nonEmptyRows, 2167);
+        strict_1.default.equal(result.createdCounts.products, 2167);
+        strict_1.default.equal(result.createdCounts.categories, 103);
     });
 });

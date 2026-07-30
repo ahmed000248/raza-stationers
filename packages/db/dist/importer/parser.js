@@ -5,7 +5,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.parseCsvText = parseCsvText;
 exports.parseCatalogueCsv = parseCatalogueCsv;
+exports.parseCatalogueXlsx = parseCatalogueXlsx;
 const promises_1 = __importDefault(require("node:fs/promises"));
+const node_fs_1 = require("node:fs");
+const node_child_process_1 = require("node:child_process");
+const node_path_1 = __importDefault(require("node:path"));
 /**
  * Robust RFC-4180 compliant CSV line parser.
  */
@@ -117,4 +121,31 @@ async function parseCatalogueCsv(filePath) {
         });
     }
     return catalogueRows;
+}
+async function parseCatalogueXlsx(filePath) {
+    let scriptPath = node_path_1.default.join(__dirname, "parse_xlsx.py");
+    if (!(0, node_fs_1.existsSync)(scriptPath)) {
+        scriptPath = node_path_1.default.resolve(__dirname, "../../src/importer/parse_xlsx.py");
+    }
+    const result = (0, node_child_process_1.spawnSync)("python", [scriptPath, filePath], {
+        maxBuffer: 10 * 1024 * 1024, // 10MB
+        encoding: "utf-8"
+    });
+    if (result.status !== 0 || result.error) {
+        let errMessage = result.stderr?.trim();
+        if (!errMessage && result.error) {
+            errMessage = result.error.message;
+        }
+        throw new Error(errMessage || `Python parse_xlsx.py failed with exit code ${result.status}`);
+    }
+    try {
+        const data = JSON.parse(result.stdout.trim());
+        return {
+            headerChecksum: data.headerChecksum,
+            rows: data.rows
+        };
+    }
+    catch (err) {
+        throw new Error(`Failed to parse python output JSON: ${err instanceof Error ? err.message : String(err)}`);
+    }
 }
