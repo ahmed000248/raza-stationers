@@ -1,0 +1,290 @@
+{
+  "certification_decision": "CERTIFIED WITH ADVISORIES",
+  "file_identity": {
+    "path": "data\\final\\Raza-Stationers-Final-Supabase-Catalogue.xlsx",
+    "filename": "Raza-Stationers-Final-Supabase-Catalogue.xlsx",
+    "size_bytes": 376017,
+    "sha256_pre": "7cb65d6d07b30c75a048431dab4f855fd60b901515c07fe0f2253f8faccafa0b",
+    "sha256_post": "7cb65d6d07b30c75a048431dab4f855fd60b901515c07fe0f2253f8faccafa0b",
+    "hash_unchanged": true,
+    "registered_sha256": "7cb65d6d07b30c75a048431dab4f855fd60b901515c07fe0f2253f8faccafa0b",
+    "hash_matches_registered": true
+  },
+  "expected_totals": {
+    "products": 2167,
+    "categories": 103,
+    "individual": 70,
+    "wholesale": 2097
+  },
+  "actual_totals": {
+    "products": 2167,
+    "categories": 103,
+    "individual": 70,
+    "wholesale": 2097
+  },
+  "sheet_structure": {
+    "method_a_sheets": [
+      "Summary",
+      "Products",
+      "Categories",
+      "Supabase Import"
+    ],
+    "method_b_sheets": [
+      "Summary",
+      "Products",
+      "Categories",
+      "Supabase Import"
+    ],
+    "hidden_sheets": [],
+    "has_macros": false,
+    "has_external_links": false,
+    "has_data_connections": false,
+    "product_rows_a": 2167,
+    "product_rows_b": 2167,
+    "formula_count_a": 0,
+    "formula_count_b": 6501,
+    "error_cells_a": 0,
+    "merged_data_a": 0,
+    "hidden_rows_a": 0,
+    "blank_rows_a": 0,
+    "sheet_protected": false,
+    "header_row": 4
+  },
+  "headers": [
+    "SKU",
+    "Product Name",
+    "Category",
+    "Sales Type",
+    "Unit of Measure",
+    "Pack Quantity",
+    "Currency",
+    "Wholesale Price",
+    "Buying Price",
+    "Profit",
+    "Profit Margin %",
+    "Markup %",
+    "Active",
+    "Source Key"
+  ],
+  "column_profile": [
+    {
+      "index": 1,
+      "header": "SKU",
+      "non_empty_count": 2167,
+      "unique_count": 2167,
+      "max_text_length": 9,
+      "sample": [
+        "RS-000001",
+        "RS-000002",
+        "RS-000003"
+      ]
+    },
+    {
+      "index": 2,
+      "header": "Product Name",
+      "non_empty_count": 2167,
+      "unique_count": 2167,
+      "max_text_length": 31,
+      "sample": [
+        "JAHAZ (6 PCS)",
+        "WELCOME BABY DISPLAY",
+        "MINI FAN 0+"
+      ]
+    },
+    {
+      "index": 3,
+      "header": "Category",
+      "non_empty_count": 2167,
+      "unique_count": 103,
+      "max_text_length": 19,
+      "sample": [
+        "BALL POINT",
+        "CHINA DAIRIES",
+        "CHINA"
+      ]
+    },
+    {
+      "index": 4,
+      "header": "Sales Type",
+      "non_empty_count": 2167,
+      "unique_count": 2,
+      "max_text_length": 10,
+      "sample": [
+        "Wholesale",
+        "Wholesale",
+        "Wholesale"
+      ]
+    },
+    {
+      "index": 5,
+      "header": "Unit of Measure",
+      "non_empty_count": 2167,
+      "unique_count": 6,
+      "max_text_length": 5,
+      "sample": [
+        "Pack",
+        "Piece",
+        "Piece"
+      ]
+    },
+    {
+      "index": 6,
+      "header": "Pack Quantity",
+      "non_empty_count": 236,
+      "unique_count": 36,
+      "min": 1.0,
+      "max": 500.0,
+      "sample": [
+        "6",
+        "12",
+        "1"
+      ]
+    },
+    {
+      "index": 7,
+      "header": "Currency",
+      "non_empty_count": 2167,
+      "unique_count": 1,
+      "max_text_length": 3,
+      "sample": [
+        "PKR",
+        "PKR",
+        "PKR"
+      ]
+    },
+    {
+      "index": 8,
+      "header": "Wholesale Price",
+      "non_empty_count": 2167,
+      "unique_count": 403,
+      "min": 5.0,
+      "max": 9000.0,
+      "sample": [
+        "390",
+        "200",
+        "300"
+      ]
+    },
+    {
+      "index": 9,
+      "header": "Buying Price",
+      "non_empty_count": 2167,
+      "unique_count": 608,
+      "min": 3.5,
+      "max": 8500.0,
+      "sample": [
+        "355",
+        "172",
+        "250"
+      ]
+    },
+    {
+      "index": 10,
+      "header": "Profit",
+      "non_empty_count": 2167,
+      "unique_count": 224,
+      "min": 0.5,
+      "max": 850.0,
+      "sample": [
+        "35",
+        "28",
+        "50"
+      ]
+    },
+    {
+      "index": 11,
+      "header": "Profit Margin %",
+      "non_empty_count": 2167,
+      "unique_count": 718,
+      "min": 0.003703703703703704,
+      "max": 0.75,
+      "sample": [
+        "0.08974358974358974",
+        "0.14",
+        "0.16666666666666666"
+      ]
+    },
+    {
+      "index": 12,
+      "header": "Markup %",
+      "non_empty_count": 2167,
+      "unique_count": 715,
+      "min": 0.0037174721189591076,
+      "max": 3.0,
+      "sample": [
+        "0.09859154929577464",
+        "0.16279069767441862",
+        "0.2"
+      ]
+    },
+    {
+      "index": 13,
+      "header": "Active",
+      "non_empty_count": 2167,
+      "unique_count": 1,
+      "max_text_length": 4,
+      "sample": [
+        "True",
+        "True",
+        "True"
+      ]
+    },
+    {
+      "index": 14,
+      "header": "Source Key",
+      "non_empty_count": 2167,
+      "unique_count": 2167,
+      "max_text_length": 18,
+      "sample": [
+        "WS-RATES:1:2",
+        "WS-RATES:1:3",
+        "WS-RATES:1:4"
+      ]
+    }
+  ],
+  "sales_type_distribution": {
+    "Wholesale": 2097,
+    "Individual": 70
+  },
+  "price_stats": {
+    "Wholesale Price": {
+      "count": 2167,
+      "min": 5.0,
+      "max": 9000.0,
+      "zeros": 0
+    },
+    "Buying Price": {
+      "count": 2167,
+      "min": 3.5,
+      "max": 8500.0,
+      "zeros": 0
+    }
+  },
+  "unit_distinct_count": 6,
+  "unit_sample": [
+    "Box",
+    "Jar",
+    "Pack",
+    "Piece",
+    "Rim",
+    "Set"
+  ],
+  "exact_duplicate_names": 0,
+  "cross_check_blocking": [],
+  "cross_check_advisory": [
+    "Formula count differs between methods (expected): A (data_only)=0  B (raw OOXML)=6501. Formulas are in analytics columns (Profit, Profit Margin %%, Markup %%); these are not import fields."
+  ],
+  "blocking_findings": [],
+  "advisory_findings": [
+    "CLASSIFICATION CONSISTENCY: 1 rows have unit=Piece/pack_qty=1 but are marked Wholesale — may be intentional",
+    "Formula count differs between methods (expected): A (data_only)=0  B (raw OOXML)=6501. Formulas are in analytics columns (Profit, Profit Margin %%, Markup %%); these are not import fields."
+  ],
+  "human_review_items": [],
+  "classification_rule": {
+    "note": "Sales Type is authoritative in the final workbook. Individual = Piece unit + pack_qty 1.",
+    "individual_unit": "piece",
+    "individual_pack_qty": 1,
+    "rule_individual_count": 71,
+    "rule_wholesale_count": 2096
+  }
+}

@@ -26,6 +26,24 @@
 - **Prohibited Usage**: NOT authorized for production import or direct execution with current legacy importer scripts.
 - **Importer Compatibility**: `INCOMPATIBLE / UNSAFE` (Requires Phase 3 importer refactoring to support multi-sheet Excel layout).
 
+### Phase 2 Certification Result
+
+- **Certification Date**: `2026-07-30`
+- **Certification Decision**: `CERTIFIED WITH ADVISORIES`
+- **Branch**: `phase-2-catalogue-certification`
+- **Tool**: `tools/certify_catalogue.py` (read-only, deterministic, two independent methods)
+- **SHA-256 (pre-analysis)**: `7cb65d6d07b30c75a048431dab4f855fd60b901515c07fe0f2253f8faccafa0b`
+- **SHA-256 (post-analysis)**: `7cb65d6d07b30c75a048431dab4f855fd60b901515c07fe0f2253f8faccafa0b` — unchanged
+- **Actual Totals Confirmed**: 2,167 products · 103 categories · 70 Individual · 2,097 Wholesale
+- **Blocking Failures**: None
+- **Advisories**:
+  - A1: 1 Wholesale row (SKU `RS-002054`) has `unit=Piece / pack_qty=1` — approved, importer must use `Sales Type` as authoritative
+  - A2: Formula columns (Profit, Profit Margin %, Markup %) present — skip in import
+- **Full Report**: `docs/stabilization/phase-2-catalogue-certification.md`
+- **Machine Report**: `docs/stabilization/phase-2-catalogue-profile.json`
+- **Workbook modified**: No
+- **Database accessed**: No
+
 ---
 
 ## 2. Legacy & Archived Data Sources
