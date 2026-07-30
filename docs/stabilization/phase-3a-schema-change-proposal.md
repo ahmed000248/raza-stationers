@@ -1,118 +1,70 @@
-# Phase 3A Schema Change Proposal — Raza Stationers
+# Phase 3A Schema Change Proposal — Raza Stationers (Revised)
 
 **Date**: 2026-07-30  
-**Status**: **PROPOSAL FOR OWNER REVIEW** (No changes applied to `schema.prisma`)  
+**Status**: **APPROVED** (Schema changes required but not yet applied)  
 **Branch**: `phase-3a-catalogue-schema-mapping`  
 **Target File**: `packages/db/prisma/schema.prisma`  
 
 ---
 
-## 1. Summary of Proposed Prisma Schema Modifications
+## 1. Summary of Schema Evaluation
 
-To cleanly support the certified business master catalogue (`2,167` products, `103` categories, `70` Individual, `2,097` Wholesale) and ensure fast, idempotent imports, the following minimal, non-destructive schema additions are proposed.
+Following owner decisions, **SPECIFIC SCHEMA CHANGES ARE REQUIRED** for Phase 3B catalogue import (Design B Lineage and packQuantity).
 
----
-
-## 2. Proposed Prisma Schema Code Snippet (Diff)
-
-```prisma
-// ============================================================================
-// Proposed Additions to packages/db/prisma/schema.prisma
-// ============================================================================
-
-// 1. Proposed New Enum for Business Sales Channel Alignment
-enum SalesType {
-  wholesale
-  individual
-
-  @@map("sales_type")
-}
-
-// 2. Proposed Field Additions to Product Model
-model Product {
-  id                     String              @id @default(cuid())
-  skuNumber              BigInt              @unique @map("sku_number")
-  sku                    String              @unique
-  sourceKey              String?             @unique @map("source_key")   // <--- PROPOSED: GAP-01 (Traceability & Idempotency)
-  salesType              SalesType?          @map("sales_type")           // <--- PROPOSED: GAP-02 (Explicit Business Sales Type)
-  name                   String
-  nameUrdu               String?             @map("name_urdu")
-  shopName               String?             @map("shop_name")
-  categoryId             String              @map("category_id")
-  description            String?
-  purchaseType           ProductPurchaseType @default(unconfirmed) @map("purchase_type")
-  status                 ProductStatus       @default(pending_review)
-  unitConfirmationStatus ConfirmationStatus  @default(unconfirmed) @map("unit_confirmation_status")
-  allowIndividualSale    Boolean             @default(false) @map("allow_individual_sale")
-  
-  // Optional Cached Price Fields for Fast Catalogue API Response (GAP-03)
-  wholesalePrice         Decimal?            @map("wholesale_price") @db.Decimal(14, 2) // <--- PROPOSED: Cached current Wholesale Price
-  buyingPrice            Decimal?            @map("buying_price") @db.Decimal(14, 2)    // <--- PROPOSED: Cached current Buying Price
-
-  lowStockThresholdBase  Decimal?            @map("low_stock_threshold_base") @db.Decimal(18, 3)
-  reviewReason           String?             @map("review_reason")
-  activatedAt            DateTime?           @map("activated_at") @db.Timestamptz(3)
-  activatedById          String?             @map("activated_by_id")
-  archivedAt             DateTime?           @map("archived_at") @db.Timestamptz(3)
-  archivedById           String?             @map("archived_by_id")
-  createdAt              DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt              DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
-
-  // Indexes
-  @@index([status, categoryId])
-  @@index([name])
-  @@index([shopName])
-  @@index([salesType])                                                      // <--- PROPOSED: Index for Sales Type filtering
-  @@map("products")
-}
-```
+The existing Prisma schema (`packages/db/prisma/schema.prisma`) ALREADY natively supports the certified business catalogue via existing models:
+- **`Product.sku`** (`String @unique`): Handles stable product identity (`RS-000001` to `RS-002167`).
+- **`Product.purchaseType`** (`ProductPurchaseType` enum): Handles sales channel classification via value translation (`Wholesale` $\rightarrow$ `bulk`, `Individual` $\rightarrow$ `individual`).
+- **`ProductPrice`**: Handles `Wholesale Price` (`priceType = wholesale`) and `Buying Price` (`priceType = buying`) with exact `Decimal(14,2)` precision.
+- **`ProductPackaging` & `UnitOfMeasure`**: Handles packaging units and pack quantities.
+- **`ImportRow` & `SourceRecordMapping`**: Handles source traceability and lineage.
 
 ---
 
-## 3. Rationale for Proposed Additions
+## 2. Locked Design Options
 
-### 3.1 `sourceKey String? @unique` (GAP-01)
-- **Why**: The certified catalogue contains a unique source key per row (`WS-RATES:1:2` to `WS-RATES:43:52`).
-- **Benefit**: Storing `sourceKey` directly on `Product` allows the importer to perform instant $O(1)$ lookup during re-runs to update existing records without creating duplicates.
-- **Safety**: Fully nullable (`String?`), causing zero impact to any existing records or queries.
+### Topic 1: Sales Type Representation
+- **Approved Solution (0 Schema Changes)**:
+  - Translate Excel `Wholesale` $\rightarrow$ `ProductPurchaseType.bulk`.
+  - Translate Excel `Individual` $\rightarrow$ `ProductPurchaseType.individual`.
+  - Preserve Row 2048 (`RS-002054`) as `bulk`.
+  - Do not automatically derive `allowIndividualSale` unless its existing semantics are proven to be identical.
 
-### 3.2 `salesType SalesType?` (GAP-02)
-- **Why**: Business operations explicitly distinguish between `Wholesale` (2,097 items) and `Individual` (70 items).
-- **Benefit**: Replaces ambiguous mapping to `ProductPurchaseType.bulk` with clean domain terms matching the business catalogue.
-- **Safety**: Nullable field addition (`SalesType?`). Existing `allowIndividualSale` boolean is synchronized automatically (`allowIndividualSale = (salesType == individual)`).
+### Topic 2: Source Record Identity & Lineage (Design B)
+- **Approved Solution (Schema Change Required)**:
+  - `Product.sku` is the primary stable product identity.
+  - Add `sourceSystem String` and `sourceKey String` to `SourceRecordMapping` with `@@unique([sourceSystem, sourceKey])`.
 
-### 3.3 Cached `wholesalePrice` and `buyingPrice` (GAP-03 — Optional)
-- **Why**: Avoids joining 3 tables (`Product` -> `ProductPackaging` -> `ProductPrice`) for simple catalog browsing queries.
-- **Benefit**: Dramatically simplifies storefront & admin catalogue listing API handlers. `ProductPrice` table remains the authoritative historical price ledger.
-- **Safety**: Nullable decimal fields (`Decimal(14, 2)`).
-
----
-
-## 4. Migration Safety & Zero Data Loss Plan
-
-Should the project owner approve these proposed changes for Phase 3B:
-
-1. **Non-Destructive Migration**: All proposed fields (`sourceKey`, `salesType`, `wholesalePrice`, `buyingPrice`) are nullable additions (`?`).
-2. **Zero Table Recreation**: PostgreSQL executes `ALTER TABLE products ADD COLUMN ...` instantaneously without locking or recreating tables.
-3. **Rollback Safety**: Every proposed change can be cleanly reverted via standard down-migration script without losing existing production data.
-4. **No Destructive Commands**: Commands such as `prisma db push --force-reset` or `prisma migrate reset` are strictly prohibited.
+### Topic 3: Packaging Conversion Semantics
+- **Approved Solution (Schema Change Required)**:
+  - Remove all inferred packaging conversions. Set `conversionToBase = 1` for all imported items.
+  - Add `packQuantity Int?` to `ProductPackaging` to store Excel pack quantity explicitly.
 
 ---
 
-## 5. Owner Approval Checklist
+## 3. Rejected Proposals (Removed from Scope)
 
-Before proceeding to Phase 3B (Importer Development):
-
-- [ ] **Approval Item 1**: Approve addition of `sourceKey String? @unique` to `Product`.
-- [ ] **Approval Item 2**: Approve addition of `SalesType` enum (`wholesale`, `individual`) and `salesType` field to `Product`.
-- [ ] **Approval Item 3**: Approve optional cached price fields (`wholesalePrice`, `buyingPrice` Decimal(14,2)) on `Product`.
-- [ ] **Approval Item 4**: Authorize creation of Phase 3B Prisma migration script (`20260730_catalogue_import_fields`).
+The following items from the previous draft have been **REMOVED**:
+1. ❌ **Cached `Product.wholesalePrice` & `Product.buyingPrice`**: Removed to prevent dual sources of truth and price cache synchronization risks. `ProductPrice` remains the sole authoritative model.
+2. ❌ **`Product.salesType` Column Addition**: Removed in favor of explicit value translation into `Product.purchaseType`.
+3. ❌ **Silently Seeded Default System Admin**: Removed. Phase 3B commit will strictly require an authenticated Admin user session.
 
 ---
 
-## 6. Next Steps
+## 4. Verification & Diagnostics
 
-Upon owner review and approval:
-1. Apply proposed additions to `packages/db/prisma/schema.prisma`.
-2. Generate migration via `npx prisma migrate dev --name catalogue_import_fields`.
-3. Proceed to **Phase 3B: Importer Development & Dry-Run Verification**.
+| Verification Step | Command | Result | Diagnostic Note |
+| :--- | :--- | :---: | :--- |
+| **npm Verification Pipeline** | `npm run verify` | **PASS (Exit Code 0)** | Replaced `npx prisma` with direct local invocation (`node node_modules/prisma/build/index.js`) to resolve path issues safely. |
+| **Direct Prisma Validation** | `node node_modules/prisma/build/index.js validate --schema=packages/db/prisma/schema.prisma` | **PASS (Exit Code 0)** | `The schema at packages/db/prisma/schema.prisma is valid 🚀` |
+| **Phase 2 Certification Guard** | `python tools/certify_catalogue.py data/final/Raza-Stationers-Final-Supabase-Catalogue.xlsx` | **PASS (Exit Code 0)** | `CERTIFIED WITH ADVISORIES` (SHA-256: `7cb65d6d...` UNCHANGED) |
+
+---
+
+## 5. Locked Owner Decisions
+
+- **1 (Sales Type)**: Explicit mapping approved.
+- **2 (Source Identity)**: Design B approved (composite key on SourceRecordMapping).
+- **3 (Packaging)**: Inferred conversions removed. `packQuantity` (Int?) introduced.
+- **4 (Pricing)**: Cached prices removed. ProductPrice authoritative.
+- **5 (Lifecycle)**: Commit creates pending_review items.
+- **6 (Authorization)**: CLI performs no writes. Commits strictly require a protected Admin API/session endpoint which derives actor identity from the authenticated session.

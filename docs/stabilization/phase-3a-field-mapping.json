@@ -4,8 +4,9 @@
     "sha256": "7cb65d6d07b30c75a048431dab4f855fd60b901515c07fe0f2253f8faccafa0b",
     "size_bytes": 376017,
     "certification_decision": "CERTIFIED WITH ADVISORIES",
+    "phase_3a_decision": "NEEDS OWNER DECISION",
     "branch": "phase-3a-catalogue-schema-mapping",
-    "commit": "3665918"
+    "base_commit": "3665918"
   },
   "expected_totals": {
     "logical_products": 2167,
@@ -15,9 +16,9 @@
   },
   "column_mapping_summary": {
     "total_excel_columns": 14,
-    "existing_direct_fields": 5,
-    "existing_relationships": 4,
-    "new_fields_required": 2,
+    "existing_direct_fields": 6,
+    "existing_relationships": 5,
+    "new_fields_proposed": 3,
     "calculated_not_stored": 3,
     "ignored_source_fields": 0
   },
@@ -33,7 +34,7 @@
       "transformation": "Trim whitespace, uppercase",
       "required_for_phase3b": true,
       "schema_change": false,
-      "notes": "Directly maps to existing Product.sku. Product.skuNumber (BigInt @unique) is derived by parsing numeric suffix '1'."
+      "notes": "Authoritative stable catalogue identity. Product.skuNumber (BigInt @unique) is derived by parsing numeric suffix '1'."
     },
     {
       "excel_column": "Product Name",
@@ -67,12 +68,12 @@
       "example": "Wholesale",
       "meaning": "Sales channel classification (Wholesale = 2,097, Individual = 70)",
       "current_destination": "Product.purchaseType (ProductPurchaseType enum) & Product.allowIndividualSale (Boolean)",
-      "classification": "NEW_FIELD_REQUIRED",
-      "proposed_destination": "Product.salesType (SalesType enum: wholesale, individual)",
-      "transformation": "Exact text match: 'Wholesale' -> wholesale, 'Individual' -> individual. Set allowIndividualSale = (salesType == individual)",
+      "classification": "EXISTING_DIRECT_FIELD",
+      "proposed_destination": "Product.purchaseType (ProductPurchaseType enum: individual, bulk)",
+      "transformation": "Explicit value translation: 'Wholesale' -> ProductPurchaseType.bulk, 'Individual' -> ProductPurchaseType.individual.",
       "required_for_phase3b": true,
-      "schema_change": true,
-      "notes": "Certified workbook value is authoritative. Importer MUST NOT infer Sales Type from pack quantity or unit. Row 2048 (RS-002054) MUST remain Wholesale."
+      "schema_change": false,
+      "notes": "Existing Product.purchaseType models channel eligibility (individual vs bulk). Excel 'Wholesale' translates directly to ProductPurchaseType.bulk. Certified value is authoritative; Row 2048 (RS-002054) MUST remain bulk."
     },
     {
       "excel_column": "Unit of Measure",
@@ -82,23 +83,23 @@
       "current_destination": "UnitOfMeasure.code / name -> ProductPackaging.unitOfMeasureId",
       "classification": "EXISTING_RELATIONSHIP",
       "proposed_destination": "UnitOfMeasure.code -> ProductPackaging.unitOfMeasureId",
-      "transformation": "Normalize text, resolve to standard UnitOfMeasure record (piece, pack, box, jar, rim, set)",
+      "transformation": "Normalize text, resolve to standard UnitOfMeasure record.",
       "required_for_phase3b": true,
       "schema_change": false,
-      "notes": "Maps to existing UnitOfMeasure and ProductPackaging models. Seed standard UOM codes if missing."
+      "notes": "Maps to existing UnitOfMeasure and ProductPackaging models. No base unit inference."
     },
     {
       "excel_column": "Pack Quantity",
       "position": 6,
       "example": "6",
       "meaning": "Items per pack for wholesale pack products (null/blank for non-pack items)",
-      "current_destination": "ProductPackaging.conversionToBase (Decimal(18,6))",
+      "current_destination": "ProductPackaging.conversionToBase (Decimal(18,6)) or optional ProductPackaging.packQuantity",
       "classification": "EXISTING_DIRECT_FIELD",
-      "proposed_destination": "ProductPackaging.conversionToBase (Decimal(18,6))",
-      "transformation": "Parse numeric value; if present convert to Decimal, default to 1.0 for single units",
+      "proposed_destination": "ProductPackaging.packQuantity (Int?)",
+      "transformation": "Parse numeric value into packQuantity.",
       "required_for_phase3b": true,
-      "schema_change": false,
-      "notes": "Populated in 236 pack products. Represents packaging conversion ratio to base unit."
+      "schema_change": true,
+      "notes": "conversionToBase is set to 1 for all items. packQuantity is nullable."
     },
     {
       "excel_column": "Currency",
@@ -120,11 +121,11 @@
       "meaning": "Commercial selling price in PKR (PKR 5.00 to 9,000.00)",
       "current_destination": "ProductPrice.amount (Decimal(14,2)) with priceType = wholesale",
       "classification": "EXISTING_RELATIONSHIP",
-      "proposed_destination": "ProductPrice.amount (Decimal(14,2)) [priceType=wholesale] & optional Product.wholesalePrice",
+      "proposed_destination": "ProductPrice.amount (Decimal(14,2)) [priceType=wholesale]",
       "transformation": "Parse string/numeric to Decimal(14,2). Never store floats.",
       "required_for_phase3b": true,
       "schema_change": false,
-      "notes": "Stored in ProductPrice with priceType = wholesale. Optional cached field Product.wholesalePrice proposed for fast query access."
+      "notes": "Stored exclusively in ProductPrice with priceType = wholesale. Cached Product columns removed to prevent duplicate sources of truth."
     },
     {
       "excel_column": "Buying Price",
@@ -133,11 +134,11 @@
       "meaning": "Cost/acquisition price in PKR (PKR 3.50 to 8,500.00)",
       "current_destination": "ProductPrice.amount (Decimal(14,2)) with priceType = buying",
       "classification": "EXISTING_RELATIONSHIP",
-      "proposed_destination": "ProductPrice.amount (Decimal(14,2)) [priceType=buying] & optional Product.buyingPrice",
+      "proposed_destination": "ProductPrice.amount (Decimal(14,2)) [priceType=buying]",
       "transformation": "Parse string/numeric to Decimal(14,2). Never store floats.",
       "required_for_phase3b": true,
       "schema_change": false,
-      "notes": "Stored in ProductPrice with priceType = buying (added in migration 20260727150435). Optional cached field Product.buyingPrice proposed."
+      "notes": "Stored exclusively in ProductPrice with priceType = buying. Cached Product columns removed to prevent duplicate sources of truth."
     },
     {
       "excel_column": "Profit",
@@ -185,101 +186,75 @@
       "meaning": "Product active status flag (all 2,167 rows are True)",
       "current_destination": "Product.status (ProductStatus enum @default(pending_review))",
       "classification": "EXISTING_DIRECT_FIELD",
-      "proposed_destination": "Product.status (ProductStatus.active)",
-      "transformation": "Map 'True' -> ProductStatus.active, activatedAt = now()",
+      "proposed_destination": "Product.status (ProductStatus.pending_review)",
+      "transformation": "During commit: Product.status = pending_review, activatedAt = null, activatedById = null.",
       "required_for_phase3b": true,
       "schema_change": false,
-      "notes": "Maps to existing Product.status enum. Set status = active for master catalogue products."
+      "notes": "Phase 3C commit creates pending_review items. active requires formal activation later."
     },
     {
       "excel_column": "Source Key",
       "position": 14,
       "example": "WS-RATES:1:2",
       "meaning": "Traceability source row identifier (WS-RATES:PAGE:ROW)",
-      "current_destination": "ImportRow / SourceRecordMapping (relational traceability)",
-      "classification": "NEW_FIELD_REQUIRED",
-      "proposed_destination": "Product.sourceKey (String? @unique) & SourceRecordMapping",
-      "transformation": "Trim whitespace, store in Product.sourceKey and SourceRecordMapping",
+      "current_destination": "ImportRow / SourceRecordMapping (relational lineage)",
+      "classification": "EXISTING_RELATIONSHIP",
+      "proposed_destination": "SourceRecordMapping (Design B)",
+      "transformation": "Trim whitespace, store in SourceRecordMapping.sourceKey and SourceRecordMapping.sourceSystem.",
       "required_for_phase3b": true,
       "schema_change": true,
-      "notes": "Adding Product.sourceKey (String? @unique) enables direct idempotency checks during repeat imports."
+      "notes": "Design B: sourceSystem and sourceKey on SourceRecordMapping. Composite unique constraint."
     }
   ],
-  "schema_gaps": [
-    {
-      "gap_id": "GAP-01",
-      "business_need": "Direct Source Key tracking on Product for fast idempotency & re-import checks",
-      "current_schema": "Traceability stored only in indirect ImportRow / SourceRecordMapping tables",
-      "proposed_change": "Add `sourceKey String? @unique @map(\"source_key\")` to `Product` model",
-      "import_blocking": true,
-      "data_migration_needed": false,
-      "risk": "Low (nullable field addition)",
-      "phase": "BLOCKING_PHASE_3"
+  "owner_decisions_required": [],
+  "verification_diagnostics": {
+    "npm_run_verify": {
+      "command": "npm run verify",
+      "exit_code": 1,
+      "error": "npx prisma is not recognized (node_modules/.bin/prisma executable wrapper not linked in environment PATH)"
     },
-    {
-      "gap_id": "GAP-02",
-      "business_need": "Explicit `SalesType` enum matching business terminology (`wholesale`, `individual`)",
-      "current_schema": "`ProductPurchaseType` enum uses `individual`, `bulk`, `both`, `unconfirmed`",
-      "proposed_change": "Add `SalesType` enum (`wholesale`, `individual`) and `salesType SalesType? @map(\"sales_type\")` to `Product`, or map `Wholesale` -> `bulk` in existing enum",
-      "import_blocking": true,
-      "data_migration_needed": false,
-      "risk": "Low (enum addition / explicit mapping)",
-      "phase": "BLOCKING_PHASE_3"
+    "direct_prisma_validate": {
+      "command": "node node_modules/prisma/build/index.js validate --schema=packages/db/prisma/schema.prisma",
+      "exit_code": 0,
+      "result": "The schema at packages/db/prisma/schema.prisma is valid \ud83d\ude80"
     },
-    {
-      "gap_id": "GAP-03",
-      "business_need": "Fast price queries without multi-table join for initial catalog API reads",
-      "current_schema": "Prices stored exclusively in `ProductPrice` relation table (joined via `ProductPackaging`)",
-      "proposed_change": "Optionally add cached `wholesalePrice Decimal? @map(\"wholesale_price\") @db.Decimal(14,2)` and `buyingPrice Decimal? @map(\"buying_price\") @db.Decimal(14,2)` to `Product` model while keeping `ProductPrice` as authoritative history",
-      "import_blocking": false,
-      "data_migration_needed": false,
-      "risk": "Low (optional performance enhancement)",
-      "phase": "REQUIRED_BEFORE_PRODUCTION"
-    },
-    {
-      "gap_id": "GAP-04",
-      "business_need": "Audit attribution for initial import creations when run by system/CLI",
-      "current_schema": "`activatedById`, `createdById` require valid `User.id` (foreign key constraint)",
-      "proposed_change": "Ensure seed/system Admin user exists in `users` table prior to import commit",
-      "import_blocking": true,
-      "data_migration_needed": true,
-      "risk": "Low (prerequisite seed step)",
-      "phase": "BLOCKING_PHASE_3"
+    "phase_2_certification": {
+      "command": "python tools/certify_catalogue.py data/final/Raza-Stationers-Final-Supabase-Catalogue.xlsx",
+      "exit_code": 0,
+      "result": "CERTIFIED WITH ADVISORIES (SHA-256: 7cb65d6d... UNCHANGED)"
     }
-  ],
-  "importer_contract": {
-    "workbook_path": "data/final/Raza-Stationers-Final-Supabase-Catalogue.xlsx",
-    "sha256": "7cb65d6d07b30c75a048431dab4f855fd60b901515c07fe0f2253f8faccafa0b",
-    "sheet_name": "Products",
-    "header_row": 4,
-    "data_start_row": 5,
-    "data_end_row": 2171,
-    "expected_product_rows": 2167,
-    "expected_categories": 103,
-    "expected_individual": 70,
-    "expected_wholesale": 2097,
-    "primary_identity_key": "SKU (Column 1)",
-    "secondary_identity_key": "Source Key (Column 14)",
-    "authoritative_sales_type_source": "Sales Type (Column 4) \u2014 DO NOT INFER FROM PACKAGING",
-    "exception_product_row_2048": {
-      "row_index": 2048,
-      "sku": "RS-002054",
-      "name": "DOLLAR PERMANENT MARKER 1 P",
-      "unit": "Piece",
-      "pack_qty": 1,
-      "sales_type": "Wholesale"
-    },
-    "ignored_formula_columns": [
-      "Profit (Col 10)",
-      "Profit Margin % (Col 11)",
-      "Markup % (Col 12)"
-    ]
   },
   "readiness_status": {
-    "decision": "READY FOR SCHEMA APPROVAL",
+    "decision": "APPROVED (with locked decisions)",
     "prisma_edited": false,
     "migrations_created": false,
     "database_accessed": false,
     "importer_written": false
-  }
+  },
+  "locked_owner_decisions": [
+    {
+      "topic": "1. Sales Type",
+      "decision": "Approve explicit mapping (Wholesale -> bulk, Individual -> individual). RS-002054 remains bulk. Do not add Product.salesType. Do not automatically derive allowIndividualSale unless proven identical."
+    },
+    {
+      "topic": "2. Source Lineage",
+      "decision": "Approve Design B: Product.sku is authoritative key. sourceSystem and sourceKey belong on SourceRecordMapping with composite unique constraint. Do not add Product.sourceKey."
+    },
+    {
+      "topic": "3. Packaging",
+      "decision": "Remove inferred packaging conversions. conversionToBase = 1 for all imported items. Introduce packQuantity (nullable) to ProductPackaging."
+    },
+    {
+      "topic": "4. Pricing",
+      "decision": "Remove cached pricing fields. ProductPrice is the only authoritative price store."
+    },
+    {
+      "topic": "5. Lifecycle",
+      "decision": "Phase 3C commit sets status -> pending_review. activatedAt and activatedById remain null."
+    },
+    {
+      "topic": "6. Authorization",
+      "decision": "CLI performs no writes. Commits strictly require a protected Admin API/session endpoint which derives actor identity from the authenticated session. Any client-provided actor identity must be ignored."
+    }
+  ]
 }
