@@ -49,3 +49,5 @@ graphify-out/cache/
 .codex-phase7-tmp/
 
 tools/__pycache__/
+
+graphify-out/
