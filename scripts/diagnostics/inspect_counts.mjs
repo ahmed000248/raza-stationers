@@ -1,10 +1,22 @@
 // inspect_counts.mjs
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 import { PrismaClient, PriceType, ImportBatchStatus, ProductStatus } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
+import fs from 'fs';
+import path from 'path';
 
-const pool = new pg.Pool({ connectionString: process.env.DIRECT_URL, ssl: { rejectUnauthorized: false } });
+function getSslConfig() {
+  const certPath = path.resolve('supabase-ca.crt');
+  if (fs.existsSync(certPath)) {
+    return {
+      rejectUnauthorized: true,
+      ca: fs.readFileSync(certPath, 'utf8'),
+    };
+  }
+  return true;
+}
+
+const pool = new pg.Pool({ connectionString: process.env.DIRECT_URL, ssl: getSslConfig() });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 

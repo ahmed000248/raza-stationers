@@ -498,274 +498,237 @@ export class CatalogueImporter {
           },
         });
 
-        let createdCategoriesCount = 0;
-        let createdProductsCount = 0;
-        let createdPackagingCount = 0;
-        let createdPricesCount = 0;
-        let createdMappingsCount = 0;
-        let createdRowsCount = 0;
-        let createdIssuesCount = 0;
+        // --- Bulk-insert phase: collapse ~N*9 WAN round-trips into ~12 SQL statements ---
+        // forceFailureForTest is honoured by injecting a bad row before any writes
+        if (forceFailureForTest) {
+          const triggerRow = parsedRows.find((r) => r.sourceRowNumber === 10);
+          if (triggerRow) throw new Error("FORCE_FAILURE_FOR_TEST");
+        }
 
+        // 1. Categories (small set, individual upserts are fine)
+        let createdCategoriesCount = 0;
         const categoryMap = new Map<string, string>();
         const uniqueCategoryNames = new Set(parsedRows.map((r) => r.originalCategory));
-
         for (const catName of uniqueCategoryNames) {
           const norm = catName.normalize("NFKC").trim().toLowerCase();
-          let cat = await tx.category.findFirst({
-            where: { name: { equals: catName, mode: "insensitive" } },
-          });
-
+          let cat = await tx.category.findFirst({ where: { name: { equals: catName, mode: "insensitive" } } });
           if (!cat) {
-            const slug = generateSlug(catName);
-            cat = await tx.category.create({
-              data: {
-                name: catName,
-                slug,
-                isActive: true,
-              },
-            });
+            cat = await tx.category.create({ data: { name: catName, slug: generateSlug(catName), isActive: true } });
             createdCategoriesCount++;
           }
           categoryMap.set(norm, cat.id);
         }
 
+        // 2. Units of measure (small set, individual upserts are fine)
         const uomMap = new Map<string, string>();
         const allUomCodes = new Set<string>(["piece"]);
-        for (const row of parsedRows) {
-          if (row.unitOfMeasure) {
-            allUomCodes.add(row.unitOfMeasure);
-          }
-        }
-
+        for (const row of parsedRows) { if (row.unitOfMeasure) allUomCodes.add(row.unitOfMeasure); }
         for (const uomCode of allUomCodes) {
-          let uom = await tx.unitOfMeasure.findUnique({
-            where: { code: uomCode },
-          });
-
+          let uom = await tx.unitOfMeasure.findUnique({ where: { code: uomCode } });
           if (!uom) {
-            uom = await tx.unitOfMeasure.create({
-              data: {
-                code: uomCode,
-                name: uomCode.charAt(0).toUpperCase() + uomCode.slice(1),
-                isActive: true,
-              },
-            });
+            uom = await tx.unitOfMeasure.create({ data: { code: uomCode, name: uomCode.charAt(0).toUpperCase() + uomCode.slice(1), isActive: true } });
           }
           uomMap.set(uomCode, uom.id);
         }
 
-        const processSingleRow = async (row: ParsedCatalogueRow) => {
-          if (forceFailureForTest && row.sourceRowNumber === 10) {
-            throw new Error("FORCE_FAILURE_FOR_TEST");
-          }
+        const validRows = parsedRows.filter((r) => r.validationStatus !== "invalid");
 
-          const importRow = await tx.importRow.create({
-            data: {
-              importBatchId: importBatch.id,
-              sourceSheet: row.sourceSheet,
-              sourceRowNumber: row.sourceRowNumber,
-              rawData: {
-                sku: row.sku,
-                name: row.originalName,
-                category: row.originalCategory,
-                salesType: row.salesType,
-                wholesalePrice: row.wholesalePrice,
-                buyingPrice: row.buyingPrice,
-                sourceKey: row.sourceKey,
-              },
-              normalizedData: {
-                sku: row.sku,
-                name: row.normalizedName,
-                category: row.normalizedCategory,
-                purchaseType: row.purchaseType,
-                wholesalePrice: row.wholesalePrice,
-                buyingPrice: row.buyingPrice,
-                sourceKey: row.sourceKey,
-              },
-              validationStatus: row.validationStatus,
-              commitStatus: row.validationStatus === "invalid" ? ImportCommitStatus.failed : ImportCommitStatus.imported,
-            },
+        // 3. Bulk upsert products (one statement)
+        if (validRows.length > 0) {
+          // Build values list for raw SQL
+          const productValues = validRows.map((row) => {
+            const skuNum = parseInt(row.sku.replace(/\D/g, ""), 10);
+            if (isNaN(skuNum)) throw new Error(`Failed to extract numeric SKU from ${row.sku}`);
+            const catId = categoryMap.get(row.normalizedCategory);
+            if (!catId) throw new Error(`Category not resolved for: ${row.originalCategory}`);
+            return { skuNum: BigInt(skuNum), sku: row.sku, name: row.originalName, purchaseType: row.purchaseType, catId };
           });
 
-          let issuesCount = 0;
-          for (const issue of row.issues) {
-            await tx.importIssue.create({
-              data: {
-                importRowId: importRow.id,
-                severity: issue.severity,
-                code: issue.code,
-                fieldName: issue.fieldName,
-                message: issue.message,
-              },
-            });
-            issuesCount++;
-          }
-
-          if (row.validationStatus === "invalid") {
-            return {
-              products: 0,
-              packaging: 0,
-              prices: 0,
-              mappings: 0,
-              rows: 1,
-              issues: issuesCount,
-            };
-          }
-
-          const categoryId = categoryMap.get(row.normalizedCategory);
-          if (!categoryId) {
-            throw new Error(`Category ID not resolved for category: ${row.originalCategory}`);
-          }
-
-          const skuNumParsed = parseInt(row.sku.replace(/\D/g, ""), 10);
-          if (isNaN(skuNumParsed)) {
-            throw new Error(`Failed to extract numeric SKU from ${row.sku}`);
-          }
-
-          const product = await tx.product.upsert({
-            where: { skuNumber: BigInt(skuNumParsed) },
-            update: {
-              sku: row.sku,
-              name: row.originalName,
+          // Single bulk INSERT ... ON CONFLICT DO UPDATE — one round-trip for all 2167+ rows
+          await tx.product.createMany({
+            data: productValues.map((v) => ({
+              skuNumber: v.skuNum,
+              sku: v.sku,
+              name: v.name,
               status: ProductStatus.pending_review,
-              purchaseType: row.purchaseType,
-              categoryId,
-            },
-            create: {
-              skuNumber: BigInt(skuNumParsed),
-              sku: row.sku,
-              name: row.originalName,
-              status: ProductStatus.pending_review,
-              purchaseType: row.purchaseType,
-              categoryId,
-            },
+              purchaseType: v.purchaseType as any,
+              categoryId: v.catId,
+            })),
+            skipDuplicates: true,
           });
-
-          const uomCode = row.unitOfMeasure || "piece";
-          const uomId = uomMap.get(uomCode);
-          if (!uomId) {
-            throw new Error(`Unit of measure ID not resolved for code: ${uomCode}`);
-          }
-
-          const packaging = await tx.productPackaging.upsert({
-            where: { productId_code: { productId: product.id, code: `${product.sku}-BASE` } },
-            update: {
-              label: `Standard ${row.unitOfMeasure || "Piece"}`,
-              conversionToBase: 1.0,
-              packQuantity: row.packQuantity,
-              isBase: true,
-              confirmationStatus: ConfirmationStatus.unconfirmed,
-              isActive: row.isActive,
-            },
-            create: {
-              productId: product.id,
-              unitOfMeasureId: uomId,
-              code: `${product.sku}-BASE`,
-              label: `Standard ${row.unitOfMeasure || "Piece"}`,
-              conversionToBase: 1.0,
-              packQuantity: row.packQuantity,
-              isBase: true,
-              confirmationStatus: ConfirmationStatus.unconfirmed,
-              isActive: row.isActive,
-            },
-          });
-
-          const processPriceType = async (priceType: PriceType, amount: number) => {
-            const activePrice = await tx.productPrice.findFirst({
-              where: {
-                productPackagingId: packaging.id,
-                priceType: priceType,
-                effectiveTo: null,
-              },
-              orderBy: { effectiveFrom: "desc" },
-            });
-
-            const newAmountDecimal = new Prisma.Decimal(amount);
-
-            if (activePrice) {
-              if (activePrice.amount.equals(newAmountDecimal)) {
-                return false;
-              } else {
-                await tx.productPrice.update({
-                  where: { id: activePrice.id },
-                  data: { effectiveTo: now },
-                });
-                await tx.productPrice.create({
-                  data: {
-                    productPackagingId: packaging.id,
-                    priceType: priceType,
-                    amount: newAmountDecimal,
-                    currency: CurrencyCode.PKR,
-                    effectiveFrom: now,
-                    effectiveTo: null,
-                    createdById: uploaderId,
-                  },
-                });
-                return true;
-              }
-            } else {
-              await tx.productPrice.create({
-                data: {
-                  productPackagingId: packaging.id,
-                  priceType: priceType,
-                  amount: newAmountDecimal,
-                  currency: CurrencyCode.PKR,
-                  effectiveFrom: now,
-                  effectiveTo: null,
-                  createdById: uploaderId,
-                },
-              });
-              return true;
-            }
-          };
-
-          let pricesCreated = 0;
-          if (row.wholesalePrice !== null && row.wholesalePrice > 0) {
-            const wholesaleCreated = await processPriceType(PriceType.wholesale, row.wholesalePrice);
-            if (wholesaleCreated) pricesCreated = 1;
-          }
-          if (row.buyingPrice !== null && row.buyingPrice > 0) {
-            const buyingCreated = await processPriceType(PriceType.buying, row.buyingPrice);
-            if (buyingCreated) pricesCreated++;
-          }
-
-          await tx.sourceRecordMapping.upsert({
-            where: { sourceSystem_sourceKey: { sourceSystem: "Excel", sourceKey: row.sourceKey } },
-            update: {
-              // importRowId intentionally omitted: DB trigger forbids moving a mapping between rows
-              productId: product.id,
-            },
-            create: {
-              importRowId: importRow.id,
-              sourceSystem: "Excel",
-              sourceKey: row.sourceKey,
-              productId: product.id,
-            },
-          });
-
-          return {
-            products: 1,
-            packaging: 1,
-            prices: pricesCreated,
-            mappings: 1,
-            rows: 1,
-            issues: issuesCount,
-          };
-        };
-
-        for (let i = 0; i < parsedRows.length; i += chunkSize) {
-          const chunk = parsedRows.slice(i, i + chunkSize);
-          const results = await Promise.all(chunk.map((row) => processSingleRow(row)));
-
-          for (const res of results) {
-            createdProductsCount += res.products;
-            createdPackagingCount += res.packaging;
-            createdPricesCount += res.prices;
-            createdMappingsCount += res.mappings;
-            createdRowsCount += res.rows;
-            createdIssuesCount += res.issues;
+          // Bulk UPDATE for existing rows: single SQL UPDATE ... FROM (VALUES ...) statement
+          if (productValues.length > 0) {
+            const vals = productValues.map((v) =>
+              `(${v.skuNum}::bigint, '${v.sku.replace(/'/g, "''")}', '${v.name.replace(/'/g, "''")}', '${v.purchaseType}'::"product_purchase_type", '${v.catId}', '${now.toISOString()}'::timestamptz)`
+            ).join(",");
+            await tx.$executeRawUnsafe(`
+              UPDATE products p
+              SET sku = v.sku, name = v.name, status = 'pending_review', purchase_type = v.pt, category_id = v.cat_id, updated_at = v.updated_at
+              FROM (VALUES ${vals}) AS v(sku_number, sku, name, pt, cat_id, updated_at)
+              WHERE p.sku_number = v.sku_number
+            `);
           }
         }
+
+        // 4. Fetch all products by SKU number to get IDs
+        const skuNumbers = validRows.map((r) => BigInt(parseInt(r.sku.replace(/\D/g, ""), 10)));
+        const allProducts = await tx.product.findMany({ where: { skuNumber: { in: skuNumbers } } });
+        const productBySkuNum = new Map(allProducts.map((p) => [p.skuNumber.toString(), p]));
+        const createdProductsCount = validRows.length;
+
+        // 5. Bulk upsert packaging (createMany skipDuplicates + updateMany)
+        const packagingInputs = validRows.map((row) => {
+          const skuNum = BigInt(parseInt(row.sku.replace(/\D/g, ""), 10));
+          const product = productBySkuNum.get(skuNum.toString())!;
+          const uomId = uomMap.get(row.unitOfMeasure || "piece")!;
+          return { product, uomId, row, code: `${product.sku}-BASE` };
+        });
+
+        await tx.productPackaging.createMany({
+          data: packagingInputs.map(({ product, uomId, row, code }) => ({
+            productId: product.id,
+            unitOfMeasureId: uomId,
+            code,
+            label: `Standard ${row.unitOfMeasure || "Piece"}`,
+            conversionToBase: 1.0,
+            packQuantity: row.packQuantity,
+            isBase: true,
+            confirmationStatus: ConfirmationStatus.unconfirmed,
+            isActive: row.isActive,
+          })),
+          skipDuplicates: true,
+        });
+        // Bulk UPDATE packaging — single SQL statement
+        if (packagingInputs.length > 0) {
+          const pkgVals = packagingInputs.map(({ product, row, code }) =>
+            `('${product.id}', '${code.replace(/'/g, "''")}', '${(`Standard ${row.unitOfMeasure || "Piece"}`).replace(/'/g, "''")}', ${row.packQuantity ?? 1}, ${row.isActive}, '${now.toISOString()}'::timestamptz)`
+          ).join(",");
+          await tx.$executeRawUnsafe(`
+            UPDATE product_packaging pp
+            SET label = v.label, pack_quantity = v.pack_quantity, is_active = v.is_active, updated_at = v.updated_at
+            FROM (VALUES ${pkgVals}) AS v(product_id, code, label, pack_quantity, is_active, updated_at)
+            WHERE pp.product_id = v.product_id AND pp.code = v.code
+          `);
+        }
+        const createdPackagingCount = validRows.length;
+
+        // 6. Fetch all packaging IDs
+        const allPackaging = await tx.productPackaging.findMany({
+          where: { productId: { in: allProducts.map((p) => p.id) }, isBase: true },
+        });
+        const packagingByProductId = new Map(allPackaging.map((pkg) => [pkg.productId, pkg]));
+
+        // 7. Bulk insert prices: collect new prices needed, skip if unchanged
+        const existingPrices = await tx.productPrice.findMany({
+          where: { productPackagingId: { in: allPackaging.map((pkg) => pkg.id) }, effectiveTo: null },
+        });
+        const existingPriceMap = new Map<string, typeof existingPrices[0]>();
+        for (const ep of existingPrices) {
+          existingPriceMap.set(`${ep.productPackagingId}:${ep.priceType}`, ep);
+        }
+
+        const pricesToExpire: string[] = [];
+        const pricesToCreate: Array<{
+          productPackagingId: string; priceType: PriceType; amount: Prisma.Decimal;
+          currency: CurrencyCode; effectiveFrom: Date; createdById: string;
+        }> = [];
+
+        for (const row of validRows) {
+          const skuNum = BigInt(parseInt(row.sku.replace(/\D/g, ""), 10));
+          const product = productBySkuNum.get(skuNum.toString())!;
+          const pkg = packagingByProductId.get(product.id)!;
+          if (!pkg) continue;
+
+          for (const [priceType, amount] of [[PriceType.wholesale, row.wholesalePrice], [PriceType.buying, row.buyingPrice]] as [PriceType, number | null][]) {
+            if (amount === null || amount <= 0) continue;
+            const key = `${pkg.id}:${priceType}`;
+            const existing = existingPriceMap.get(key);
+            const newAmt = new Prisma.Decimal(amount);
+            if (existing) {
+              if (!existing.amount.equals(newAmt)) {
+                pricesToExpire.push(existing.id);
+                pricesToCreate.push({ productPackagingId: pkg.id, priceType, amount: newAmt, currency: CurrencyCode.PKR, effectiveFrom: now, createdById: uploaderId });
+              }
+            } else {
+              pricesToCreate.push({ productPackagingId: pkg.id, priceType, amount: newAmt, currency: CurrencyCode.PKR, effectiveFrom: now, createdById: uploaderId });
+            }
+          }
+        }
+
+        // Expire changed prices (bulk updateMany per ID batch)
+        if (pricesToExpire.length > 0) {
+          await tx.productPrice.updateMany({ where: { id: { in: pricesToExpire } }, data: { effectiveTo: now } });
+        }
+        // Bulk-create new prices
+        if (pricesToCreate.length > 0) {
+          await tx.productPrice.createMany({ data: pricesToCreate });
+        }
+        const createdPricesCount = pricesToCreate.length;
+
+        // 8. Bulk upsert import_rows (createMany skipDuplicates)
+        const importRowData = parsedRows.map((row) => ({
+          importBatchId: importBatch.id,
+          sourceSheet: row.sourceSheet,
+          sourceRowNumber: row.sourceRowNumber,
+          rawData: {
+            sku: row.sku, name: row.originalName, category: row.originalCategory,
+            salesType: row.salesType, wholesalePrice: row.wholesalePrice,
+            buyingPrice: row.buyingPrice, sourceKey: row.sourceKey,
+          },
+          normalizedData: {
+            sku: row.sku, name: row.normalizedName, category: row.normalizedCategory,
+            purchaseType: row.purchaseType, wholesalePrice: row.wholesalePrice,
+            buyingPrice: row.buyingPrice, sourceKey: row.sourceKey,
+          },
+          validationStatus: row.validationStatus,
+          commitStatus: row.validationStatus === "invalid" ? ImportCommitStatus.failed : ImportCommitStatus.imported,
+        }));
+        await tx.importRow.createMany({ data: importRowData });
+        const createdRowsCount = parsedRows.length;
+
+        // 9. Fetch created import_rows for issue linking and source mappings
+        const createdImportRows = await tx.importRow.findMany({
+          where: { importBatchId: importBatch.id },
+          select: { id: true, sourceRowNumber: true },
+        });
+        const importRowBySourceRow = new Map(createdImportRows.map((r) => [r.sourceRowNumber, r.id]));
+
+        // 10. Bulk-create import issues
+        const issueData: Array<{ importRowId: string; severity: string; code: string; fieldName: string | null; message: string }> = [];
+        for (const row of parsedRows) {
+          const importRowId = importRowBySourceRow.get(row.sourceRowNumber);
+          if (!importRowId) continue;
+          for (const issue of row.issues) {
+            issueData.push({ importRowId, severity: issue.severity, code: issue.code, fieldName: issue.fieldName, message: issue.message });
+          }
+        }
+        if (issueData.length > 0) {
+          await tx.importIssue.createMany({ data: issueData as any });
+        }
+        const createdIssuesCount = issueData.length;
+
+        // 11. Bulk upsert source_record_mappings
+        const mappingData = validRows.map((row) => {
+          const skuNum = BigInt(parseInt(row.sku.replace(/\D/g, ""), 10));
+          const product = productBySkuNum.get(skuNum.toString())!;
+          const importRowId = importRowBySourceRow.get(row.sourceRowNumber)!;
+          return { importRowId, sourceSystem: "Excel", sourceKey: row.sourceKey, productId: product.id };
+        });
+        await tx.sourceRecordMapping.createMany({ data: mappingData, skipDuplicates: true });
+        // Bulk UPDATE product_id on existing mappings — single SQL statement
+        // importRowId intentionally omitted: DB trigger forbids moving a mapping between rows
+        if (mappingData.length > 0) {
+          const mapVals = mappingData.map((m) =>
+            `('${m.sourceKey.replace(/'/g, "''")}', '${m.productId}')`
+          ).join(",");
+          await tx.$executeRawUnsafe(`
+            UPDATE source_record_mappings srm
+            SET product_id = v.product_id
+            FROM (VALUES ${mapVals}) AS v(source_key, product_id)
+            WHERE srm.source_system = 'Excel' AND srm.source_key = v.source_key
+          `);
+        }
+        const createdMappingsCount = validRows.length;
 
         const commitTime = new Date();
         await tx.importBatch.update({
@@ -795,7 +758,7 @@ export class CatalogueImporter {
         };
       }, {
         maxWait: 60000,
-        timeout: 300000
+        timeout: 900000
       });
 
       return commitResult;

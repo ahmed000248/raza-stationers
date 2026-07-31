@@ -1,4 +1,3 @@
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 import jwt from 'jsonwebtoken';
 import FormData from 'form-data';
 import fs from 'fs';
@@ -14,9 +13,20 @@ import { CatalogueImporter } from '@raza-stationers/db';
 const JWT_SECRET = "raza-stationers-test-secret-1234567890";
 const WORKBOOK_PATH = path.resolve('data/final/Raza-Stationers-Final-Supabase-Catalogue.xlsx');
 
+function getSslConfig() {
+  const certPath = path.resolve('supabase-ca.crt');
+  if (fs.existsSync(certPath)) {
+    return {
+      rejectUnauthorized: true,
+      ca: fs.readFileSync(certPath, 'utf8'),
+    };
+  }
+  return true;
+}
+
 const pool = new pg.Pool({
   connectionString: process.env.DIRECT_URL,
-  ssl: { rejectUnauthorized: false }
+  ssl: getSslConfig()
 });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
