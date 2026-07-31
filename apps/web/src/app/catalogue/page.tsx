@@ -81,7 +81,7 @@ function CatalogueContent() {
 
   return (
     <div className="py-10 px-6 min-h-screen">
-      <div className="mx-auto max-w-6xl space-y-8">
+      <div className="mx-auto max-w-none w-full space-y-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-border pb-6">
           <div>
             <span className="text-xs font-semibold uppercase tracking-wider text-[var(--color-evergreen-600)]">FR-CAT-04 Wholesale Catalogue</span>

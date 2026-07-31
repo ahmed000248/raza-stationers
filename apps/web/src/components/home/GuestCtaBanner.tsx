@@ -6,7 +6,7 @@ import { Building2, ArrowRight } from "lucide-react"
 export function GuestCtaBanner() {
   return (
     <section className="py-16 px-6">
-      <div className="mx-auto max-w-6xl relative overflow-hidden rounded-3xl bg-[var(--color-ink-900)] text-white p-8 sm:p-12 shadow-xl border border-[var(--color-forest-700)]">
+      <div className="mx-auto max-w-none w-full relative overflow-hidden rounded-3xl bg-[var(--color-ink-900)] text-white p-8 sm:p-12 shadow-xl border border-[var(--color-forest-700)]">
         {/* Background Decorative Accents */}
         <div className="absolute top-0 right-0 -mt-10 -mr-10 size-64 rounded-full bg-[var(--color-evergreen-600)]/20 blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 -mb-10 -ml-10 size-64 rounded-full bg-[var(--color-amber-500)]/10 blur-3xl pointer-events-none" />

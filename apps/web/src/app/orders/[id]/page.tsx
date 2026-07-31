@@ -44,7 +44,7 @@ export default function OrderTrackingPage({ params }: Props) {
 
   return (
     <div className="py-10 px-6 min-h-screen">
-      <div className="mx-auto max-w-4xl space-y-8">
+      <div className="mx-auto max-w-none w-full space-y-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
           <div>
             <Link href="/orders" className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors mb-2">

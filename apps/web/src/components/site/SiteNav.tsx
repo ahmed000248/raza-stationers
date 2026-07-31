@@ -43,7 +43,7 @@ export function SiteNav() {
       {/* Floating Pill Nav with Glass styling */}
       <nav
         className={cn(
-          "glass relative flex items-center justify-between w-full max-w-6xl h-14 px-4 sm:px-6 rounded-full transition-all duration-200 border border-[var(--glass-border)] shadow-md",
+          "glass relative flex items-center justify-between w-full max-w-none h-14 px-6 sm:px-8 rounded-full transition-all duration-200 border border-[var(--glass-border)] shadow-md",
           scrolled && "shadow-lg scale-[0.99]"
         )}
       >

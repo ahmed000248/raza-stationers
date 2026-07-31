@@ -12,7 +12,7 @@ const HOME_CATEGORIES = [
 export function CategorySection() {
   return (
     <section className="py-12 px-6 border-t border-border/40">
-      <div className="mx-auto max-w-6xl space-y-8">
+      <div className="mx-auto max-w-none w-full px-4 md:px-8 space-y-8">
         <div className="text-center space-y-2">
           <span className="text-xs font-semibold uppercase tracking-wider text-[var(--color-evergreen-600)]">FR-CAT-02 Browse Category</span>
           <h2 className="font-heading text-2xl sm:text-3xl font-bold tracking-tight text-[var(--color-ink-900)]">Stationery Categories</h2>
