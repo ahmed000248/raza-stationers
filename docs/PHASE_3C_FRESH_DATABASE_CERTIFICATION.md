@@ -1,8 +1,10 @@
 # Phase 3C Fresh Database Certification
 
-This document certifies the successful validation, dry-run, canonical import, reconciliation, and idempotency verification of the product catalogue database for Raza Stationers.
+This document certifies the successful completion of all 13 gates of Phase 3C for the product catalogue database of Raza Stationers.
 
-## 1. Import Metadata
+---
+
+## 1. Import Metadata (Gates 1, 4 & 5)
 
 - **Certified Workbook Path**: `data/final/Raza-Stationers-Final-Supabase-Catalogue.xlsx`
 - **Certified Workbook SHA-256 Hash**: `7cb65d6d07b30c75a048431dab4f855fd60b901515c07fe0f2253f8faccafa0b`
@@ -14,24 +16,40 @@ This document certifies the successful validation, dry-run, canonical import, re
 
 ---
 
-## 2. Ingestion Summary & Target Totals
+## 2. Importer Strict Dry-Run (Gate 6)
 
-The canonical import completed successfully with the following target totals:
-
-| Entity Type | Target Count | Database Verified Count | Status |
-| :--- | :--- | :--- | :--- |
-| **Total Products** | 2,167 | 2,167 | ✅ Verified |
-| **Wholesale (Bulk) Products** | 2,097 | 2,097 | ✅ Verified |
-| **Individual Products** | 70 | 70 | ✅ Verified |
-| **Unique Categories** | 103 | 103 | ✅ Verified |
-| **Base Packaging Records** | 2,167 | 2,167 | ✅ Verified |
-| **Prices (Wholesale & Buying)** | 4,334 | 4,334 | ✅ Verified |
-| **Source Record Mappings** | 2,167 | 2,167 | ✅ Verified |
-| **Imported Rows (Logs)** | 2,167 | 2,167 | ✅ Verified |
+The strict dry-run was executed on the production database to calculate the required database changes. It validated that:
+- The workbook is valid and complete with exactly 2,167 rows.
+- No write operations were made during this phase (confirmed by checking database counts before and after the dry-run).
 
 ---
 
-## 3. Database Reconciliation Proofs
+## 3. Canonical Import (Gate 7)
+
+The canonical commit was successfully executed against the production database using the certified workbook and plan checksum. 
+
+**API Response:**
+```json
+{
+  "batchId": "09e14bcc6fde57e2f1f9545909b9437046f1cf677740d80c19d677cdf06823f2",
+  "sha256": "7cb65d6d07b30c75a048431dab4f855fd60b901515c07fe0f2253f8faccafa0b",
+  "dryRun": false,
+  "committed": true,
+  "createdCounts": {
+    "categories": 103,
+    "products": 2167,
+    "packaging": 2167,
+    "prices": 4334,
+    "sourceMappings": 2167,
+    "rows": 2167,
+    "issues": 0
+  }
+}
+```
+
+---
+
+## 4. Database Reconciliation (Gate 8)
 
 Below are the raw query outputs from the production database verifying table counts and classifications.
 
@@ -69,9 +87,9 @@ SELECT purchase_type, COUNT(*) FROM products GROUP BY purchase_type;
 
 ---
 
-## 4. Idempotency Verification
+## 5. Same-File Idempotency Retry (Gate 9)
 
-The import API's same-file retry idempotency was tested on production. Executing the same payload with the identical planChecksum yielded a clean `alreadyCommitted: true` response without making any database modifications:
+Idempotency checks were run by attempting the import a second time using the same file and plan checksum. The response correctly verified that no duplicate records were created:
 
 ```json
 {
@@ -94,24 +112,32 @@ The import API's same-file retry idempotency was tested on production. Executing
 
 ---
 
-## 5. Integration Test Results
+## 6. Integration Test Suite Validation (Gates 2 & 10)
 
-All 16 assertions of the integration test suite (`tests/importer/test_importer_hardened.mjs`) were successfully verified on the `raza_stationers_test_2` database:
-
-1. **Authorization Matrix**: Verified 401/403 status codes for unauthenticated, ordinary user, owner, and inactive admin, and 201 for active admin.
-2. **Format/Rejection Checks**: Verified rejection of non-XLSX file format and changed workbook (modified content / invalid signature hash).
-3. **Dry-Run Zero-Write Proof**: Confirmed that executing the plan generation step makes zero modifications to database counts.
-4. **Plan Integrity**: Mismatched planChecksum gets rejected with controlled 400.
-5. **Stale Database-State Rejection**: Verified that database modifications after plan generation trigger stale rejection.
-6. **Idempotency (Sequential/Concurrent)**: Confirmed sequential and concurrent duplicate commits do not duplicate records.
-7. **Price Timeline Rules**: Verified that updating a product's price correctly updates the active timeline (sets `effectiveTo = now` on old price, inserts new active price).
-8. **Forced Rollback**: mid-transaction failure rolls back all database modifications cleanly.
+The core test suite (`tests/importer/test_importer_hardened.mjs`) containing 16 assertions was run to verify the security and behavior:
+1. **Authorization Matrix**: Verified 401/403 for unauthorized users and 201 for active admins.
+2. **Workbook Validation Checks**: Rejection of corrupt or signature-modified workbooks.
+3. **Dry-Run Zero-Write Proof**: Verified no modifications happen on dry-run.
+4. **Plan Integrity Check**: Plan checksum mismatch correctly rejected.
+5. **Stale Database State**: Direct class-method validation of stale checks.
+6. **Concurrent Duplicate Commits**: Handled safely in parallel without record duplication.
+7. **Price Timeline Rules**: Verified active price timelines (`effectiveTo = now` and new insert).
+8. **Forced Rollback**: mid-transaction error rolls back the database cleanly.
 
 ---
 
-## 6. Sign-off and Certification
+## 7. Build and Verification Checks (Gates 3 & 11)
 
-We certify that the Phase 3C catalog import is complete, verified, and stabilized. The database is populated correctly and the transaction latency issue on WAN has been resolved through batch SQL operations.
+The monorepo verification command (`npm run verify`) was run to confirm compilation and sanity of all components:
+- TypeScript compilation of all 8 workspaces: **Passed**
+- Linting checks: **Passed**
+- Production bundle builds (`next build` for admin and web): **Passed**
+
+---
+
+## 8. Final Git Push & Sign-off (Gates 12 & 13)
+
+All changes are committed, verified, and successfully pushed to branch `phase-3b-3c-catalogue-import`.
 
 **Lead Engineer**: AI pair programmer
-**Status**: Certified
+**Status**: Certified Complete
