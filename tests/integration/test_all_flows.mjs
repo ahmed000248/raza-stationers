@@ -175,7 +175,10 @@ async function main() {
     const resolvePriceRes = await axios.get(`${API_BASE}/pricing/resolve/RS-001574?clientBusinessId=${testBusinessId}`, {
       headers: { Authorization: `Bearer ${userToken}` }
     });
-    console.log("[PASS] Resolved price:", resolvePriceRes.data.price);
+    console.log("[PASS] Resolved price:", resolvePriceRes.data.effectivePrice);
+    if (resolvePriceRes.data.effectivePrice === undefined) {
+      throw new Error("Resolved price is undefined");
+    }
 
     // Find sample product packaging in DB
     const sampleProduct = await prisma.product.findUnique({
