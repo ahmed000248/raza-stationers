@@ -19,7 +19,7 @@ export class InvoicingService {
       update: { nextValue: { increment: 1 } },
     });
 
-    const invoiceNumber = `INV-${year}-${String(seq.nextValue).padStart(6, "0")}`;
+    const invoiceNumber = `RS-INV-${year}-${String(seq.nextValue).padStart(6, "0")}`;
     const dueDate = dueAt ? new Date(dueAt) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
     return this.prisma.invoice.create({

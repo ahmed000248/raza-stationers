@@ -50,8 +50,8 @@ export class CatalogueController {
   @Roles("owner", "admin")
   @ApiBearerAuth()
   @ApiOperation({ summary: "Update product status (activate/archive)" })
-  updateProductStatus(@Param("id") id: string, @Body() body: { status: string }) {
-    return this.catalogueService.updateProductStatus(id, body.status);
+  updateProductStatus(@Param("id") id: string, @Body() body: { status: string }, @CurrentUser("id") userId: string) {
+    return this.catalogueService.updateProductStatus(id, body.status, userId);
   }
 
   @Get("products/id/:id")

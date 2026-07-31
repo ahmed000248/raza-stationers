@@ -21,7 +21,7 @@ export class OrdersService {
       update: { nextValue: { increment: 1 } },
     });
 
-    const orderNumber = `ORD-${year}-${String(seq.nextValue).padStart(6, "0")}`;
+    const orderNumber = `RS-ORD-${year}-${String(seq.nextValue).padStart(6, "0")}`;
 
     const packagingIds = data.items.map((i) => i.productPackagingId);
     const packaging = await this.prisma.productPackaging.findMany({
