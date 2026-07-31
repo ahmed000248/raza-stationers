@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@raza-stationers/ui", "@raza-stationers/types", "@raza-stationers/api"],
+  experimental: {
+    turbopackLocalPostcssConfig: true,
+  },
   async rewrites() {
     return [
       {
