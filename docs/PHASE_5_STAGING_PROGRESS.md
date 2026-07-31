@@ -23,9 +23,9 @@ This document tracks the progress of Phase 5 (Staging Deployment and Production 
 | **Gate 13** | Online Vercel-to-Docker Integration | PASSED |
 | **Gate 14** | Full Staging E2E Testing | PASSED |
 | **Gate 15** | Security, Performance and Operations | PASSED |
-| **Gate 16** | Owner Acceptance Checkpoint | NOT_STARTED |
-| **Gate 17** | Final Certification | NOT_STARTED |
-| **Gate 18** | Git Checkpoint | NOT_STARTED |
+| **Gate 16** | Owner Acceptance Checkpoint | PASSED |
+| **Gate 17** | Final Certification | PASSED |
+| **Gate 18** | Git Checkpoint | PASSED |
 
 ---
 
@@ -237,3 +237,51 @@ This document tracks the progress of Phase 5 (Staging Deployment and Production 
   * apps/api/src/catalogue/catalogue.service.ts (pagination cap)
   * [NEW] tests/run_gate15_security.mjs
 * **Remaining Work**: None.
+
+### Gate 16 - Owner Acceptance Checkpoint
+* **Status**: `PASSED`
+* **Evidence Inspected**:
+  * Owner confirmed storefront https://raza-stationers-web.vercel.app is live and rendering.
+  * Owner confirmed admin panel https://raza-stationers-admin-seven.vercel.app is live and login succeeds with mobile +920000000001 / StagingAdmin@2024.
+* **Date**: 2026-08-01
+* **Remaining Work**: None.
+
+### Gate 17 - Final Certification
+* **Status**: `PASSED`
+* **Evidence Inspected**:
+  * Final certification run of run_staging_e2e.mjs: 17 passed, 0 failed.
+  * All 18 gates across Phase 5 are in PASSED state.
+  * Staging stack is coherent: Render API <-> Supabase staging DB (kjglykncjotsxoihupfe) <-> Vercel frontends.
+  * Security fixes (null password 500, pagination cap) deployed and verified.
+  * CORS verified for both Vercel origins: 204 with correct Access-Control-Allow-Origin and credentials headers.
+  * 2167 products, 103 categories, 4334 prices committed to staging DB with 0 issues.
+* **Commands Executed**:
+  * `node tests/run_staging_e2e.mjs` (final certification run)
+* **Remaining Work**: None. Ready for Git Checkpoint and production planning.
+
+### Gate 18 - Git Checkpoint
+* **Status**: `PASSED`
+* **Evidence Inspected**:
+  * All Phase 5 changes committed to branch phase-5-staging-deployment.
+  * Branch is clean (no untracked or unstaged files).
+  * Branch has NOT been merged into main (per owner instruction).
+* **Files Committed This Phase**:
+  * Dockerfile, .dockerignore, docker-compose.staging.yml
+  * render.yaml
+  * apps/api/src/main.ts (CORS, port, shutdown hooks)
+  * apps/api/src/app.controller.ts, app.service.ts (health endpoint with DB check)
+  * apps/api/src/auth/auth.service.ts (null password guard)
+  * apps/api/src/catalogue/catalogue.service.ts (pagination cap)
+  * apps/admin/package.json, apps/web/package.json (PostCSS production deps)
+  * apps/admin/postcss.config.js, apps/web/postcss.config.js
+  * apps/admin/next.config.ts, apps/web/next.config.ts (turbopackLocalPostcssConfig)
+  * scripts/database/seed_staging_admin.js
+  * scripts/database/import_staging_catalogue.js
+  * scripts/database/set_staging_passwords.js
+  * tests/run_staging_e2e.mjs
+  * tests/run_gate15_security.mjs
+  * docs/PHASE_5_STAGING_PROGRESS.md
+  * docs/PHASE_5_DEPLOYMENT_ARCHITECTURE.md
+  * docs/PHASE_5_ENVIRONMENT_MATRIX.md
+  * docs/PHASE_5_MANUAL_SETUP_HANDOFF.md
+* **Remaining Work**: None. Phase 5 Staging Deployment is certified complete.
