@@ -16,7 +16,7 @@ COPY apps/web/package.json ./apps/web/
 COPY apps/admin/package.json ./apps/admin/
 
 # Install dependencies (workspaces support is native in npm)
-RUN npm ci
+RUN npm ci --workspace=@raza-stationers/api-server --include-workspace-deps
 
 # Copy the rest of the source code (except what is ignored in .dockerignore)
 COPY . .
@@ -31,7 +31,7 @@ RUN npm run build --workspace=@raza-stationers/types && \
     npm run build --workspace=@raza-stationers/api-server
 
 # Prune development dependencies (npm prune will keep production modules)
-RUN npm prune --production
+RUN npm prune --production --workspace=@raza-stationers/api-server --include-workspace-deps
 
 # Stage 2: Runtime environment
 FROM node:20.19.0-alpine AS runner

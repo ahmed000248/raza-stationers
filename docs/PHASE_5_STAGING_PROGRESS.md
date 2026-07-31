@@ -13,9 +13,9 @@ This document tracks the progress of Phase 5 (Staging Deployment and Production 
 | **Gate 3** | Deployment Architecture Inventory | PASSED |
 | **Gate 4** | Backend Production Readiness | PASSED |
 | **Gate 5** | Create or Repair Docker Artifacts | PASSED |
-| **Gate 6** | Docker Capability Checkpoint | MANUAL_ACTION_REQUIRED |
-| **Gate 7** | Local Docker Build and Container Test | NOT_STARTED |
-| **Gate 8** | Cloud Manual Setup Checkpoint | NOT_STARTED |
+| **Gate 6** | Docker Capability Checkpoint | PASSED |
+| **Gate 7** | Local Docker Build and Container Test | PASSED |
+| **Gate 8** | Cloud Manual Setup Checkpoint | MANUAL_ACTION_REQUIRED |
 | **Gate 9** | Verify Manual Cloud Setup | NOT_STARTED |
 | **Gate 10** | Prepare the Staging Database | NOT_STARTED |
 | **Gate 11** | Deploy the Docker Backend | NOT_STARTED |
@@ -98,12 +98,33 @@ This document tracks the progress of Phase 5 (Staging Deployment and Production 
 * **Remaining Work**: None.
 
 ### Gate 6 — Docker Capability Checkpoint
-* **Status**: `MANUAL_ACTION_REQUIRED`
+* **Status**: `PASSED`
 * **Evidence Inspected**:
-  * Docker CLI (v29.6.2) and Docker Compose (v5.3.1) are installed.
-  * The background Docker service (daemon) is NOT running (connection refused to `//./pipe/dockerDesktopLinuxEngine`).
+  * Docker CLI (v29.6.2), Docker Compose (v5.3.1), and Docker Desktop Daemon are confirmed running and healthy.
 * **Commands Executed**:
   * `docker --version; docker compose version; docker info`
 * **Files Changed**:
-  * [NEW] `docs/PHASE_5_MANUAL_SETUP_HANDOFF.md`
-* **Remaining Work**: Start Docker Desktop manually and run verification checks. Owner must notify when daemon is online.
+  * `docs/PHASE_5_MANUAL_SETUP_HANDOFF.md`
+* **Remaining Work**: None.
+
+### Gate 7 — Local Docker Build and Container Test
+* **Status**: `PASSED`
+* **Evidence Inspected**:
+  * Docker local build succeeded cleanly producing image `raza-stationers-api:staging`.
+  * Verified that container runs, uses non-root `nestjs` user, binds correctly to port 4000, and returns correct structure on `/` healthcheck: `{ status: "ok", services: { database: "disconnected" } }` when database is offline.
+* **Commands Executed**:
+  * `docker build -t raza-stationers-api:staging .`
+  * `docker run --name raza-staging-test -p 4000:4000 -e DATABASE_URL=postgresql://postgres:mock@localhost:5432/mock -e DIRECT_URL=postgresql://postgres:mock@localhost:5432/mock -e JWT_SECRET=mock_jwt_secret_token_minimum_32_chars_long -d raza-stationers-api:staging`
+  * `Invoke-RestMethod -Uri http://localhost:4000/`
+  * `docker rm -f raza-staging-test`
+* **Files Changed**: None.
+* **Remaining Work**: None.
+
+### Gate 8 — Cloud Manual Setup Checkpoint
+* **Status**: `MANUAL_ACTION_REQUIRED`
+* **Evidence Inspected**:
+  * Provisioning staging cloud infrastructure (isolated Supabase database project, Render/Railway Docker host service, Vercel staging site) requires owner credentials, billing, and cloud authorization.
+* **Commands Executed**: None.
+* **Files Changed**:
+  * `docs/PHASE_5_MANUAL_SETUP_HANDOFF.md`
+* **Remaining Work**: Owner must provision a separate staging database project, configure Docker container hosting service (with staging env variables), connect Vercel project, and obtain staging URLs.
