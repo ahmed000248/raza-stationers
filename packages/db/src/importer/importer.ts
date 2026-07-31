@@ -17,9 +17,6 @@ import { parseCatalogueCsv, parseCatalogueXlsx } from "./parser.js";
 import { validateCatalogueRows } from "./validator.js";
 import { ImportExecutionOptions, ImportExecutionResult, ParsedCatalogueRow } from "./types.js";
 
-// Ensure Node TLS handles Supabase pooled connection certificates cleanly
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-
 export function generateSlug(name: string): string {
   const clean = name
     .toLowerCase()
@@ -787,5 +784,24 @@ export class CatalogueImporter {
       await prisma.$disconnect();
       await pool.end();
     }
+  }
+
+  public static async commitWorkbook(
+    sourcePath: string,
+    uploaderId: string,
+    planChecksum: string,
+    chunkSize = 25,
+    forceFailureForTest = false
+  ): Promise<ImportExecutionResult> {
+    if (!sourcePath) {
+      throw new Error("Source path must be specified for catalogue commit");
+    }
+    const fileBytes = await fs.readFile(sourcePath);
+    const fileSha256 = createHash("sha256").update(fileBytes).digest("hex");
+
+    const { headerChecksum, rows: rawRows } = await parseCatalogueXlsx(sourcePath);
+    const { parsedRows, profile } = validateCatalogueRows(rawRows, sourcePath, fileSha256);
+
+    return this.commit(parsedRows, profile, uploaderId, planChecksum, chunkSize, forceFailureForTest);
   }
 }

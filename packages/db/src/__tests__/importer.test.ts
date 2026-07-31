@@ -101,15 +101,25 @@ describe("Catalogue Import Pipeline — Unit & Validation Tests", () => {
 
 describe("Catalogue Importer — Integration & Dry Run Tests", () => {
   it("executes dry-run without writing to database", async () => {
-    const filePath = path.resolve(__dirname, "../../../../data/final/Raza-Stationers-Final-Supabase-Catalogue.xlsx");
+    const originalPath = path.resolve(__dirname, "../../../../data/final/Raza-Stationers-Final-Supabase-Catalogue.xlsx");
+    const tempPath = path.resolve(__dirname, `../../../../data/final/temp-unit-test-${Date.now()}.xlsx`);
 
-    const { result } = await CatalogueImporter.generatePlan(filePath);
+    // Copy and append a unique byte to make the SHA-256 unique and bypass the committed batch check
+    const orgBytes = await fs.readFile(originalPath);
+    const modBytes = Buffer.concat([orgBytes, Buffer.from(`unit-test-token-${Date.now()}`)]);
+    await fs.writeFile(tempPath, modBytes);
 
-    assert.equal(result.dryRun, true);
-    assert.equal(result.committed, false);
-    assert.equal(result.profile.totalSourceRows, 2167);
-    assert.equal(result.profile.nonEmptyRows, 2167);
-    assert.equal(result.createdCounts.products, 2167);
-    assert.equal(result.createdCounts.categories, 103);
+    try {
+      const { result } = await CatalogueImporter.generatePlan(tempPath);
+
+      assert.equal(result.dryRun, true);
+      assert.equal(result.committed, false);
+      assert.equal(result.profile.totalSourceRows, 2167);
+      assert.equal(result.profile.nonEmptyRows, 2167);
+      assert.equal(result.createdCounts.products, 2167);
+      assert.equal(result.createdCounts.categories, 103);
+    } finally {
+      await fs.unlink(tempPath).catch(() => {});
+    }
   });
 });

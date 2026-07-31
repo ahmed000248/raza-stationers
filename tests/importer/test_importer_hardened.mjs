@@ -179,6 +179,31 @@ async function runTests() {
   assert.equal(res.status, 400, "CSV uploads must be rejected");
   console.log("  ✔ Non-XLSX file format rejected (400)");
 
+  // --- TEST 2B: Changed Workbook Rejection ---
+  console.log("\n[2B] Testing Changed Workbook Rejection...");
+  const tempModPath = path.resolve('data/final/Raza-Stationers-Final-Supabase-Catalogue-modified.xlsx');
+  const orgBytes = fs.readFileSync(WORKBOOK_PATH);
+  // Modify a tiny part of the Excel (append dummy data at the end) to break SHA-256
+  const modBytes = Buffer.concat([orgBytes, Buffer.from("broken-hash-signature")]);
+  fs.writeFileSync(tempModPath, modBytes);
+
+  const modForm = () => {
+    const f = new FormData();
+    f.append('file', fs.createReadStream(tempModPath), {
+      filename: 'Raza-Stationers-Final-Supabase-Catalogue-modified.xlsx',
+      contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    });
+    return f;
+  };
+
+  res = await axios.post('http://localhost:4000/admin/imports/catalogue/plan', modForm(), {
+    headers: { ...modForm().getHeaders(), Authorization: `Bearer ${adminToken}` },
+    validateStatus: () => true
+  });
+  assert.equal(res.status, 400, `Modified workbook must be rejected with 400 Bad Request, got ${res.status}`);
+  fs.unlinkSync(tempModPath);
+  console.log("  ✔ Modified workbook with incorrect hash rejected with controlled 400");
+
   // --- TEST 3: Dry-Run Zero-Write Proof ---
   console.log("\n[3] Testing Dry-Run Zero-Write Proof...");
   const countsBeforePlan = await getTableCounts();
@@ -208,6 +233,144 @@ async function runTests() {
   });
   assert.equal(res.status, 400, `Commit with invalid planChecksum must be rejected with 400 Bad Request, got ${res.status}`);
   console.log("  ✔ Mismatched planChecksum rejected with controlled 400");
+
+  // --- TEST 4B: Stale Database-State Rejection ---
+  console.log("\n[4B] Testing Stale Database-State Rejection (Direct Class Method)...");
+  
+  // Setup a mock row for a unique SKU
+  const staleRunToken = `mock-stale-hash-${Date.now()}`;
+  const staleSuffix = Date.now();
+  const staleNum = 900000 + Math.floor(Math.random() * 90000);
+  const staleSku = `RS-${staleNum}`;
+  
+  const staleRows = [{
+    sourceRowNumber: 1,
+    sourceSheet: 'Products',
+    sku: staleSku,
+    originalName: 'STALE PRODUCT',
+    normalizedName: 'stale product',
+    originalCategory: 'Pens & Pencils',
+    normalizedCategory: 'pens & pencils',
+    salesType: 'Wholesale',
+    purchaseType: 'bulk',
+    unitOfMeasure: 'piece',
+    packQuantity: 1,
+    currency: 'PKR',
+    wholesalePrice: 150,
+    buyingPrice: 100,
+    isActive: true,
+    sourceKey: `STALE_KEY_${staleSuffix}`,
+    hasPrice: true,
+    isValidPrice: true,
+    isZeroPrice: false,
+    isNegativePrice: false,
+    validationStatus: 'valid',
+    issues: []
+  }];
+
+  const staleProfile = {
+    sourcePath: 'data/final/Raza-Stationers-Final-Supabase-Catalogue.xlsx',
+    fileSha256: staleRunToken,
+    totalSourceRows: 1,
+    nonEmptyRows: 1,
+    emptyRows: 0,
+    validRows: 1,
+    warningRows: 0,
+    invalidRows: 0,
+    exactDuplicateGroups: 0,
+    possibleDuplicateNameGroups: 0,
+    uniqueProductNames: 1,
+    uniqueCategories: 1,
+    validWholesalePrices: 1,
+    missingPrices: 0,
+    zeroPrices: 0,
+    negativePrices: 0,
+    ambiguousPackagingRows: 0,
+    possibleVariantRows: 0,
+    classifications: { 'Wholesale': 1 },
+    unparseableRows: 0
+  };
+
+  // Compute standard plan checksum for empty DB state of this SKU
+  const rowActionsStale = staleRows.map(row => {
+    const buyingPriceHash = row.buyingPrice !== null
+      ? crypto.createHash("sha256").update(String(row.buyingPrice)).digest("hex")
+      : null;
+    return {
+      sku: row.sku,
+      name: row.originalName,
+      category: row.normalizedCategory,
+      purchaseType: row.purchaseType,
+      unitOfMeasure: row.unitOfMeasure,
+      packQuantity: row.packQuantity,
+      wholesalePrice: row.wholesalePrice,
+      buyingPriceHash: buyingPriceHash,
+      sourceKey: row.sourceKey
+    };
+  });
+  rowActionsStale.sort((a, b) => a.sku.localeCompare(b.sku));
+  const actionSetChecksumStale = crypto.createHash("sha256").update(JSON.stringify(rowActionsStale)).digest("hex");
+  const headerChecksumStale = crypto.createHash("sha256").update("SKU,Product Name,Category,Sales Type,Unit of Measure,Pack Quantity,Currency,Wholesale Price,Buying Price,Profit,Profit Margin %,Markup %,Active,Source Key").digest("hex");
+
+  // DB state checksum is empty initially
+  const dbStateChecksumStale = crypto.createHash("sha256").update(JSON.stringify({ products: [], mappings: [] })).digest("hex");
+
+  const stablePlanStale = {
+    fileSha256: staleRunToken,
+    importerVersion: "1.0.0",
+    worksheetName: "Products",
+    headerChecksum: headerChecksumStale,
+    actionSetChecksum: actionSetChecksumStale,
+    relevantDatabaseStateChecksum: dbStateChecksumStale,
+    createdCounts: {
+      categories: 1,
+      products: 1,
+      packaging: 1,
+      prices: 2,
+      sourceMappings: 1,
+      rows: 1,
+      issues: 0,
+    },
+  };
+  const correctStaleChecksum = crypto.createHash("sha256").update(JSON.stringify(stablePlanStale)).digest("hex");
+
+  // Modify the database state temporarily BEFORE committing, by creating a dummy product with the same SKU
+  // This causes the database state check during commit to be non-empty, changing the databaseStateChecksum!
+  const tempProduct = await prisma.product.create({
+    data: {
+      sku: staleSku,
+      skuNumber: BigInt(staleNum),
+      name: 'TEMP CONFLICT',
+      purchaseType: 'bulk',
+      status: 'pending_review',
+      category: {
+        connectOrCreate: {
+          where: { slug: 'pens-pencils' },
+          create: { name: 'Pens & Pencils', slug: 'pens-pencils' }
+        }
+      }
+    }
+  });
+
+  try {
+    await CatalogueImporter.commit(
+      staleRows,
+      staleProfile,
+      'user_admin123',
+      correctStaleChecksum,
+      25,
+      false
+    );
+    throw new Error("Stale commit should have failed but succeeded!");
+  } catch (err) {
+    assert.ok(err.message.includes("checksum mismatch") || err.message.includes("Plan checksum mismatch"), `Expected plan checksum mismatch error, got ${err.message}`);
+    console.log("  ✔ Stale database-state rejection verified successfully!");
+  } finally {
+    // Delete the temp product
+    await prisma.product.delete({
+      where: { id: tempProduct.id }
+    });
+  }
 
   // --- TEST 5: Canonical XLSX Commit ---
   console.log("\n[5] Executing Canonical Commit...");
@@ -249,6 +412,61 @@ async function runTests() {
   const countsAfterRetry = await getTableCounts();
   assert.deepEqual(countsAfterRetry, countsBeforeRetry, "Same-file retry must make 0 database modifications");
   console.log("  ✔ Same-file idempotency confirmed. Counts unchanged.");
+
+  // --- TEST 6B: Concurrent Duplicate Commits ---
+  console.log("\n[6B] Testing Concurrent Duplicate Commits...");
+  // Trigger two concurrent commits of the same certified workbook.
+  // Both should use the same planChecksum. One will acquire the lock, commit/see it already committed.
+  // The other will wait for the lock, then see it already committed. Both should return 201 with alreadyCommitted: true.
+  const [concRes1, concRes2] = await Promise.all([
+    axios.post(`http://localhost:4000/admin/imports/catalogue/commit?planChecksum=${planChecksum}`, planForm(), {
+      headers: { ...planForm().getHeaders(), Authorization: `Bearer ${adminToken}` },
+      validateStatus: () => true
+    }),
+    axios.post(`http://localhost:4000/admin/imports/catalogue/commit?planChecksum=${planChecksum}`, planForm(), {
+      headers: { ...planForm().getHeaders(), Authorization: `Bearer ${adminToken}` },
+      validateStatus: () => true
+    })
+  ]);
+
+  assert.equal(concRes1.status, 201, `Concurrent request 1 must return 201, got ${concRes1.status}`);
+  assert.equal(concRes2.status, 201, `Concurrent request 2 must return 201, got ${concRes2.status}`);
+  assert.equal(concRes1.data.alreadyCommitted, true, "Concurrent request 1 should be recognized as already committed");
+  assert.equal(concRes2.data.alreadyCommitted, true, "Concurrent request 2 should be recognized as already committed");
+  console.log("  ✔ Concurrent duplicate commits handled safely without duplication");
+
+  // --- TEST 6C: Unknown Internal Failures Remaining HTTP 500 ---
+  console.log("\n[6C] Testing Unknown Internal Failures Remaining HTTP 500...");
+  // Upload the certified workbook (so SHA-256 validation passes), but use a filename containing
+  // illegal characters ('*' and '?') to trigger a filesystem write error on the server.
+  // This filesystem exception is unmapped and will bubble up as a controlled HTTP 500.
+  const corruptForm = () => {
+    const f = new FormData();
+    f.append('file', fs.createReadStream(WORKBOOK_PATH), {
+      filename: 'invalid*file?name.xlsx', // Illegal characters for Windows/filesystem writes!
+      contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    });
+    return f;
+  };
+
+  res = await axios.post(`http://localhost:4000/admin/imports/catalogue/commit?planChecksum=${planChecksum}`, corruptForm(), {
+    headers: { ...corruptForm().getHeaders(), Authorization: `Bearer ${adminToken}` },
+    validateStatus: () => true
+  });
+  
+  assert.equal(res.status, 500, `Illegal filename write must return 500 Internal Server Error, got ${res.status}`);
+  console.log("  ✔ Unknown internal failure correctly resulted in HTTP 500");
+
+  // --- TEST 6D: Recorded Actor Matching Active Admin ---
+  console.log("\n[6D] Testing Recorded Actor matches Authenticated Active Admin...");
+  // Query the database for the ImportBatch for our certified workbook
+  const certifiedBatch = await prisma.importBatch.findFirst({
+    where: { sha256: '7cb65d6d07b30c75a048431dab4f855fd60b901515c07fe0f2253f8faccafa0b' }
+  });
+  assert.ok(certifiedBatch, "Certified batch must exist in the database");
+  assert.equal(certifiedBatch.uploadedById, 'user_admin123', "uploadedById must record the active Admin user ID");
+  assert.equal(certifiedBatch.committedById, 'user_admin123', "committedById must record the active Admin user ID");
+  console.log("  ✔ Recorded actor matches authenticated Admin successfully");
 
   // --- TEST 7: Database-level Price Timeline Rules and Rollbacks ---
   // To avoid HTTP identity check gates, we run directly on the CatalogueImporter class.
@@ -428,6 +646,17 @@ async function runTests() {
     assert.equal(openPrice.effectiveTo, null, "New price should have null effectiveTo");
     assert.deepEqual(closedPrice.effectiveTo, openPrice.effectiveFrom, "Prior effectiveTo should equal new effectiveFrom");
     console.log("  ✔ Pricing Timeline Rules validated successfully!");
+
+    // Clean up ProductPrice changes (since they are not delete-protected by triggers)
+    console.log("  Cleaning up Test 7 ProductPrice fixtures...");
+    await prisma.productPrice.delete({
+      where: { id: openPrice.id }
+    });
+    await prisma.productPrice.update({
+      where: { id: closedPrice.id },
+      data: { effectiveTo: null }
+    });
+    console.log("  ✔ Test 7 ProductPrice fixtures cleaned up successfully.");
   }
 
   // --- TEST 8: Forced Rollback ---

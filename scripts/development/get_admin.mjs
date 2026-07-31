@@ -1,6 +1,6 @@
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-import { PrismaClient } from './node_modules/@prisma/client/index.js';
-import { PrismaPg } from './node_modules/@prisma/adapter-pg/dist/index.js';
+import { PrismaClient } from '../../node_modules/@prisma/client/index.js';
+import { PrismaPg } from '../../node_modules/@prisma/adapter-pg/dist/index.js';
 import pg from 'pg';
 
 const pool = new pg.Pool({

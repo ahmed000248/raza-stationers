@@ -12,8 +12,6 @@ const adapter_pg_1 = require("@prisma/adapter-pg");
 const pg_1 = __importDefault(require("pg"));
 const parser_js_1 = require("./parser.js");
 const validator_js_1 = require("./validator.js");
-// Ensure Node TLS handles Supabase pooled connection certificates cleanly
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 function generateSlug(name) {
     const clean = name
         .toLowerCase()
@@ -707,6 +705,16 @@ class CatalogueImporter {
             await prisma.$disconnect();
             await pool.end();
         }
+    }
+    static async commitWorkbook(sourcePath, uploaderId, planChecksum, chunkSize = 25, forceFailureForTest = false) {
+        if (!sourcePath) {
+            throw new Error("Source path must be specified for catalogue commit");
+        }
+        const fileBytes = await promises_1.default.readFile(sourcePath);
+        const fileSha256 = (0, node_crypto_1.createHash)("sha256").update(fileBytes).digest("hex");
+        const { headerChecksum, rows: rawRows } = await (0, parser_js_1.parseCatalogueXlsx)(sourcePath);
+        const { parsedRows, profile } = (0, validator_js_1.validateCatalogueRows)(rawRows, sourcePath, fileSha256);
+        return this.commit(parsedRows, profile, uploaderId, planChecksum, chunkSize, forceFailureForTest);
     }
 }
 exports.CatalogueImporter = CatalogueImporter;

@@ -90,30 +90,7 @@ export class ImportsController {
 
     try {
       const fileSha256 = crypto.createHash('sha256').update(file.buffer).digest('hex');
-      const dummyProfile = {
-        sourcePath: tempPath,
-        fileSha256: fileSha256,
-        totalSourceRows: 0,
-        nonEmptyRows: 0,
-        emptyRows: 0,
-        validRows: 0,
-        warningRows: 0,
-        invalidRows: 0,
-        exactDuplicateGroups: 0,
-        possibleDuplicateNameGroups: 0,
-        uniqueProductNames: 0,
-        uniqueCategories: 0,
-        validWholesalePrices: 0,
-        missingPrices: 0,
-        zeroPrices: 0,
-        negativePrices: 0,
-        ambiguousPackagingRows: 0,
-        possibleVariantRows: 0,
-        classifications: {},
-        unparseableRows: 0,
-      };
-
-      const commitResult = await CatalogueImporter.commit([], dummyProfile, userId, planChecksum);
+      const commitResult = await CatalogueImporter.commitWorkbook(tempPath, userId, planChecksum);
       return commitResult;
     } catch (error: any) {
       const msg = error.message || '';

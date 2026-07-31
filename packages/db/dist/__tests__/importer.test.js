@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const node_test_1 = require("node:test");
 const strict_1 = __importDefault(require("node:assert/strict"));
+const promises_1 = __importDefault(require("node:fs/promises"));
 const node_path_1 = __importDefault(require("node:path"));
 const client_1 = require("@prisma/client");
 const validator_js_1 = require("../importer/validator.js");
@@ -88,13 +89,23 @@ const mockRow = (overrides) => ({
 });
 (0, node_test_1.describe)("Catalogue Importer — Integration & Dry Run Tests", () => {
     (0, node_test_1.it)("executes dry-run without writing to database", async () => {
-        const filePath = node_path_1.default.resolve(__dirname, "../../../../data/final/Raza-Stationers-Final-Supabase-Catalogue.xlsx");
-        const { result } = await importer_js_1.CatalogueImporter.generatePlan(filePath);
-        strict_1.default.equal(result.dryRun, true);
-        strict_1.default.equal(result.committed, false);
-        strict_1.default.equal(result.profile.totalSourceRows, 2167);
-        strict_1.default.equal(result.profile.nonEmptyRows, 2167);
-        strict_1.default.equal(result.createdCounts.products, 2167);
-        strict_1.default.equal(result.createdCounts.categories, 103);
+        const originalPath = node_path_1.default.resolve(__dirname, "../../../../data/final/Raza-Stationers-Final-Supabase-Catalogue.xlsx");
+        const tempPath = node_path_1.default.resolve(__dirname, `../../../../data/final/temp-unit-test-${Date.now()}.xlsx`);
+        // Copy and append a unique byte to make the SHA-256 unique and bypass the committed batch check
+        const orgBytes = await promises_1.default.readFile(originalPath);
+        const modBytes = Buffer.concat([orgBytes, Buffer.from(`unit-test-token-${Date.now()}`)]);
+        await promises_1.default.writeFile(tempPath, modBytes);
+        try {
+            const { result } = await importer_js_1.CatalogueImporter.generatePlan(tempPath);
+            strict_1.default.equal(result.dryRun, true);
+            strict_1.default.equal(result.committed, false);
+            strict_1.default.equal(result.profile.totalSourceRows, 2167);
+            strict_1.default.equal(result.profile.nonEmptyRows, 2167);
+            strict_1.default.equal(result.createdCounts.products, 2167);
+            strict_1.default.equal(result.createdCounts.categories, 103);
+        }
+        finally {
+            await promises_1.default.unlink(tempPath).catch(() => { });
+        }
     });
 });

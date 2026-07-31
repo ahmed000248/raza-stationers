@@ -8,4 +8,5 @@ export declare class CatalogueImporter {
     }>;
     private static calculateDatabaseStateChecksum;
     static commit(parsedRows: ParsedCatalogueRow[], profile: ImportExecutionResult["profile"], uploaderId: string, planChecksum: string, chunkSize?: number, forceFailureForTest?: boolean): Promise<ImportExecutionResult>;
+    static commitWorkbook(sourcePath: string, uploaderId: string, planChecksum: string, chunkSize?: number, forceFailureForTest?: boolean): Promise<ImportExecutionResult>;
 }

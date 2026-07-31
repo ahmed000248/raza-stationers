@@ -8,7 +8,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   private pool: pg.Pool;
 
   constructor() {
-    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
     if (!process.env.DATABASE_URL && !process.env.DIRECT_URL) {
       require("dotenv").config({ path: require("path").resolve(process.cwd(), "../../.env") });
       require("dotenv").config({ path: require("path").resolve(process.cwd(), ".env") });
