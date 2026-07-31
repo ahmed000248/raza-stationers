@@ -108,26 +108,21 @@ export function SiteNav() {
           </Link>
 
           {/* Sign In / Account Status Trigger */}
-          <button
-            type="button"
+          <Button
+            size="xs"
+            variant={accountStatus === "approved" ? "secondary" : "default"}
+            className="rounded-full px-3 gap-1 hidden sm:inline-flex"
             onClick={() => setSignInOpen(true)}
-            className="hidden sm:inline-flex"
           >
-            <Button
-              size="xs"
-              variant={accountStatus === "approved" ? "secondary" : "default"}
-              className="rounded-full px-3 gap-1"
-            >
-              <User className="size-3" />
-              <span>
-                {accountStatus === "approved"
-                  ? "Wholesale Account"
-                  : accountStatus === "pending"
-                  ? "Pending Approval"
-                  : "Sign In"}
-              </span>
-            </Button>
-          </button>
+            <User className="size-3" />
+            <span>
+              {accountStatus === "approved"
+                ? "Wholesale Account"
+                : accountStatus === "pending"
+                ? "Pending Approval"
+                : "Sign In"}
+            </span>
+          </Button>
 
           {/* SignIn Modal Component */}
           <SignInModal open={signInOpen} onOpenChange={setSignInOpen} />
