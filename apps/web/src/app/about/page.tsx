@@ -12,7 +12,7 @@ export const metadata = {
 export default function AboutPage() {
   return (
     <div className="py-12 px-6 min-h-screen space-y-16">
-      <div className="mx-auto max-w-5xl space-y-12">
+      <div className="mx-auto max-w-none w-full space-y-12">
         {/* Hero Section */}
         <div className="text-center space-y-4 max-w-3xl mx-auto">
           <div className="inline-flex size-16 items-center justify-center rounded-3xl bg-[var(--color-evergreen-600)] text-white shadow-md mb-2">

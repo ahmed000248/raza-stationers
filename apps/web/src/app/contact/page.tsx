@@ -44,7 +44,7 @@ export default function ContactPage() {
 
   return (
     <div className="py-12 px-6 min-h-screen">
-      <div className="mx-auto max-w-5xl space-y-12">
+      <div className="mx-auto max-w-none w-full space-y-12">
         {/* Header */}
         <div className="text-center space-y-2 max-w-2xl mx-auto">
           <span className="text-xs font-semibold uppercase tracking-wider text-[var(--color-evergreen-600)]">

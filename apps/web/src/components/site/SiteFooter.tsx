@@ -5,7 +5,7 @@ import { Bilingual } from "@/components/ui/bilingual"
 export function SiteFooter() {
   return (
     <footer className="mt-auto bg-[var(--color-ink-900)] text-white/90 border-t border-[var(--color-forest-700)]">
-      <div className="mx-auto max-w-6xl px-6 py-12">
+      <div className="mx-auto max-w-none w-full px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand Col */}
           <div className="space-y-4 md:col-span-1">

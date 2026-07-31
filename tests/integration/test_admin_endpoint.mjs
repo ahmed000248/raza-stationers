@@ -28,7 +28,7 @@ async function testAuth(token, role) {
       contentType: 'text/csv',
     });
 
-    const res = await axios.post('http://localhost:4000/admin/imports/catalogue', form, {
+    const res = await axios.post('http://localhost:4000/admin/imports/catalogue/plan', form, {
       headers: {
         ...form.getHeaders(),
         Authorization: `Bearer ${token}`

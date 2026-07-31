@@ -47,7 +47,7 @@ export function HeroSection() {
 
   return (
     <section ref={containerRef} className="relative overflow-hidden py-12 md:py-20 px-6">
-      <div className="mx-auto max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      <div className="mx-auto max-w-none w-full px-4 md:px-8 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
         {/* Left Column: Headline & Action */}
         <div ref={heroTextRef} className="lg:col-span-7 space-y-6">
           <Badge variant="mist" className="px-3.5 py-1 text-xs">

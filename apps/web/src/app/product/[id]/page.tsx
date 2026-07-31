@@ -50,7 +50,7 @@ export default function ProductDetailPage({ params }: Props) {
 
   return (
     <div className="py-10 px-6 min-h-screen">
-      <div className="mx-auto max-w-6xl space-y-12">
+      <div className="mx-auto max-w-none w-full space-y-12">
         <Link href="/catalogue" className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft className="size-4" /><span>Back to Product Catalogue</span>
         </Link>

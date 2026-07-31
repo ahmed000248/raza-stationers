@@ -43,7 +43,7 @@ export function SiteNav() {
       {/* Floating Pill Nav with Glass styling */}
       <nav
         className={cn(
-          "glass relative flex items-center justify-between w-full max-w-6xl h-14 px-4 sm:px-6 rounded-full transition-all duration-200 border border-[var(--glass-border)] shadow-md",
+          "glass relative flex items-center justify-between w-full max-w-none h-14 px-6 sm:px-8 rounded-full transition-all duration-200 border border-[var(--glass-border)] shadow-md",
           scrolled && "shadow-lg scale-[0.99]"
         )}
       >
@@ -108,26 +108,21 @@ export function SiteNav() {
           </Link>
 
           {/* Sign In / Account Status Trigger */}
-          <button
-            type="button"
+          <Button
+            size="xs"
+            variant={accountStatus === "approved" ? "secondary" : "default"}
+            className="rounded-full px-3 gap-1 hidden sm:inline-flex"
             onClick={() => setSignInOpen(true)}
-            className="hidden sm:inline-flex"
           >
-            <Button
-              size="xs"
-              variant={accountStatus === "approved" ? "secondary" : "default"}
-              className="rounded-full px-3 gap-1"
-            >
-              <User className="size-3" />
-              <span>
-                {accountStatus === "approved"
-                  ? "Wholesale Account"
-                  : accountStatus === "pending"
-                  ? "Pending Approval"
-                  : "Sign In"}
-              </span>
-            </Button>
-          </button>
+            <User className="size-3" />
+            <span>
+              {accountStatus === "approved"
+                ? "Wholesale Account"
+                : accountStatus === "pending"
+                ? "Pending Approval"
+                : "Sign In"}
+            </span>
+          </Button>
 
           {/* SignIn Modal Component */}
           <SignInModal open={signInOpen} onOpenChange={setSignInOpen} />
