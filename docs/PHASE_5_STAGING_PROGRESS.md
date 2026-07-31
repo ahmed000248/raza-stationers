@@ -22,7 +22,7 @@ This document tracks the progress of Phase 5 (Staging Deployment and Production 
 | **Gate 12** | Prepare and Deploy Vercel Frontend | PASSED |
 | **Gate 13** | Online Vercel-to-Docker Integration | PASSED |
 | **Gate 14** | Full Staging E2E Testing | PASSED |
-| **Gate 15** | Security, Performance and Operations | NOT_STARTED |
+| **Gate 15** | Security, Performance and Operations | PASSED |
 | **Gate 16** | Owner Acceptance Checkpoint | NOT_STARTED |
 | **Gate 17** | Final Certification | NOT_STARTED |
 | **Gate 18** | Git Checkpoint | NOT_STARTED |
@@ -205,4 +205,35 @@ This document tracks the progress of Phase 5 (Staging Deployment and Production 
 * **Files Changed**:
   * [NEW] `tests/run_staging_e2e.mjs`
   * [NEW] `scripts/database/set_staging_passwords.js`
+* **Remaining Work**: None.
+
+### Gate 15 - Security, Performance and Operations
+* **Status**: `PASSED`
+* **Evidence Inspected**:
+  * 15 assertions passed, 2 warnings fixed, 0 failures.
+  * CORS OPTIONS preflight verified for both Vercel origins via Node fetch: HTTP 204, Access-Control-Allow-Credentials: true.
+* **Security Results**:
+  * Auth guards: GET /users/me, GET /clients, GET /admin/products all return 401 without token.
+  * Malformed JWT returns 401.
+  * RBAC: regular user cannot reach GET /admin/products (403) or PUT /clients/:id/approve (403).
+  * Wrong password: 401, no stack trace or DB details leaked.
+  * 404 non-existent routes: no stack trace leaked.
+* **Fixes Applied**:
+  * auth.service.ts: null/non-string password now throws UnauthorizedException (401) before bcrypt.compare, preventing internal 500.
+  * catalogue.service.ts: findAllAdmin limit capped at 100 server-side (Math.min).
+* **Performance Results**:
+  * GET /: 129ms
+  * POST /auth/login: 703ms
+  * GET /admin/products (20 items): 1099ms (Render free tier cold-path; expected on first request)
+  * GET /pricing/resolve: 1003ms (acceptable for staging free tier)
+* **Operations Results**:
+  * Health endpoint GET / returns {status:ok,services:{database:connected},version:0.1.0}.
+  * GET /api/docs Swagger UI returns 200.
+* **Commands Executed**:
+  * `node tests/run_gate15_security.mjs`
+  * Node.js CORS preflight check for both Vercel origins.
+* **Files Changed**:
+  * apps/api/src/auth/auth.service.ts (null password guard)
+  * apps/api/src/catalogue/catalogue.service.ts (pagination cap)
+  * [NEW] tests/run_gate15_security.mjs
 * **Remaining Work**: None.
