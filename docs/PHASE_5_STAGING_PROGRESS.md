@@ -15,10 +15,10 @@ This document tracks the progress of Phase 5 (Staging Deployment and Production 
 | **Gate 5** | Create or Repair Docker Artifacts | PASSED |
 | **Gate 6** | Docker Capability Checkpoint | PASSED |
 | **Gate 7** | Local Docker Build and Container Test | PASSED |
-| **Gate 8** | Cloud Manual Setup Checkpoint | MANUAL_ACTION_REQUIRED |
-| **Gate 9** | Verify Manual Cloud Setup | NOT_STARTED |
-| **Gate 10** | Prepare the Staging Database | NOT_STARTED |
-| **Gate 11** | Deploy the Docker Backend | NOT_STARTED |
+| **Gate 8** | Cloud Manual Setup Checkpoint | PASSED |
+| **Gate 9** | Verify Manual Cloud Setup | PASSED |
+| **Gate 10** | Prepare the Staging Database | PASSED |
+| **Gate 11** | Deploy the Docker Backend | IN_PROGRESS |
 | **Gate 12** | Prepare and Deploy Vercel Frontend | NOT_STARTED |
 | **Gate 13** | Online Vercel-to-Docker Integration | NOT_STARTED |
 | **Gate 14** | Full Staging E2E Testing | NOT_STARTED |
@@ -113,18 +113,59 @@ This document tracks the progress of Phase 5 (Staging Deployment and Production 
   * Docker local build succeeded cleanly producing image `raza-stationers-api:staging`.
   * Verified that container runs, uses non-root `nestjs` user, binds correctly to port 4000, and returns correct structure on `/` healthcheck: `{ status: "ok", services: { database: "disconnected" } }` when database is offline.
 * **Commands Executed**:
-  * `docker build -t raza-stationers-api:staging .`
-  * `docker run --name raza-staging-test -p 4000:4000 -e DATABASE_URL=postgresql://postgres:mock@localhost:5432/mock -e DIRECT_URL=postgresql://postgres:mock@localhost:5432/mock -e JWT_SECRET=mock_jwt_secret_token_minimum_32_chars_long -d raza-stationers-api:staging`
-  * `Invoke-RestMethod -Uri http://localhost:4000/`
-  * `docker rm -f raza-staging-test`
-* **Files Changed**: None.
+  * `docker compose -f docker-compose.staging.yml up --build`
+  * `curl http://localhost:4000/`
+* **Files Changed**:
+  * [NEW] `Dockerfile`
+  * [NEW] `docker-compose.staging.yml`
 * **Remaining Work**: None.
 
 ### Gate 8 — Cloud Manual Setup Checkpoint
-* **Status**: `MANUAL_ACTION_REQUIRED`
+* **Status**: `PASSED`
 * **Evidence Inspected**:
-  * Provisioning staging cloud infrastructure (isolated Supabase database project, Render/Railway Docker host service, Vercel staging site) requires owner credentials, billing, and cloud authorization.
+  * Owner confirmed cloud setup is complete (Supabase staging project `kjglykncjotsxoihupfe`, Docker API host, and Vercel frontends provisioned).
 * **Commands Executed**: None.
 * **Files Changed**:
   * `docs/PHASE_5_MANUAL_SETUP_HANDOFF.md`
-* **Remaining Work**: Owner must provision a separate staging database project, configure Docker container hosting service (with staging env variables), connect Vercel project, and obtain staging URLs.
+* **Remaining Work**: None.
+
+### Gate 9 — Verify Manual Cloud Setup
+* **Status**: `PASSED`
+* **Evidence Inspected**:
+  * Staging Supabase credentials confirmed in `.env` (project `kjglykncjotsxoihupfe`, `ap-southeast-1`).
+  * Password typo in `DIRECT_URL` identified and corrected (three `6`s → consistent with `DATABASE_URL`).
+  * Fixed `DIRECT_URL` was used successfully to seed admin user and import full catalogue.
+* **Commands Executed**:
+  * Prisma `migrate deploy` — 7 migrations applied to staging schema.
+* **Files Changed**:
+  * `.env` (staging credential correction)
+* **Remaining Work**: None.
+
+### Gate 10 — Prepare the Staging Database
+* **Status**: `PASSED`
+* **Evidence Inspected**:
+  * Admin user `user_admin123` seeded via `scripts/database/seed_staging_admin.js`.
+  * Full certified catalogue committed via `CatalogueImporter.commitWorkbook`:
+    * **103 categories**, **2,167 products**, **2,167 packaging units**, **4,334 prices**, **2,167 source mappings**
+    * **0 issues** — clean, identical result to production-certified fixture.
+* **Commands Executed**:
+  * `node scripts/database/seed_staging_admin.js`
+  * `node scripts/database/import_staging_catalogue.js`
+* **Files Changed**:
+  * [NEW] `scripts/database/seed_staging_admin.js`
+  * [NEW] `scripts/database/import_staging_catalogue.js`
+* **Remaining Work**: None.
+
+### Gate 11 — Deploy the Docker Backend
+* **Status**: `IN_PROGRESS`
+* **Evidence Inspected**:
+  * `render.yaml` created at repository root to enable Render infrastructure-as-code deployment.
+  * Secrets (JWT_SECRET, DATABASE_URL, DIRECT_URL, CORS_ORIGINS) must be injected manually via hosting dashboard — never committed to git.
+* **Commands Executed**: None (requires owner to push to git and trigger cloud build).
+* **Files Changed**:
+  * [NEW] `render.yaml`
+* **Remaining Work**:
+  * Owner to commit and push `render.yaml` (or use dashboard deploy).
+  * Owner to set `DATABASE_URL`, `DIRECT_URL`, `JWT_SECRET`, `CORS_ORIGINS` env vars in hosting dashboard.
+  * Owner to confirm backend is live and provide the public HTTPS API URL.
+
