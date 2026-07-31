@@ -12,6 +12,25 @@ const adapter_pg_1 = require("@prisma/adapter-pg");
 const pg_1 = __importDefault(require("pg"));
 const parser_js_1 = require("./parser.js");
 const validator_js_1 = require("./validator.js");
+const node_fs_1 = __importDefault(require("node:fs"));
+const node_path_1 = __importDefault(require("node:path"));
+function getSslConfig() {
+    let currentDir = process.cwd();
+    for (let i = 0; i < 5; i++) {
+        const certPath = node_path_1.default.join(currentDir, "supabase-ca.crt");
+        if (node_fs_1.default.existsSync(certPath)) {
+            return {
+                rejectUnauthorized: true,
+                ca: node_fs_1.default.readFileSync(certPath, "utf8"),
+            };
+        }
+        const parent = node_path_1.default.dirname(currentDir);
+        if (parent === currentDir)
+            break;
+        currentDir = parent;
+    }
+    return true;
+}
 function generateSlug(name) {
     const clean = name
         .toLowerCase()
@@ -28,7 +47,7 @@ class CatalogueImporter {
         }
         const pool = new pg_1.default.Pool({
             connectionString,
-            ssl: { rejectUnauthorized: false },
+            ssl: getSslConfig(),
             max: 10,
         });
         const adapter = new adapter_pg_1.PrismaPg(pool);

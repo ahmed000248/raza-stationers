@@ -16,6 +16,25 @@ import pg from "pg";
 import { parseCatalogueCsv, parseCatalogueXlsx } from "./parser.js";
 import { validateCatalogueRows } from "./validator.js";
 import { ImportExecutionOptions, ImportExecutionResult, ParsedCatalogueRow } from "./types.js";
+import fsSync from "node:fs";
+import path from "node:path";
+
+function getSslConfig(): any {
+  let currentDir = process.cwd();
+  for (let i = 0; i < 5; i++) {
+    const certPath = path.join(currentDir, "supabase-ca.crt");
+    if (fsSync.existsSync(certPath)) {
+      return {
+        rejectUnauthorized: true,
+        ca: fsSync.readFileSync(certPath, "utf8"),
+      };
+    }
+    const parent = path.dirname(currentDir);
+    if (parent === currentDir) break;
+    currentDir = parent;
+  }
+  return true;
+}
 
 export function generateSlug(name: string): string {
   const clean = name
@@ -35,7 +54,7 @@ export class CatalogueImporter {
 
     const pool = new pg.Pool({
       connectionString,
-      ssl: { rejectUnauthorized: false },
+      ssl: getSslConfig(),
       max: 10,
     });
 
