@@ -20,6 +20,7 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "test": "echo \"Testing is NOT CONFIGURED for this workspace. See docs/stabilization/phase-1-reproducibility.md\"",
+    "demo:complete": "node scripts/database/demo_complete.js",
     "verify": "npm run db:validate && npm run db:generate && npm run typecheck && npm run lint && npm run build"
   },
   "engines": {
@@ -33,6 +34,7 @@
     "form-data": "^4.0.6",
     "jsonwebtoken": "^9.0.3",
     "prisma": "^7.9.0",
+    "speakeasy": "^2.0.0",
     "typescript": "^5"
   },
   "dependencies": {

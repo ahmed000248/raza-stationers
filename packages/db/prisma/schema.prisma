@@ -419,12 +419,15 @@ model User {
   id              String    @id @default(cuid())
   mobileNumber    String    @unique @map("mobile_number")
   email           String?   @unique
-  passwordHash    String    @map("password_hash")
+  passwordHash    String?   @map("password_hash")
   name            String
   role            UserRole
   isActive        Boolean   @default(true) @map("is_active")
   deactivatedAt   DateTime? @map("deactivated_at") @db.Timestamptz(3)
   deactivatedById String?   @map("deactivated_by_id")
+  totpSecret      String?   @map("totp_secret") // Deprecated: Custom speakeasy TOTP secret (unused, superseded by Supabase MFA)
+  isTotpEnabled   Boolean   @default(false) @map("is_totp_enabled") // Deprecated: Custom speakeasy TOTP status (unused, superseded by Supabase MFA)
+  supabaseAuthId  String?   @unique @map("supabase_auth_id")
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
 
@@ -642,6 +645,7 @@ model Product {
   unitConfirmationStatus ConfirmationStatus  @default(unconfirmed) @map("unit_confirmation_status")
   allowIndividualSale    Boolean             @default(false) @map("allow_individual_sale")
   lowStockThresholdBase  Decimal?            @map("low_stock_threshold_base") @db.Decimal(18, 3)
+  openingStockStatus     String              @default("NOT_COUNTED") @map("opening_stock_status")
   reviewReason           String?             @map("review_reason")
   activatedAt            DateTime?           @map("activated_at") @db.Timestamptz(3)
   activatedById          String?             @map("activated_by_id")
@@ -922,6 +926,7 @@ model Order {
   clientBusinessId       String         @map("client_business_id")
   placedByUserId         String         @map("placed_by_user_id")
   status                 OrderStatus    @default(pending_review)
+  isDemo                 Boolean        @default(false) @map("is_demo")
   currency               CurrencyCode   @default(PKR)
   requestedPaymentMethod PaymentMethod? @map("requested_payment_method")
   recipientNameSnapshot  String         @map("recipient_name_snapshot")
@@ -1580,6 +1585,7 @@ model BusinessSettings {
   requireApproval Boolean @default(true) @map("require_approval")
   stockAlert      Boolean @default(true) @map("stock_alert")
   packingView     Boolean @default(true) @map("packing_view")
+  inventoryMode   String  @default("DEMO") @map("inventory_mode")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
   @@map("business_settings")

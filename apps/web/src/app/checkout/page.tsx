@@ -22,7 +22,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
 export default function CheckoutPage() {
   const router = useRouter()
   const { items, subtotal, totalItems, clearCart } = useCart()
-  const { clientBusiness } = useAuth()
+  const { accountStatus, clientBusiness } = useAuth()
 
   const [recipientName, setRecipientName] = React.useState(clientBusiness?.contactPerson || "")
   const [phone, setPhone] = React.useState(clientBusiness?.phone || "")
@@ -40,6 +40,38 @@ export default function CheckoutPage() {
   const isCityValid = isCityInDeliveryZone(city)
 
   React.useEffect(() => { if (items.length === 0) router.push("/cart") }, [items, router])
+
+  // Redirect to login if user is guest, preserving current input state
+  React.useEffect(() => {
+    if (accountStatus === "guest") {
+      try {
+        const tempState = { recipientName, phone, city, address, deliveryNotes, paymentMethod }
+        sessionStorage.setItem("raza_stationers_temp_checkout", JSON.stringify(tempState))
+      } catch (err) {
+        // Ignore session storage write errors
+      }
+      router.push("/signin?returnTo=/checkout")
+    }
+  }, [accountStatus, router])
+
+  // Restore input state from session storage on mount
+  React.useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem("raza_stationers_temp_checkout")
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (parsed.recipientName) setRecipientName(parsed.recipientName)
+        if (parsed.phone) setPhone(parsed.phone)
+        if (parsed.city) setCity(parsed.city)
+        if (parsed.address) setAddress(parsed.address)
+        if (parsed.deliveryNotes) setDeliveryNotes(parsed.deliveryNotes)
+        if (parsed.paymentMethod) setPaymentMethod(parsed.paymentMethod)
+        sessionStorage.removeItem("raza_stationers_temp_checkout")
+      }
+    } catch (err) {
+      // Ignore session storage read errors
+    }
+  }, [])
 
   const validateForm = () => {
     const e: Record<string, string> = {}

@@ -39,6 +39,11 @@ export class OrdersService {
 
     const packagingMap = new Map(packaging.map((p) => [p.id, p]));
 
+    // Fetch inventory settings
+    const settings = await this.prisma.businessSettings.findFirst();
+    const inventoryMode = settings?.inventoryMode || "DEMO";
+    const isDemo = inventoryMode === "DEMO";
+
     let subtotal = 0;
     const orderItems: Prisma.OrderItemUncheckedCreateWithoutOrderInput[] = [];
 
@@ -50,6 +55,25 @@ export class OrdersService {
       const price = pkg.prices[0];
       if (!price) throw new BadRequestException(`No wholesale price for ${pkg.product.name}`);
 
+      const requestedBaseQty = item.quantity * Number(pkg.conversionToBase);
+
+      // Inventory validation in LIVE mode
+      if (inventoryMode === "LIVE") {
+        if (pkg.product.openingStockStatus === "NOT_COUNTED") {
+          throw new BadRequestException(`Product '${pkg.product.name}' has uncounted opening stock and cannot be ordered.`);
+        }
+        
+        // Find stock balance for this product
+        const stock = await this.prisma.stockBalance.findFirst({
+          where: { productId: pkg.productId },
+        });
+        
+        const available = stock ? (Number(stock.onHandQuantity) - Number(stock.reservedQuantity)) : 0;
+        if (available <= 0 || available < requestedBaseQty) {
+          throw new BadRequestException(`Product '${pkg.product.name}' is Out of Stock.`);
+        }
+      }
+
       const lineTotal = Number(price.amount) * item.quantity;
       subtotal += lineTotal;
 
@@ -57,7 +81,7 @@ export class OrdersService {
         productId: pkg.productId,
         productPackagingId: item.productPackagingId,
         quantity: item.quantity,
-        baseQuantity: item.quantity * Number(pkg.conversionToBase),
+        baseQuantity: requestedBaseQty,
         skuSnapshot: pkg.product.sku,
         productNameSnapshot: pkg.product.name,
         packagingLabelSnapshot: pkg.label,
@@ -86,6 +110,7 @@ export class OrdersService {
         subtotal,
         grandTotal: subtotal,
         status: "pending_review",
+        isDemo,
         items: { create: orderItems },
         statusHistory: {
           create: {

@@ -14,6 +14,10 @@ const JWT_SECRET = "raza-stationers-test-secret-1234567890";
 const WORKBOOK_PATH = path.resolve('data/final/Raza-Stationers-Final-Supabase-Catalogue.xlsx');
 
 function getSslConfig() {
+  const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL;
+  if (connectionString && (connectionString.includes('127.0.0.1') || connectionString.includes('localhost'))) {
+    return false;
+  }
   const certPath = path.resolve('supabase-ca.crt');
   if (fs.existsSync(certPath)) {
     return {
@@ -33,8 +37,9 @@ const prisma = new PrismaClient({ adapter });
 
 // Helpers to generate tokens
 function signToken(role, userId = 'user_admin123') {
+  const aal = (role === 'admin' || role === 'owner') ? 'aal2' : 'aal1';
   return jwt.sign(
-    { sub: userId, email: 'admin@razastationers.com', role: role },
+    { sub: userId, email: 'admin@razastationers.com', role: role, aal },
     JWT_SECRET,
     { expiresIn: '10m' }
   );
@@ -65,7 +70,7 @@ async function runTests() {
     update: { isActive: true },
     create: {
       id: 'user_admin123',
-      mobileNumber: '+920000000001',
+      mobileNumber: '+920000000091',
       name: 'Test Admin',
       role: 'admin',
       isActive: true,
@@ -79,7 +84,7 @@ async function runTests() {
     update: { isActive: true },
     create: {
       id: 'user_owner123',
-      mobileNumber: '+920000000002',
+      mobileNumber: '+920000000092',
       name: 'Test Owner',
       role: 'owner',
       isActive: true,
@@ -93,7 +98,7 @@ async function runTests() {
     update: { isActive: true },
     create: {
       id: 'user_regular123',
-      mobileNumber: '+920000000003',
+      mobileNumber: '+920000000093',
       name: 'Test Regular User',
       role: 'business_user',
       isActive: true,

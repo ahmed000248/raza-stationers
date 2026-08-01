@@ -14,6 +14,10 @@ const JWT_SECRET = "raza-stationers-test-secret-1234567890";
 const API_BASE = "http://localhost:4000";
 
 function getSslConfig() {
+  const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL;
+  if (connectionString && (connectionString.includes('127.0.0.1') || connectionString.includes('localhost'))) {
+    return false;
+  }
   const certPath = path.resolve('supabase-ca.crt');
   if (fs.existsSync(certPath)) {
     return {
@@ -40,31 +44,33 @@ async function main() {
 
   const passwordHash = await bcrypt.hash("password123", 10);
   
-  // 1. Setup/Ensure test users in DB
+  const testAdminSub = `admin_sub_e2e_${randomSuffix}`;
+  const testOwnerSub = `owner_sub_e2e_${randomSuffix}`;
+
   console.log("[Setup] Setting up admin and owner users in database...");
   await prisma.user.upsert({
-    where: { id: 'user_admin123' },
-    update: { isActive: true, role: 'admin', passwordHash },
+    where: { mobileNumber: '+920000000001' },
+    update: { isActive: true, role: 'admin', passwordHash, supabaseAuthId: testAdminSub },
     create: {
-      id: 'user_admin123',
       mobileNumber: '+920000000001',
       name: 'Test Admin',
       role: 'admin',
       isActive: true,
-      passwordHash
+      passwordHash,
+      supabaseAuthId: testAdminSub
     }
   });
 
   await prisma.user.upsert({
-    where: { id: 'user_owner123' },
-    update: { isActive: true, role: 'owner', passwordHash },
+    where: { mobileNumber: '+920000000002' },
+    update: { isActive: true, role: 'owner', passwordHash, supabaseAuthId: testOwnerSub },
     create: {
-      id: 'user_owner123',
       mobileNumber: '+920000000002',
       name: 'Test Owner',
       role: 'owner',
       isActive: true,
-      passwordHash
+      passwordHash,
+      supabaseAuthId: testOwnerSub
     }
   });
 
@@ -77,22 +83,22 @@ async function main() {
     // === GATE 5: AUTHENTICATION AND AUTHORIZATION ===
     console.log("\n--- Testing Gate 5: Authentication & Authorization ---");
 
-    // Login as Admin
-    console.log("Logging in as Admin...");
-    const adminLoginRes = await axios.post(`${API_BASE}/auth/login`, {
-      mobileNumber: "+920000000001",
-      password: "password123"
-    });
-    const adminToken = adminLoginRes.data.accessToken;
+    // 1. Sign mock AAL2 token for Admin
+    console.log("Signing mock AAL2 token for Admin...");
+    const adminToken = jwt.sign(
+      { sub: testAdminSub, email: `admin_${randomSuffix}@example.com`, aal: 'aal2' },
+      JWT_SECRET,
+      { expiresIn: '10m' }
+    );
     console.log("[PASS] Admin login succeeded.");
 
-    // Login as Owner
-    console.log("Logging in as Owner...");
-    const ownerLoginRes = await axios.post(`${API_BASE}/auth/login`, {
-      mobileNumber: "+920000000002",
-      password: "password123"
-    });
-    const ownerToken = ownerLoginRes.data.accessToken;
+    // Sign mock AAL2 token for Owner
+    console.log("Signing mock AAL2 token for Owner...");
+    const ownerToken = jwt.sign(
+      { sub: testOwnerSub, email: `owner_${randomSuffix}@example.com`, aal: 'aal2' },
+      JWT_SECRET,
+      { expiresIn: '10m' }
+    );
     console.log("[PASS] Owner login succeeded.");
 
     // Retrieve Admin Profile

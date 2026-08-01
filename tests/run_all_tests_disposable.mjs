@@ -1,229 +1,309 @@
+/**
+ * run_all_tests_disposable.mjs
+ *
+ * Isolated local Docker integration test runner.
+ * - Spins up a fresh PostgreSQL container per run
+ * - Deploys schema via prisma migrate deploy
+ * - Seeds catalogue from repository artifact (data/final/*.xlsx) via Admin API
+ * - Runs all integration and importer test suites
+ * - Tears down cleanly regardless of outcome
+ *
+ * No staging connections are made. All data is sourced from the repository.
+ * ponytail: staging copy removed — local only; catalog seeded via Admin API commit
+ */
 import { execSync, spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 import pg from 'pg';
+import FormData from 'form-data';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-const schemaName = 'e2e_test_schema';
+const timestamp = Date.now();
+const containerName = `raza_test_pg_${timestamp}`;
+const dbName = `raza_test_db_${timestamp}`;
+const schemaName = 'public';
 
-function appendSchema(url, schema) {
-  if (!url) return url;
-  if (url.includes('?')) {
-    return url + `&schema=${schema}`;
-  }
-  return url + `?schema=${schema}`;
+// Catalogue workbook — certified repository artifact, not staging copy
+const WORKBOOK_PATH = path.resolve('data/final/Raza-Stationers-Final-Supabase-Catalogue.xlsx');
+
+// Test JWT secret must match what the API is configured with in test mode
+const TEST_JWT_SECRET = process.env.JWT_SECRET || 'raza-stationers-test-secret-1234567890';
+
+console.log("=== ISOLATED LOCAL DOCKER TEST RUNNER ===");
+console.log("Container Name:", containerName);
+console.log("Database Name:", dbName);
+console.log("Schema Name:", schemaName);
+
+async function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-const testDatabaseUrl = appendSchema(process.env.DATABASE_URL, schemaName);
-const testDirectUrl = appendSchema(process.env.DIRECT_URL, schemaName);
-
-console.log("=== DISPOSABLE TEST RUNNER CONFIG ===");
-console.log("Test Schema:", schemaName);
-console.log("Test DATABASE_URL:", testDatabaseUrl);
-console.log("Test DIRECT_URL:", testDirectUrl);
-console.log("=====================================\n");
-
-function getSslConfig() {
-  const certPath = path.resolve('supabase-ca.crt');
-  if (fs.existsSync(certPath)) {
-    return {
-      rejectUnauthorized: true,
-      ca: fs.readFileSync(certPath, 'utf8'),
-    };
+async function fetchWithRetry(url, opts, maxAttempts = 30, intervalMs = 1000) {
+  for (let i = 1; i <= maxAttempts; i++) {
+    try {
+      const res = await fetch(url, opts);
+      if (res.status === 200) return res;
+    } catch (_) {}
+    if (i === maxAttempts) throw new Error(`${url} did not become available after ${maxAttempts}s`);
+    await sleep(intervalMs);
   }
-  return true;
 }
-
-const pool = new pg.Pool({
-  connectionString: process.env.DIRECT_URL,
-  ssl: getSslConfig()
-});
 
 async function main() {
   let serverProcess = null;
-  
-  try {
-    // 1. Re-initialize Schema
-    console.log(`[1/7] Initializing clean disposable schema ${schemaName}...`);
-    await pool.query(`DROP SCHEMA IF EXISTS ${schemaName} CASCADE`);
-    await pool.query(`CREATE SCHEMA ${schemaName}`);
-    
-    // 2. Deploy Schema DDL from Migration SQL
-    console.log(`[2/7] Deploying database structure to ${schemaName} via all 7 migration SQL scripts...`);
-    const migrationsDir = path.resolve('packages/db/prisma/migrations');
-    const migrationFolders = fs.readdirSync(migrationsDir)
-      .filter(f => /^\d+_\w+/.test(f))
-      .sort(); // alphabet sort matches chronological timestamp order
+  let containerStarted = false;
 
-    for (const folder of migrationFolders) {
-      const migPath = path.join(migrationsDir, folder, 'migration.sql');
-      if (fs.existsSync(migPath)) {
-        console.log(`  Applying migration: ${folder}...`);
-        let sql = fs.readFileSync(migPath, 'utf8');
-        sql = `SET search_path = ${schemaName}, pg_catalog;\n` + sql;
-        
-        sql = sql.replace(/CREATE SCHEMA IF NOT EXISTS "public";/g, `CREATE SCHEMA IF NOT EXISTS "${schemaName}";`);
-        sql = sql.replace(/"public"/g, `"${schemaName}"`);
-        sql = sql.replace(/public\./g, `${schemaName}.`);
-        sql = sql.replace(/'public\./g, `'${schemaName}.`);
-        
-        await pool.query(sql);
+  try {
+    // --- 1. Start Docker postgres container ---
+    console.log("[1] Spinning up PostgreSQL docker container...");
+    execSync(
+      `docker run -d --name ${containerName} -p 5432 -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=${dbName} postgres:15-alpine`,
+      { stdio: 'ignore' }
+    );
+    containerStarted = true;
+    await sleep(3000);
+
+    const portOutput = execSync(`docker port ${containerName} 5432`, { encoding: 'utf8' }).trim();
+    const portMatch = portOutput.match(/:(\d+)$/);
+    if (!portMatch) throw new Error(`Failed to parse mapped port: ${portOutput}`);
+    const localPort = portMatch[1];
+    const testDatabaseUrl = `postgresql://postgres:postgres@127.0.0.1:${localPort}/${dbName}?schema=${schemaName}`;
+    const testDirectUrl = testDatabaseUrl;
+
+    console.log("Mapped Local Port:", localPort);
+
+    // --- 2. Safety assertion: must be local ---
+    const urlObj = new URL(testDatabaseUrl);
+    if (urlObj.hostname !== '127.0.0.1' && urlObj.hostname !== 'localhost') {
+      throw new Error(`CRITICAL: test database host is not local: ${urlObj.hostname}`);
+    }
+
+    const testPool = new pg.Pool({
+      connectionString: testDatabaseUrl.replace(`schema=${schemaName}`, 'schema=public'),
+    });
+
+    // --- 3. Wait for Postgres to be ready ---
+    console.log("[2] Waiting for PostgreSQL to accept connections...");
+    let actualDb = null;
+    for (let attempt = 1; attempt <= 45; attempt++) {
+      try {
+        const dbCheckRes = await testPool.query("SELECT current_database()");
+        actualDb = dbCheckRes.rows[0].current_database;
+        break;
+      } catch (_) {
+        if (attempt === 45) throw new Error('PostgreSQL container failed to become ready after 45 attempts');
+        await sleep(1000);
       }
     }
-    console.log("[PASS] All 7 migrations deployed successfully.");
-    
-    // 3. Copy certified catalogue fixtures from public schema to disposable schema
-    console.log(`[3/7] Copying certified catalogue from public to ${schemaName}...`);
-    await pool.query(`
-      INSERT INTO ${schemaName}.users (
-        id, mobile_number, email, password_hash, name, role, is_active, deactivated_at, deactivated_by_id, created_at, updated_at
-      )
-      SELECT 
-        id, mobile_number, email, password_hash, name, role::text::${schemaName}.user_role, is_active, deactivated_at, deactivated_by_id, created_at, updated_at
-      FROM public.users
+    if (actualDb !== dbName) {
+      throw new Error(`CRITICAL ID MISMATCH: Expected '${dbName}', got '${actualDb}'`);
+    }
+
+    // --- 4. Create standard Supabase roles expected by migrations ---
+    console.log("[3] Creating Supabase standard roles...");
+    await testPool.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'anon') THEN
+          CREATE ROLE anon NOLOGIN;
+        END IF;
+        IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'authenticated') THEN
+          CREATE ROLE authenticated NOLOGIN;
+        END IF;
+        IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'service_role') THEN
+          CREATE ROLE service_role NOLOGIN;
+        END IF;
+        IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'authenticator') THEN
+          CREATE ROLE authenticator NOLOGIN;
+        END IF;
+        IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'supabase_admin') THEN
+          CREATE ROLE supabase_admin NOLOGIN;
+        END IF;
+      END
+      $$;
     `);
-    await pool.query(`
-      INSERT INTO ${schemaName}.categories (
-        id, name, slug, is_active, archived_at, archived_by_id, created_at, updated_at
-      )
-      SELECT 
-        id, name, slug, is_active, archived_at, archived_by_id, created_at, updated_at
-      FROM public.categories
-    `);
-    await pool.query(`
-      INSERT INTO ${schemaName}.products (
-        id, sku_number, sku, name, name_urdu, shop_name, category_id, description, purchase_type, status, unit_confirmation_status, allow_individual_sale, low_stock_threshold_base, review_reason, activated_at, activated_by_id, archived_at, archived_by_id, created_at, updated_at
-      )
-      SELECT 
-        id, sku_number, sku, name, name_urdu, shop_name, category_id, description, purchase_type::text::${schemaName}.product_purchase_type, status::text::${schemaName}.product_status, unit_confirmation_status::text::${schemaName}.confirmation_status, allow_individual_sale, low_stock_threshold_base, review_reason, activated_at, activated_by_id, archived_at, archived_by_id, created_at, updated_at
-      FROM public.products
-    `);
-    await pool.query(`INSERT INTO ${schemaName}.units_of_measure SELECT * FROM public.units_of_measure`);
-    await pool.query(`
-      INSERT INTO ${schemaName}.product_packaging (
-        id, product_id, unit_of_measure_id, code, label, conversion_to_base, is_base, confirmation_status, is_active, created_at, updated_at, pack_quantity
-      )
-      SELECT 
-        id, product_id, unit_of_measure_id, code, label, conversion_to_base, is_base, confirmation_status::text::${schemaName}.confirmation_status, is_active, created_at, updated_at, pack_quantity
-      FROM public.product_packaging
-    `);
-    await pool.query(`
-      INSERT INTO ${schemaName}.product_prices (
-        id, product_packaging_id, price_type, currency, amount, effective_from, effective_to, created_by_id, created_at
-      )
-      SELECT 
-        id, product_packaging_id, price_type::text::${schemaName}.price_type, currency::text::${schemaName}.currency_code, amount, effective_from, effective_to, created_by_id, created_at
-      FROM public.product_prices
-    `);
-    
-    // Also copy document sequences to avoid sequence missing errors on order/invoice allocation
-    await pool.query(`
-      INSERT INTO ${schemaName}.document_sequences (
-        document_type, "year", next_value, updated_at
-      )
-      SELECT 
-        document_type::text::${schemaName}.document_type, "year", next_value, updated_at
-      FROM public.document_sequences
-    `);
-    
-    console.log("[PASS] Catalogue fixtures copied successfully.");
-    
-    // 4. Start API server pointing to the disposable schema
-    console.log(`[4/7] Starting API Server pointing to ${schemaName}...`);
-    
-    // Spawn api-server
+
+    // --- 5. Deploy schema via prisma migrate deploy ---
+    console.log("[4] Running prisma migrate deploy...");
+    execSync(`npx prisma migrate deploy --schema=packages/db/prisma/schema.prisma`, {
+      stdio: 'inherit',
+      env: { ...process.env, DATABASE_URL: testDatabaseUrl, DIRECT_URL: testDirectUrl }
+    });
+
+    // --- 6. Create test sentinel table ---
+    console.log("[5] Creating test sentinel...");
+    await testPool.query(`CREATE TABLE public.test_run_sentinel (id SERIAL PRIMARY KEY, run_id VARCHAR(255))`);
+    await testPool.query(`INSERT INTO public.test_run_sentinel (run_id) VALUES ($1)`, [containerName]);
+    await testPool.end();
+
+    // --- 7. Start Local API Server ---
+    console.log("[6] Starting local API Server...");
     serverProcess = spawn('npm', ['run', 'dev:api'], {
       env: {
         ...process.env,
         DATABASE_URL: testDatabaseUrl,
         DIRECT_URL: testDirectUrl,
-        PORT: '4000'
+        PORT: '4000',
+        PGOPTIONS: `-c search_path=${schemaName}`,
+        NODE_ENV: 'test',
+        USE_TEST_KEY: 'true',
       },
       shell: true,
       stdio: 'pipe'
     });
-    
-    // Log server output to a temporary log
+
     const serverLogStream = fs.createWriteStream(path.resolve('tests/disposable_server.log'));
     serverProcess.stdout.pipe(serverLogStream);
     serverProcess.stderr.pipe(serverLogStream);
-    
-    // Wait for the server to be ready on port 4000
+
     console.log("Waiting for API server to boot on port 4000...");
-    await new Promise((resolve, reject) => {
-      let attempts = 0;
-      const interval = setInterval(async () => {
-        attempts++;
-        try {
-          const res = await fetch('http://localhost:4000/');
-          if (res.status === 200) {
-            clearInterval(interval);
-            console.log("[PASS] API Server is running and healthy on port 4000.");
-            resolve();
-          }
-        } catch (e) {
-          if (attempts > 30) {
-            clearInterval(interval);
-            reject(new Error("API Server failed to start on port 4000 within 30 seconds. check tests/disposable_server.log"));
-          }
-        }
-      }, 1000);
+    await fetchWithRetry('http://localhost:4000/');
+    console.log("[PASS] Local API Server is healthy on port 4000.");
+
+    // --- 8. Seed catalogue from repository XLSX via Admin API ---
+    console.log("[7] Seeding catalogue from repository artifact (data/final/*.xlsx)...");
+    if (!fs.existsSync(WORKBOOK_PATH)) {
+      throw new Error(`Catalogue workbook not found at ${WORKBOOK_PATH}`);
+    }
+
+    // Sign an admin JWT directly (test secret)
+    const jwt = await import('jsonwebtoken');
+    const adminToken = jwt.default.sign(
+      { sub: 'user_admin123', role: 'admin', mobileNumber: '+920000000000', aal: 'aal2' },
+      TEST_JWT_SECRET,
+      { expiresIn: '10m' }
+    );
+
+    // Seed admin user so JWT is accepted by JwtStrategy's user validation
+    const localSeedPool = new pg.Pool({ connectionString: testDirectUrl });
+    const bcrypt = await import('bcryptjs');
+    const seedHash = await bcrypt.default.hash('SeedAdmin@2024', 10);
+    await localSeedPool.query(`
+      INSERT INTO public.users (id, mobile_number, name, role, is_active, password_hash, supabase_auth_id, created_at, updated_at)
+      VALUES ('user_admin123', '+920000000000', 'Seed Admin', 'admin', true, $1, 'user_admin123', NOW(), NOW())
+      ON CONFLICT (id) DO UPDATE SET is_active = true, role = 'admin', supabase_auth_id = 'user_admin123'
+    `, [seedHash]);
+    await localSeedPool.end();
+
+    // Step 1: Generate plan to get planChecksum
+    const planForm1 = new globalThis.FormData();
+    const fileBuffer = fs.readFileSync(WORKBOOK_PATH);
+    const fileBlob = new Blob([fileBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    planForm1.append('file', fileBlob, 'Raza-Stationers-Final-Supabase-Catalogue.xlsx');
+
+    const planRes = await fetch('http://localhost:4000/admin/imports/catalogue/plan', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${adminToken}` },
+      body: planForm1,
     });
-    
-    // 5. Run E2E Integration tests
-    console.log("[5/7] Running all integration test suites sequentially...");
+    if (!planRes.ok) {
+      const body = await planRes.text();
+      throw new Error(`Catalogue plan failed (${planRes.status}): ${body}`);
+    }
+    const planBody = await planRes.json();
+    const planChecksum = planBody.checksum || planBody.planChecksum || planBody.sha256;
+    if (!planChecksum) {
+      throw new Error(`Plan response did not contain a checksum. Keys: ${Object.keys(planBody).join(', ')}`);
+    }
+    console.log(`[INFO] Plan checksum: ${planChecksum}`);
+
+    // Step 2: Commit with planChecksum
+    const commitForm = new globalThis.FormData();
+    commitForm.append('file', fileBlob, 'Raza-Stationers-Final-Supabase-Catalogue.xlsx');
+    const importRes = await fetch(
+      `http://localhost:4000/admin/imports/catalogue/commit?planChecksum=${encodeURIComponent(planChecksum)}`,
+      {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${adminToken}` },
+        body: commitForm,
+      }
+    );
+    if (!importRes.ok) {
+      const body = await importRes.text();
+      throw new Error(`Catalogue commit failed (${importRes.status}): ${body}`);
+    }
+    const importBody = await importRes.json();
+    console.log(`[PASS] Catalogue seeded: ${importBody.createdCounts?.products ?? '?'} products, ${importBody.createdCounts?.categories ?? '?'} categories`);
+
+    // --- 9. Run Integration Test Suites ---
+    console.log("[8] Executing test suites...");
     const testSuites = [
       'tests/integration/test_admin_endpoint.mjs',
       'tests/integration/test_admin_catalogue.mjs',
       'tests/integration/test_all_flows.mjs',
       'tests/integration/test_invoices.mjs',
+      'tests/integration/test_gate2_inventory.mjs',
+      'tests/integration/test_gate7_totp.mjs',
+      'tests/integration/test_supabase_auth.mjs',
+      'tests/importer/test_importer_hardened.mjs',
     ];
-    
-    let failed = false;
+
+    let testFailed = false;
     for (const suite of testSuites) {
       console.log(`Running suite: ${suite}...`);
       try {
-        execSync(`node "${suite}"`, { stdio: 'inherit' });
+        execSync(`node "${suite}"`, {
+          stdio: 'inherit',
+          env: {
+            ...process.env,
+            DATABASE_URL: testDatabaseUrl,
+            DIRECT_URL: testDirectUrl,
+            PGOPTIONS: `-c search_path=${schemaName}`
+          }
+        });
         console.log(`[SUCCESS] Suite passed: ${suite}\n`);
-      } catch (err) {
+      } catch (_) {
         console.error(`[FAIL] Suite failed: ${suite}`);
-        failed = true;
+        testFailed = true;
       }
     }
-    
-    if (failed) {
-      throw new Error("One or more integration test suites failed!");
-    }
-    
-    console.log("[6/7] All integration test suites completed successfully!");
-    
+
+    if (testFailed) throw new Error("One or more integration test suites failed.");
+
+    console.log("=== ALL SUITES COMPLETED SUCCESSFULLY ===");
+
   } catch (err) {
-    console.error("\n[CRITICAL ERROR] Test run aborted:", err.message);
+    console.error("[CRITICAL ERROR] Test execution failed:", err.message);
+    if (containerStarted) {
+      try {
+        const logs = execSync(`docker logs ${containerName}`, { encoding: 'utf8' });
+        console.log("=== DOCKER CONTAINER LOGS ===\n", logs);
+      } catch (_) {}
+    }
     process.exitCode = 1;
   } finally {
-    // 6. Kill Server Process
     if (serverProcess) {
-      console.log("[Cleanup] Stopping test API Server...");
+      console.log("[Cleanup] Stopping local API Server...");
       serverProcess.kill('SIGTERM');
-      // For Windows: force kill if it doesn't close
-      try {
-        execSync(`taskkill /F /T /PID ${serverProcess.pid}`, { stdio: 'ignore' });
-      } catch (e) {}
+      try { execSync(`taskkill /F /T /PID ${serverProcess.pid}`, { stdio: 'ignore' }); } catch (_) {}
     }
-    
-    // 7. Drop Schema
-    console.log(`[7/7] Cleaning up: dropping disposable schema ${schemaName}...`);
+
+    // Force-kill orphan processes on port 4000
     try {
-      await pool.query(`DROP SCHEMA IF EXISTS ${schemaName} CASCADE`);
-      console.log(`[Cleanup SUCCESS] Schema ${schemaName} dropped cleanly.`);
-    } catch (e) {
-      console.error(`[Cleanup FAIL] Could not drop schema ${schemaName}:`, e.message);
+      if (process.platform === 'win32') {
+        const stdout = execSync('netstat -ano | findstr :4000', { encoding: 'utf8' });
+        for (const line of stdout.split('\n')) {
+          if (line.includes('LISTENING')) {
+            const pid = line.trim().split(/\s+/).pop();
+            if (pid && pid !== '0') execSync(`taskkill /F /PID ${pid}`, { stdio: 'ignore' });
+          }
+        }
+      }
+    } catch (_) {}
+
+    if (containerStarted) {
+      console.log(`[Cleanup] Removing PostgreSQL container ${containerName}...`);
+      try {
+        execSync(`docker rm -f ${containerName}`, { stdio: 'ignore' });
+        console.log(`[Cleanup SUCCESS] Container ${containerName} removed cleanly.`);
+      } catch (e) {
+        console.error(`[Cleanup FAIL] Failed to remove container:`, e.message);
+      }
     }
-    
-    await pool.end();
-    console.log("=== DISPOSABLE TEST RUN COMPLETED ===");
+    console.log("=== TEST SUITE LIFECYCLE CONCLUDED ===");
+    process.exit(process.exitCode || 0);
   }
 }
 

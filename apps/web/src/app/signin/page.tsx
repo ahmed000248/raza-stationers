@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -11,16 +11,18 @@ import { LogIn, ArrowLeft, Sparkles, ShieldCheck, Clock, UserX } from "lucide-re
 
 export default function SignInPage() {
   const router = useRouter()
-  const { accountStatus, login, logout } = useAuth()
-  const [mobileNumber, setMobileNumber] = React.useState("03001234567")
+  const searchParams = useSearchParams()
+  const returnTo = searchParams.get("returnTo")
+  const { accountStatus, login, logout, loginWithGoogle } = useAuth()
+  const [email, setEmail] = React.useState("contact@alkarampaper.com")
   const [password, setPassword] = React.useState("test123")
   const [error, setError] = React.useState("")
   const [loading, setLoading] = React.useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!mobileNumber || mobileNumber.length < 10) {
-      setError("Please enter a valid mobile number")
+    if (!email || !email.includes("@")) {
+      setError("Please enter a valid email address")
       return
     }
     if (!password || password.length < 4) {
@@ -30,11 +32,22 @@ export default function SignInPage() {
     setError("")
     setLoading(true)
     try {
-      await login(mobileNumber, password)
-      router.push("/catalogue")
+      await login(email, password)
+      router.push(returnTo || "/catalogue")
     } catch (err: any) {
       setError(err.message || "Invalid credentials. Please try again.")
     } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleGoogleSignIn = async () => {
+    setError("")
+    setLoading(true)
+    try {
+      await loginWithGoogle()
+    } catch (err: any) {
+      setError(err.message || "Google Sign-In failed")
       setLoading(false)
     }
   }
@@ -76,11 +89,11 @@ export default function SignInPage() {
                   className={`p-2 rounded-xl border text-[11px] font-semibold flex flex-col items-center gap-1 transition-all ${accountStatus === "guest" ? "bg-[var(--color-ink-900)] text-white border-[var(--color-ink-900)]" : "bg-card border-border text-muted-foreground hover:text-foreground"}`}>
                   <UserX className="size-3.5" /><span>Guest</span>
                 </button>
-                <button type="button" onClick={() => { setMobileNumber("03001234567"); setPassword("test123"); }}
+                <button type="button" onClick={() => { setEmail("contact@alkarampaper.com"); setPassword("test123"); }}
                   className={`p-2 rounded-xl border text-[11px] font-semibold flex flex-col items-center gap-1 transition-all ${accountStatus === "pending" ? "bg-amber-600 text-white border-amber-600" : "bg-card border-border text-muted-foreground hover:text-foreground"}`}>
                   <Clock className="size-3.5" /><span>Pending</span>
                 </button>
-                <button type="button" onClick={() => { setMobileNumber("03001234567"); setPassword("test123"); }}
+                <button type="button" onClick={() => { setEmail("contact@alkarampaper.com"); setPassword("test123"); }}
                   className={`p-2 rounded-xl border text-[11px] font-semibold flex flex-col items-center gap-1 transition-all ${accountStatus === "approved" ? "bg-[var(--color-evergreen-600)] text-white border-[var(--color-evergreen-600)]" : "bg-card border-border text-muted-foreground hover:text-foreground"}`}>
                   <ShieldCheck className="size-3.5" /><span>Approved</span>
                 </button>
@@ -90,11 +103,12 @@ export default function SignInPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-foreground">Mobile Number *</label>
+              <label className="text-xs font-semibold text-foreground">Email Address *</label>
               <Input
-                value={mobileNumber}
-                onChange={(e) => setMobileNumber(e.target.value)}
-                placeholder="03001234567"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="contact@alkarampaper.com"
               />
             </div>
 
@@ -116,9 +130,28 @@ export default function SignInPage() {
             </Button>
           </form>
 
+          <div className="relative my-4 text-center">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-border" />
+            </div>
+            <span className="relative bg-card px-3 text-[10px] text-muted-foreground uppercase">Or continue with</span>
+          </div>
+
+          <Button type="button" variant="outline" size="lg" onClick={handleGoogleSignIn} className="w-full rounded-full gap-2 font-semibold" disabled={loading}>
+            <svg className="size-4 mr-2" viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+              <g transform="matrix(1, 0, 0, 1, 0, 0)">
+                <path d="M21.35,11.1H12v2.7h5.38c-0.24,1.28 -0.96,2.37 -2.04,3.1v2.6h3.29c1.92,-1.78 3.02,-4.4 3.02,-7.4C21.65,11.77 21.54,11.41 21.35,11.1z" fill="#4285F4" />
+                <path d="M12,20.6c2.43,0 4.47,-0.8 5.96,-2.2l-3.29,-2.6c-0.91,0.61 -2.08,0.98 -3.67,0.98 -2.33,0 -4.3,-1.57 -5.01,-3.68H2.58v2.7C4.07,18.77 7.78,20.6 12,20.6z" fill="#34A853" />
+                <path d="M6.99,13.1c-0.18,-0.55 -0.29,-1.13 -0.29,-1.73s0.11,-1.18 0.29,-1.73V6.94H2.58C1.94,8.22 1.57,9.67 1.57,11.2s0.37,2.98 1.01,4.26L6.99,13.1z" fill="#FBBC05" />
+                <path d="M12,5.82c1.32,0 2.51,0.45 3.44,1.35l2.58,-2.58C16.46,3.15 14.42,2.3 12,2.3c-4.22,0 -7.93,1.83 -9.42,4.64l4.41,3.42C7.7,8.25 9.67,5.82 12,5.82z" fill="#EA4335" />
+              </g>
+            </svg>
+            <span>Sign in with Google</span>
+          </Button>
+
           <div className="border-t border-border pt-4 text-center text-xs text-muted-foreground space-y-1">
             <p>New wholesale shop owner?</p>
-            <Link href="/register" className="font-bold text-[var(--color-evergreen-600)] hover:underline block">
+            <Link href={returnTo ? `/register?returnTo=${encodeURIComponent(returnTo)}` : "/register"} className="font-bold text-[var(--color-evergreen-600)] hover:underline block">
               Register Wholesale Account →
             </Link>
           </div>

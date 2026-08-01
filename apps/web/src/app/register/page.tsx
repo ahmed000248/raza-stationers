@@ -29,6 +29,7 @@ export default function WholesaleRegistrationPage() {
 
   const [errors, setErrors] = React.useState<Record<string, string>>({})
   const [submitted, setSubmitted] = React.useState(false)
+  const [confirmationPending, setConfirmationPending] = React.useState(false)
   const [loading, setLoading] = React.useState(false)
   const [submitError, setSubmitError] = React.useState("")
 
@@ -39,6 +40,7 @@ export default function WholesaleRegistrationPage() {
     if (!name || name.trim().length < 2) newErrors.name = "Your name is required"
     if (!mobileNumber || mobileNumber.trim().length < 10) newErrors.mobileNumber = "Valid mobile number required"
     if (!password || password.length < 4) newErrors.password = "Password must be at least 4 characters"
+    if (!email || !email.includes("@")) newErrors.email = "Valid email address required"
     if (!businessName || businessName.trim().length < 3) newErrors.businessName = "Business name must be at least 3 characters"
     if (!ownerName || ownerName.trim().length < 2) newErrors.ownerName = "Owner name is required"
     if (!city) newErrors.city = "City is required"
@@ -58,6 +60,7 @@ export default function WholesaleRegistrationPage() {
         name,
         mobileNumber,
         password,
+        email,
         businessName,
         businessType,
         contactPerson: ownerName,
@@ -66,7 +69,11 @@ export default function WholesaleRegistrationPage() {
       })
       setSubmitted(true)
     } catch (err: any) {
-      setSubmitError(err.message || "Registration failed. Please try again.")
+      if (err.message === "CONFIRMATION_PENDING") {
+        setConfirmationPending(true)
+      } else {
+        setSubmitError(err.message || "Registration failed. Please try again.")
+      }
     } finally {
       setLoading(false)
     }
@@ -95,7 +102,21 @@ export default function WholesaleRegistrationPage() {
           </p>
         </div>
 
-        {(submitted || accountStatus === "pending") ? (
+        {confirmationPending ? (
+          <div className="p-8 rounded-3xl border border-amber-500/30 bg-amber-500/10 space-y-6 text-center">
+            <div className="inline-flex size-16 items-center justify-center rounded-full bg-amber-600 text-white shadow-md mx-auto">
+              <FileText className="size-8" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="font-heading font-bold text-2xl text-[var(--color-ink-900)]">
+                Confirm Your Email Address
+              </h2>
+              <p className="text-xs sm:text-sm text-muted-foreground max-w-md mx-auto">
+                We sent a confirmation link to <strong className="text-foreground">{email}</strong>. Please check your inbox and click the link to verify your email.
+              </p>
+            </div>
+          </div>
+        ) : (submitted || accountStatus === "pending") ? (
           <div className="p-8 rounded-3xl border border-amber-500/30 bg-amber-500/10 space-y-6 text-center">
             <div className="inline-flex size-16 items-center justify-center rounded-full bg-amber-600 text-white shadow-md mx-auto">
               <Building2 className="size-8" />
@@ -137,10 +158,17 @@ export default function WholesaleRegistrationPage() {
                   {errors.mobileNumber && <span className="text-[11px] text-destructive font-medium">{errors.mobileNumber}</span>}
                 </div>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-foreground">Password *</label>
-                <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 4 characters" className={errors.password ? "border-destructive" : ""} />
-                {errors.password && <span className="text-[11px] text-destructive font-medium">{errors.password}</span>}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground">Password *</label>
+                  <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 4 characters" className={errors.password ? "border-destructive" : ""} />
+                  {errors.password && <span className="text-[11px] text-destructive font-medium">{errors.password}</span>}
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground">Email Address *</label>
+                  <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="contact@alkarampaper.com" className={errors.email ? "border-destructive" : ""} />
+                  {errors.email && <span className="text-[11px] text-destructive font-medium">{errors.email}</span>}
+                </div>
               </div>
             </div>
 

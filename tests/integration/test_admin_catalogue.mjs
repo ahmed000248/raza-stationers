@@ -2,15 +2,22 @@ import axios from 'axios';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
+import bcrypt from 'bcryptjs';
 import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
+import jwt from 'jsonwebtoken';
 
 dotenv.config({ path: path.resolve('.env') });
 
 const API_BASE = "http://localhost:4000";
+const TEST_JWT_SECRET = process.env.JWT_SECRET || 'raza-stationers-test-secret-1234567890';
 
 function getSslConfig() {
+  const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL;
+  if (connectionString && (connectionString.includes('127.0.0.1') || connectionString.includes('localhost'))) {
+    return false;
+  }
   const certPath = path.resolve('supabase-ca.crt');
   if (fs.existsSync(certPath)) {
     return {
@@ -31,16 +38,35 @@ const prisma = new PrismaClient({ adapter });
 async function main() {
   console.log("=== STARTING ADMIN CATALOGUE FLOW TESTS ===");
 
+  const suffix = Date.now();
+  const testAdminSub = `admin_sub_${suffix}`;
+
+  // Ensure Admin user exists in DB with supabaseAuthId
+  const passwordHash = await bcrypt.hash("password123", 10);
+  await prisma.user.upsert({
+    where: { id: 'admin_test_user' },
+    update: { isActive: true, supabaseAuthId: testAdminSub },
+    create: {
+      id: 'admin_test_user',
+      mobileNumber: `+92399${suffix}`,
+      name: 'Admin User',
+      role: 'admin',
+      isActive: true,
+      passwordHash,
+      supabaseAuthId: testAdminSub,
+    }
+  });
+
   let testProductId = null;
 
   try {
-    // 1. Log in as admin
-    console.log("Logging in as Admin...");
-    const loginRes = await axios.post(`${API_BASE}/auth/login`, {
-      mobileNumber: "+920000000001",
-      password: "password123"
-    });
-    const adminToken = loginRes.data.accessToken;
+    // 1. Log in as admin (AAL2 token simulation)
+    console.log("Signing mock AAL2 token for Admin...");
+    const adminToken = jwt.sign(
+      { sub: testAdminSub, email: `admin_${suffix}@example.com`, aal: 'aal2' },
+      TEST_JWT_SECRET,
+      { expiresIn: '10m' }
+    );
     console.log("[PASS] Admin login succeeded.");
 
     // Get a valid category ID to use

@@ -1,11 +1,13 @@
 "use client"
+/* eslint-disable react-hooks/refs */
 
 import * as React from "react"
 import { User, ClientBusiness, BusinessUserRole } from "@raza-stationers/types"
 import { UserPricingContext } from "@/lib/pricing"
 import { createAPIClient } from "@raza-stationers/api"
+import { createClient } from "@/lib/supabase/client"
 
-export type AccountStatus = "guest" | "pending" | "approved"
+export type AccountStatus = "guest" | "pending" | "approved" | "unregistered"
 
 interface AuthContextValue {
   accountStatus: AccountStatus
@@ -13,29 +15,31 @@ interface AuthContextValue {
   clientBusiness: ClientBusiness | null
   businessRole: BusinessUserRole | null
   pricingContext: UserPricingContext
-  login: (mobileNumber: string, password: string) => Promise<void>
+  login: (email: string, password: string) => Promise<any>
   register: (data: {
     name: string
     mobileNumber: string
     password: string
+    email: string
     businessName: string
     businessType: string
     contactPerson: string
     address: string
     city: string
   }) => Promise<void>
-  logout: () => void
+  logout: () => Promise<void>
+  loginWithGoogle: () => Promise<void>
+  resetPassword: (email: string) => Promise<void>
+  updatePassword: (password: string) => Promise<void>
+  linkAccount: (supabaseToken: string, mobileNumber: string, password: string) => Promise<void>
 }
 
 const AuthContext = React.createContext<AuthContextValue | null>(null)
 
-const TOKEN_KEY = "raza_stationers_jwt_v1"
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
 
-function getClient() {
-  if (typeof window === "undefined") return createAPIClient({ baseUrl: API_BASE })
-  const token = localStorage.getItem(TOKEN_KEY)
-  return createAPIClient({ baseUrl: API_BASE, authToken: token || undefined })
+function getClient(onUnauthorized?: () => void) {
+  return createAPIClient({ baseUrl: API_BASE, onUnauthorized })
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -45,80 +49,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [businessRole, setBusinessRole] = React.useState<BusinessUserRole | null>(null)
   const [isLoaded, setIsLoaded] = React.useState(false)
 
-  const api = getClient()
+  const supabase = React.useMemo(() => createClient(), [])
+
+  const logout = React.useCallback(async () => {
+    await supabase.auth.signOut()
+    setUser(null)
+    setClientBusiness(null)
+    setBusinessRole(null)
+    setAccountStatus("guest")
+  }, [supabase])
+
+  const onUnauthorizedRef = React.useRef<(() => void) | null>(null)
 
   React.useEffect(() => {
-    const token = localStorage.getItem(TOKEN_KEY)
-    if (!token) {
-      setIsLoaded(true)
-      return
+    onUnauthorizedRef.current = () => {
+      logout()
+      if (typeof window !== "undefined") {
+        window.location.href = `/signin?returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}`
+      }
     }
+  }, [logout])
 
-    api.setAuthToken(token)
-    api.getProfile()
-      .then((profile: any) => {
-        const u: User = {
-          id: profile.id,
-          name: profile.name,
-          mobileNumber: profile.mobileNumber,
-          passwordHash: "",
-          role: profile.role,
-          isActive: true,
-          createdAt: profile.createdAt,
-        }
-        setUser(u)
-
-        if (profile.businessUserLinks?.length > 0) {
-          const link = profile.businessUserLinks[0]
-          const biz = link.clientBusiness
-          setBusinessRole(link.role)
-          setClientBusiness({
-            id: biz.id,
-            businessName: biz.businessName,
-            ownerName: biz.contactPerson,
-            contactPerson: biz.contactPerson,
-            phone: biz.mobileNumber,
-            email: biz.email || "",
-            address: biz.address,
-            city: biz.city,
-            businessType: biz.businessType,
-            discountPercent: 0,
-            creditLimit: 0,
-            outstandingBalance: 0,
-            creditStatus: "active",
-            accountStatus: biz.accountStatus,
-            createdAt: biz.createdAt,
-          })
-          setAccountStatus(biz.accountStatus === "active" ? "approved" : "pending")
-        } else {
-          setAccountStatus("approved")
-        }
-      })
-      .catch(() => {
-        localStorage.removeItem(TOKEN_KEY)
-      })
-      .finally(() => setIsLoaded(true))
+  const api = React.useMemo(() => {
+    return getClient(() => {
+      if (onUnauthorizedRef.current) onUnauthorizedRef.current()
+    })
   }, [])
 
-  const login = React.useCallback(async (mobileNumber: string, password: string) => {
-    const api = getClient()
-    const res: any = await api.login(mobileNumber, password)
-    localStorage.setItem(TOKEN_KEY, res.accessToken)
-    api.setAuthToken(res.accessToken)
-
-    const u: User = {
-      id: res.user.id,
-      name: res.user.name,
-      mobileNumber: res.user.mobileNumber,
-      passwordHash: "",
-      role: res.user.role,
-      isActive: true,
-      createdAt: "",
-    }
-    setUser(u)
-
+  const fetchProfile = React.useCallback(async (token: string) => {
+    api.setAuthToken(token)
     try {
       const profile: any = await api.getProfile()
+      const u: User = {
+        id: profile.id,
+        name: profile.name,
+        mobileNumber: profile.mobileNumber,
+        passwordHash: "",
+        role: profile.role,
+        isActive: true,
+        createdAt: profile.createdAt,
+      }
+      setUser(u)
+
       if (profile.businessUserLinks?.length > 0) {
         const link = profile.businessUserLinks[0]
         const biz = link.clientBusiness
@@ -144,30 +116,102 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setAccountStatus("approved")
       }
-    } catch {
-      setAccountStatus("approved")
+    } catch (err) {
+      console.warn("Failed to load profile for token", err)
+      setUser(null)
+      setAccountStatus("unregistered")
     }
-  }, [])
+  }, [api])
+
+  // Setup Supabase and legacy session loading
+  React.useEffect(() => {
+    let active = true
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!active) return
+      if (session) {
+        fetchProfile(session.access_token).finally(() => {
+          if (active) setIsLoaded(true)
+        })
+      } else {
+        setIsLoaded(true)
+      }
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!active) return
+      if (session) {
+        await fetchProfile(session.access_token)
+      } else {
+        setUser(null)
+        setClientBusiness(null)
+        setBusinessRole(null)
+        setAccountStatus("guest")
+      }
+    })
+
+    return () => {
+      active = false
+      subscription.unsubscribe()
+    }
+  }, [supabase, fetchProfile])
+
+  React.useEffect(() => {
+    if (isLoaded && accountStatus === "unregistered") {
+      if (typeof window !== "undefined" && !window.location.pathname.startsWith("/onboarding") && !window.location.pathname.startsWith("/auth")) {
+        window.location.href = `/onboarding?returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}`
+      }
+    }
+  }, [isLoaded, accountStatus])
+
+  const login = React.useCallback(async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+    if (error) throw new Error(error.message)
+    if (data.session) {
+      await fetchProfile(data.session.access_token)
+    }
+  }, [supabase, fetchProfile])
 
   const register = React.useCallback(async (data: {
     name: string
     mobileNumber: string
     password: string
+    email: string
     businessName: string
     businessType: string
     contactPerson: string
     address: string
     city: string
   }) => {
-    const api = getClient()
-    const regRes: any = await api.register({
+    const { data: signUpData, error } = await supabase.auth.signUp({
+      email: data.email,
+      password: data.password,
+      options: {
+        data: {
+          name: data.name,
+          phone: data.mobileNumber,
+        }
+      }
+    })
+    if (error) throw new Error(error.message)
+
+    const token = signUpData.session?.access_token
+    if (!token) {
+      throw new Error("CONFIRMATION_PENDING")
+    }
+
+    api.setAuthToken(token)
+
+    // Register user on NestJS side
+    await api.post("/auth/register-supabase", {
       name: data.name,
       mobileNumber: data.mobileNumber,
-      password: data.password,
     })
-    localStorage.setItem(TOKEN_KEY, regRes.accessToken)
-    api.setAuthToken(regRes.accessToken)
 
+    // Register client business details
     await api.registerClient({
       businessName: data.businessName,
       businessType: data.businessType,
@@ -177,43 +221,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       city: data.city,
     })
 
-    const u: User = {
-      id: regRes.user.id,
-      name: regRes.user.name,
-      mobileNumber: regRes.user.mobileNumber,
-      passwordHash: "",
-      role: regRes.user.role,
-      isActive: true,
-      createdAt: "",
-    }
-    setUser(u)
-    setAccountStatus("pending")
-    setClientBusiness({
-      id: "",
-      businessName: data.businessName,
-      ownerName: data.contactPerson,
-      contactPerson: data.contactPerson,
-      phone: data.mobileNumber,
-      address: data.address,
-      city: data.city,
-      businessType: data.businessType as any,
-      discountPercent: 0,
-      creditLimit: 0,
-      outstandingBalance: 0,
-      creditStatus: "active",
-      accountStatus: "pending",
-      createdAt: new Date().toISOString(),
-    })
-    setBusinessRole("owner")
-  }, [])
+    await fetchProfile(token)
+  }, [supabase, fetchProfile, api])
 
-  const logout = React.useCallback(() => {
-    localStorage.removeItem(TOKEN_KEY)
-    setUser(null)
-    setClientBusiness(null)
-    setBusinessRole(null)
-    setAccountStatus("guest")
-  }, [])
+  const loginWithGoogle = React.useCallback(async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    })
+    if (error) throw new Error(error.message)
+  }, [supabase])
+
+  const resetPassword = React.useCallback(async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    })
+    if (error) throw new Error(error.message)
+  }, [supabase])
+
+  const updatePassword = React.useCallback(async (password: string) => {
+    const { error } = await supabase.auth.updateUser({ password })
+    if (error) throw new Error(error.message)
+  }, [supabase])
+
+  const linkAccount = React.useCallback(async (supabaseToken: string, mobileNumber: string, password: string) => {
+    const legacyApi = getClient()
+    const res: any = await legacyApi.login(mobileNumber, password)
+    legacyApi.setAuthToken(res.accessToken)
+    await legacyApi.post("/auth/link", { supabaseToken })
+    await fetchProfile(supabaseToken)
+  }, [fetchProfile])
 
   const pricingContext: UserPricingContext = React.useMemo(() => {
     if (accountStatus === "approved" && clientBusiness?.accountStatus === "active") {
@@ -240,6 +279,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         register,
         logout,
+        loginWithGoogle,
+        resetPassword,
+        updatePassword,
+        linkAccount,
       }}
     >
       {children}

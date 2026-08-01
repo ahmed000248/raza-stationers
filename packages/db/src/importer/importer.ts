@@ -19,7 +19,11 @@ import { ImportExecutionOptions, ImportExecutionResult, ParsedCatalogueRow } fro
 import fsSync from "node:fs";
 import path from "node:path";
 
-function getSslConfig(): any {
+function getSslConfig(connectionString?: string): any {
+  const cs = connectionString || process.env.DIRECT_URL || process.env.DATABASE_URL || "";
+  if (cs.includes("localhost") || cs.includes("127.0.0.1")) {
+    return false;
+  }
   let currentDir = process.cwd();
   for (let i = 0; i < 5; i++) {
     const certPath = path.join(currentDir, "supabase-ca.crt");
@@ -54,7 +58,7 @@ export class CatalogueImporter {
 
     const pool = new pg.Pool({
       connectionString,
-      ssl: getSslConfig(),
+      ssl: getSslConfig(connectionString),
       max: 10,
     });
 
@@ -739,6 +743,11 @@ export class CatalogueImporter {
             committedAt: commitTime,
           },
         });
+
+        // 12. Synchronize product SKU sequence after bulk inserts
+        await tx.$executeRawUnsafe(`
+          SELECT setval('public.product_sku_seq', COALESCE((SELECT MAX(sku_number) FROM products), 1))
+        `);
 
         return {
           batchId: importBatch.id,

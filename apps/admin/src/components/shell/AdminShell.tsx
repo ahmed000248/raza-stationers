@@ -6,6 +6,9 @@ import { AdminNav } from "./AdminNav"
 import { TopBar } from "./TopBar"
 import { ToastContainer, ToastItem, ToastVariant } from "@raza-stationers/ui"
 import { useAdminAuth } from "@/hooks/use-admin-auth"
+import { TotpEnrollView } from "./TotpEnrollView"
+import { TotpChallengeView } from "./TotpChallengeView"
+import { createClient } from "@/lib/supabase/client"
 
 interface AddToastInput {
   title: string
@@ -30,9 +33,16 @@ export function useAdminShell() {
   return context
 }
 
+// Roles that require AAL2 before dashboard access
+const MFA_REQUIRED_ROLES: AdminRole[] = ["admin", "owner"]
+
 export function AdminShell({ children }: { children: React.ReactNode }) {
-  const { user, role: adminRole, loading } = useAdminAuth()
+  const { user, role: adminRole, loading, currentLevel, nextLevel, enrollMfa, confirmEnrollMfa, verifyMfa, refreshSession } = useAdminAuth()
   const [toasts, setToasts] = React.useState<ToastItem[]>([])
+
+  // MFA challenge state (for already-enrolled users who need AAL2 step-up)
+  const [pendingFactorId, setPendingFactorId] = React.useState<string | null>(null)
+  const [pendingChallengeId, setPendingChallengeId] = React.useState<string | null>(null)
 
   const addToast = React.useCallback(({ title, description, type = "info" }: AddToastInput) => {
     const id = Math.random().toString(36).substring(2, 9)
@@ -48,10 +58,84 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const role: AdminRole = adminRole || (process.env.NODE_ENV !== "production" ? "owner" : "owner")
   const contextValue = React.useMemo(() => ({ role, userName: user?.name || "Staff", alertCount: 3, addToast }), [role, user, addToast])
 
+  // Issue a fresh challenge for an already-enrolled factor
+  const issueFreshChallenge = React.useCallback(async () => {
+    const supabase = createClient()
+    const factors = await supabase.auth.mfa.listFactors()
+    const totp = factors.data?.totp?.[0]
+    if (!totp) throw new Error("No TOTP factor found")
+    const challenge = await supabase.auth.mfa.challenge({ factorId: totp.id })
+    if (challenge.error) throw new Error(challenge.error.message)
+    setPendingFactorId(totp.id)
+    setPendingChallengeId(challenge.data.id)
+    return { factorId: totp.id, challengeId: challenge.data.id }
+  }, [])
+
+  // For already-enrolled users showing the challenge view, prime the challenge on mount
+  const needsMfaStepUp =
+    MFA_REQUIRED_ROLES.includes(role) &&
+    nextLevel === "aal2" &&
+    currentLevel === "aal1"
+
+  const needsMfaEnrollment =
+    MFA_REQUIRED_ROLES.includes(role) &&
+    nextLevel === "aal1" &&
+    currentLevel === "aal1" &&
+    !!user  // user loaded — not yet enrolled
+
+  React.useEffect(() => {
+    if (needsMfaStepUp && !pendingFactorId) {
+      issueFreshChallenge().catch(console.error)
+    }
+  }, [needsMfaStepUp, pendingFactorId, issueFreshChallenge])
+
+  // ── Loading ──────────────────────────────────────────────────────────────────
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen"><p className="text-sm text-muted-foreground">Loading...</p></div>
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-sm text-muted-foreground">Loading...</p>
+      </div>
+    )
   }
 
+  // ── MFA Enrollment Gate ───────────────────────────────────────────────────────
+  // Admin/owner with no TOTP factor enrolled yet
+  if (needsMfaEnrollment) {
+    return (
+      <>
+        <TotpEnrollView onEnroll={enrollMfa} onConfirm={confirmEnrollMfa} />
+        <ToastContainer toasts={toasts} onDismiss={handleDismissToast} />
+      </>
+    )
+  }
+
+  // ── MFA Challenge Gate ────────────────────────────────────────────────────────
+  // Admin/owner enrolled but session is only AAL1 — needs step-up
+  if (needsMfaStepUp) {
+    if (!pendingFactorId || !pendingChallengeId) {
+      return (
+        <div className="flex items-center justify-center min-h-screen">
+          <p className="text-sm text-muted-foreground">Preparing two-factor challenge...</p>
+        </div>
+      )
+    }
+    return (
+      <>
+        <TotpChallengeView
+          factorId={pendingFactorId}
+          challengeId={pendingChallengeId}
+          onVerify={async (fId, cId, code) => {
+            await verifyMfa(fId, cId, code)
+            await refreshSession()
+          }}
+          onNewChallenge={issueFreshChallenge}
+        />
+        <ToastContainer toasts={toasts} onDismiss={handleDismissToast} />
+      </>
+    )
+  }
+
+  // ── Normal Dashboard ──────────────────────────────────────────────────────────
   return (
     <AdminShellContext.Provider value={contextValue}>
       <div className="flex min-h-screen bg-[var(--canvas)] text-[var(--ink-900)] font-sans antialiased">
