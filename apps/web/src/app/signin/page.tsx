@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -11,6 +11,8 @@ import { LogIn, ArrowLeft, Sparkles, ShieldCheck, Clock, UserX } from "lucide-re
 
 export default function SignInPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const returnTo = searchParams.get("returnTo")
   const { accountStatus, login, logout } = useAuth()
   const [mobileNumber, setMobileNumber] = React.useState("03001234567")
   const [password, setPassword] = React.useState("test123")
@@ -31,7 +33,7 @@ export default function SignInPage() {
     setLoading(true)
     try {
       await login(mobileNumber, password)
-      router.push("/catalogue")
+      router.push(returnTo || "/catalogue")
     } catch (err: any) {
       setError(err.message || "Invalid credentials. Please try again.")
     } finally {
@@ -118,7 +120,7 @@ export default function SignInPage() {
 
           <div className="border-t border-border pt-4 text-center text-xs text-muted-foreground space-y-1">
             <p>New wholesale shop owner?</p>
-            <Link href="/register" className="font-bold text-[var(--color-evergreen-600)] hover:underline block">
+            <Link href={returnTo ? `/register?returnTo=${encodeURIComponent(returnTo)}` : "/register"} className="font-bold text-[var(--color-evergreen-600)] hover:underline block">
               Register Wholesale Account →
             </Link>
           </div>

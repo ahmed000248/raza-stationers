@@ -1,15 +1,18 @@
 export interface APIClientOptions {
   baseUrl: string;
   authToken?: string;
+  onUnauthorized?: () => void;
 }
 
 export class RazaAPIClient {
   private baseUrl: string;
   private authToken?: string;
+  private onUnauthorized?: () => void;
 
   constructor(options: APIClientOptions) {
     this.baseUrl = options.baseUrl;
     this.authToken = options.authToken;
+    this.onUnauthorized = options.onUnauthorized;
   }
 
   public setAuthToken(token: string) {
@@ -238,6 +241,9 @@ export class RazaAPIClient {
     const res = await fetch(`${this.baseUrl}${path}`, {
       headers: this.getHeaders(),
     });
+    if (res.status === 401 && this.onUnauthorized) {
+      this.onUnauthorized();
+    }
     if (!res.ok) {
       const error = await res.text().catch(() => "Unknown error");
       throw new Error(`${res.status} ${error}`);
@@ -250,6 +256,9 @@ export class RazaAPIClient {
       method: "DELETE",
       headers: this.getHeaders(),
     });
+    if (res.status === 401 && this.onUnauthorized) {
+      this.onUnauthorized();
+    }
     if (!res.ok) {
       const error = await res.text().catch(() => "Unknown error");
       throw new Error(`${res.status} ${error}`);
@@ -263,6 +272,9 @@ export class RazaAPIClient {
       headers: this.getHeaders(),
       body: JSON.stringify(body),
     });
+    if (res.status === 401 && this.onUnauthorized) {
+      this.onUnauthorized();
+    }
     if (!res.ok) {
       const error = await res.text().catch(() => "Unknown error");
       throw new Error(`${res.status} ${error}`);
@@ -276,6 +288,9 @@ export class RazaAPIClient {
       headers: this.getHeaders(),
       body: JSON.stringify(body),
     });
+    if (res.status === 401 && this.onUnauthorized) {
+      this.onUnauthorized();
+    }
     if (!res.ok) {
       const error = await res.text().catch(() => "Unknown error");
       throw new Error(`${res.status} ${error}`);

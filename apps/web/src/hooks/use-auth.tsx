@@ -32,10 +32,10 @@ const AuthContext = React.createContext<AuthContextValue | null>(null)
 const TOKEN_KEY = "raza_stationers_jwt_v1"
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
 
-function getClient() {
+function getClient(onUnauthorized?: () => void) {
   if (typeof window === "undefined") return createAPIClient({ baseUrl: API_BASE })
   const token = localStorage.getItem(TOKEN_KEY)
-  return createAPIClient({ baseUrl: API_BASE, authToken: token || undefined })
+  return createAPIClient({ baseUrl: API_BASE, authToken: token || undefined, onUnauthorized })
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -45,7 +45,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [businessRole, setBusinessRole] = React.useState<BusinessUserRole | null>(null)
   const [isLoaded, setIsLoaded] = React.useState(false)
 
-  const api = getClient()
+  const logout = React.useCallback(() => {
+    localStorage.removeItem(TOKEN_KEY)
+    setUser(null)
+    setClientBusiness(null)
+    setBusinessRole(null)
+    setAccountStatus("guest")
+  }, [])
+
+  const onUnauthorizedRef = React.useRef<(() => void) | null>(null)
+
+  React.useEffect(() => {
+    onUnauthorizedRef.current = () => {
+      logout()
+      if (typeof window !== "undefined") {
+        window.location.href = `/signin?returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}`
+      }
+    }
+  }, [logout])
+
+  const api = React.useMemo(() => {
+    return getClient(() => {
+      if (onUnauthorizedRef.current) onUnauthorizedRef.current()
+    })
+  }, [])
 
   React.useEffect(() => {
     const token = localStorage.getItem(TOKEN_KEY)
@@ -207,13 +230,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setBusinessRole("owner")
   }, [])
 
-  const logout = React.useCallback(() => {
-    localStorage.removeItem(TOKEN_KEY)
-    setUser(null)
-    setClientBusiness(null)
-    setBusinessRole(null)
-    setAccountStatus("guest")
-  }, [])
+
 
   const pricingContext: UserPricingContext = React.useMemo(() => {
     if (accountStatus === "approved" && clientBusiness?.accountStatus === "active") {
