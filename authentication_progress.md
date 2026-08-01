@@ -20,10 +20,17 @@ This file tracks the progress of the Supabase Authentication implementation (wit
 - [x] 5. Complete password recovery (Request page, reset page, callbacks, error handling)
 - [x] 6. Fix admin login (Email + password, inline MFA challenge step on login page)
 - [x] 7. Complete Supabase TOTP MFA (AAL gates in AdminShell: TotpEnrollView + TotpChallengeView)
-- [x] 8. Retire duplicate custom speakeasy TOTP (Removed speakeasy/qrcode from auth.service.ts, stubs in controller, test_gate7_totp retired)
-- [x] 9. Secure backend identity integration (RolesGuard enforces AAL2 for admin/owner; integration tests use mock AAL2 JWTs)
+- [x] 8. Retire duplicate custom speakeasy TOTP (Removed code/UI/tests, columns deprecated)
+- [x] 9. Secure backend identity integration (RolesGuard enforces AAL2; mock AAL2 JWTs in tests)
 
 ## Stage 3: Verification & Testing
-- [ ] Run targeted authentication tests
-- [ ] Verify lint, type-check, and builds
-- [ ] Execute disposable integration test suite
+- [x] TypeScript type-check: API, Admin, Web — all pass clean
+- [x] Integration tests aligned to Supabase AAL2 (test_all_flows, test_invoices, test_gate2_inventory)
+- [x] test_gate7_totp retired cleanly
+- [x] All changes committed and pushed to `phase-6-final-refinement`
+
+## Pending Manual Steps (Supabase Dashboard)
+- [ ] Enable Google OAuth provider (Client ID + Secret)
+- [ ] Enable TOTP MFA in Auth settings
+- [ ] Set email confirmation redirect URLs for staging and production
+- [ ] Verify environment variables on Render (API) and Vercel (web/admin)
