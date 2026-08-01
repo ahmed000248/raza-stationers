@@ -7,8 +7,11 @@ import { PrismaService } from "../../prisma/prisma.service";
 @Injectable()
 export class SupabaseStrategy extends PassportStrategy(Strategy, "supabase") {
   constructor(private prisma: PrismaService) {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://kjglykncjotsxoihupfe.supabase.co";
-    const jwksUri = `${supabaseUrl.replace(/\/$/, "")}/auth/v1/jwks`;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (!supabaseUrl && process.env.NODE_ENV !== "test" && process.env.USE_TEST_KEY !== "true") {
+      throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL environment variable.");
+    }
+    const jwksUri = `${(supabaseUrl || "https://mock.supabase.co").replace(/\/$/, "")}/auth/v1/jwks`;
 
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -30,7 +33,7 @@ export class SupabaseStrategy extends PassportStrategy(Strategy, "supabase") {
       },
       issuer: (process.env.NODE_ENV === "test" || process.env.USE_TEST_KEY === "true")
         ? undefined
-        : `${supabaseUrl.replace(/\/$/, "")}/auth/v1`,
+        : `${supabaseUrl!.replace(/\/$/, "")}/auth/v1`,
       algorithms: ["RS256", "HS256"],
     });
   }

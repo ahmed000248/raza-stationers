@@ -24,13 +24,10 @@ interface AdminAuthContextValue {
 
 const AdminAuthContext = React.createContext<AdminAuthContextValue | null>(null)
 
-const TOKEN_KEY = "raza_stationers_admin_jwt_v1"
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
 
 function getClient() {
-  if (typeof window === "undefined") return createAPIClient({ baseUrl: API_BASE })
-  const token = localStorage.getItem(TOKEN_KEY)
-  return createAPIClient({ baseUrl: API_BASE, authToken: token || undefined })
+  return createAPIClient({ baseUrl: API_BASE })
 }
 
 export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
@@ -45,7 +42,6 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = React.useCallback(async () => {
     await supabase.auth.signOut()
-    localStorage.removeItem(TOKEN_KEY)
     setUser(null)
     setRole(null)
     setCurrentLevel("aal1")
@@ -81,13 +77,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   const refreshSession = React.useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession()
     if (session) {
-      localStorage.setItem(TOKEN_KEY, session.access_token)
       await fetchProfile(session.access_token)
-    } else {
-      const legacyToken = localStorage.getItem(TOKEN_KEY)
-      if (legacyToken) {
-        await fetchProfile(legacyToken)
-      }
     }
   }, [supabase, fetchProfile])
 
@@ -97,35 +87,23 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!active) return
       if (session) {
-        localStorage.setItem(TOKEN_KEY, session.access_token)
         fetchProfile(session.access_token).finally(() => {
           if (active) setLoading(false)
         })
       } else {
-        const legacyToken = localStorage.getItem(TOKEN_KEY)
-        if (legacyToken) {
-          fetchProfile(legacyToken).finally(() => {
-            if (active) setLoading(false)
-          })
-        } else {
-          setLoading(false)
-        }
+        setLoading(false)
       }
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!active) return
       if (session) {
-        localStorage.setItem(TOKEN_KEY, session.access_token)
         await fetchProfile(session.access_token)
       } else {
-        const legacyToken = localStorage.getItem(TOKEN_KEY)
-        if (!legacyToken) {
-          setUser(null)
-          setRole(null)
-          setCurrentLevel("aal1")
-          setNextLevel("aal1")
-        }
+        setUser(null)
+        setRole(null)
+        setCurrentLevel("aal1")
+        setNextLevel("aal1")
       }
     })
 
@@ -141,7 +119,6 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     if (!data.session) throw new Error("No session created")
 
     const token = data.session.access_token
-    localStorage.setItem(TOKEN_KEY, token)
     api.setAuthToken(token)
 
     // Check MFA level
@@ -177,7 +154,6 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
 
     const { data: { session } } = await supabase.auth.getSession()
     if (session) {
-      localStorage.setItem(TOKEN_KEY, session.access_token)
       await fetchProfile(session.access_token)
     }
   }, [supabase, fetchProfile])
@@ -212,7 +188,6 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     // Reload session/profile to update level
     const { data: { session } } = await supabase.auth.getSession()
     if (session) {
-      localStorage.setItem(TOKEN_KEY, session.access_token)
       await fetchProfile(session.access_token)
     }
   }, [supabase, fetchProfile])
@@ -223,7 +198,6 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
 
     const { data: { session } } = await supabase.auth.getSession()
     if (session) {
-      localStorage.setItem(TOKEN_KEY, session.access_token)
       await fetchProfile(session.access_token)
     }
   }, [supabase, fetchProfile])

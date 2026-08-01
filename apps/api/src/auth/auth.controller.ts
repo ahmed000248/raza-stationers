@@ -52,33 +52,29 @@ export class AuthController {
   @Post("totp/verify")
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: "Verify a TOTP code after pre-auth login. Returns full access token." })
-  verifyTotp(@CurrentUser("id") userId: string, @Body() body: { token: string }) {
-    return this.authService.verifyTotp(userId, body.token);
+  verifyTotp() {
+    throw new BadRequestException("Custom TOTP is retired. Please use Supabase TOTP MFA.");
   }
 
   @Post("totp/setup")
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: "Generate a TOTP secret and QR code for owner/admin. Does not enable 2FA yet." })
-  setupTotp(@CurrentUser("id") userId: string) {
-    return this.authService.setupTotp(userId);
+  setupTotp() {
+    throw new BadRequestException("Custom TOTP is retired. Please use Supabase TOTP MFA.");
   }
 
   @Post("totp/enable")
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: "Confirm TOTP setup by verifying first code. Enables 2FA on account." })
-  enableTotp(@CurrentUser("id") userId: string, @Body() body: { token: string }) {
-    return this.authService.enableTotp(userId, body.token);
+  enableTotp() {
+    throw new BadRequestException("Custom TOTP is retired. Please use Supabase TOTP MFA.");
   }
 
   @Post("totp/disable")
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: "Disable TOTP 2FA. Requires current valid TOTP code." })
-  disableTotp(@CurrentUser("id") userId: string, @Body() body: { token: string }) {
-    return this.authService.disableTotp(userId, body.token);
+  disableTotp() {
+    throw new BadRequestException("Custom TOTP is retired. Please use Supabase TOTP MFA.");
   }
 
   @Put("change-password")

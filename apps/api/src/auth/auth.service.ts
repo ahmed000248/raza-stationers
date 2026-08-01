@@ -1,8 +1,6 @@
 import { Injectable, UnauthorizedException, ConflictException, BadRequestException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcryptjs";
-import * as speakeasy from "speakeasy";
-import * as qrcode from "qrcode";
 import * as jwt from "jsonwebtoken";
 import jwksRsa from "jwks-rsa";
 import { PrismaService } from "../prisma/prisma.service";
@@ -24,7 +22,10 @@ export class AuthService {
       }
     }
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://kjglykncjotsxoihupfe.supabase.co";
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (!supabaseUrl) {
+      throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL environment variable.");
+    }
     const jwksUri = `${supabaseUrl.replace(/\/$/, "")}/auth/v1/jwks`;
 
     const client = jwksRsa({
@@ -210,101 +211,7 @@ export class AuthService {
       throw new UnauthorizedException("Invalid credentials");
     }
 
-    // If TOTP is enabled for this user, return a partial token indicating 2FA is required
-    if (user.isTotpEnabled) {
-      return {
-        requiresTotp: true,
-        // Short-lived pre-auth token carrying only the user id
-        preAuthToken: this.jwtService.sign(
-          { sub: user.id, preAuth: true },
-          { expiresIn: "5m" },
-        ),
-      };
-    }
-
     return this.generateToken(user);
-  }
-
-  async verifyTotp(userId: string, token: string) {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    if (!user || !user.isTotpEnabled || !user.totpSecret) {
-      throw new UnauthorizedException("TOTP not configured for this account");
-    }
-    const isValid = speakeasy.totp.verify({
-      secret: user.totpSecret,
-      encoding: "base32",
-      token,
-      window: 1,
-    });
-    if (!isValid) {
-      throw new UnauthorizedException("Invalid or expired TOTP code");
-    }
-    return this.generateToken(user);
-  }
-
-  async setupTotp(userId: string): Promise<{ secret: string; otpauthUrl: string; qrDataUrl: string }> {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    if (!user) throw new UnauthorizedException("User not found");
-    if (!["owner", "admin"].includes(user.role)) {
-      throw new BadRequestException("TOTP 2FA is only available for owner and admin roles");
-    }
-
-    const generated = speakeasy.generateSecret({
-      name: `Raza Stationers (${user.mobileNumber})`,
-      length: 20,
-    });
-    const otpauthUrl = generated.otpauth_url!;
-    const qrDataUrl = await qrcode.toDataURL(otpauthUrl);
-
-    // Store secret (base32) but do NOT enable yet — enabled after first successful verify
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { totpSecret: generated.base32 },
-    });
-
-    return { secret: generated.base32, otpauthUrl, qrDataUrl };
-  }
-
-  async enableTotp(userId: string, token: string) {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    if (!user || !user.totpSecret) {
-      throw new BadRequestException("Run TOTP setup first");
-    }
-    const isValid = speakeasy.totp.verify({
-      secret: user.totpSecret,
-      encoding: "base32",
-      token,
-      window: 1,
-    });
-    if (!isValid) {
-      throw new UnauthorizedException("Invalid TOTP code — setup verification failed");
-    }
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { isTotpEnabled: true },
-    });
-    return { success: true, message: "TOTP 2FA enabled" };
-  }
-
-  async disableTotp(userId: string, token: string) {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    if (!user || !user.isTotpEnabled || !user.totpSecret) {
-      throw new BadRequestException("TOTP is not enabled for this account");
-    }
-    const isValid = speakeasy.totp.verify({
-      secret: user.totpSecret,
-      encoding: "base32",
-      token,
-      window: 1,
-    });
-    if (!isValid) {
-      throw new UnauthorizedException("Invalid TOTP code");
-    }
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { isTotpEnabled: false, totpSecret: null },
-    });
-    return { success: true, message: "TOTP 2FA disabled" };
   }
 
   async changePassword(userId: string, currentPassword: string, newPassword: string) {

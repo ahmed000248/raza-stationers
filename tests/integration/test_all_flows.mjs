@@ -44,28 +44,33 @@ async function main() {
 
   const passwordHash = await bcrypt.hash("password123", 10);
   
+  const testAdminSub = `admin_sub_e2e_${randomSuffix}`;
+  const testOwnerSub = `owner_sub_e2e_${randomSuffix}`;
+
   console.log("[Setup] Setting up admin and owner users in database...");
   await prisma.user.upsert({
     where: { mobileNumber: '+920000000001' },
-    update: { isActive: true, role: 'admin', passwordHash },
+    update: { isActive: true, role: 'admin', passwordHash, supabaseAuthId: testAdminSub },
     create: {
       mobileNumber: '+920000000001',
       name: 'Test Admin',
       role: 'admin',
       isActive: true,
-      passwordHash
+      passwordHash,
+      supabaseAuthId: testAdminSub
     }
   });
 
   await prisma.user.upsert({
     where: { mobileNumber: '+920000000002' },
-    update: { isActive: true, role: 'owner', passwordHash },
+    update: { isActive: true, role: 'owner', passwordHash, supabaseAuthId: testOwnerSub },
     create: {
       mobileNumber: '+920000000002',
       name: 'Test Owner',
       role: 'owner',
       isActive: true,
-      passwordHash
+      passwordHash,
+      supabaseAuthId: testOwnerSub
     }
   });
 
@@ -78,22 +83,22 @@ async function main() {
     // === GATE 5: AUTHENTICATION AND AUTHORIZATION ===
     console.log("\n--- Testing Gate 5: Authentication & Authorization ---");
 
-    // Login as Admin
-    console.log("Logging in as Admin...");
-    const adminLoginRes = await axios.post(`${API_BASE}/auth/login`, {
-      mobileNumber: "+920000000001",
-      password: "password123"
-    });
-    const adminToken = adminLoginRes.data.accessToken;
+    // 1. Sign mock AAL2 token for Admin
+    console.log("Signing mock AAL2 token for Admin...");
+    const adminToken = jwt.sign(
+      { sub: testAdminSub, email: `admin_${randomSuffix}@example.com`, aal: 'aal2' },
+      JWT_SECRET,
+      { expiresIn: '10m' }
+    );
     console.log("[PASS] Admin login succeeded.");
 
-    // Login as Owner
-    console.log("Logging in as Owner...");
-    const ownerLoginRes = await axios.post(`${API_BASE}/auth/login`, {
-      mobileNumber: "+920000000002",
-      password: "password123"
-    });
-    const ownerToken = ownerLoginRes.data.accessToken;
+    // Sign mock AAL2 token for Owner
+    console.log("Signing mock AAL2 token for Owner...");
+    const ownerToken = jwt.sign(
+      { sub: testOwnerSub, email: `owner_${randomSuffix}@example.com`, aal: 'aal2' },
+      JWT_SECRET,
+      { expiresIn: '10m' }
+    );
     console.log("[PASS] Owner login succeeded.");
 
     // Retrieve Admin Profile
