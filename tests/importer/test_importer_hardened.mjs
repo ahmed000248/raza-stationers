@@ -14,6 +14,10 @@ const JWT_SECRET = "raza-stationers-test-secret-1234567890";
 const WORKBOOK_PATH = path.resolve('data/final/Raza-Stationers-Final-Supabase-Catalogue.xlsx');
 
 function getSslConfig() {
+  const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL;
+  if (connectionString && (connectionString.includes('127.0.0.1') || connectionString.includes('localhost'))) {
+    return false;
+  }
   const certPath = path.resolve('supabase-ca.crt');
   if (fs.existsSync(certPath)) {
     return {

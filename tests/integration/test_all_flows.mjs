@@ -14,6 +14,10 @@ const JWT_SECRET = "raza-stationers-test-secret-1234567890";
 const API_BASE = "http://localhost:4000";
 
 function getSslConfig() {
+  const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL;
+  if (connectionString && (connectionString.includes('127.0.0.1') || connectionString.includes('localhost'))) {
+    return false;
+  }
   const certPath = path.resolve('supabase-ca.crt');
   if (fs.existsSync(certPath)) {
     return {
@@ -40,13 +44,11 @@ async function main() {
 
   const passwordHash = await bcrypt.hash("password123", 10);
   
-  // 1. Setup/Ensure test users in DB
   console.log("[Setup] Setting up admin and owner users in database...");
   await prisma.user.upsert({
-    where: { id: 'user_admin123' },
+    where: { mobileNumber: '+920000000001' },
     update: { isActive: true, role: 'admin', passwordHash },
     create: {
-      id: 'user_admin123',
       mobileNumber: '+920000000001',
       name: 'Test Admin',
       role: 'admin',
@@ -56,10 +58,9 @@ async function main() {
   });
 
   await prisma.user.upsert({
-    where: { id: 'user_owner123' },
+    where: { mobileNumber: '+920000000002' },
     update: { isActive: true, role: 'owner', passwordHash },
     create: {
-      id: 'user_owner123',
       mobileNumber: '+920000000002',
       name: 'Test Owner',
       role: 'owner',

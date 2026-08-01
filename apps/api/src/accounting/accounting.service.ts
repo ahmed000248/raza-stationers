@@ -7,9 +7,9 @@ export class AccountingService {
 
   async getSummary() {
     const [totalRevenue, totalExpenses, totalOrders, pendingInvoices] = await Promise.all([
-      this.prisma.order.aggregate({ where: { status: "delivered" }, _sum: { grandTotal: true } }),
+      this.prisma.order.aggregate({ where: { status: "delivered", isDemo: false }, _sum: { grandTotal: true } }),
       this.prisma.expenseEntry.aggregate({ where: { voidedAt: null }, _sum: { amount: true } }),
-      this.prisma.order.count(),
+      this.prisma.order.count({ where: { isDemo: false } }),
       this.prisma.invoice.count({ where: { status: { in: ["issued", "partially_paid"] } } }),
     ]);
 
@@ -24,7 +24,7 @@ export class AccountingService {
 
   async getRevenue() {
     const orders = await this.prisma.order.findMany({
-      where: { status: "delivered" },
+      where: { status: "delivered", isDemo: false },
       select: { grandTotal: true, createdAt: true },
       orderBy: { createdAt: "asc" },
     });

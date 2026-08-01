@@ -642,6 +642,7 @@ model Product {
   unitConfirmationStatus ConfirmationStatus  @default(unconfirmed) @map("unit_confirmation_status")
   allowIndividualSale    Boolean             @default(false) @map("allow_individual_sale")
   lowStockThresholdBase  Decimal?            @map("low_stock_threshold_base") @db.Decimal(18, 3)
+  openingStockStatus     String              @default("NOT_COUNTED") @map("opening_stock_status")
   reviewReason           String?             @map("review_reason")
   activatedAt            DateTime?           @map("activated_at") @db.Timestamptz(3)
   activatedById          String?             @map("activated_by_id")
@@ -922,6 +923,7 @@ model Order {
   clientBusinessId       String         @map("client_business_id")
   placedByUserId         String         @map("placed_by_user_id")
   status                 OrderStatus    @default(pending_review)
+  isDemo                 Boolean        @default(false) @map("is_demo")
   currency               CurrencyCode   @default(PKR)
   requestedPaymentMethod PaymentMethod? @map("requested_payment_method")
   recipientNameSnapshot  String         @map("recipient_name_snapshot")
@@ -1580,6 +1582,7 @@ model BusinessSettings {
   requireApproval Boolean @default(true) @map("require_approval")
   stockAlert      Boolean @default(true) @map("stock_alert")
   packingView     Boolean @default(true) @map("packing_view")
+  inventoryMode   String  @default("DEMO") @map("inventory_mode")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
   @@map("business_settings")

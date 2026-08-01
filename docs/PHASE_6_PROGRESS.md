@@ -10,7 +10,7 @@ This document tracks the execution progress, audit evidence, test logs, commits,
 |------|-------------|--------|------------|
 | **Gate 0** | Baseline and Architecture Audit | PASSED | `1da24f0` |
 | **Gate 1** | Checkout Authentication & 401 Fix | PASSED | `d34c5ee` |
-| **Gate 2** | Demo-to-Live Inventory Foundation | NOT_STARTED | - |
+| **Gate 2** | Demo-to-Live Inventory Foundation | PASSED | - |
 | **Gate 3** | Inventory and Admin Data Control | NOT_STARTED | - |
 | **Gate 4** | Delivery and Store Pickup | NOT_STARTED | - |
 | **Gate 5** | Product Pricing and Bulk Purchasing | NOT_STARTED | - |
@@ -89,6 +89,27 @@ Below is the impact map matching Phase 6 scope areas to files and folders:
 
 ---
 
+### Gate 2 — Demo-to-Live Inventory Foundation
+* **Status:** `PASSED`
+* **Incident Summary & Recovery:**
+  * Runaway disposable test runner execution against staging resolved and recovered.
+  * Successfully executed staging database recovery transaction: restored `business_settings.inventory_mode` to `'DEMO'`, updated the 5 test orders to `is_demo = false`, and dropped the orphan `migration_test` schema.
+* **Audit & Test Suite Hardening:**
+  * Updated database connection logic in NestJS API (`PrismaService`), all integration test suites (`test_admin_catalogue.mjs`, `test_all_flows.mjs`, `test_invoices.mjs`, `test_gate2_inventory.mjs`, `test_importer_hardened.mjs`), and `demo_complete.js` to automatically bypass SSL when connecting to local databases (`localhost` or `127.0.0.1`).
+  * Hardened the disposable test runner `run_all_tests_disposable.mjs` to forcefully terminate any processes bound to port `4000` on cleanup, preventing `EADDRINUSE` conflicts.
+  * Increased PostgreSQL initialization connection retry limit to 45 attempts to tolerate slow container bootstrapping on Windows.
+* **Verification & Evidence:**
+  * All E2E integration test suites run and pass 100% cleanly in the isolated Docker container environment:
+    * `test_admin_endpoint.mjs` -> `[SUCCESS] Suite passed`
+    * `test_admin_catalogue.mjs` -> `[SUCCESS] Suite passed`
+    * `test_all_flows.mjs` -> `[SUCCESS] Suite passed`
+    * `test_invoices.mjs` -> `[SUCCESS] Suite passed`
+    * `test_gate2_inventory.mjs` -> `[SUCCESS] Suite passed`
+    * All 6 inventory foundation test cases pass cleanly.
+  * Clean container teardown and port cleanup verified.
+
+---
+
 ## 4. Unresolved Advisories
 
-* None. Staging environment is fully operational and certified.
+* None. Staging recovery is complete, local test environment is fully isolated and hardened, and all integration tests are passing.

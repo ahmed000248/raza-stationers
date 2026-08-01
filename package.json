@@ -20,6 +20,7 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "test": "echo \"Testing is NOT CONFIGURED for this workspace. See docs/stabilization/phase-1-reproducibility.md\"",
+    "demo:complete": "node scripts/database/demo_complete.js",
     "verify": "npm run db:validate && npm run db:generate && npm run typecheck && npm run lint && npm run build"
   },
   "engines": {
