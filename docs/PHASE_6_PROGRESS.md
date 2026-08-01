@@ -9,7 +9,7 @@ This document tracks the execution progress, audit evidence, test logs, commits,
 | Gate | Description | Status | Commit SHA |
 |------|-------------|--------|------------|
 | **Gate 0** | Baseline and Architecture Audit | PASSED | `1da24f0` |
-| **Gate 1** | Checkout Authentication & 401 Fix | NOT_STARTED | - |
+| **Gate 1** | Checkout Authentication & 401 Fix | PASSED | `d34c5ee` |
 | **Gate 2** | Demo-to-Live Inventory Foundation | NOT_STARTED | - |
 | **Gate 3** | Inventory and Admin Data Control | NOT_STARTED | - |
 | **Gate 4** | Delivery and Store Pickup | NOT_STARTED | - |
@@ -64,6 +64,31 @@ Below is the impact map matching Phase 6 scope areas to files and folders:
 
 ---
 
-## 3. Unresolved Advisories
+## 3. Gate Reports
+
+### Gate 1 — Checkout Authentication and 401 Fix
+* **Status:** `PASSED`
+* **Commit SHA:** `d34c5ee`
+* **Changes Implemented:**
+  * Enforced login check on checkout mount. Logged-out guest users are redirected to `/signin?returnTo=/checkout`.
+  * Saved and restored checkout form fields (`recipientName`, `phone`, `city`, `address`, `deliveryNotes`, `paymentMethod`) to/from `sessionStorage` during auth redirection.
+  * Added query parameter `returnTo` handling in the `signin` page and the link to `register`.
+  * Centralized expired-session 401 handling on the frontend client (`onUnauthorized` callback on `RazaAPIClient` calls `logout()` and redirects cleanly to login).
+  * Prevented duplicate clicks on order placement by using `isSubmitting` state to disable the button and show a loading spinner (already supported by UI, verified).
+* **Verification & Evidence:**
+  * Created unit test `tests/integration/test_gate1_auth.mjs`.
+  * Test execution output:
+    ```
+    === STARTING GATE 1 AUTH & 401 INTERCEPTION TESTS ===
+    [PASS] Valid token retrieves profile successfully
+    [PASS] Expired token correctly triggers 401 callback and throws
+    === ALL GATE 1 AUTH TESTS PASSED ===
+    ```
+  * Workspaces build compilation: Clean and successful.
+  * Staging regression suite: **17/17 passed**.
+
+---
+
+## 4. Unresolved Advisories
 
 * None. Staging environment is fully operational and certified.
