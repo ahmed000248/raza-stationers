@@ -744,6 +744,11 @@ export class CatalogueImporter {
           },
         });
 
+        // 12. Synchronize product SKU sequence after bulk inserts
+        await tx.$executeRawUnsafe(`
+          SELECT setval('public.product_sku_seq', COALESCE((SELECT MAX(sku_number) FROM products), 1))
+        `);
+
         return {
           batchId: importBatch.id,
           sha256: profile.fileSha256,

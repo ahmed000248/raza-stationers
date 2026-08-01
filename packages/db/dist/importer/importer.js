@@ -14,7 +14,11 @@ const parser_js_1 = require("./parser.js");
 const validator_js_1 = require("./validator.js");
 const node_fs_1 = __importDefault(require("node:fs"));
 const node_path_1 = __importDefault(require("node:path"));
-function getSslConfig() {
+function getSslConfig(connectionString) {
+    const cs = connectionString || process.env.DIRECT_URL || process.env.DATABASE_URL || "";
+    if (cs.includes("localhost") || cs.includes("127.0.0.1")) {
+        return false;
+    }
     let currentDir = process.cwd();
     for (let i = 0; i < 5; i++) {
         const certPath = node_path_1.default.join(currentDir, "supabase-ca.crt");
@@ -47,7 +51,7 @@ class CatalogueImporter {
         }
         const pool = new pg_1.default.Pool({
             connectionString,
-            ssl: getSslConfig(),
+            ssl: getSslConfig(connectionString),
             max: 10,
         });
         const adapter = new adapter_pg_1.PrismaPg(pool);
@@ -663,6 +667,10 @@ class CatalogueImporter {
                         committedAt: commitTime,
                     },
                 });
+                // 12. Synchronize product SKU sequence after bulk inserts
+                await tx.$executeRawUnsafe(`
+          SELECT setval('public.product_sku_seq', COALESCE((SELECT MAX(sku_number) FROM products), 1))
+        `);
                 return {
                     batchId: importBatch.id,
                     sha256: profile.fileSha256,

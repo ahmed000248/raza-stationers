@@ -37,8 +37,9 @@ const prisma = new PrismaClient({ adapter });
 
 // Helpers to generate tokens
 function signToken(role, userId = 'user_admin123') {
+  const aal = (role === 'admin' || role === 'owner') ? 'aal2' : 'aal1';
   return jwt.sign(
-    { sub: userId, email: 'admin@razastationers.com', role: role },
+    { sub: userId, email: 'admin@razastationers.com', role: role, aal },
     JWT_SECRET,
     { expiresIn: '10m' }
   );
@@ -69,7 +70,7 @@ async function runTests() {
     update: { isActive: true },
     create: {
       id: 'user_admin123',
-      mobileNumber: '+920000000001',
+      mobileNumber: '+920000000091',
       name: 'Test Admin',
       role: 'admin',
       isActive: true,
@@ -83,7 +84,7 @@ async function runTests() {
     update: { isActive: true },
     create: {
       id: 'user_owner123',
-      mobileNumber: '+920000000002',
+      mobileNumber: '+920000000092',
       name: 'Test Owner',
       role: 'owner',
       isActive: true,
@@ -97,7 +98,7 @@ async function runTests() {
     update: { isActive: true },
     create: {
       id: 'user_regular123',
-      mobileNumber: '+920000000003',
+      mobileNumber: '+920000000093',
       name: 'Test Regular User',
       role: 'business_user',
       isActive: true,

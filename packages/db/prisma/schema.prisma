@@ -419,7 +419,7 @@ model User {
   id              String    @id @default(cuid())
   mobileNumber    String    @unique @map("mobile_number")
   email           String?   @unique
-  passwordHash    String    @map("password_hash")
+  passwordHash    String?   @map("password_hash")
   name            String
   role            UserRole
   isActive        Boolean   @default(true) @map("is_active")
@@ -427,6 +427,7 @@ model User {
   deactivatedById String?   @map("deactivated_by_id")
   totpSecret      String?   @map("totp_secret")
   isTotpEnabled   Boolean   @default(false) @map("is_totp_enabled")
+  supabaseAuthId  String?   @unique @map("supabase_auth_id")
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
 

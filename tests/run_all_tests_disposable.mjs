@@ -146,7 +146,9 @@ async function main() {
         DATABASE_URL: testDatabaseUrl,
         DIRECT_URL: testDirectUrl,
         PORT: '4000',
-        PGOPTIONS: `-c search_path=${schemaName}`
+        PGOPTIONS: `-c search_path=${schemaName}`,
+        NODE_ENV: 'test',
+        USE_TEST_KEY: 'true',
       },
       shell: true,
       stdio: 'pipe'
@@ -169,7 +171,7 @@ async function main() {
     // Sign an admin JWT directly (test secret)
     const jwt = await import('jsonwebtoken');
     const adminToken = jwt.default.sign(
-      { sub: 'seed_admin', role: 'admin', mobileNumber: '+920000000001' },
+      { sub: 'user_admin123', role: 'admin', mobileNumber: '+920000000000', aal: 'aal2' },
       TEST_JWT_SECRET,
       { expiresIn: '10m' }
     );
@@ -179,23 +181,22 @@ async function main() {
     const bcrypt = await import('bcryptjs');
     const seedHash = await bcrypt.default.hash('SeedAdmin@2024', 10);
     await localSeedPool.query(`
-      INSERT INTO public.users (id, mobile_number, name, role, is_active, password_hash, created_at, updated_at)
-      VALUES ('seed_admin', '+920000000001', 'Seed Admin', 'admin', true, $1, NOW(), NOW())
-      ON CONFLICT (id) DO UPDATE SET is_active = true, role = 'admin'
+      INSERT INTO public.users (id, mobile_number, name, role, is_active, password_hash, supabase_auth_id, created_at, updated_at)
+      VALUES ('user_admin123', '+920000000000', 'Seed Admin', 'admin', true, $1, 'user_admin123', NOW(), NOW())
+      ON CONFLICT (id) DO UPDATE SET is_active = true, role = 'admin', supabase_auth_id = 'user_admin123'
     `, [seedHash]);
     await localSeedPool.end();
 
     // Step 1: Generate plan to get planChecksum
-    const planForm1 = new FormData();
-    planForm1.append('file', fs.createReadStream(WORKBOOK_PATH), {
-      filename: 'Raza-Stationers-Final-Supabase-Catalogue.xlsx',
-      contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    });
+    const planForm1 = new globalThis.FormData();
+    const fileBuffer = fs.readFileSync(WORKBOOK_PATH);
+    const fileBlob = new Blob([fileBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    planForm1.append('file', fileBlob, 'Raza-Stationers-Final-Supabase-Catalogue.xlsx');
+
     const planRes = await fetch('http://localhost:4000/admin/imports/catalogue/plan', {
       method: 'POST',
-      headers: { ...planForm1.getHeaders(), Authorization: `Bearer ${adminToken}` },
+      headers: { Authorization: `Bearer ${adminToken}` },
       body: planForm1,
-      duplex: 'half'
     });
     if (!planRes.ok) {
       const body = await planRes.text();
@@ -209,18 +210,14 @@ async function main() {
     console.log(`[INFO] Plan checksum: ${planChecksum}`);
 
     // Step 2: Commit with planChecksum
-    const commitForm = new FormData();
-    commitForm.append('file', fs.createReadStream(WORKBOOK_PATH), {
-      filename: 'Raza-Stationers-Final-Supabase-Catalogue.xlsx',
-      contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    });
+    const commitForm = new globalThis.FormData();
+    commitForm.append('file', fileBlob, 'Raza-Stationers-Final-Supabase-Catalogue.xlsx');
     const importRes = await fetch(
       `http://localhost:4000/admin/imports/catalogue/commit?planChecksum=${encodeURIComponent(planChecksum)}`,
       {
         method: 'POST',
-        headers: { ...commitForm.getHeaders(), Authorization: `Bearer ${adminToken}` },
+        headers: { Authorization: `Bearer ${adminToken}` },
         body: commitForm,
-        duplex: 'half'
       }
     );
     if (!importRes.ok) {
@@ -239,6 +236,7 @@ async function main() {
       'tests/integration/test_invoices.mjs',
       'tests/integration/test_gate2_inventory.mjs',
       'tests/integration/test_gate7_totp.mjs',
+      'tests/integration/test_supabase_auth.mjs',
       'tests/importer/test_importer_hardened.mjs',
     ];
 
@@ -305,6 +303,7 @@ async function main() {
       }
     }
     console.log("=== TEST SUITE LIFECYCLE CONCLUDED ===");
+    process.exit(process.exitCode || 0);
   }
 }
 

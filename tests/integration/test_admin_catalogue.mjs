@@ -2,6 +2,7 @@ import axios from 'axios';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
+import bcrypt from 'bcryptjs';
 import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
@@ -34,6 +35,21 @@ const prisma = new PrismaClient({ adapter });
 
 async function main() {
   console.log("=== STARTING ADMIN CATALOGUE FLOW TESTS ===");
+
+  // Ensure Admin user exists in DB
+  const passwordHash = await bcrypt.hash("password123", 10);
+  await prisma.user.upsert({
+    where: { id: 'admin_test_user' },
+    update: { isActive: true },
+    create: {
+      id: 'admin_test_user',
+      mobileNumber: '+920000000001',
+      name: 'Admin User',
+      role: 'admin',
+      isActive: true,
+      passwordHash,
+    }
+  });
 
   let testProductId = null;
 
