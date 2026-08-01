@@ -104,14 +104,26 @@ async function main() {
     // --- 4. Create standard Supabase roles expected by migrations ---
     console.log("[3] Creating Supabase standard roles...");
     await testPool.query(`
-      CREATE ROLE IF NOT EXISTS anon NOLOGIN;
-      CREATE ROLE IF NOT EXISTS authenticated NOLOGIN;
-      CREATE ROLE IF NOT EXISTS service_role NOLOGIN;
-      CREATE ROLE IF NOT EXISTS authenticator NOLOGIN;
-      CREATE ROLE IF NOT EXISTS supabase_admin NOLOGIN;
-    `).catch(() => {
-      // Postgres <15 doesn't have IF NOT EXISTS for roles; run individually ignoring errors
-    });
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'anon') THEN
+          CREATE ROLE anon NOLOGIN;
+        END IF;
+        IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'authenticated') THEN
+          CREATE ROLE authenticated NOLOGIN;
+        END IF;
+        IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'service_role') THEN
+          CREATE ROLE service_role NOLOGIN;
+        END IF;
+        IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'authenticator') THEN
+          CREATE ROLE authenticator NOLOGIN;
+        END IF;
+        IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'supabase_admin') THEN
+          CREATE ROLE supabase_admin NOLOGIN;
+        END IF;
+      END
+      $$;
+    `);
 
     // --- 5. Deploy schema via prisma migrate deploy ---
     console.log("[4] Running prisma migrate deploy...");
