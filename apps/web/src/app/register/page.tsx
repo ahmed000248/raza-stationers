@@ -2,30 +2,26 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Bilingual } from "@/components/ui/bilingual"
 import { PendingVerificationNotice } from "@/components/auth/PendingVerificationNotice"
-import { isCityInDeliveryZone, SUPPORTED_DELIVERY_CITIES } from "@raza-stationers/validation"
-import { Building2, ArrowLeft, Check, ArrowRight, FileText, Loader2 } from "lucide-react"
+import { isCityInDeliveryZone, normalizePakistaniMobile, SUPPORTED_DELIVERY_CITIES } from "@raza-stationers/validation"
+import { Building2, ArrowLeft, ArrowRight, FileText, Loader2 } from "lucide-react"
 
 export default function WholesaleRegistrationPage() {
-  const router = useRouter()
-  const { accountStatus, register, clientBusiness } = useAuth()
+  const { accountStatus, register } = useAuth()
 
-  const [name, setName] = React.useState("Karamat Ali")
-  const [mobileNumber, setMobileNumber] = React.useState("03009876543")
-  const [password, setPassword] = React.useState("test123")
-  const [businessName, setBusinessName] = React.useState("Al-Karam Paper Mart")
-  const [ownerName, setOwnerName] = React.useState("Karamat Ali")
-  const [email, setEmail] = React.useState("contact@alkarampaper.com")
-  const [city, setCity] = React.useState("Karachi")
-  const [address, setAddress] = React.useState("Shop #14, Paper Market, Light House, Karachi")
+  const [name, setName] = React.useState("")
+  const [mobileNumber, setMobileNumber] = React.useState("")
+  const [password, setPassword] = React.useState("")
+  const [businessName, setBusinessName] = React.useState("")
+  const [ownerName, setOwnerName] = React.useState("")
+  const [email, setEmail] = React.useState("")
+  const [city, setCity] = React.useState("")
+  const [address, setAddress] = React.useState("")
   const [businessType, setBusinessType] = React.useState("stationery_shop")
-  const [ntnCnic, setNtnCnic] = React.useState("42201-1234567-1")
-  const [documentAttached, setDocumentAttached] = React.useState(false)
 
   const [errors, setErrors] = React.useState<Record<string, string>>({})
   const [submitted, setSubmitted] = React.useState(false)
@@ -38,8 +34,8 @@ export default function WholesaleRegistrationPage() {
   const validate = () => {
     const newErrors: Record<string, string> = {}
     if (!name || name.trim().length < 2) newErrors.name = "Your name is required"
-    if (!mobileNumber || mobileNumber.trim().length < 10) newErrors.mobileNumber = "Valid mobile number required"
-    if (!password || password.length < 4) newErrors.password = "Password must be at least 4 characters"
+    if (!normalizePakistaniMobile(mobileNumber)) newErrors.mobileNumber = "Use Pakistani mobile format 03XXXXXXXXX"
+    if (!password || password.length < 6) newErrors.password = "Password must be at least 6 characters"
     if (!email || !email.includes("@")) newErrors.email = "Valid email address required"
     if (!businessName || businessName.trim().length < 3) newErrors.businessName = "Business name must be at least 3 characters"
     if (!ownerName || ownerName.trim().length < 2) newErrors.ownerName = "Owner name is required"
@@ -58,7 +54,7 @@ export default function WholesaleRegistrationPage() {
     try {
       await register({
         name,
-        mobileNumber,
+        mobileNumber: normalizePakistaniMobile(mobileNumber)!,
         password,
         email,
         businessName,
@@ -92,13 +88,13 @@ export default function WholesaleRegistrationPage() {
 
         <div className="space-y-2 border-b border-border pb-6">
           <span className="text-xs font-semibold uppercase tracking-wider text-[var(--color-evergreen-600)]">
-            FR-AUTH-01 / FR-AUTH-02 Wholesale Business Portal
+            Business account registration
           </span>
           <h1 className="font-heading text-3xl sm:text-4xl font-bold tracking-tight text-[var(--color-ink-900)]">
             Wholesale Account Registration
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground">
-            Register your stationery shop or book depot to unlock wholesale discount pricing and 30-day business credit terms.
+            Submit your business details for owner review. Approved accounts can use their eligible catalogue pricing.
           </p>
         </div>
 
@@ -133,7 +129,7 @@ export default function WholesaleRegistrationPage() {
             <div className="flex justify-center pt-2">
               <Link href="/catalogue">
                 <Button size="lg" className="rounded-full gap-2 font-semibold">
-                  <span>Browse Catalogue with Retail Pricing</span>
+                  <span>Browse Catalogue</span>
                   <ArrowRight className="size-4" />
                 </Button>
               </Link>
@@ -149,24 +145,24 @@ export default function WholesaleRegistrationPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-foreground">Your Name *</label>
-                  <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Karamat Ali" className={errors.name ? "border-destructive" : ""} />
+                  <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your full name" autoComplete="name" className={errors.name ? "border-destructive" : ""} />
                   {errors.name && <span className="text-[11px] text-destructive font-medium">{errors.name}</span>}
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-foreground">Mobile Number *</label>
-                  <Input value={mobileNumber} onChange={(e) => setMobileNumber(e.target.value)} placeholder="03009876543" className={errors.mobileNumber ? "border-destructive" : ""} />
+                  <Input value={mobileNumber} onChange={(e) => setMobileNumber(e.target.value)} inputMode="tel" autoComplete="tel-national" maxLength={11} placeholder="03XXXXXXXXX" className={errors.mobileNumber ? "border-destructive" : ""} />
                   {errors.mobileNumber && <span className="text-[11px] text-destructive font-medium">{errors.mobileNumber}</span>}
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-foreground">Password *</label>
-                  <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 4 characters" className={errors.password ? "border-destructive" : ""} />
+                  <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" autoComplete="new-password" className={errors.password ? "border-destructive" : ""} />
                   {errors.password && <span className="text-[11px] text-destructive font-medium">{errors.password}</span>}
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-foreground">Email Address *</label>
-                  <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="contact@alkarampaper.com" className={errors.email ? "border-destructive" : ""} />
+                  <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@business.com" autoComplete="email" className={errors.email ? "border-destructive" : ""} />
                   {errors.email && <span className="text-[11px] text-destructive font-medium">{errors.email}</span>}
                 </div>
               </div>
@@ -180,12 +176,12 @@ export default function WholesaleRegistrationPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-foreground">Shop / Business Name *</label>
-                  <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="Al-Karam Paper Mart" className={errors.businessName ? "border-destructive" : ""} />
+                  <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="Your business name" autoComplete="organization" className={errors.businessName ? "border-destructive" : ""} />
                   {errors.businessName && <span className="text-[11px] text-destructive font-medium">{errors.businessName}</span>}
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-foreground">Owner / Contact Name *</label>
-                  <Input value={ownerName} onChange={(e) => setOwnerName(e.target.value)} placeholder="Karamat Ali" className={errors.ownerName ? "border-destructive" : ""} />
+                  <Input value={ownerName} onChange={(e) => setOwnerName(e.target.value)} placeholder="Owner or contact name" className={errors.ownerName ? "border-destructive" : ""} />
                   {errors.ownerName && <span className="text-[11px] text-destructive font-medium">{errors.ownerName}</span>}
                 </div>
               </div>
@@ -201,6 +197,7 @@ export default function WholesaleRegistrationPage() {
                   <label className="text-xs font-semibold text-foreground">City *</label>
                   <select value={city} onChange={(e) => setCity(e.target.value)}
                     className={`w-full h-10 px-3 rounded-xl border bg-background text-sm outline-none focus:ring-2 focus:ring-ring ${errors.city ? "border-destructive" : "border-border"}`}>
+                    <option value="">Select city</option>
                     {SUPPORTED_DELIVERY_CITIES.map((c) => (<option key={c} value={c}>{c}</option>))}
                     <option value="Other">Other City</option>
                   </select>

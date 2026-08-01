@@ -36,6 +36,7 @@ async function main() {
   console.log('=== INTEGRATION: SUPABASE AUTHENTICATION TESTS ===');
 
   const suffix = Date.now();
+  const mobileSuffix = String(suffix).slice(-8);
   const testSub1 = `supabase_sub_1_${suffix}`;
   const testSub2 = `supabase_sub_2_${suffix}`;
   const testSubAdmin = `supabase_sub_admin_${suffix}`;
@@ -51,7 +52,7 @@ async function main() {
   try {
     const res = await axios.post(
       `${API_BASE}/auth/register-supabase`,
-      { name: 'Supabase User 1', mobileNumber: `+92300${suffix}` },
+      { name: 'Supabase User 1', mobileNumber: `030${mobileSuffix}` },
       {
         headers: { Authorization: `Bearer ${regToken}` },
         validateStatus: () => true,
@@ -70,7 +71,7 @@ async function main() {
   try {
     const res = await axios.post(
       `${API_BASE}/auth/register-supabase`,
-      { name: 'Supabase User 1 Clone', mobileNumber: `+92301${suffix}` },
+      { name: 'Supabase User 1 Clone', mobileNumber: `031${mobileSuffix}` },
       {
         headers: { Authorization: `Bearer ${regToken}` },
         validateStatus: () => true,
@@ -94,7 +95,7 @@ async function main() {
     );
     const res = await axios.post(
       `${API_BASE}/auth/register-supabase`,
-      { name: 'Supabase User 2', mobileNumber: `+92302${suffix}` },
+      { name: 'Supabase User 2', mobileNumber: `032${mobileSuffix}` },
       {
         headers: { Authorization: `Bearer ${badToken}` },
         validateStatus: () => true,
@@ -114,7 +115,7 @@ async function main() {
   const legacyUser = await prisma.user.create({
     data: {
       name: 'Legacy User',
-      mobileNumber: `+92350${suffix}`,
+      mobileNumber: `033${mobileSuffix}`,
       passwordHash: legacyPassHash,
       role: 'business_user',
     },
@@ -175,7 +176,7 @@ async function main() {
   const adminUser = await prisma.user.create({
     data: {
       name: 'Supabase Admin',
-      mobileNumber: `+92380${suffix}`,
+      mobileNumber: `034${mobileSuffix}`,
       role: 'owner',
       supabaseAuthId: testSubAdmin,
       passwordHash: '',
@@ -231,21 +232,7 @@ async function main() {
     fail('Admin AAL2 check', e);
   }
 
-  // Clean up
-  try {
-    await prisma.user.deleteMany({
-      where: {
-        id: { in: [legacyUser.id, adminUser.id] }
-      }
-    });
-    // Find registered user 1
-    const registeredUser = await prisma.user.findFirst({
-      where: { supabaseAuthId: testSub1 }
-    });
-    if (registeredUser) {
-      await prisma.user.delete({ where: { id: registeredUser.id } });
-    }
-  } catch (_) {}
+  // Audited identities are intentionally retained until the disposable database is destroyed.
 
   await prisma.$disconnect();
   await pool.end();

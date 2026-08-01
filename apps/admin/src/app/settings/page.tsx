@@ -7,18 +7,15 @@ import { useAdminShell } from "@/components/shell/AdminShell"
 import { isOwner } from "@/lib/role"
 import { BusinessProfileCard } from "@/components/settings/BusinessProfileCard"
 import { OrderPreferencesCard } from "@/components/settings/OrderPreferencesCard"
-import { createAPIClient } from "@raza-stationers/api"
 import { Loader2 } from "lucide-react"
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
+import { useAdminAuth } from "@/hooks/use-admin-auth"
 
 export default function SettingsPage() {
   const { role } = useAdminShell()
+  const { api } = useAdminAuth()
   const ownerRole = isOwner(role)
   const [settings, setSettings] = React.useState<any>(null)
   const [loading, setLoading] = React.useState(true)
-
-  const api = createAPIClient({ baseUrl: API_BASE })
 
   React.useEffect(() => {
     if (!ownerRole) return
@@ -51,6 +48,15 @@ export default function SettingsPage() {
     <div className="space-y-6">
       <h1 className="font-heading text-2xl font-bold">Settings</h1>
       <BusinessProfileCard name={settings?.businessName || ""} phone={settings?.contactPhone || ""} onNameChange={(v) => handleSave({ businessName: v })} onPhoneChange={(v) => handleSave({ contactPhone: v })} />
+      <section className="rounded-2xl border border-[var(--border-subtle)] bg-white p-6 shadow-xs">
+        <h2 className="text-sm font-semibold text-[var(--ink-900)]">Store pickup configuration</h2>
+        <p className="mt-1 text-xs text-[var(--text-muted)]">Pickup remains unavailable at checkout until both real owner-supplied values are saved.</p>
+        <div className="mt-4 grid gap-4">
+          <label className="space-y-1 text-xs font-medium text-[var(--text-muted)]">Pickup location<input value={settings?.pickupLocation || ""} onChange={(event) => setSettings((current: any) => ({ ...current, pickupLocation: event.target.value }))} placeholder="Owner-supplied pickup address" className="block h-11 w-full rounded-xl border border-gray-200 px-3 text-sm text-[var(--ink-900)]" /></label>
+          <label className="space-y-1 text-xs font-medium text-[var(--text-muted)]">Pickup instructions<textarea value={settings?.pickupInstructions || ""} onChange={(event) => setSettings((current: any) => ({ ...current, pickupInstructions: event.target.value }))} placeholder="Owner-supplied hours and collection instructions" rows={3} className="block w-full rounded-xl border border-gray-200 p-3 text-sm text-[var(--ink-900)]" /></label>
+          <Button type="button" onClick={() => handleSave({ pickupLocation: settings?.pickupLocation?.trim() || null, pickupInstructions: settings?.pickupInstructions?.trim() || null })} className="w-fit">Save pickup configuration</Button>
+        </div>
+      </section>
       <OrderPreferencesCard requireApproval={settings?.requireApproval ?? true} stockAlert={settings?.stockAlert ?? true} packingView={settings?.packingView ?? true} onToggleApproval={() => handleToggle("requireApproval", !settings?.requireApproval)} onToggleStockAlert={() => handleToggle("stockAlert", !settings?.stockAlert)} onTogglePackingView={() => handleToggle("packingView", !settings?.packingView)} />
     </div>
   )

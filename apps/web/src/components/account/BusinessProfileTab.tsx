@@ -12,7 +12,7 @@ export function BusinessProfileTab() {
 
   const [shopName, setShopName] = React.useState(clientBusiness?.businessName || "Al-Raza Book Depot & Stationers")
   const [ownerName, setOwnerName] = React.useState(user?.name || "Ahmed Raza")
-  const [phone, setPhone] = React.useState(user?.mobileNumber || "03001234567")
+  const [phone, setPhone] = React.useState(user?.mobileNumber || "")
   const [email, setEmail] = React.useState(clientBusiness?.email || "ahmed@alrazabookdepot.com")
   const [city, setCity] = React.useState(clientBusiness?.city || "Karachi")
   const [address, setAddress] = React.useState(clientBusiness?.address || "Shop #42, Main Stationery Market, Urdu Bazar")
@@ -58,7 +58,7 @@ export function BusinessProfileTab() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <label className="text-xs font-semibold text-foreground">Mobile Phone Number</label>
-          <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <Input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" autoComplete="tel-national" maxLength={11} placeholder="03XXXXXXXXX" />
         </div>
 
         <div className="space-y-1.5">

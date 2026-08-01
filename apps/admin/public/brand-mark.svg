@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">Raza Stationers</title>
+  <desc id="desc">An RS monogram formed by an open book and pencil.</desc>
+  <rect width="64" height="64" rx="16" fill="#051F20"/>
+  <path d="M13 18.5c7.2-2.2 13.1-.8 19 4.1v27.1c-5.9-4.2-11.8-5.4-19-3.2v-28Z" fill="#DAF1DE"/>
+  <path d="M51 18.5c-7.2-2.2-13.1-.8-19 4.1v27.1c5.9-4.2 11.8-5.4 19-3.2v-28Z" fill="#8EB69B"/>
+  <path d="M32 22.6v27.1" stroke="#235347" stroke-width="2"/>
+  <path d="m43.8 12.8 7.4 7.4-16.8 16.8-8.7 1.3 1.3-8.7 16.8-16.8Z" fill="#D9A441" stroke="#051F20" stroke-width="2" stroke-linejoin="round"/>
+  <path d="m43.8 12.8 7.4 7.4 2.2-2.2a2.6 2.6 0 0 0 0-3.7l-3.7-3.7a2.6 2.6 0 0 0-3.7 0l-2.2 2.2Z" fill="#F8F9F6" stroke="#051F20" stroke-width="2"/>
+</svg>

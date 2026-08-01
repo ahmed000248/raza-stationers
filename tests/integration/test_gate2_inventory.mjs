@@ -82,12 +82,12 @@ async function main() {
     const testOwnerSub = `owner_sub_${suffix}`;
     
     // Ensure Admin user exists with supabaseAuthId
-    await prisma.user.upsert({
+    const testAdminUser = await prisma.user.upsert({
       where: { id: 'admin_test_user' },
       update: { isActive: true, supabaseAuthId: testAdminSub },
       create: {
         id: 'admin_test_user',
-        mobileNumber: `+92399${suffix}`,
+        mobileNumber: `031${String(suffix).slice(-8)}`,
         name: 'Admin User',
         role: 'admin',
         isActive: true,
@@ -102,7 +102,7 @@ async function main() {
       update: { isActive: true, supabaseAuthId: testOwnerSub },
       create: {
         id: 'owner_test_user',
-        mobileNumber: `+92398${suffix}`,
+        mobileNumber: `032${String(suffix).slice(-8)}`,
         name: 'Owner User',
         role: 'owner',
         isActive: true,
@@ -128,8 +128,8 @@ async function main() {
       { expiresIn: '10m' }
     );
 
-    const randomSuffix = Math.floor(1000000 + Math.random() * 9000000).toString();
-    const testMobile = `+929${randomSuffix}`;
+    const randomSuffix = Math.floor(10000000 + Math.random() * 90000000).toString();
+    const testMobile = `033${randomSuffix}`;
     const testBusinessName = `Gate 2 Test Shop ${randomSuffix}`;
 
     console.log(`Registering test business user: ${testMobile}...`);
@@ -139,6 +139,13 @@ async function main() {
       password: "password123"
     });
     const userToken = regRes.data.accessToken;
+    try {
+      await axios.post(`${API_BASE}/auth/register`, { name: "Duplicate Legacy Format", mobileNumber: `+92${testMobile.slice(1)}`, password: "password123" });
+      assert.fail('Equivalent +92 and 03 mobile identities must not create duplicate users');
+    } catch (err) {
+      assert.strictEqual(err.response.status, 409);
+      console.log('[PASS] Local and legacy +92 mobile formats resolve to one account identity.');
+    }
 
     console.log("Registering client business...");
     const clientRes = await axios.post(`${API_BASE}/clients`, {
@@ -158,21 +165,89 @@ async function main() {
       headers: { Authorization: `Bearer ${ownerToken}` }
     });
 
-    // Get a product packaging ID
-    const packaging = await prisma.productPackaging.findFirst({
-      where: { isActive: true },
+    // Create isolated synthetic saleable fixtures. Certified catalogue rows remain untouched.
+    const fixtureNumber = 680000 + Number(String(suffix).slice(-5));
+    const fixtureCategory = await prisma.category.upsert({
+      where: { slug: 'synthetic-gate2' },
+      update: { isActive: true },
+      create: { name: 'Synthetic Gate 2', slug: 'synthetic-gate2', isActive: true }
+    });
+    const fixtureUnit = await prisma.unitOfMeasure.upsert({
+      where: { code: 'SYN-G2-EACH' },
+      update: { isActive: true },
+      create: { code: 'SYN-G2-EACH', name: 'Synthetic Gate 2 each', symbol: 'ea', isActive: true }
+    });
+    const fixtureProduct = await prisma.product.create({
+      data: {
+        skuNumber: BigInt(fixtureNumber),
+        sku: `RS-${fixtureNumber}`,
+        name: `Synthetic Gate 2 product ${suffix}`,
+        categoryId: fixtureCategory.id,
+        purchaseType: 'both',
+        status: 'active',
+        unitConfirmationStatus: 'confirmed',
+        allowIndividualSale: true,
+        openingStockStatus: 'COUNTED',
+        activatedAt: new Date(),
+        activatedById: testAdminUser.id
+      }
+    });
+    const packaging = await prisma.productPackaging.create({
+      data: {
+        productId: fixtureProduct.id,
+        unitOfMeasureId: fixtureUnit.id,
+        code: 'UNIT',
+        label: 'Synthetic unit',
+        conversionToBase: 1,
+        isBase: true,
+        confirmationStatus: 'confirmed',
+        isActive: true,
+        prices: {
+          create: { priceType: 'wholesale', amount: 100, effectiveFrom: new Date(), createdById: testAdminUser.id }
+        }
+      },
       include: { product: true }
     });
-    if (!packaging) throw new Error("No active product packaging found for order testing");
+    const openingFixtureNumber = fixtureNumber + 100000;
+    const openingProduct = await prisma.product.create({
+      data: {
+        skuNumber: BigInt(openingFixtureNumber),
+        sku: `RS-${openingFixtureNumber}`,
+        name: `Synthetic opening-stock product ${suffix}`,
+        categoryId: fixtureCategory.id,
+        purchaseType: 'individual',
+        status: 'active',
+        unitConfirmationStatus: 'confirmed',
+        allowIndividualSale: true,
+        openingStockStatus: 'NOT_COUNTED',
+        activatedAt: new Date(),
+        activatedById: testAdminUser.id,
+        packaging: {
+          create: {
+            unitOfMeasureId: fixtureUnit.id,
+            code: 'UNIT',
+            label: 'Synthetic unit',
+            conversionToBase: 1,
+            isBase: true,
+            confirmationStatus: 'confirmed',
+            isActive: true
+          }
+        }
+      }
+    });
 
     // --- TEST CASE 1: DEMO MODE ORDER PLACEMENT ---
     console.log("TEST CASE 1: Placing order in DEMO mode...");
     // Force settings to DEMO first
-    await prisma.businessSettings.upsert({
-      where: { id: 'test_settings' },
-      create: { id: 'test_settings', inventoryMode: 'DEMO' },
-      update: { inventoryMode: 'DEMO' }
+    const currentSettings = await prisma.businessSettings.findFirst();
+    if (currentSettings) await prisma.businessSettings.update({ where: { id: currentSettings.id }, data: { inventoryMode: 'DEMO', pickupLocation: 'Synthetic test pickup counter', pickupInstructions: 'Bring the order number during disposable testing.' } });
+    else await prisma.businessSettings.create({ data: { id: 'test_settings', inventoryMode: 'DEMO', pickupLocation: 'Synthetic test pickup counter', pickupInstructions: 'Bring the order number during disposable testing.' } });
+    await prisma.deliveryZone.upsert({
+      where: { name: 'Gate 2 Karachi' },
+      create: { name: 'Gate 2 Karachi', city: 'Karachi', isFree: true, isActive: true },
+      update: { city: 'Karachi', isFree: true, isActive: true }
     });
+    await prisma.product.update({ where: { id: packaging.productId }, data: { openingStockStatus: 'COUNTED' } });
 
     const orderRes1 = await axios.post(`${API_BASE}/orders`, {
       clientBusinessId,
@@ -180,14 +255,53 @@ async function main() {
       recipientName: "Test Recipient",
       mobile: "03001234567",
       address: "Test Address, Karachi",
-      city: "Karachi"
+      city: "Karachi",
+      fulfilmentMethod: "delivery",
+      idempotencyKey: `gate2-demo-${suffix}`
     }, {
       headers: { Authorization: `Bearer ${userToken}` }
     });
 
     assert.strictEqual(orderRes1.status, 201);
     assert.strictEqual(orderRes1.data.isDemo, true, "Order placed in DEMO mode must be tagged with isDemo: true");
+    assert.strictEqual(orderRes1.data.clientBusinessId, clientBusinessId);
+    assert.ok(orderRes1.data.placedByUserId, 'Order must retain the authenticated application-user identity');
     console.log("[PASS] DEMO mode order placed and tagged isDemo: true successfully.");
+
+    const duplicateRes = await axios.post(`${API_BASE}/orders`, {
+      clientBusinessId,
+      items: [{ productPackagingId: packaging.id, quantity: 2 }],
+      recipientName: "Test Recipient",
+      mobile: "03001234567",
+      address: "Test Address, Karachi",
+      city: "Karachi",
+      fulfilmentMethod: "delivery",
+      idempotencyKey: `gate2-demo-${suffix}`
+    }, { headers: { Authorization: `Bearer ${userToken}` } });
+    assert.strictEqual(duplicateRes.data.id, orderRes1.data.id, "A repeated checkout key must return the original order");
+    assert.strictEqual(await prisma.order.count({ where: { checkoutIdempotencyKey: `gate2-demo-${suffix}` } }), 1);
+    console.log("[PASS] Checkout idempotency prevents duplicate orders.");
+
+    const pickupRes = await axios.post(`${API_BASE}/orders`, {
+      clientBusinessId,
+      items: [{ productPackagingId: packaging.id, quantity: 1 }],
+      recipientName: "Pickup Recipient",
+      mobile: "03001234567",
+      fulfilmentMethod: "pickup",
+      idempotencyKey: `gate2-pickup-${suffix}`
+    }, { headers: { Authorization: `Bearer ${userToken}` } });
+    assert.strictEqual(pickupRes.data.fulfilmentMethod, 'pickup');
+    assert.strictEqual(Number(pickupRes.data.deliveryCharge), 0);
+    assert.strictEqual(await prisma.delivery.count({ where: { orderId: pickupRes.data.id } }), 0);
+    console.log("[PASS] Pickup snapshots configured instructions and never creates a delivery charge/record.");
+
+    try {
+      await axios.post(`${API_BASE}/orders`, {}, { headers: { Authorization: 'Bearer invalid-expired-token' } });
+      assert.fail('Invalid access token should be rejected');
+    } catch (err) {
+      assert.strictEqual(err.response.status, 401);
+      console.log("[PASS] Invalid/expired checkout session remains protected with HTTP 401.");
+    }
 
     // --- TEST CASE 2: DEMO COMPLETE CLI DRY-RUN ---
     console.log("TEST CASE 2: Running demo:complete in dry-run mode...");
@@ -239,14 +353,16 @@ async function main() {
         recipientName: "Test Recipient",
         mobile: "03001234567",
         address: "Test Address, Karachi",
-        city: "Karachi"
+        city: "Karachi",
+        fulfilmentMethod: "delivery",
+        idempotencyKey: `gate2-uncounted-${suffix}`
       }, {
         headers: { Authorization: `Bearer ${userToken}` }
       });
       assert.fail("Should have thrown 400 for uncounted stock in LIVE mode");
     } catch (err) {
       assert.strictEqual(err.response.status, 400);
-      assert.ok(err.response.data.message.includes("uncounted opening stock"), "Error must reference uncounted opening stock");
+      assert.ok(err.response.data.message.includes("stock being updated"), "Error must reference stock being updated");
       console.log("[PASS] Uncounted stock correctly blocked in LIVE mode.");
     }
 
@@ -278,14 +394,16 @@ async function main() {
         recipientName: "Test Recipient",
         mobile: "03001234567",
         address: "Test Address, Karachi",
-        city: "Karachi"
+        city: "Karachi",
+        fulfilmentMethod: "delivery",
+        idempotencyKey: `gate2-zero-${suffix}`
       }, {
         headers: { Authorization: `Bearer ${userToken}` }
       });
       assert.fail("Should have thrown 400 for out of stock in LIVE mode");
     } catch (err) {
       assert.strictEqual(err.response.status, 400);
-      assert.ok(err.response.data.message.includes("Out of Stock"), "Error must reference Out of Stock");
+      assert.ok(err.response.data.message.includes("enough available stock"), "Error must reference insufficient available stock");
       console.log("[PASS] Out of stock correctly blocked in LIVE mode.");
     }
 
@@ -302,13 +420,76 @@ async function main() {
       recipientName: "Test Recipient",
       mobile: "03001234567",
       address: "Test Address, Karachi",
-      city: "Karachi"
+      city: "Karachi",
+      fulfilmentMethod: "delivery",
+      idempotencyKey: `gate2-live-${suffix}`
     }, {
       headers: { Authorization: `Bearer ${userToken}` }
     });
     assert.strictEqual(orderRes3.status, 201);
     assert.strictEqual(orderRes3.data.isDemo, false, "LIVE order must have isDemo: false");
-    console.log("[PASS] LIVE order placed successfully with stock.");
+    await axios.put(`${API_BASE}/orders/${orderRes3.data.id}/status`, { status: 'confirmed' }, { headers: { Authorization: `Bearer ${adminToken}` } });
+    console.log("[PASS] LIVE order confirmation reserved available stock.");
+
+    const basePerOrder = 2 * Number(packaging.conversionToBase);
+    const beforePacking = await prisma.stockBalance.findFirst({ where: { productId: packaging.productId } });
+    await axios.put(`${API_BASE}/orders/${orderRes3.data.id}/status`, { status: 'packed' }, { headers: { Authorization: `Bearer ${adminToken}` } });
+    const afterPacking = await prisma.stockBalance.findUnique({ where: { id: beforePacking.id } });
+    assert.strictEqual(Number(afterPacking.onHandQuantity), Number(beforePacking.onHandQuantity) - basePerOrder);
+    assert.strictEqual(Number(afterPacking.reservedQuantity), Number(beforePacking.reservedQuantity) - basePerOrder);
+    assert.strictEqual(Number(afterPacking.unavailableQuantity), Number(beforePacking.unavailableQuantity) + basePerOrder);
+    assert.ok(await prisma.stockMovement.findFirst({ where: { orderItemId: orderRes3.data.items[0].id, movementType: 'packing' } }));
+    console.log("[PASS] Packing consumes the reservation and writes a before/after stock movement.");
+
+    const liveBalance = afterPacking;
+    await prisma.stockBalance.update({ where: { id: liveBalance.id }, data: { onHandQuantity: Number(liveBalance.reservedQuantity) + basePerOrder * 1.5 } });
+    const concurrentBodies = ['a', 'b'].map((key) => ({
+      clientBusinessId,
+      items: [{ productPackagingId: packaging.id, quantity: 2 }],
+      recipientName: "Concurrent Recipient",
+      mobile: "03001234567",
+      address: "Test Address, Karachi",
+      city: "Karachi",
+      fulfilmentMethod: "delivery",
+      idempotencyKey: `gate2-concurrent-${key}-${suffix}`
+    }));
+    const pendingOrders = await Promise.all(concurrentBodies.map((body) => axios.post(`${API_BASE}/orders`, body, { headers: { Authorization: `Bearer ${userToken}` } })));
+    const concurrent = await Promise.allSettled(pendingOrders.map((result) => axios.put(`${API_BASE}/orders/${result.data.id}/status`, { status: 'confirmed' }, { headers: { Authorization: `Bearer ${adminToken}` } })));
+    const rejectedConfirmations = concurrent
+      .filter((result) => result.status === 'rejected')
+      .map((result) => ({ status: result.reason.response?.status, code: result.reason.code, message: result.reason.message, data: result.reason.response?.data }));
+    console.log('[INFO] Concurrent confirmation rejections:', JSON.stringify(rejectedConfirmations));
+    assert.strictEqual(concurrent.filter((result) => result.status === 'fulfilled').length, 1, 'Only one competing confirmation may reserve limited stock');
+    assert.strictEqual(concurrent.filter((result) => result.status === 'rejected' && result.reason.response?.status === 400).length, 1, `The overselling confirmation must receive HTTP 400: ${JSON.stringify(rejectedConfirmations)}`);
+    const protectedBalance = await prisma.stockBalance.findUnique({ where: { id: liveBalance.id } });
+    assert.ok(Number(protectedBalance.reservedQuantity) <= Number(protectedBalance.onHandQuantity));
+    console.log("[PASS] Row-locked reservations prevent concurrent overselling.");
+    const confirmedConcurrent = concurrent.find((result) => result.status === 'fulfilled').value.data;
+    const reservedBeforeCancel = Number((await prisma.stockBalance.findUnique({ where: { id: liveBalance.id } })).reservedQuantity);
+    await axios.put(`${API_BASE}/orders/${confirmedConcurrent.id}/status`, { status: 'cancelled' }, { headers: { Authorization: `Bearer ${adminToken}` } });
+    const reservedAfterCancel = Number((await prisma.stockBalance.findUnique({ where: { id: liveBalance.id } })).reservedQuantity);
+    assert.strictEqual(reservedAfterCancel, reservedBeforeCancel - basePerOrder);
+    console.log("[PASS] Cancelling a confirmed order releases its active stock reservation.");
+
+    await prisma.product.update({ where: { id: openingProduct.id }, data: { openingStockStatus: 'NOT_COUNTED' } });
+    const openingRes = await axios.post(`${API_BASE}/stock/opening`, {
+      productId: openingProduct.id,
+      stockLocationId: 'cms9ict6g02ynowgac24fnny',
+      quantityBase: 0,
+      reason: 'Synthetic verified zero opening count'
+    }, { headers: { Authorization: `Bearer ${ownerToken}` } });
+    assert.strictEqual(Number(openingRes.data.previousQuantityBase), 0);
+    assert.strictEqual(Number(openingRes.data.newQuantityBase), 0);
+    assert.strictEqual((await prisma.product.findUnique({ where: { id: openingProduct.id } })).openingStockStatus, 'COUNTED');
+    const adjustRes = await axios.post(`${API_BASE}/stock/adjustments`, {
+      productId: openingProduct.id,
+      stockLocationId: 'cms9ict6g02ynowgac24fnny',
+      quantityDelta: 7,
+      reason: 'Synthetic verified restock adjustment'
+    }, { headers: { Authorization: `Bearer ${ownerToken}` } });
+    assert.strictEqual(Number(adjustRes.data.previousQuantityBase), 0);
+    assert.strictEqual(Number(adjustRes.data.newQuantityBase), 7);
+    console.log("[PASS] Initialized-zero stock is distinct and adjustments preserve before/delta/after evidence.");
 
     console.log("=== ALL GATE 2 INVENTORY FOUNDATION TESTS PASSED ===");
 

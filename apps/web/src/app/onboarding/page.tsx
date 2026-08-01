@@ -8,13 +8,14 @@ import { createClient } from "@/lib/supabase/client"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Bilingual } from "@/components/ui/bilingual"
-import { isCityInDeliveryZone, SUPPORTED_DELIVERY_CITIES } from "@raza-stationers/validation"
+import { isCityInDeliveryZone, normalizePakistaniMobile, SUPPORTED_DELIVERY_CITIES } from "@raza-stationers/validation"
 import { Building2, ArrowRight, UserPlus, Link2, LogOut, Loader2 } from "lucide-react"
 
 export default function OnboardingPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const returnTo = searchParams.get("returnTo")
+  const requestedReturnTo = searchParams.get("returnTo")
+  const returnTo = requestedReturnTo?.startsWith("/") && !requestedReturnTo.startsWith("//") ? requestedReturnTo : "/catalogue"
   
   const { accountStatus, user, logout, register, linkAccount } = useAuth()
   const supabase = React.useMemo(() => createClient(), [])
@@ -50,7 +51,7 @@ export default function OnboardingPage() {
   // Redirect if not in unregistered state
   React.useEffect(() => {
     if (accountStatus && accountStatus !== "unregistered") {
-      router.push(returnTo || "/catalogue")
+      router.push(returnTo)
     }
   }, [accountStatus, router, returnTo])
 
@@ -59,7 +60,7 @@ export default function OnboardingPage() {
   const validateCreate = () => {
     const newErrors: Record<string, string> = {}
     if (!name || name.trim().length < 2) newErrors.name = "Your name is required"
-    if (!mobileNumber || mobileNumber.trim().length < 10) newErrors.mobileNumber = "Valid mobile number required"
+    if (!normalizePakistaniMobile(mobileNumber)) newErrors.mobileNumber = "Use Pakistani mobile format 03XXXXXXXXX"
     if (!businessName || businessName.trim().length < 3) newErrors.businessName = "Business name must be at least 3 characters"
     if (!city) newErrors.city = "City is required"
     else if (!isCityValid) newErrors.city = "This city is outside our delivery zones"
@@ -70,7 +71,7 @@ export default function OnboardingPage() {
 
   const validateLink = () => {
     const newErrors: Record<string, string> = {}
-    if (!legacyMobile || legacyMobile.trim().length < 10) newErrors.legacyMobile = "Valid mobile number required"
+    if (!normalizePakistaniMobile(legacyMobile)) newErrors.legacyMobile = "Use Pakistani mobile format 03XXXXXXXXX"
     if (!legacyPassword || legacyPassword.length < 4) newErrors.legacyPassword = "Password must be at least 4 characters"
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -89,7 +90,7 @@ export default function OnboardingPage() {
       
       await register({
         name,
-        mobileNumber,
+        mobileNumber: normalizePakistaniMobile(mobileNumber)!,
         password: "", // Not used in registration since they are logged in via provider
         email,
         businessName,
@@ -98,7 +99,7 @@ export default function OnboardingPage() {
         address,
         city,
       })
-      router.push(returnTo || "/catalogue")
+      router.push(returnTo)
     } catch (err: any) {
       setSubmitError(err.message || "Failed to create profile. Please try again.")
     } finally {
@@ -115,8 +116,8 @@ export default function OnboardingPage() {
       const session = (await supabase.auth.getSession()).data.session
       if (!session) throw new Error("No active session found")
       
-      await linkAccount(session.access_token, legacyMobile, legacyPassword)
-      router.push(returnTo || "/catalogue")
+      await linkAccount(session.access_token, normalizePakistaniMobile(legacyMobile)!, legacyPassword)
+      router.push(returnTo)
     } catch (err: any) {
       setSubmitError(err.message || "Failed to link legacy account. Check credentials.")
     } finally {
@@ -190,7 +191,7 @@ export default function OnboardingPage() {
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-foreground">Mobile Number *</label>
-                    <Input value={mobileNumber} onChange={(e) => setMobileNumber(e.target.value)} placeholder="03009876543" className={errors.mobileNumber ? "border-destructive" : ""} />
+                    <Input value={mobileNumber} onChange={(e) => setMobileNumber(e.target.value)} inputMode="tel" autoComplete="tel-national" maxLength={11} placeholder="03XXXXXXXXX" className={errors.mobileNumber ? "border-destructive" : ""} />
                     {errors.mobileNumber && <span className="text-[11px] text-destructive font-medium">{errors.mobileNumber}</span>}
                   </div>
                 </div>
@@ -256,7 +257,7 @@ export default function OnboardingPage() {
               <div className="space-y-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-foreground">Legacy Mobile Number *</label>
-                  <Input value={legacyMobile} onChange={(e) => setLegacyMobile(e.target.value)} placeholder="03001234567" className={errors.legacyMobile ? "border-destructive" : ""} />
+                  <Input value={legacyMobile} onChange={(e) => setLegacyMobile(e.target.value)} inputMode="tel" autoComplete="tel-national" maxLength={11} placeholder="03XXXXXXXXX" className={errors.legacyMobile ? "border-destructive" : ""} />
                   {errors.legacyMobile && <span className="text-[11px] text-destructive font-medium">{errors.legacyMobile}</span>}
                 </div>
                 <div className="space-y-1.5">

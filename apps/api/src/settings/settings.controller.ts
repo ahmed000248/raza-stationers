@@ -19,7 +19,7 @@ export class SettingsController {
 
   @Put()
   @ApiOperation({ summary: "Update business settings (owner only)" })
-  update(@Body() body: { businessName?: string; contactPhone?: string; requireApproval?: boolean; stockAlert?: boolean; packingView?: boolean }) {
+  update(@Body() body: { businessName?: string; contactPhone?: string; requireApproval?: boolean; stockAlert?: boolean; packingView?: boolean; pickupLocation?: string | null; pickupInstructions?: string | null }) {
     return this.settingsService.update(body);
   }
 }

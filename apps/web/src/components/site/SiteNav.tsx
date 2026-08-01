@@ -3,178 +3,76 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ShoppingBag, Menu, User, BookOpen } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Bilingual } from "@/components/ui/bilingual"
-import { NotificationDropdown } from "@/components/site/NotificationDropdown"
-import { Sheet, SheetHeader, SheetTitle, SheetClose } from "@/components/ui/sheet"
-import { useCart } from "@/hooks/use-cart"
+import { Menu, ShoppingBag, UserRound } from "lucide-react"
+import { BrandLogo } from "@/components/site/BrandLogo"
+import { Sheet, SheetClose, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { useAuth } from "@/hooks/use-auth"
-import { SignInModal } from "@/components/auth/SignInModal"
+import { useCart } from "@/hooks/use-cart"
+import { cn } from "@/lib/utils"
 
-const navLinks = [
-  { href: "/", en: "Home", ur: "صفحہ اول" },
-  { href: "/catalogue", en: "Catalogue", ur: "کیٹلاگ" },
-  { href: "/orders", en: "Orders", ur: "آرڈرز" },
-  { href: "/about", en: "About", ur: "ہمارے بارے میں" },
-  { href: "/contact", en: "Contact", ur: "رابطہ کریں" },
+const primaryLinks = [
+  { href: "/", label: "Home" },
+  { href: "/catalogue", label: "Catalogue" },
+  { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
 ]
 
 export function SiteNav() {
   const pathname = usePathname()
   const { totalItems } = useCart()
   const { accountStatus } = useAuth()
-  const [scrolled, setScrolled] = React.useState(false)
   const [mobileOpen, setMobileOpen] = React.useState(false)
-  const [signInOpen, setSignInOpen] = React.useState(false)
-
-  // Ponytail: Lightweight 2-line scroll listener instead of heavy library
-  React.useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20)
-    }
-    window.addEventListener("scroll", handleScroll, { passive: true })
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
+  const accountHref = accountStatus === "guest" ? `/signin?returnTo=${encodeURIComponent(pathname)}` : "/account"
 
   return (
-    <header className="sticky top-0 z-40 flex justify-center w-full px-4 pt-4 pb-2 transition-all">
-      {/* Floating Pill Nav with Glass styling */}
-      <nav
-        className={cn(
-          "glass relative flex items-center justify-between w-full max-w-none h-14 px-6 sm:px-8 rounded-full transition-all duration-200 border border-[var(--glass-border)] shadow-md",
-          scrolled && "shadow-lg scale-[0.99]"
-        )}
-      >
-        {/* Brand Logo */}
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="flex size-8 items-center justify-center rounded-full bg-[var(--color-evergreen-600)] text-white shadow-xs group-hover:scale-105 transition-transform">
-            <BookOpen className="size-4" />
-          </div>
-          <div className="flex flex-col leading-none">
-            <span className="font-heading font-bold text-sm tracking-tight text-[var(--color-ink-900)]">
-              Raza Stationers
-            </span>
-            <span dir="rtl" className="font-urdu text-[10px] text-muted-foreground">
-              رضا اسٹیشنرز
-            </span>
-          </div>
+    <header className="sticky top-0 z-40 border-b border-border/80 bg-[var(--color-canvas)]/95 backdrop-blur-md">
+      <nav aria-label="Primary navigation" className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
+        <Link href="/" aria-label="Raza Stationers home" className="shrink-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-ring">
+          <BrandLogo compact className="sm:hidden" />
+          <BrandLogo className="hidden sm:inline-flex" />
         </Link>
 
-        {/* Desktop Nav Links */}
-        <div className="hidden md:flex items-center gap-1">
-          {navLinks.map((link) => {
-            const isActive = pathname === link.href
+        <div className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 md:flex">
+          {primaryLinks.map((link) => {
+            const active = pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href))
             return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={cn(
-                  "relative px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors hover:text-foreground",
-                  isActive
-                    ? "bg-black/10 text-[var(--color-ink-900)] font-semibold"
-                    : "text-muted-foreground hover:bg-black/5"
-                )}
-              >
-                <span className="flex items-center gap-1">
-                  <span>{link.en}</span>
-                  <span dir="rtl" className="font-urdu text-[10px] opacity-70">
-                    {link.ur}
-                  </span>
-                </span>
+              <Link key={link.href} href={link.href} aria-current={active ? "page" : undefined}
+                className={cn("rounded-lg px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring", active ? "bg-[var(--color-mist-100)] text-[var(--color-ink-900)]" : "text-muted-foreground hover:text-foreground")}>
+                {link.label}
               </Link>
             )
           })}
         </div>
 
-        {/* Right Actions */}
-        <div className="flex items-center gap-2">
-          {/* Notification Dropdown (Glass) */}
-          <NotificationDropdown />
-
-          {/* Cart Trigger with Count Badge */}
-          <Link
-            href="/cart"
-            className="relative flex size-9 items-center justify-center rounded-full text-foreground/80 transition-colors hover:bg-black/5 hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            aria-label="View Shopping Cart"
-          >
-            <ShoppingBag className="size-4" />
-            {totalItems > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-[var(--color-evergreen-600)] text-[10px] font-bold text-white shadow-xs">
-                {totalItems}
-              </span>
-            )}
+        <div className="flex items-center gap-1.5">
+          <Link href={accountHref} aria-label={accountStatus === "guest" ? "Sign in" : "Open account"}
+            className="inline-flex h-10 items-center gap-2 rounded-xl px-2.5 text-sm font-semibold text-[var(--color-ink-900)] hover:bg-[var(--color-mist-100)] focus:outline-none focus:ring-2 focus:ring-ring">
+            <UserRound className="size-4" />
+            <span className="hidden lg:inline">{accountStatus === "guest" ? "Sign in" : "Account"}</span>
           </Link>
-
-          {/* Sign In / Account Status Trigger */}
-          <Button
-            size="xs"
-            variant={accountStatus === "approved" ? "secondary" : "default"}
-            className="rounded-full px-3 gap-1 hidden sm:inline-flex"
-            onClick={() => setSignInOpen(true)}
-          >
-            <User className="size-3" />
-            <span>
-              {accountStatus === "approved"
-                ? "Wholesale Account"
-                : accountStatus === "pending"
-                ? "Pending Approval"
-                : "Sign In"}
-            </span>
-          </Button>
-
-          {/* SignIn Modal Component */}
-          <SignInModal open={signInOpen} onOpenChange={setSignInOpen} />
-
-          {/* Mobile Menu Toggle */}
-          <button
-            type="button"
-            onClick={() => setMobileOpen(true)}
-            className="flex md:hidden size-9 items-center justify-center rounded-full hover:bg-black/5 focus:outline-none"
-            aria-label="Open navigation menu"
-          >
+          <Link href="/cart" aria-label={`Cart with ${totalItems} items`}
+            className="relative inline-flex size-10 items-center justify-center rounded-xl text-[var(--color-ink-900)] hover:bg-[var(--color-mist-100)] focus:outline-none focus:ring-2 focus:ring-ring">
+            <ShoppingBag className="size-4" />
+            {totalItems > 0 && <span className="absolute -right-0.5 -top-0.5 flex min-w-4 items-center justify-center rounded-full bg-[var(--color-evergreen-600)] px-1 text-[10px] font-bold text-white">{totalItems}</span>}
+          </Link>
+          <button type="button" onClick={() => setMobileOpen(true)} className="inline-flex size-10 items-center justify-center rounded-xl hover:bg-[var(--color-mist-100)] focus:outline-none focus:ring-2 focus:ring-ring md:hidden" aria-label="Open navigation menu">
             <Menu className="size-5" />
           </button>
         </div>
       </nav>
 
-      {/* Mobile Drawer (Sheet) */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen} side="left">
         <SheetClose onClick={() => setMobileOpen(false)} />
-        <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
-            <BookOpen className="size-5 text-[var(--color-evergreen-600)]" />
-            <Bilingual en="Raza Stationers" ur="رضا اسٹیشنرز" layout="inline" />
-          </SheetTitle>
-        </SheetHeader>
-        <div className="py-6 flex flex-col gap-2 flex-1">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={() => setMobileOpen(false)}
-              className={cn(
-                "flex items-center justify-between p-3 rounded-lg text-sm font-medium transition-colors",
-                pathname === link.href
-                  ? "bg-muted text-foreground font-semibold"
-                  : "text-muted-foreground hover:bg-muted/50"
-              )}
-            >
-              <span>{link.en}</span>
-              <span dir="rtl" className="font-urdu text-xs text-muted-foreground">
-                {link.ur}
-              </span>
-            </Link>
+        <SheetHeader><SheetTitle><BrandLogo /></SheetTitle></SheetHeader>
+        <div className="flex flex-1 flex-col gap-1 py-6">
+          {primaryLinks.map((link) => (
+            <Link key={link.href} href={link.href} onClick={() => setMobileOpen(false)}
+              className={cn("rounded-xl px-4 py-3 text-sm font-semibold", pathname === link.href ? "bg-[var(--color-mist-100)]" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground")}>{link.label}</Link>
           ))}
-          <div className="mt-auto pt-6 border-t border-border">
-            <Link href="/sign-in" onClick={() => setMobileOpen(false)}>
-              <Button className="w-full justify-center gap-2 rounded-full" variant="default">
-                <User className="size-4" />
-                <Bilingual en="Sign In to Account" ur="اکاؤنٹ میں سائن ان کریں" layout="inline" />
-              </Button>
-            </Link>
-          </div>
+          <Link href="/orders" onClick={() => setMobileOpen(false)} className="rounded-xl px-4 py-3 text-sm font-semibold text-muted-foreground hover:bg-muted/60 hover:text-foreground">Orders</Link>
+          <Link href={accountHref} onClick={() => setMobileOpen(false)} className="mt-auto rounded-xl bg-[var(--color-evergreen-600)] px-4 py-3 text-center text-sm font-semibold text-white">
+            {accountStatus === "guest" ? "Sign in to your account" : "Open your account"}
+          </Link>
         </div>
       </Sheet>
     </header>

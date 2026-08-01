@@ -4,6 +4,7 @@ import * as React from "react"
 import { useRouter } from "next/navigation"
 import { useAdminAuth } from "@/hooks/use-admin-auth"
 import { LogIn, Shield, KeyRound } from "lucide-react"
+import Image from "next/image"
 
 type Step = "credentials" | "mfa-challenge"
 
@@ -19,6 +20,11 @@ export default function AdminLoginPage() {
   const [challengeId, setChallengeId] = React.useState("")
   const [error, setError] = React.useState("")
   const [loading, setLoading] = React.useState(false)
+
+  const destination = React.useCallback(() => {
+    const candidate = new URLSearchParams(window.location.search).get("next")
+    return candidate?.startsWith("/") && !candidate.startsWith("//") ? candidate : "/dashboard"
+  }, [])
 
   const handleCredentials = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -39,7 +45,7 @@ export default function AdminLoginPage() {
         setChallengeId(result.challengeId)
         setStep("mfa-challenge")
       } else {
-        router.push("/dashboard")
+        router.push(destination())
       }
     } catch (err: any) {
       setError(err.message || "Login failed")
@@ -59,7 +65,7 @@ export default function AdminLoginPage() {
     setError("")
     try {
       await verifyMfa(factorId, challengeId, code)
-      router.push("/dashboard")
+      router.push(destination())
     } catch (err: any) {
       setError(err.message || "Invalid code — try again")
       setMfaCode("")
@@ -72,6 +78,7 @@ export default function AdminLoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-[var(--canvas)]">
       <div className="w-full max-w-sm p-8 space-y-6">
         <div className="text-center space-y-1">
+          <Image src="/brand-mark.svg" alt="Raza Stationers" width={56} height={56} priority className="mx-auto mb-3 size-14 rounded-2xl" />
           <h1 className="font-heading text-2xl font-bold text-[var(--ink-900)]">Admin Sign In</h1>
           <p className="text-sm text-muted-foreground">Raza Stationers Operations Portal</p>
         </div>
@@ -84,7 +91,7 @@ export default function AdminLoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@razastationers.com"
+                placeholder="owner@your-domain.example"
                 className="w-full h-10 px-3 rounded-xl border border-border bg-background text-sm outline-none focus:ring-2 focus:ring-ring"
               />
             </div>

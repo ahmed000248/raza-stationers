@@ -13,16 +13,16 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Bilingual } from "@/components/ui/bilingual"
 import { formatPKR } from "@/lib/pricing"
-import { isCityInDeliveryZone, PaymentMethodType, SUPPORTED_DELIVERY_CITIES } from "@raza-stationers/validation"
+import { normalizePakistaniMobile, PaymentMethodType, SUPPORTED_DELIVERY_CITIES } from "@raza-stationers/validation"
 import { createAPIClient } from "@raza-stationers/api"
-import { ArrowLeft, ArrowRight, Truck, Building2, Lock, Loader2 } from "lucide-react"
+import { ArrowLeft, ArrowRight, Truck, Building2, Lock, Loader2, MapPin, Store } from "lucide-react"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
 
 export default function CheckoutPage() {
   const router = useRouter()
   const { items, subtotal, totalItems, clearCart } = useCart()
-  const { accountStatus, clientBusiness } = useAuth()
+  const { accountStatus, clientBusiness, getAccessToken, logout } = useAuth()
 
   const [recipientName, setRecipientName] = React.useState(clientBusiness?.contactPerson || "")
   const [phone, setPhone] = React.useState(clientBusiness?.phone || "")
@@ -33,11 +33,30 @@ export default function CheckoutPage() {
   const [agreeToTerms, setAgreeToTerms] = React.useState(true)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [error, setError] = React.useState("")
+  const [fulfilmentMethod, setFulfilmentMethod] = React.useState<"delivery" | "pickup" | null>(null)
+  const [fulfilmentOptions, setFulfilmentOptions] = React.useState<any>(null)
+  const [optionsLoading, setOptionsLoading] = React.useState(true)
+  const submittingRef = React.useRef(false)
+  const idempotencyKeyRef = React.useRef("")
 
   const [errors, setErrors] = React.useState<Record<string, string>>({})
   const minOrderThreshold = 2000
   const isBelowMinOrder = subtotal < minOrderThreshold
-  const isCityValid = isCityInDeliveryZone(city)
+  const selectedDeliveryZone = fulfilmentOptions?.deliveryZones?.find((zone: any) => zone.city.toLowerCase() === city.toLowerCase())
+  const isCityValid = fulfilmentMethod !== "delivery" || Boolean(selectedDeliveryZone)
+  const deliveryCharge = fulfilmentMethod === "delivery" ? Number(selectedDeliveryZone?.charge || 0) : 0
+
+  React.useEffect(() => {
+    if (accountStatus === "guest") return
+    let active = true
+    getAccessToken().then(async (token) => {
+      if (!token) return
+      const api = createAPIClient({ baseUrl: API_BASE, authToken: token })
+      const options = await api.getFulfilmentOptions()
+      if (active) setFulfilmentOptions(options)
+    }).catch(() => { if (active) setError("Fulfilment options could not be loaded.") }).finally(() => { if (active) setOptionsLoading(false) })
+    return () => { active = false }
+  }, [accountStatus, getAccessToken])
 
   React.useEffect(() => { if (items.length === 0) router.push("/cart") }, [items, router])
 
@@ -45,7 +64,7 @@ export default function CheckoutPage() {
   React.useEffect(() => {
     if (accountStatus === "guest") {
       try {
-        const tempState = { recipientName, phone, city, address, deliveryNotes, paymentMethod }
+        const tempState = { recipientName, phone, city, address, deliveryNotes, paymentMethod, fulfilmentMethod }
         sessionStorage.setItem("raza_stationers_temp_checkout", JSON.stringify(tempState))
       } catch (err) {
         // Ignore session storage write errors
@@ -66,6 +85,7 @@ export default function CheckoutPage() {
         if (parsed.address) setAddress(parsed.address)
         if (parsed.deliveryNotes) setDeliveryNotes(parsed.deliveryNotes)
         if (parsed.paymentMethod) setPaymentMethod(parsed.paymentMethod)
+        if (parsed.fulfilmentMethod) setFulfilmentMethod(parsed.fulfilmentMethod)
         sessionStorage.removeItem("raza_stationers_temp_checkout")
       }
     } catch (err) {
@@ -75,11 +95,14 @@ export default function CheckoutPage() {
 
   const validateForm = () => {
     const e: Record<string, string> = {}
+    if (!fulfilmentMethod) e.fulfilmentMethod = "Select delivery or pickup"
     if (!recipientName || recipientName.trim().length < 2) e.recipientName = "Recipient name is required"
-    if (!phone || phone.trim().length < 10) e.phone = "Valid mobile number required"
-    if (!city) e.city = "City is required"
-    else if (!isCityValid) e.city = "City outside delivery zone"
-    if (!address || address.trim().length < 10) e.address = "Complete address required"
+    if (!normalizePakistaniMobile(phone)) e.phone = "Use Pakistani mobile format 03XXXXXXXXX"
+    if (fulfilmentMethod === "delivery") {
+      if (!city) e.city = "City is required"
+      else if (!isCityValid) e.city = "Delivery is not configured for this city"
+      if (!address || address.trim().length < 10) e.address = "Complete address required"
+    }
     if (!agreeToTerms) e.agreeToTerms = "You must agree to the terms"
     setErrors(e)
     return Object.keys(e).length === 0
@@ -87,28 +110,43 @@ export default function CheckoutPage() {
 
   const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (isBelowMinOrder || !validateForm()) return
+    if (submittingRef.current || isBelowMinOrder || !validateForm() || !fulfilmentMethod) return
+    submittingRef.current = true
     setIsSubmitting(true)
     setError("")
 
     try {
-      const api = createAPIClient({ baseUrl: API_BASE })
+      const token = await getAccessToken()
+      if (!token) throw new Error("SESSION_EXPIRED")
+      const api = createAPIClient({ baseUrl: API_BASE, authToken: token })
+      if (!idempotencyKeyRef.current) idempotencyKeyRef.current = crypto.randomUUID()
       const order = await api.createOrder({
         clientBusinessId: clientBusiness?.id || "",
         items: items.map((item) => {
-          const sku = item.id.split("-")[0]
           return { productPackagingId: item.id, quantity: item.quantity }
         }),
         recipientName,
-        mobile: phone,
+        mobile: normalizePakistaniMobile(phone)!,
         address,
         city,
+        deliveryNotes,
+        paymentMethod,
+        fulfilmentMethod,
+        idempotencyKey: idempotencyKeyRef.current,
       })
       clearCart()
       router.push(`/order-confirmation/${order.id}`)
     } catch (err: any) {
-      setError(err.message || "Failed to submit order")
+      const expired = err.message === "SESSION_EXPIRED" || /^401\b/.test(err.message || "")
+      if (expired) {
+        setError("Your session expired. Sign in again to continue checkout.")
+        await logout()
+        router.push("/signin?returnTo=/checkout&reason=session-expired")
+      } else {
+        setError(err.message || "Failed to submit order")
+      }
     } finally {
+      submittingRef.current = false
       setIsSubmitting(false)
     }
   }
@@ -116,8 +154,8 @@ export default function CheckoutPage() {
   if (items.length === 0) return null
 
   return (
-    <div className="py-10 px-6 min-h-screen">
-      <div className="mx-auto max-w-none w-full space-y-8">
+    <div className="min-h-screen px-3 py-8 sm:px-6 sm:py-10">
+      <div className="mx-auto w-full max-w-6xl space-y-8">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-border pb-6">
           <div>
             <Link href="/cart" className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors mb-2">
@@ -132,9 +170,20 @@ export default function CheckoutPage() {
 
         <form onSubmit={handleSubmitOrder} className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
           <div className="lg:col-span-7 space-y-8">
+            <div className="space-y-4 rounded-2xl border border-border bg-card p-6 shadow-xs">
+              <h3 className="flex items-center gap-2 border-b border-border pb-3 font-heading text-base font-bold text-[var(--color-ink-900)]"><MapPin className="size-4 text-[var(--color-evergreen-600)]" />1. Fulfilment method</h3>
+              {optionsLoading ? <div className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="size-4 animate-spin" />Loading fulfilment options…</div> : (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <button type="button" onClick={() => setFulfilmentMethod("delivery")} disabled={!fulfilmentOptions?.deliveryZones?.length} className={`min-h-24 rounded-2xl border p-4 text-left transition-colors ${fulfilmentMethod === "delivery" ? "border-[var(--color-evergreen-600)] bg-[var(--color-mist-100)]" : "border-border hover:border-[var(--color-sage-400)]"}`}><Truck className="mb-2 size-5" /><span className="block text-sm font-bold">Delivery</span><span className="text-xs text-muted-foreground">Address and configured zone charge apply.</span></button>
+                  <button type="button" onClick={() => setFulfilmentMethod("pickup")} disabled={!fulfilmentOptions?.pickup?.available} className={`min-h-24 rounded-2xl border p-4 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${fulfilmentMethod === "pickup" ? "border-[var(--color-evergreen-600)] bg-[var(--color-mist-100)]" : "border-border hover:border-[var(--color-sage-400)]"}`}><Store className="mb-2 size-5" /><span className="block text-sm font-bold">Pickup</span><span className="text-xs text-muted-foreground">{fulfilmentOptions?.pickup?.available ? "No delivery charge." : "Awaiting owner pickup configuration."}</span></button>
+                </div>
+              )}
+              {errors.fulfilmentMethod && <p className="text-xs font-medium text-destructive">{errors.fulfilmentMethod}</p>}
+              {fulfilmentMethod === "pickup" && fulfilmentOptions?.pickup?.available && <div className="rounded-xl bg-[var(--color-mist-100)] p-3 text-xs"><p className="font-semibold">{fulfilmentOptions.pickup.location}</p><p className="mt-1 text-muted-foreground">{fulfilmentOptions.pickup.instructions}</p></div>}
+            </div>
             <div className="space-y-4 p-6 rounded-2xl border border-border bg-card shadow-xs">
               <h3 className="font-heading text-base font-bold text-[var(--color-ink-900)] border-b border-border pb-3 flex items-center gap-2">
-                <Truck className="size-4 text-[var(--color-evergreen-600)]" /><span>1. Delivery Address</span>
+                <Truck className="size-4 text-[var(--color-evergreen-600)]" /><span>2. {fulfilmentMethod === "pickup" ? "Pickup contact" : "Delivery address"}</span>
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
@@ -144,11 +193,11 @@ export default function CheckoutPage() {
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold">Mobile Number *</label>
-                  <Input value={phone} onChange={(e) => setPhone(e.target.value)} className={errors.phone ? "border-destructive" : ""} />
+                  <Input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" autoComplete="tel-national" maxLength={11} placeholder="03XXXXXXXXX" className={errors.phone ? "border-destructive" : ""} />
                   {errors.phone && <span className="text-[11px] text-destructive font-medium">{errors.phone}</span>}
                 </div>
               </div>
-              <div className="space-y-1.5">
+              {fulfilmentMethod !== "pickup" && <div className="space-y-1.5">
                 <label className="text-xs font-semibold">City *</label>
                 <select value={city} onChange={(e) => setCity(e.target.value)}
                   className={`w-full h-10 px-3 rounded-xl border bg-background text-sm outline-none focus:ring-2 focus:ring-ring ${errors.city ? "border-destructive" : "border-border"}`}>
@@ -156,14 +205,14 @@ export default function CheckoutPage() {
                   <option value="Other">Other City</option>
                 </select>
                 {errors.city && <span className="text-[11px] text-destructive font-medium block">{errors.city}</span>}
-              </div>
-              <DeliveryZoneNotice selectedCity={city} />
-              <div className="space-y-1.5">
+              </div>}
+              {fulfilmentMethod !== "pickup" && <DeliveryZoneNotice selectedCity={city} />}
+              {fulfilmentMethod !== "pickup" && <div className="space-y-1.5">
                 <label className="text-xs font-semibold">Address *</label>
                 <textarea rows={3} value={address} onChange={(e) => setAddress(e.target.value)}
                   className={`w-full p-3 rounded-xl border bg-background text-sm outline-none focus:ring-2 focus:ring-ring resize-none ${errors.address ? "border-destructive" : "border-border"}`} />
                 {errors.address && <span className="text-[11px] text-destructive font-medium">{errors.address}</span>}
-              </div>
+              </div>}
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold">Delivery Notes (Optional)</label>
                 <Input value={deliveryNotes} onChange={(e) => setDeliveryNotes(e.target.value)} placeholder="e.g. Deliver between 9am - 1pm" />
@@ -172,9 +221,9 @@ export default function CheckoutPage() {
 
             <div className="p-6 rounded-2xl border border-border bg-card shadow-xs space-y-4">
               <h3 className="font-heading text-base font-bold text-[var(--color-ink-900)] border-b border-border pb-3 flex items-center gap-2">
-                <Building2 className="size-4" /><span>2. Payment Method</span>
+                <Building2 className="size-4" /><span>3. Payment Method</span>
               </h3>
-              <PaymentMethodPicker value={paymentMethod} onChange={setPaymentMethod} isCreditActive={true} receiptUploaded={false} onUploadReceipt={() => {}} />
+              <PaymentMethodPicker value={paymentMethod} onChange={setPaymentMethod} isCreditActive={false} receiptUploaded={false} onUploadReceipt={() => {}} />
             </div>
 
             <div className="p-4 rounded-xl border border-border bg-card flex items-start gap-3">
@@ -197,14 +246,14 @@ export default function CheckoutPage() {
               </div>
               <div className="space-y-2 pt-2 text-sm border-t border-border">
                 <div className="flex justify-between text-muted-foreground"><span>Subtotal ({totalItems} items)</span><span className="font-medium">{formatPKR(subtotal)}</span></div>
-                <div className="flex justify-between text-muted-foreground"><span>Delivery</span><span className="font-medium text-[var(--color-evergreen-600)]">Free</span></div>
+                <div className="flex justify-between text-muted-foreground"><span>{fulfilmentMethod === "pickup" ? "Pickup" : "Delivery"}</span><span className="font-medium text-[var(--color-evergreen-600)]">{deliveryCharge > 0 ? formatPKR(deliveryCharge) : fulfilmentMethod ? "No charge" : "Select a method"}</span></div>
                 <div className="pt-3 border-t border-border flex justify-between items-baseline">
                   <span className="font-heading font-bold text-base">Total Payable</span>
-                  <span className="font-heading font-bold text-2xl text-[var(--color-evergreen-600)]">{formatPKR(subtotal)}</span>
+                  <span className="font-heading font-bold text-2xl text-[var(--color-evergreen-600)]">{formatPKR(subtotal + deliveryCharge)}</span>
                 </div>
               </div>
               {error && <p className="text-xs text-destructive font-medium">{error}</p>}
-              <Button type="submit" disabled={isBelowMinOrder || !isCityValid || isSubmitting} size="lg" className="w-full rounded-full gap-2 text-sm font-semibold shadow-md py-6">
+              <Button type="submit" disabled={isBelowMinOrder || !isCityValid || isSubmitting || !fulfilmentMethod || optionsLoading} size="lg" className="w-full rounded-full gap-2 text-sm font-semibold shadow-md py-6">
                 {isSubmitting ? <><Loader2 className="size-4 animate-spin" /><span>Submitting...</span></> : <><Bilingual en="Confirm & Submit Order" ur="آرڈر جمع کروائیں" layout="inline" /><ArrowRight className="size-4" /></>}
               </Button>
             </div>

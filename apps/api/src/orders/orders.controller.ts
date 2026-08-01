@@ -23,25 +23,33 @@ export class OrdersController {
       items: Array<{ productPackagingId: string; quantity: number }>;
       recipientName: string;
       mobile: string;
-      address: string;
-      city: string;
+      address?: string;
+      city?: string;
       deliveryNotes?: string;
       paymentMethod?: string;
+      fulfilmentMethod: "delivery" | "pickup";
+      idempotencyKey: string;
     },
   ) {
     return this.ordersService.create(userId, body.clientBusinessId, body);
   }
 
+  @Get("fulfilment-options")
+  @ApiOperation({ summary: "Get configured delivery zones and pickup availability" })
+  fulfilmentOptions() {
+    return this.ordersService.getFulfilmentOptions();
+  }
+
   @Get()
   @ApiOperation({ summary: "List orders with pagination and filters" })
-  findAll(@Query() query: { page?: number; limit?: number; status?: string; clientBusinessId?: string }) {
-    return this.ordersService.findAll(query);
+  findAll(@Query() query: { page?: number; limit?: number; status?: string; clientBusinessId?: string }, @CurrentUser() user: { id: string; role: string; aal?: string }) {
+    return this.ordersService.findAll(query, user);
   }
 
   @Get(":id")
   @ApiOperation({ summary: "Get order details" })
-  findById(@Param("id") id: string) {
-    return this.ordersService.findById(id);
+  findById(@Param("id") id: string, @CurrentUser() user: { id: string; role: string; aal?: string }) {
+    return this.ordersService.findById(id, user);
   }
 
   @Put(":id/status")

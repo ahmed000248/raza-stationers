@@ -71,4 +71,10 @@ export class CatalogueController {
   getCategories() {
     return this.catalogueService.findCategories();
   }
+
+  @Get("catalogue/filter-options")
+  @ApiOperation({ summary: "List catalogue filter values backed by active product packaging" })
+  getFilterOptions() {
+    return this.catalogueService.findFilterOptions();
+  }
 }

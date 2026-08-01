@@ -48,7 +48,7 @@ async function main() {
     update: { isActive: true, supabaseAuthId: testAdminSub },
     create: {
       id: 'admin_test_user',
-      mobileNumber: `+92399${suffix}`,
+      mobileNumber: `038${String(suffix).slice(-8)}`,
       name: 'Admin User',
       role: 'admin',
       isActive: true,

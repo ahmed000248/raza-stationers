@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
 import {
   LayoutDashboard,
@@ -71,6 +72,7 @@ export function AdminNav() {
     <aside className="w-[240px] shrink-0 bg-[#051F20] text-white flex flex-col p-4 sticky top-0 h-screen box-border overflow-hidden select-none">
       {/* Title & Subtitle */}
       <div className="px-2 pb-5 pt-1">
+        <Image src="/brand-mark.svg" alt="Raza Stationers" width={40} height={40} className="mb-3 size-10 rounded-xl" />
         <div className="font-heading text-[17px] font-semibold text-white tracking-tight">
           Raza Stationers
         </div>

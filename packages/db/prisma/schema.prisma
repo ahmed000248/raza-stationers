@@ -150,6 +150,13 @@ enum OrderStatus {
   @@map("order_status")
 }
 
+enum FulfilmentMethod {
+  delivery
+  pickup
+
+  @@map("fulfilment_method")
+}
+
 enum ChangeRequestType {
   edit
   cancellation
@@ -276,6 +283,7 @@ enum StockBucket {
 }
 
 enum StockMovementType {
+  opening_balance
   restock
   packing
   dispatch
@@ -510,7 +518,7 @@ model ClientBusiness {
   businessName  String                      @map("business_name")
   businessType  BusinessType                @map("business_type")
   contactPerson String                      @map("contact_person")
-  mobileNumber  String                      @map("mobile_number")
+  mobileNumber  String                      @unique @map("mobile_number")
   email         String?
   ntn           String?
   cnic          String?
@@ -886,21 +894,23 @@ model StockReservation {
 }
 
 model StockMovement {
-  id                 String            @id @default(cuid())
-  productId          String            @map("product_id")
-  stockLocationId    String            @map("stock_location_id")
-  quantityBase       Decimal           @map("quantity_base") @db.Decimal(18, 3)
-  fromBucket         StockBucket?      @map("from_bucket")
-  toBucket           StockBucket?      @map("to_bucket")
-  movementType       StockMovementType @map("movement_type")
-  stockReservationId String?           @map("stock_reservation_id")
-  orderItemId        String?           @map("order_item_id")
-  cancellationId     String?           @map("cancellation_id")
-  returnItemId       String?           @map("return_item_id")
-  deliveryAttemptId  String?           @map("delivery_attempt_id")
-  reason             String
-  createdById        String            @map("created_by_id")
-  occurredAt         DateTime          @default(now()) @map("occurred_at") @db.Timestamptz(3)
+  id                   String            @id @default(cuid())
+  productId            String            @map("product_id")
+  stockLocationId      String            @map("stock_location_id")
+  quantityBase         Decimal           @map("quantity_base") @db.Decimal(18, 3)
+  previousQuantityBase Decimal?          @map("previous_quantity_base") @db.Decimal(18, 3)
+  newQuantityBase      Decimal?          @map("new_quantity_base") @db.Decimal(18, 3)
+  fromBucket           StockBucket?      @map("from_bucket")
+  toBucket             StockBucket?      @map("to_bucket")
+  movementType         StockMovementType @map("movement_type")
+  stockReservationId   String?           @map("stock_reservation_id")
+  orderItemId          String?           @map("order_item_id")
+  cancellationId       String?           @map("cancellation_id")
+  returnItemId         String?           @map("return_item_id")
+  deliveryAttemptId    String?           @map("delivery_attempt_id")
+  reason               String
+  createdById          String            @map("created_by_id")
+  occurredAt           DateTime          @default(now()) @map("occurred_at") @db.Timestamptz(3)
 
   product          Product           @relation(fields: [productId], references: [id], onDelete: Restrict)
   stockLocation    StockLocation     @relation(fields: [stockLocationId], references: [id], onDelete: Restrict)
@@ -919,28 +929,32 @@ model StockMovement {
 }
 
 model Order {
-  id                     String         @id @default(cuid())
-  orderNumber            String         @unique @map("order_number")
-  orderYear              Int            @map("order_year")
-  sequenceNumber         Int            @map("sequence_number")
-  clientBusinessId       String         @map("client_business_id")
-  placedByUserId         String         @map("placed_by_user_id")
-  status                 OrderStatus    @default(pending_review)
-  isDemo                 Boolean        @default(false) @map("is_demo")
-  currency               CurrencyCode   @default(PKR)
-  requestedPaymentMethod PaymentMethod? @map("requested_payment_method")
-  recipientNameSnapshot  String         @map("recipient_name_snapshot")
-  mobileSnapshot         String         @map("mobile_snapshot")
-  addressSnapshot        String         @map("address_snapshot")
-  citySnapshot           String         @map("city_snapshot")
-  deliveryNotesSnapshot  String?        @map("delivery_notes_snapshot")
-  subtotal               Decimal        @db.Decimal(14, 2)
-  discountTotal          Decimal        @default(0) @map("discount_total") @db.Decimal(14, 2)
-  taxTotal               Decimal        @default(0) @map("tax_total") @db.Decimal(14, 2)
-  deliveryCharge         Decimal        @default(0) @map("delivery_charge") @db.Decimal(14, 2)
-  grandTotal             Decimal        @map("grand_total") @db.Decimal(14, 2)
-  createdAt              DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt              DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+  id                         String           @id @default(cuid())
+  orderNumber                String           @unique @map("order_number")
+  orderYear                  Int              @map("order_year")
+  sequenceNumber             Int              @map("sequence_number")
+  clientBusinessId           String           @map("client_business_id")
+  placedByUserId             String           @map("placed_by_user_id")
+  status                     OrderStatus      @default(pending_review)
+  isDemo                     Boolean          @default(false) @map("is_demo")
+  fulfilmentMethod           FulfilmentMethod @default(delivery) @map("fulfilment_method")
+  checkoutIdempotencyKey     String?          @unique @map("checkout_idempotency_key")
+  currency                   CurrencyCode     @default(PKR)
+  requestedPaymentMethod     PaymentMethod?   @map("requested_payment_method")
+  recipientNameSnapshot      String           @map("recipient_name_snapshot")
+  mobileSnapshot             String           @map("mobile_snapshot")
+  addressSnapshot            String           @map("address_snapshot")
+  citySnapshot               String           @map("city_snapshot")
+  deliveryNotesSnapshot      String?          @map("delivery_notes_snapshot")
+  pickupLocationSnapshot     String?          @map("pickup_location_snapshot")
+  pickupInstructionsSnapshot String?          @map("pickup_instructions_snapshot")
+  subtotal                   Decimal          @db.Decimal(14, 2)
+  discountTotal              Decimal          @default(0) @map("discount_total") @db.Decimal(14, 2)
+  taxTotal                   Decimal          @default(0) @map("tax_total") @db.Decimal(14, 2)
+  deliveryCharge             Decimal          @default(0) @map("delivery_charge") @db.Decimal(14, 2)
+  grandTotal                 Decimal          @map("grand_total") @db.Decimal(14, 2)
+  createdAt                  DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt                  DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   clientBusiness ClientBusiness       @relation(fields: [clientBusinessId], references: [id], onDelete: Restrict)
   placedByUser   User                 @relation(fields: [placedByUserId], references: [id], onDelete: Restrict)
@@ -1579,14 +1593,16 @@ model AuditLog {
 }
 
 model BusinessSettings {
-  id              String  @id @default(cuid())
-  businessName    String  @default("Raza Stationers") @map("business_name")
-  contactPhone    String  @default("042-35678901") @map("contact_phone")
-  requireApproval Boolean @default(true) @map("require_approval")
-  stockAlert      Boolean @default(true) @map("stock_alert")
-  packingView     Boolean @default(true) @map("packing_view")
-  inventoryMode   String  @default("DEMO") @map("inventory_mode")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  id                 String   @id @default(cuid())
+  businessName       String   @default("Raza Stationers") @map("business_name")
+  contactPhone       String   @default("042-35678901") @map("contact_phone")
+  requireApproval    Boolean  @default(true) @map("require_approval")
+  stockAlert         Boolean  @default(true) @map("stock_alert")
+  packingView        Boolean  @default(true) @map("packing_view")
+  inventoryMode      String   @default("DEMO") @map("inventory_mode")
+  pickupLocation     String?  @map("pickup_location")
+  pickupInstructions String?  @map("pickup_instructions")
+  updatedAt          DateTime @updatedAt @map("updated_at")
 
   @@map("business_settings")
 }

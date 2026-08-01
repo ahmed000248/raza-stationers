@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, ConflictException, ForbiddenException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
+import { normalizePakistaniMobile } from "@raza-stationers/validation";
 
 @Injectable()
 export class ClientsService {
@@ -33,8 +34,10 @@ export class ClientsService {
     address: string;
     city: string;
   }) {
+    const mobileNumber = normalizePakistaniMobile(data.mobileNumber);
+    if (!mobileNumber) throw new ConflictException("Mobile number must use the Pakistani 03XXXXXXXXX format");
     const existing = await this.prisma.clientBusiness.findFirst({
-      where: { mobileNumber: data.mobileNumber },
+      where: { mobileNumber },
     });
     if (existing) throw new ConflictException("Business with this mobile already exists");
 
@@ -43,7 +46,7 @@ export class ClientsService {
         businessName: data.businessName,
         businessType: data.businessType as any,
         contactPerson: data.contactPerson,
-        mobileNumber: data.mobileNumber,
+        mobileNumber,
         address: data.address,
         city: data.city,
       },

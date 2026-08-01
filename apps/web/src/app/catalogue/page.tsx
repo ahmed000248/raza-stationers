@@ -1,128 +1,128 @@
 "use client"
 
 import * as React from "react"
-import { useSearchParams } from "next/navigation"
-import { ProductCard } from "@/components/catalogue/ProductCard"
-import { CatalogueSearchInput } from "@/components/catalogue/CatalogueSearchInput"
-import { CategoryFilter } from "@/components/catalogue/CategoryFilter"
-import { PurchaseTypeToggle, PurchaseTypeFilter } from "@/components/catalogue/PurchaseTypeToggle"
-import { CataloguePagination } from "@/components/catalogue/CataloguePagination"
-import { StaggerList } from "@/components/motion/stagger-list"
-import { EmptyState } from "@/components/ui/empty-state"
-import { useAuth } from "@/hooks/use-auth"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { createAPIClient } from "@raza-stationers/api"
-import { SearchX, SlidersHorizontal, Loader2 } from "lucide-react"
-import { Suspense } from "react"
+import { Filter, SearchX, X } from "lucide-react"
+import { CategoryBrowser } from "@/components/catalogue/CategoryBrowser"
+import { CataloguePagination } from "@/components/catalogue/CataloguePagination"
+import { CatalogueSearchInput } from "@/components/catalogue/CatalogueSearchInput"
+import { ProductListRow } from "@/components/catalogue/ProductListRow"
+import { Button } from "@/components/ui/button"
+import { EmptyState } from "@/components/ui/empty-state"
+import { Sheet, SheetClose, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useAuth } from "@/hooks/use-auth"
+import useDebounce from "@/hooks/use-debounce"
 
-const ITEMS_PER_PAGE = 8
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
+const ITEMS_PER_PAGE = 20
+const allowedStock = new Set(["updating", "out_of_stock", "low_stock", "in_stock"])
+const allowedSaleType = new Set(["individual", "bulk"])
+const allowedSort = new Set(["name_asc", "name_desc", "newest"])
 
-function CatalogueContent() {
-  const searchParams = useSearchParams()
-  const categoryParam = searchParams.get("category")
-  const { pricingContext, accountStatus } = useAuth()
-
-  const [searchQuery, setSearchQueryRaw] = React.useState("")
-  const [selectedCategoryLocal, setSelectedCategoryLocal] = React.useState<string | null>(null)
-  const [purchaseType, setPurchaseType] = React.useState<PurchaseTypeFilter>("all")
-  const [currentPage, setCurrentPage] = React.useState(1)
-  const [products, setProducts] = React.useState<any[]>([])
-  const [categories, setCategories] = React.useState<any[]>([])
-  const [total, setTotal] = React.useState(0)
-  const [loading, setLoading] = React.useState(true)
-
-  const selectedCategory = categoryParam ?? selectedCategoryLocal
-
-  const setSelectedCategory = React.useCallback((cat: string | null) => { setSelectedCategoryLocal(cat); setCurrentPage(1) }, [])
-  const setSearchQuery = React.useCallback((q: string) => { setSearchQueryRaw(q); setCurrentPage(1) }, [])
-  const handlePurchaseTypeChange = React.useCallback((pt: PurchaseTypeFilter) => { setPurchaseType(pt); setCurrentPage(1) }, [])
-
-  const fetchProducts = React.useCallback(async () => {
-    setLoading(true)
-    try {
-      const api = createAPIClient({ baseUrl: API_BASE })
-      const params: any = { page: currentPage, limit: ITEMS_PER_PAGE }
-      if (searchQuery) params.search = searchQuery
-      if (selectedCategory) {
-        const cat = categories.find((c: any) => c.id === selectedCategory)
-        if (cat) params.categorySlug = cat.slug
-      }
-      const data = await api.getProducts(params)
-      setProducts(data.items || [])
-      setTotal(data.total || 0)
-    } catch {
-      setProducts([])
-    } finally {
-      setLoading(false)
-    }
-  }, [currentPage, searchQuery, selectedCategory, categories])
-
-  const fetchCategories = React.useCallback(async () => {
-    try {
-      const api = createAPIClient({ baseUrl: API_BASE })
-      const data = await api.getCategories()
-      setCategories(data || [])
-    } catch {}
-  }, [])
-
-  React.useEffect(() => { fetchCategories() }, [fetchCategories])
-  React.useEffect(() => { fetchProducts() }, [fetchProducts])
-
-  const totalPages = Math.ceil(total / ITEMS_PER_PAGE)
-
-  const clearAllFilters = () => {
-    setSearchQuery("")
-    setSelectedCategory(null)
-    setPurchaseType("all")
-    setCurrentPage(1)
-  }
-
-  const categoryItems = categories.map((c: any) => ({ id: c.id, name: c.name, slug: c.slug }))
-
-  return (
-    <div className="py-10 px-6 min-h-screen">
-      <div className="mx-auto max-w-none w-full space-y-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-border pb-6">
-          <div>
-            <span className="text-xs font-semibold uppercase tracking-wider text-[var(--color-evergreen-600)]">FR-CAT-04 Wholesale Catalogue</span>
-            <h1 className="font-heading text-3xl sm:text-4xl font-bold tracking-tight text-[var(--color-ink-900)] mt-1">Stationery Products Catalogue</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Browse paper, notebooks, writing tools, and office supplies.</p>
-          </div>
-        </div>
-
-        <div className="space-y-4 bg-card/40 p-4 sm:p-6 rounded-2xl border border-border">
-          <CatalogueSearchInput value={searchQuery} onChange={setSearchQuery} />
-          <div className="flex items-center justify-between gap-4 pt-2 border-t border-border/40">
-            <CategoryFilter categories={categoryItems} selectedId={selectedCategory} onSelect={setSelectedCategory} />
-            {(selectedCategory || searchQuery || purchaseType !== "all") && (
-              <button type="button" onClick={clearAllFilters} className="text-xs font-medium text-[var(--color-evergreen-600)] hover:underline shrink-0">Reset Filters</button>
-            )}
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>Showing <span className="font-semibold text-foreground">{loading ? "..." : total}</span> products</span>
-          <span className="flex items-center gap-1"><SlidersHorizontal className="size-3" /><span>FR-CAT-08</span></span>
-        </div>
-
-        {loading ? (
-          <div className="flex items-center justify-center py-20"><Loader2 className="size-6 animate-spin text-muted-foreground" /></div>
-        ) : products.length === 0 ? (
-          <EmptyState icon={SearchX} title="No Products Match Your Search" description="Try clearing your filters." actionLabel="Reset All Filters" onAction={clearAllFilters} />
-        ) : (
-          <StaggerList className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {products.map((p: any) => (
-              <ProductCard key={p.id} product={p} pricingContext={pricingContext} />
-            ))}
-          </StaggerList>
-        )}
-
-        <CataloguePagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
-      </div>
-    </div>
-  )
+function CatalogueSkeleton() {
+  return <div className="overflow-hidden rounded-2xl border border-border bg-card">{Array.from({ length: 8 }, (_, index) => <div key={index} className="flex items-center gap-3 border-b border-border p-3 last:border-0"><Skeleton className="size-12 shrink-0 rounded-xl" /><div className="flex-1 space-y-2"><Skeleton className="h-3 w-2/3" /><Skeleton className="h-2.5 w-1/3" /></div><Skeleton className="h-10 w-14 rounded-xl" /></div>)}</div>
 }
 
 export default function CataloguePage() {
-  return <Suspense fallback={<div className="p-8 text-center text-sm text-muted-foreground">Loading Catalogue...</div>}><CatalogueContent /></Suspense>
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const { pricingContext } = useAuth()
+  const [searchInput, setSearchInput] = React.useState(searchParams.get("q") || "")
+  const debouncedSearch = useDebounce(searchInput, 350)
+  const [products, setProducts] = React.useState<any[]>([])
+  const [categories, setCategories] = React.useState<any[]>([])
+  const [units, setUnits] = React.useState<any[]>([])
+  const [total, setTotal] = React.useState(0)
+  const [loading, setLoading] = React.useState(true)
+  const [error, setError] = React.useState("")
+  const [filtersOpen, setFiltersOpen] = React.useState(false)
+
+  const current = React.useMemo(() => {
+    const pageValue = Number(searchParams.get("page"))
+    const saleType = searchParams.get("saleType")
+    const stock = searchParams.get("stock")
+    const sort = searchParams.get("sort")
+    const minPrice = Number(searchParams.get("minPrice"))
+    const maxPrice = Number(searchParams.get("maxPrice"))
+    return {
+      q: searchParams.get("q") || "", category: searchParams.get("category"),
+      page: Number.isInteger(pageValue) && pageValue > 0 ? pageValue : 1,
+      saleType: allowedSaleType.has(saleType || "") ? saleType as "individual" | "bulk" : undefined,
+      stock: allowedStock.has(stock || "") ? stock as "updating" | "out_of_stock" | "low_stock" | "in_stock" : undefined,
+      unit: searchParams.get("unit") || undefined,
+      sort: allowedSort.has(sort || "") ? sort as "name_asc" | "name_desc" | "newest" : "name_asc" as const,
+      minPrice: Number.isFinite(minPrice) && minPrice >= 0 && searchParams.has("minPrice") ? minPrice : undefined,
+      maxPrice: Number.isFinite(maxPrice) && maxPrice >= 0 && searchParams.has("maxPrice") ? maxPrice : undefined,
+    }
+  }, [searchParams])
+
+  const updateParams = React.useCallback((updates: Record<string, string | number | null | undefined>, resetPage = true) => {
+    const next = new URLSearchParams(searchParams.toString())
+    Object.entries(updates).forEach(([key, value]) => value === null || value === undefined || value === "" ? next.delete(key) : next.set(key, String(value)))
+    if (resetPage && !("page" in updates)) next.delete("page")
+    router.replace(`${pathname}${next.size ? `?${next}` : ""}`, { scroll: false })
+  }, [pathname, router, searchParams])
+
+  React.useEffect(() => { if (debouncedSearch !== current.q) updateParams({ q: debouncedSearch || null }) }, [debouncedSearch, current.q, updateParams])
+  React.useEffect(() => { setSearchInput(current.q) }, [current.q])
+
+  React.useEffect(() => {
+    const api = createAPIClient({ baseUrl: API_BASE })
+    Promise.all([api.getCategories(), api.getCatalogueFilterOptions()]).then(([categoryData, optionData]: any[]) => {
+      setCategories(categoryData || [])
+      setUnits(optionData?.units || [])
+    }).catch(() => {})
+  }, [])
+
+  React.useEffect(() => {
+    const controller = new AbortController()
+    const api = createAPIClient({ baseUrl: API_BASE })
+    setLoading(true)
+    setError("")
+    api.getProducts({ page: current.page, limit: ITEMS_PER_PAGE, search: current.q || undefined, categorySlug: current.category || undefined, saleType: current.saleType, stock: current.stock, unit: current.unit, minPrice: current.minPrice, maxPrice: current.maxPrice, sort: current.sort, signal: controller.signal })
+      .then((data: any) => { setProducts(data.items || []); setTotal(data.total || 0) })
+      .catch((cause: unknown) => { if ((cause as Error)?.name !== "AbortError") { setProducts([]); setError("Catalogue results could not be loaded. Please try again.") } })
+      .finally(() => { if (!controller.signal.aborted) setLoading(false) })
+    return () => controller.abort()
+  }, [current])
+
+  const reset = () => { setSearchInput(""); router.replace(pathname, { scroll: false }); setFiltersOpen(false) }
+  const activeFilters = [current.category && ["category", current.category], current.saleType && ["saleType", current.saleType], current.stock && ["stock", current.stock.replaceAll("_", " ")], current.unit && ["unit", current.unit], current.minPrice !== undefined && ["minPrice", `From Rs. ${current.minPrice}`], current.maxPrice !== undefined && ["maxPrice", `To Rs. ${current.maxPrice}`]].filter(Boolean) as string[][]
+  const filterControls = (
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-6">
+      <label className="space-y-1 text-xs font-semibold">Sale type<select value={current.saleType || ""} onChange={(event) => updateParams({ saleType: event.target.value || null })} className="block min-h-10 w-full rounded-xl border border-border bg-background px-3 text-sm font-normal"><option value="">All sale types</option><option value="individual">Individual</option><option value="bulk">Bulk packaging</option></select></label>
+      <label className="space-y-1 text-xs font-semibold">Availability<select value={current.stock || ""} onChange={(event) => updateParams({ stock: event.target.value || null })} className="block min-h-10 w-full rounded-xl border border-border bg-background px-3 text-sm font-normal"><option value="">All stock states</option><option value="updating">Stock being updated</option><option value="in_stock">In stock</option><option value="low_stock">Low stock</option><option value="out_of_stock">Out of stock</option></select></label>
+      <label className="space-y-1 text-xs font-semibold">Sale unit<select value={current.unit || ""} onChange={(event) => updateParams({ unit: event.target.value || null })} className="block min-h-10 w-full rounded-xl border border-border bg-background px-3 text-sm font-normal"><option value="">All units</option>{units.map((unit) => <option key={unit.code} value={unit.code}>{unit.name}</option>)}</select></label>
+      <label className="space-y-1 text-xs font-semibold">Minimum price<input type="number" min="0" defaultValue={current.minPrice} key={`min-${current.minPrice}`} onBlur={(event) => updateParams({ minPrice: event.target.value || null })} placeholder="No minimum" className="block min-h-10 w-full rounded-xl border border-border bg-background px-3 text-sm font-normal" /></label>
+      <label className="space-y-1 text-xs font-semibold">Maximum price<input type="number" min="0" defaultValue={current.maxPrice} key={`max-${current.maxPrice}`} onBlur={(event) => updateParams({ maxPrice: event.target.value || null })} placeholder="No maximum" className="block min-h-10 w-full rounded-xl border border-border bg-background px-3 text-sm font-normal" /></label>
+      <label className="space-y-1 text-xs font-semibold">Sort<select value={current.sort} onChange={(event) => updateParams({ sort: event.target.value === "name_asc" ? null : event.target.value })} className="block min-h-10 w-full rounded-xl border border-border bg-background px-3 text-sm font-normal"><option value="name_asc">Name A–Z</option><option value="name_desc">Name Z–A</option><option value="newest">Recently added</option></select></label>
+    </div>
+  )
+
+  return (
+    <div className="min-h-screen px-3 py-6 sm:px-6 sm:py-10">
+      <div className="mx-auto w-full max-w-6xl space-y-6">
+        <header className="space-y-2"><p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--color-evergreen-600)]">Raza Stationers catalogue</p><h1 className="font-heading text-2xl font-bold text-[var(--color-ink-900)] sm:text-3xl">Find supplies quickly</h1><p className="text-sm text-muted-foreground">Compact, verified product information with shareable filters.</p></header>
+        <div className="rounded-2xl border border-border bg-card p-3 sm:p-4">
+          <div className="flex gap-2"><CatalogueSearchInput value={searchInput} onChange={setSearchInput} className="min-w-0 flex-1" /><Button type="button" variant="outline" className="min-h-10 shrink-0 rounded-xl lg:hidden" onClick={() => setFiltersOpen(true)}><Filter className="size-4" /><span className="hidden sm:inline">Filters</span></Button></div>
+          <div className="mt-4 hidden border-t border-border pt-4 lg:block">{filterControls}</div>
+          {activeFilters.length > 0 && <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3">{activeFilters.map(([key, label]) => <button key={key} type="button" onClick={() => updateParams({ [key]: null })} className="inline-flex min-h-8 items-center gap-1 rounded-full bg-[var(--color-mist-100)] px-3 text-[11px] font-semibold capitalize">{label}<X className="size-3" /></button>)}<button type="button" onClick={reset} className="min-h-8 px-2 text-xs font-semibold text-[var(--color-evergreen-600)] hover:underline">Reset filters</button></div>}
+        </div>
+
+        <CategoryBrowser variant="mobile" categories={categories} selectedSlug={current.category} onSelect={(category) => updateParams({ category })} />
+        <div className="flex gap-6">
+          <CategoryBrowser categories={categories} selectedSlug={current.category} onSelect={(category) => updateParams({ category })} />
+          <section className="min-w-0 flex-1" aria-busy={loading}>
+            <div className="mb-3 flex items-center justify-between text-xs text-muted-foreground"><span>{loading ? "Loading results…" : `${total.toLocaleString("en-PK")} products`}</span>{error && <button type="button" onClick={() => updateParams({ page: current.page }, false)} className="font-semibold text-destructive underline">Retry</button>}</div>
+            {loading ? <CatalogueSkeleton /> : products.length === 0 ? <EmptyState icon={SearchX} title="No products match these filters" description={error || "Try clearing one or more filters."} actionLabel="Reset filters" onAction={reset} /> : <div className="overflow-hidden rounded-2xl border border-border bg-card">{products.map((product) => <ProductListRow key={product.id} product={product} pricingContext={pricingContext} />)}</div>}
+            <CataloguePagination currentPage={current.page} totalPages={Math.ceil(total / ITEMS_PER_PAGE)} onPageChange={(page) => updateParams({ page }, false)} />
+          </section>
+        </div>
+      </div>
+      <Sheet open={filtersOpen} onOpenChange={setFiltersOpen} side="right"><SheetClose onClick={() => setFiltersOpen(false)} /><SheetHeader><SheetTitle>Catalogue filters</SheetTitle></SheetHeader><div className="mt-5 flex-1 overflow-y-auto">{filterControls}<Button type="button" variant="outline" onClick={reset} className="mt-5 w-full rounded-xl">Reset filters</Button></div></Sheet>
+    </div>
+  )
 }

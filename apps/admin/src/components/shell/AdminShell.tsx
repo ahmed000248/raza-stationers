@@ -9,6 +9,8 @@ import { useAdminAuth } from "@/hooks/use-admin-auth"
 import { TotpEnrollView } from "./TotpEnrollView"
 import { TotpChallengeView } from "./TotpChallengeView"
 import { createClient } from "@/lib/supabase/client"
+import { BrandedLoader } from "./BrandedLoader"
+import { usePathname, useRouter } from "next/navigation"
 
 interface AddToastInput {
   title: string
@@ -39,10 +41,18 @@ const MFA_REQUIRED_ROLES: AdminRole[] = ["admin", "owner"]
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const { user, role: adminRole, loading, currentLevel, nextLevel, enrollMfa, confirmEnrollMfa, verifyMfa, refreshSession } = useAdminAuth()
   const [toasts, setToasts] = React.useState<ToastItem[]>([])
+  const pathname = usePathname()
+  const router = useRouter()
 
   // MFA challenge state (for already-enrolled users who need AAL2 step-up)
   const [pendingFactorId, setPendingFactorId] = React.useState<string | null>(null)
   const [pendingChallengeId, setPendingChallengeId] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    if (loading) return
+    if (!user && pathname !== "/login") router.replace(`/login?next=${encodeURIComponent(pathname)}`)
+    if (user && pathname === "/login") router.replace("/dashboard")
+  }, [loading, pathname, router, user])
 
   const addToast = React.useCallback(({ title, description, type = "info" }: AddToastInput) => {
     const id = Math.random().toString(36).substring(2, 9)
@@ -55,7 +65,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     setToasts((prev) => prev.filter((t) => t.id !== id))
   }, [])
 
-  const role: AdminRole = adminRole || (process.env.NODE_ENV !== "production" ? "owner" : "owner")
+  const role = adminRole as AdminRole
   const contextValue = React.useMemo(() => ({ role, userName: user?.name || "Staff", alertCount: 3, addToast }), [role, user, addToast])
 
   // Issue a fresh challenge for an already-enrolled factor
@@ -91,11 +101,20 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   // ── Loading ──────────────────────────────────────────────────────────────────
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-sm text-muted-foreground">Loading...</p>
-      </div>
-    )
+    return <BrandedLoader />
+  }
+
+  if (!user) {
+    if (pathname === "/login") return <>{children}</>
+    return <BrandedLoader label="Redirecting to secure sign in…" />
+  }
+
+  if (!adminRole) {
+    return <BrandedLoader label="Verifying portal permissions..." />
+  }
+
+  if (pathname === "/login") {
+    return <BrandedLoader label="Opening the operations portal…" />
   }
 
   // ── MFA Enrollment Gate ───────────────────────────────────────────────────────
@@ -113,11 +132,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   // Admin/owner enrolled but session is only AAL1 — needs step-up
   if (needsMfaStepUp) {
     if (!pendingFactorId || !pendingChallengeId) {
-      return (
-        <div className="flex items-center justify-center min-h-screen">
-          <p className="text-sm text-muted-foreground">Preparing two-factor challenge...</p>
-        </div>
-      )
+      return <BrandedLoader label="Preparing two-factor verification…" />
     }
     return (
       <>

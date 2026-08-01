@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { UserPlus, Briefcase } from "lucide-react"
+import { normalizePakistaniMobile } from "@raza-stationers/validation"
 
 interface StaffMember {
   id: string
@@ -52,12 +53,13 @@ export function StaffTab() {
 
   const handleInvite = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newName || !newMobile) return
+    const mobileNumber = normalizePakistaniMobile(newMobile)
+    if (!newName || !mobileNumber) return
 
     const newMember: StaffMember = {
       id: `link-${Date.now()}`,
       name: newName,
-      mobileNumber: newMobile,
+      mobileNumber,
       email: `${newName.toLowerCase().replace(/\s+/g, ".")}@alrazabookdepot.com`,
       businessRole: newRole,
       status: "invited",
@@ -127,7 +129,10 @@ export function StaffTab() {
                 <Input
                   value={newMobile}
                   onChange={(e) => setNewMobile(e.target.value)}
-                  placeholder="03001234567"
+                  inputMode="tel"
+                  autoComplete="tel-national"
+                  maxLength={11}
+                  placeholder="03XXXXXXXXX"
                   required
                 />
               </div>

@@ -40,7 +40,7 @@ async function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function fetchWithRetry(url, opts, maxAttempts = 30, intervalMs = 1000) {
+async function fetchWithRetry(url, opts, maxAttempts = 90, intervalMs = 1000) {
   for (let i = 1; i <= maxAttempts; i++) {
     try {
       const res = await fetch(url, opts);
@@ -138,9 +138,13 @@ async function main() {
     await testPool.query(`INSERT INTO public.test_run_sentinel (run_id) VALUES ($1)`, [containerName]);
     await testPool.end();
 
-    // --- 7. Start Local API Server ---
-    console.log("[6] Starting local API Server...");
-    serverProcess = spawn('npm', ['run', 'dev:api'], {
+    // --- 7. Build and start a stable local API process (never watch mode) ---
+    console.log("[6] Building and starting local API Server...");
+    execSync('npm run build:api', {
+      stdio: 'inherit',
+      env: { ...process.env, DATABASE_URL: testDatabaseUrl, DIRECT_URL: testDirectUrl }
+    });
+    serverProcess = spawn('npm', ['run', 'start', '--workspace=@raza-stationers/api-server'], {
       env: {
         ...process.env,
         DATABASE_URL: testDatabaseUrl,
@@ -182,7 +186,7 @@ async function main() {
     const seedHash = await bcrypt.default.hash('SeedAdmin@2024', 10);
     await localSeedPool.query(`
       INSERT INTO public.users (id, mobile_number, name, role, is_active, password_hash, supabase_auth_id, created_at, updated_at)
-      VALUES ('user_admin123', '+920000000000', 'Seed Admin', 'admin', true, $1, 'user_admin123', NOW(), NOW())
+      VALUES ('user_admin123', '03000000000', 'Seed Admin', 'admin', true, $1, 'user_admin123', NOW(), NOW())
       ON CONFLICT (id) DO UPDATE SET is_active = true, role = 'admin', supabase_auth_id = 'user_admin123'
     `, [seedHash]);
     await localSeedPool.end();

@@ -38,8 +38,8 @@ const prisma = new PrismaClient({ adapter });
 async function main() {
   console.log("=== STARTING FULL END-TO-END FLOW TESTS ===");
 
-  const randomSuffix = Math.floor(1000000 + Math.random() * 9000000).toString();
-  const testMobileNumber = `+929${randomSuffix}`;
+  const randomSuffix = Math.floor(10000000 + Math.random() * 90000000).toString();
+  const testMobileNumber = `035${randomSuffix}`;
   const testBusinessName = `E2E Test Shop ${randomSuffix}`;
 
   const passwordHash = await bcrypt.hash("password123", 10);
@@ -48,11 +48,11 @@ async function main() {
   const testOwnerSub = `owner_sub_e2e_${randomSuffix}`;
 
   console.log("[Setup] Setting up admin and owner users in database...");
-  await prisma.user.upsert({
-    where: { mobileNumber: '+920000000001' },
+  const testAdminUser = await prisma.user.upsert({
+    where: { mobileNumber: '03600000001' },
     update: { isActive: true, role: 'admin', passwordHash, supabaseAuthId: testAdminSub },
     create: {
-      mobileNumber: '+920000000001',
+      mobileNumber: '03600000001',
       name: 'Test Admin',
       role: 'admin',
       isActive: true,
@@ -62,10 +62,10 @@ async function main() {
   });
 
   await prisma.user.upsert({
-    where: { mobileNumber: '+920000000002' },
+    where: { mobileNumber: '03600000002' },
     update: { isActive: true, role: 'owner', passwordHash, supabaseAuthId: testOwnerSub },
     create: {
-      mobileNumber: '+920000000002',
+      mobileNumber: '03600000002',
       name: 'Test Owner',
       role: 'owner',
       isActive: true,
@@ -176,25 +176,53 @@ async function main() {
     // === GATE 7: CUSTOMER AND ORDER FLOWS ===
     console.log("\n--- Testing Gate 7: Customer and Order Flows ---");
 
-    // Resolve wholesale price for sample product SKU RS-001574
-    console.log("Resolving price for product RS-001574...");
-    const resolvePriceRes = await axios.get(`${API_BASE}/pricing/resolve/RS-001574?clientBusinessId=${testBusinessId}`, {
-      headers: { Authorization: `Bearer ${userToken}` }
+    const fixtureNumber = 580000 + Number(randomSuffix.slice(-5));
+    const fixtureCategory = await prisma.category.upsert({
+      where: { slug: 'synthetic-e2e' },
+      update: { isActive: true },
+      create: { name: 'Synthetic E2E', slug: 'synthetic-e2e', isActive: true }
     });
-    console.log("[PASS] Resolved price:", resolvePriceRes.data.effectivePrice);
-    if (resolvePriceRes.data.effectivePrice === undefined) {
-      throw new Error("Resolved price is undefined");
-    }
-
-    // Find sample product packaging in DB
-    const sampleProduct = await prisma.product.findUnique({
-      where: { sku: "RS-001574" },
-      include: { packaging: true }
+    const fixtureUnit = await prisma.unitOfMeasure.upsert({
+      where: { code: 'SYN-EACH' },
+      update: { isActive: true },
+      create: { code: 'SYN-EACH', name: 'Synthetic each', symbol: 'ea', isActive: true }
     });
-    const productPackagingId = sampleProduct?.packaging?.[0]?.id;
-    if (!productPackagingId) {
-      throw new Error("Could not find packaging for RS-001574");
-    }
+    const fixtureProduct = await prisma.product.create({
+      data: {
+        skuNumber: BigInt(fixtureNumber),
+        sku: `RS-${fixtureNumber}`,
+        name: `Synthetic wholesale fixture ${randomSuffix}`,
+        categoryId: fixtureCategory.id,
+        purchaseType: 'both',
+        status: 'active',
+        unitConfirmationStatus: 'confirmed',
+        allowIndividualSale: true,
+        openingStockStatus: 'COUNTED',
+        activatedAt: new Date(),
+        activatedById: testAdminUser.id
+      }
+    });
+    const samplePackaging = await prisma.productPackaging.create({
+      data: {
+        productId: fixtureProduct.id,
+        unitOfMeasureId: fixtureUnit.id,
+        code: 'UNIT',
+        label: 'Synthetic unit',
+        conversionToBase: 1,
+        isBase: true,
+        confirmationStatus: 'confirmed',
+        isActive: true,
+        prices: {
+          create: { priceType: 'wholesale', amount: 100, effectiveFrom: new Date(), createdById: testAdminUser.id }
+        }
+      },
+      include: { product: true }
+    });
+    const productPackagingId = samplePackaging.id;
+    const resolvePriceRes = await axios.get(`${API_BASE}/pricing/resolve/${samplePackaging.product.sku}?clientBusinessId=${testBusinessId}`, { headers: { Authorization: `Bearer ${userToken}` } });
+    if (resolvePriceRes.data.effectivePrice === undefined) throw new Error("Resolved price is undefined");
+    await prisma.product.update({ where: { id: samplePackaging.productId }, data: { openingStockStatus: 'COUNTED' } });
+    await prisma.deliveryZone.upsert({ where: { name: 'E2E Karachi' }, create: { name: 'E2E Karachi', city: 'Karachi', isFree: true, isActive: true }, update: { city: 'Karachi', isFree: true, isActive: true } });
 
     // Create an order
     console.log("Creating wholesale order...");
@@ -204,10 +232,12 @@ async function main() {
         { productPackagingId, quantity: 5 }
       ],
       recipientName: "E2E Test Recipient",
-      mobile: "+929999999999",
+      mobile: "03500000000",
       address: "123 Test Street",
       city: "Karachi",
-      paymentMethod: "cash"
+      paymentMethod: "CASH_ON_DELIVERY",
+      fulfilmentMethod: "delivery",
+      idempotencyKey: `e2e-order-${randomSuffix}`
     }, {
       headers: { Authorization: `Bearer ${userToken}` }
     });

@@ -6,6 +6,7 @@ import { User, ClientBusiness, BusinessUserRole } from "@raza-stationers/types"
 import { UserPricingContext } from "@/lib/pricing"
 import { createAPIClient } from "@raza-stationers/api"
 import { createClient } from "@/lib/supabase/client"
+import { BrandedLoader } from "@/components/site/BrandedLoader"
 
 export type AccountStatus = "guest" | "pending" | "approved" | "unregistered"
 
@@ -28,10 +29,11 @@ interface AuthContextValue {
     city: string
   }) => Promise<void>
   logout: () => Promise<void>
-  loginWithGoogle: () => Promise<void>
+  loginWithGoogle: (returnTo?: string) => Promise<void>
   resetPassword: (email: string) => Promise<void>
   updatePassword: (password: string) => Promise<void>
   linkAccount: (supabaseToken: string, mobileNumber: string, password: string) => Promise<void>
+  getAccessToken: () => Promise<string | null>
 }
 
 const AuthContext = React.createContext<AuthContextValue | null>(null)
@@ -186,19 +188,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     address: string
     city: string
   }) => {
-    const { data: signUpData, error } = await supabase.auth.signUp({
-      email: data.email,
-      password: data.password,
-      options: {
-        data: {
-          name: data.name,
-          phone: data.mobileNumber,
-        }
-      }
-    })
-    if (error) throw new Error(error.message)
+    const currentSession = (await supabase.auth.getSession()).data.session
+    let token = currentSession?.user.email?.toLowerCase() === data.email.toLowerCase() ? currentSession.access_token : null
+    if (!token) {
+      const { data: signUpData, error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: { data: { name: data.name, phone: data.mobileNumber } },
+      })
+      if (error) throw new Error(error.message)
+      token = signUpData.session?.access_token || null
+    }
 
-    const token = signUpData.session?.access_token
     if (!token) {
       throw new Error("CONFIRMATION_PENDING")
     }
@@ -224,11 +225,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await fetchProfile(token)
   }, [supabase, fetchProfile, api])
 
-  const loginWithGoogle = React.useCallback(async () => {
+  const loginWithGoogle = React.useCallback(async (returnTo = "/catalogue") => {
+    const safeReturnTo = returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/catalogue"
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(safeReturnTo)}`,
       },
     })
     if (error) throw new Error(error.message)
@@ -239,6 +241,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       redirectTo: `${window.location.origin}/reset-password`,
     })
     if (error) throw new Error(error.message)
+  }, [supabase])
+
+  const getAccessToken = React.useCallback(async () => {
+    const { data, error } = await supabase.auth.getSession()
+    if (error || !data.session) return null
+    if (data.session.expires_at && data.session.expires_at <= Math.floor(Date.now() / 1000) + 30) {
+      const refreshed = await supabase.auth.refreshSession()
+      return refreshed.data.session?.access_token || null
+    }
+    return data.session.access_token
   }, [supabase])
 
   const updatePassword = React.useCallback(async (password: string) => {
@@ -265,7 +277,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [accountStatus, clientBusiness])
 
   if (!isLoaded) {
-    return <div className="flex items-center justify-center min-h-screen"><p className="text-sm text-muted-foreground">Loading...</p></div>
+    return <BrandedLoader fullScreen label="Restoring your secure session…" />
   }
 
   return (
@@ -283,6 +295,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         resetPassword,
         updatePassword,
         linkAccount,
+        getAccessToken,
       }}
     >
       {children}

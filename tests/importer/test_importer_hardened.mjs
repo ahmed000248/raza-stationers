@@ -70,7 +70,7 @@ async function runTests() {
     update: { isActive: true },
     create: {
       id: 'user_admin123',
-      mobileNumber: '+920000000091',
+      mobileNumber: '03900000091',
       name: 'Test Admin',
       role: 'admin',
       isActive: true,
@@ -84,7 +84,7 @@ async function runTests() {
     update: { isActive: true },
     create: {
       id: 'user_owner123',
-      mobileNumber: '+920000000092',
+      mobileNumber: '03900000092',
       name: 'Test Owner',
       role: 'owner',
       isActive: true,
@@ -98,7 +98,7 @@ async function runTests() {
     update: { isActive: true },
     create: {
       id: 'user_regular123',
-      mobileNumber: '+920000000093',
+      mobileNumber: '03900000093',
       name: 'Test Regular User',
       role: 'business_user',
       isActive: true,

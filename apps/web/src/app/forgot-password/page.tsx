@@ -73,7 +73,7 @@ export default function ForgotPasswordPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="contact@alkarampaper.com"
+                  placeholder="you@business.com"
                   className={error ? "border-destructive" : ""}
                 />
               </div>

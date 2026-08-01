@@ -34,14 +34,20 @@ export class RazaAPIClient {
   }
 
   // Catalogue
-  async getProducts(params?: { page?: number; limit?: number; search?: string; categorySlug?: string }) {
+  async getProducts(params?: { page?: number; limit?: number; search?: string; categorySlug?: string; saleType?: "individual" | "bulk"; unit?: string; stock?: "updating" | "out_of_stock" | "low_stock" | "in_stock"; minPrice?: number; maxPrice?: number; sort?: "name_asc" | "name_desc" | "newest"; signal?: AbortSignal }) {
     const searchParams = new URLSearchParams();
     if (params?.page) searchParams.set("page", String(params.page));
     if (params?.limit) searchParams.set("limit", String(params.limit));
     if (params?.search) searchParams.set("search", params.search);
     if (params?.categorySlug) searchParams.set("categorySlug", params.categorySlug);
+    if (params?.saleType) searchParams.set("saleType", params.saleType);
+    if (params?.unit) searchParams.set("unit", params.unit);
+    if (params?.stock) searchParams.set("stock", params.stock);
+    if (params?.minPrice !== undefined) searchParams.set("minPrice", String(params.minPrice));
+    if (params?.maxPrice !== undefined) searchParams.set("maxPrice", String(params.maxPrice));
+    if (params?.sort) searchParams.set("sort", params.sort);
     const qs = searchParams.toString();
-    return this.get(`/products${qs ? `?${qs}` : ""}`);
+    return this.get(`/products${qs ? `?${qs}` : ""}`, params?.signal);
   }
 
   async getProduct(sku: string) {
@@ -50,6 +56,10 @@ export class RazaAPIClient {
 
   async getCategories() {
     return this.get("/categories");
+  }
+
+  async getCatalogueFilterOptions() {
+    return this.get("/catalogue/filter-options");
   }
 
   // Pricing
@@ -64,8 +74,12 @@ export class RazaAPIClient {
     items: Array<{ productPackagingId: string; quantity: number }>;
     recipientName: string;
     mobile: string;
-    address: string;
-    city: string;
+    address?: string;
+    city?: string;
+    deliveryNotes?: string;
+    paymentMethod?: string;
+    fulfilmentMethod: "delivery" | "pickup";
+    idempotencyKey: string;
   }) {
     return this.post("/orders", data);
   }
@@ -121,9 +135,12 @@ export class RazaAPIClient {
   }
 
   // Stock
-  async getAllStock(params?: { page?: number }) {
+  async getAllStock(params?: { page?: number; limit?: number; search?: string; stockState?: string }) {
     const searchParams = new URLSearchParams();
     if (params?.page) searchParams.set("page", String(params.page));
+    if (params?.limit) searchParams.set("limit", String(params.limit));
+    if (params?.search) searchParams.set("search", params.search);
+    if (params?.stockState) searchParams.set("stockState", params.stockState);
     const qs = searchParams.toString();
     return this.get(`/stock${qs ? `?${qs}` : ""}`);
   }
@@ -131,6 +148,10 @@ export class RazaAPIClient {
   async getStock(sku: string) {
     return this.get(`/stock/${sku}`);
   }
+
+  async recordOpeningStock(data: { productId: string; stockLocationId: string; quantityBase: number; reason: string }) { return this.post("/stock/opening", data); }
+  async adjustStock(data: { productId: string; stockLocationId: string; quantityDelta: number; reason: string }) { return this.post("/stock/adjustments", data); }
+  async getStockLocations() { return this.get("/stock-locations"); }
 
   // Delivery
   async getAllDeliveries(params?: { page?: number }) {
@@ -199,7 +220,7 @@ export class RazaAPIClient {
 
   // Staff
   async listStaff() { return this.get("/staff"); }
-  async createStaff(data: { name: string; mobileNumber: string; password: string; role: string; staffRole?: string }) { return this.post("/staff", data); }
+  async createStaff(data: { name: string; email: string; mobileNumber: string; role: "admin" | "packing" | "delivery" }) { return this.post("/staff", data); }
   async toggleStaffActive(id: string) { return this.put(`/staff/${id}/toggle-active`, {}); }
   async changeStaffRole(id: string, role: string) { return this.put(`/staff/${id}/change-role`, { role }); }
 
@@ -212,7 +233,9 @@ export class RazaAPIClient {
 
   // Settings
   async getSettings() { return this.get("/settings"); }
-  async updateSettings(data: { businessName?: string; contactPhone?: string; requireApproval?: boolean; stockAlert?: boolean; packingView?: boolean }) { return this.put("/settings", data); }
+  async updateSettings(data: { businessName?: string; contactPhone?: string; requireApproval?: boolean; stockAlert?: boolean; packingView?: boolean; pickupLocation?: string | null; pickupInstructions?: string | null }) { return this.put("/settings", data); }
+
+  async getFulfilmentOptions() { return this.get("/orders/fulfilment-options"); }
 
   // Audit
   async getAuditLogs(params?: { page?: number; limit?: number; entityType?: string }) {
@@ -237,9 +260,10 @@ export class RazaAPIClient {
     return this.postMethod(path, body);
   }
 
-  private async get(path: string) {
+  private async get(path: string, signal?: AbortSignal) {
     const res = await fetch(`${this.baseUrl}${path}`, {
       headers: this.getHeaders(),
+      signal,
     });
     if (res.status === 401 && this.onUnauthorized) {
       this.onUnauthorized();

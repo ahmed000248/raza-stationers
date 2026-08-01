@@ -14,37 +14,40 @@ export class InventoryController {
   constructor(private inventoryService: InventoryService) {}
 
   @Get("stock")
+  @UseGuards(RolesGuard)
+  @Roles("owner", "admin", "packing")
   @ApiOperation({ summary: "List all stock balances" })
-  findAllStock(@Query() query: { page?: number; limit?: number }) {
+  findAllStock(@Query() query: { page?: number; limit?: number; search?: string; stockState?: string }) {
     return this.inventoryService.findAllStock(query);
   }
 
+  @Post("stock/opening")
+  @UseGuards(RolesGuard)
+  @Roles("owner", "admin")
+  @ApiOperation({ summary: "Record a product's first real opening-stock count" })
+  recordOpeningStock(@CurrentUser("id") userId: string, @Body() body: { productId: string; stockLocationId: string; quantityBase: number; reason: string }) {
+    return this.inventoryService.recordOpeningStock({ ...body, userId });
+  }
+
+  @Post("stock/adjustments")
+  @UseGuards(RolesGuard)
+  @Roles("owner", "admin")
+  @ApiOperation({ summary: "Adjust initialized stock with before/after audit evidence" })
+  adjustStock(@CurrentUser("id") userId: string, @Body() body: { productId: string; stockLocationId: string; quantityDelta: number; reason: string }) {
+    return this.inventoryService.adjustStock({ ...body, userId });
+  }
+
   @Get("stock/:sku")
+  @UseGuards(RolesGuard)
+  @Roles("owner", "admin", "packing")
   @ApiOperation({ summary: "Get stock balance for a product by SKU" })
   getStock(@Param("sku") sku: string) {
     return this.inventoryService.getStockBySku(sku);
   }
 
-  @Post("stock/movements")
+  @Get("stock-locations")
   @UseGuards(RolesGuard)
   @Roles("owner", "admin", "packing")
-  @ApiOperation({ summary: "Record a stock movement (admin/owner/packing)" })
-  recordMovement(
-    @CurrentUser("id") userId: string,
-    @Body() body: {
-      productId: string;
-      stockLocationId: string;
-      quantityBase: number;
-      fromBucket?: string;
-      toBucket: string;
-      movementType: string;
-      reason: string;
-    },
-  ) {
-    return this.inventoryService.recordMovement({ ...body, userId });
-  }
-
-  @Get("stock-locations")
   @ApiOperation({ summary: "List active stock locations" })
   getLocations() {
     return this.inventoryService.getLocations();

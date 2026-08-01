@@ -7,19 +7,17 @@ import { useAdminShell } from "@/components/shell/AdminShell"
 import { isOwner } from "@/lib/role"
 import { StaffTable } from "@/components/staff/StaffTable"
 import { AddStaffModal } from "@/components/staff/AddStaffModal"
-import { createAPIClient } from "@raza-stationers/api"
 import { Loader2 } from "lucide-react"
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
+import { useAdminAuth } from "@/hooks/use-admin-auth"
 
 export default function StaffManagementPage() {
   const { role, addToast } = useAdminShell()
+  const { api } = useAdminAuth()
   const ownerRole = isOwner(role)
   const [staff, setStaff] = React.useState<any[]>([])
   const [loading, setLoading] = React.useState(true)
   const [addModalOpen, setAddModalOpen] = React.useState(false)
 
-  const api = createAPIClient({ baseUrl: API_BASE })
   const fetchStaff = React.useCallback(async () => {
     try { const d = await api.listStaff(); setStaff(d || []) } catch {} finally { setLoading(false) }
   }, [])
@@ -34,7 +32,7 @@ export default function StaffManagementPage() {
     </div>
   }
 
-  const handleCreateStaff = async (data: { name: string; mobileNumber: string; password: string; role: string }) => {
+  const handleCreateStaff = async (data: { name: string; email: string; mobileNumber: string; role: "admin" | "packing" | "delivery" }) => {
     await api.createStaff(data)
     setAddModalOpen(false)
     fetchStaff()
@@ -59,7 +57,7 @@ export default function StaffManagementPage() {
       {loading ? <div className="flex justify-center py-12"><Loader2 className="size-6 animate-spin" /></div> : (
         <StaffTable staff={staff} onToggleActive={handleToggleActive} />
       )}
-      <AddStaffModal open={addModalOpen} onClose={() => setAddModalOpen(false)} onAddStaff={(s) => handleCreateStaff({ name: s.name, mobileNumber: s.phone, password: "changeme123", role: s.role })} />
+      <AddStaffModal open={addModalOpen} onClose={() => setAddModalOpen(false)} onInvite={handleCreateStaff} />
     </div>
   )
 }

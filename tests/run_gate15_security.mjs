@@ -8,8 +8,8 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const BASE = 'https://raza-stationers-api-staging.onrender.com';
-const ADMIN_MOBILE = '+920000000001';
-const OWNER_MOBILE = '+920000000002';
+const ADMIN_MOBILE = '03600000001';
+const OWNER_MOBILE = '03600000002';
 const STAGING_PASS  = 'StagingAdmin@2024';
 
 let passed = 0; let failed = 0; let warned = 0;
@@ -50,7 +50,7 @@ async function main() {
   const ownerRes = await axios.post(`${BASE}/auth/login`, { mobileNumber: OWNER_MOBILE, password: STAGING_PASS });
   ownerToken = ownerRes.data.accessToken;
   // Register a temp read-only business user
-  const tmpMobile = `+929${Math.floor(1000000 + Math.random() * 9000000)}`;
+  const tmpMobile = `039${Math.floor(10000000 + Math.random() * 90000000)}`;
   const regRes = await axios.post(`${BASE}/auth/register`, { name: 'SecTest User', mobileNumber: tmpMobile, password: 'password123' });
   userToken = regRes.data.accessToken;
   const tmpUserId = regRes.data.user.id;

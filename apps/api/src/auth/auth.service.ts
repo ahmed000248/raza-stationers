@@ -4,6 +4,7 @@ import * as bcrypt from "bcryptjs";
 import * as jwt from "jsonwebtoken";
 import jwksRsa from "jwks-rsa";
 import { PrismaService } from "../prisma/prisma.service";
+import { normalizePakistaniMobile } from "@raza-stationers/validation";
 
 @Injectable()
 export class AuthService {
@@ -66,6 +67,8 @@ export class AuthService {
   }
 
   async registerSupabase(token: string, data: { name: string; mobileNumber: string }) {
+    const mobileNumber = normalizePakistaniMobile(data.mobileNumber);
+    if (!mobileNumber) throw new BadRequestException("Mobile number must use the Pakistani 03XXXXXXXXX format");
     const payload = await this.verifySupabaseToken(token);
     const sub = payload.sub;
     const email = payload.email || null;
@@ -78,7 +81,7 @@ export class AuthService {
     }
 
     const existingByMobile = await this.prisma.user.findUnique({
-      where: { mobileNumber: data.mobileNumber },
+      where: { mobileNumber },
     });
     if (existingByMobile) {
       throw new ConflictException("Mobile number is already registered in the system. Please sign in and link your account.");
@@ -98,7 +101,7 @@ export class AuthService {
         supabaseAuthId: sub,
         email: email,
         name: data.name,
-        mobileNumber: data.mobileNumber,
+        mobileNumber,
         role: "business_user",
       },
     });
@@ -172,8 +175,10 @@ export class AuthService {
   }
 
   async register(data: { name: string; mobileNumber: string; password: string }) {
+    const mobileNumber = normalizePakistaniMobile(data.mobileNumber);
+    if (!mobileNumber) throw new BadRequestException("Mobile number must use the Pakistani 03XXXXXXXXX format");
     const existing = await this.prisma.user.findUnique({
-      where: { mobileNumber: data.mobileNumber },
+      where: { mobileNumber },
     });
     if (existing) {
       throw new ConflictException("Mobile number already registered");
@@ -183,7 +188,7 @@ export class AuthService {
     const user = await this.prisma.user.create({
       data: {
         name: data.name,
-        mobileNumber: data.mobileNumber,
+        mobileNumber,
         passwordHash: hashedPassword,
         role: "business_user",
       },
@@ -193,6 +198,7 @@ export class AuthService {
   }
 
   async login(mobileNumber: string, password: string) {
+    mobileNumber = normalizePakistaniMobile(mobileNumber) || mobileNumber.trim();
     const user = await this.prisma.user.findUnique({
       where: { mobileNumber },
     });

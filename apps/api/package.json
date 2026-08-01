@@ -18,6 +18,8 @@
     "@nestjs/swagger": "^11.0.0",
     "@prisma/client": "^7.9.0",
     "@raza-stationers/db": "^0.1.0",
+    "@raza-stationers/validation": "*",
+    "@supabase/supabase-js": "^2.111.0",
     "@types/qrcode": "^1.5.6",
     "bcryptjs": "^3.0.3",
     "class-transformer": "^0.5.1",

@@ -57,12 +57,6 @@ export function PaymentMethodPicker({
       icon: Wallet,
     },
     {
-      id: "ONLINE_NAYAPAY",
-      label: "NayaPay",
-      description: "Pay instantly via NayaPay digital wallet",
-      icon: Wallet,
-    },
-    {
       id: "ONLINE_BANK_TRANSFER",
       label: "Manual Bank Transfer",
       description: "Direct bank transfer with receipt slip upload",

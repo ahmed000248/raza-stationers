@@ -4,6 +4,7 @@ import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { Roles } from "../auth/decorators/roles.decorator";
 import { StaffService } from "./staff.service";
+import { CurrentUser } from "../auth/decorators/current-user.decorator";
 
 @ApiTags("Staff")
 @Controller("staff")
@@ -18,9 +19,9 @@ export class StaffController {
   findAll() { return this.staffService.findAll(); }
 
   @Post()
-  @ApiOperation({ summary: "Create a new staff member (owner only)" })
-  create(@Body() body: { name: string; mobileNumber: string; password: string; role: string; staffRole?: string }) {
-    return this.staffService.create(body);
+  @ApiOperation({ summary: "Invite a Supabase-backed staff member (AAL2 owner only)" })
+  create(@CurrentUser("id") ownerId: string, @Body() body: { name: string; email: string; mobileNumber: string; role: "admin" | "packing" | "delivery" }) {
+    return this.staffService.create(body, ownerId);
   }
 
   @Put(":id/toggle-active")

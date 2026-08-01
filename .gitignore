@@ -12,6 +12,7 @@ node_modules/
 
 # testing
 coverage/
+tests/disposable_server.log
 
 # next.js
 .next/
@@ -51,3 +52,4 @@ graphify-out/cache/
 tools/__pycache__/
 
 graphify-out/
+.gstack/

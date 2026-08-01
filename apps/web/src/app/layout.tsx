@@ -27,6 +27,8 @@ const fontUrdu = Noto_Nastaliq_Urdu({
 
 export const metadata: Metadata = {
   title: "Raza Stationers | Wholesale & Retail Stationery",
+  icons: { icon: "/brand-mark.svg", apple: "/brand-mark.svg" },
+  manifest: "/manifest.webmanifest",
   description: "Quality notebooks, pens and office supplies — wholesale pricing for registered shops.",
 };
 

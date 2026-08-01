@@ -20,6 +20,7 @@ interface AdminAuthContextValue {
   unenrollMfa: (factorId: string) => Promise<void>
   logout: () => Promise<void>
   refreshSession: () => Promise<void>
+  api: ReturnType<typeof createAPIClient>
 }
 
 const AdminAuthContext = React.createContext<AdminAuthContextValue | null>(null)
@@ -53,6 +54,10 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const profile: any = await api.getProfile()
       const staffRole: AdminRole = (profile.staffProfile?.staffRole || profile.role) as AdminRole
+      if (!["owner", "admin", "packing", "delivery"].includes(staffRole)) {
+        await supabase.auth.signOut()
+        throw new Error("This account is not authorized for the Admin application")
+      }
       setUser({
         id: profile.id,
         name: profile.name,
@@ -69,8 +74,12 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
         setCurrentLevel(mfaData.currentLevel || "aal1")
         setNextLevel(mfaData.nextLevel || "aal1")
       }
+      return true
     } catch (err) {
       console.warn("Failed to load admin profile", err)
+      setUser(null)
+      setRole(null)
+      return false
     }
   }, [api, supabase])
 
@@ -121,6 +130,13 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     const token = data.session.access_token
     api.setAuthToken(token)
 
+    const profile: any = await api.getProfile()
+    const trustedRole = profile.staffProfile?.staffRole || profile.role
+    if (!["owner", "admin", "packing", "delivery"].includes(trustedRole)) {
+      await supabase.auth.signOut()
+      throw new Error("This account is not authorized for the Admin application")
+    }
+
     // Check MFA level
     const { data: mfaData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
     if (mfaData && mfaData.nextLevel === "aal2" && mfaData.currentLevel === "aal1") {
@@ -140,7 +156,8 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    await fetchProfile(token)
+    const authorized = await fetchProfile(token)
+    if (!authorized) throw new Error("This account is not authorized for the Admin application")
     return { requiresMfa: false }
   }, [supabase, api, fetchProfile])
 
@@ -217,6 +234,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
         unenrollMfa,
         logout,
         refreshSession,
+        api,
       }}
     >
       {children}

@@ -4,7 +4,7 @@ import * as React from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Bilingual } from "@/components/ui/bilingual"
-import { SUPPORTED_DELIVERY_CITIES } from "@raza-stationers/validation"
+import { normalizePakistaniMobile, SUPPORTED_DELIVERY_CITIES } from "@raza-stationers/validation"
 import { Mail, Phone, MapPin, MessageSquare, Send, Check, Clock, Building2 } from "lucide-react"
 
 export default function ContactPage() {
@@ -21,7 +21,7 @@ export default function ContactPage() {
   const validate = () => {
     const newErrors: Record<string, string> = {}
     if (!name || name.trim().length < 2) newErrors.name = "Name is required"
-    if (!mobile || mobile.trim().length < 10) newErrors.mobile = "Valid mobile number is required"
+    if (!normalizePakistaniMobile(mobile)) newErrors.mobile = "Use Pakistani mobile format 03XXXXXXXXX"
     if (!city) newErrors.city = "City is required"
     if (!message || message.trim().length < 10) newErrors.message = "Message must be at least 10 characters"
 
@@ -163,7 +163,10 @@ export default function ContactPage() {
                       <Input
                         value={mobile}
                         onChange={(e) => setMobile(e.target.value)}
-                        placeholder="03001234567"
+                        inputMode="tel"
+                        autoComplete="tel-national"
+                        maxLength={11}
+                        placeholder="03XXXXXXXXX"
                         className={errors.mobile ? "border-destructive" : ""}
                       />
                       {errors.mobile && <span className="text-[11px] text-destructive font-medium">{errors.mobile}</span>}

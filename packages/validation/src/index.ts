@@ -16,6 +16,29 @@ export const SUPPORTED_DELIVERY_CITIES = [
 export type SupportedCity = (typeof SUPPORTED_DELIVERY_CITIES)[number]
 
 /**
+ * Convert accepted Pakistani mobile presentations to the owner-approved local
+ * storage/display form: 03XXXXXXXXX. Returns null for landlines, malformed or
+ * non-Pakistani numbers so callers cannot silently rewrite an identity.
+ */
+export function normalizePakistaniMobile(value: string): string | null {
+  const compact = value.trim().replace(/[\s()-]/g, "")
+  let digits = compact.replace(/^\+/, "")
+  if (digits.startsWith("0092")) digits = digits.slice(2)
+  if (digits.startsWith("92")) digits = `0${digits.slice(2)}`
+  if (/^3\d{9}$/.test(digits)) digits = `0${digits}`
+  return /^03\d{9}$/.test(digits) ? digits : null
+}
+
+export const pakistaniMobileSchema = z.string().transform((value, context) => {
+  const normalized = normalizePakistaniMobile(value)
+  if (!normalized) {
+    context.addIssue({ code: z.ZodIssueCode.custom, message: "Enter a Pakistani mobile number in 03XXXXXXXXX format" })
+    return z.NEVER
+  }
+  return normalized
+})
+
+/**
  * Check if a city string is in our delivery zones (OF-04)
  */
 export function isCityInDeliveryZone(city: string): boolean {
@@ -29,10 +52,7 @@ export function isCityInDeliveryZone(city: string): boolean {
  */
 export const deliveryAddressSchema = z.object({
   recipientName: z.string().min(2, "Recipient name must be at least 2 characters"),
-  phone: z
-    .string()
-    .min(10, "Please enter a valid phone number (+92 300 1234567)")
-    .regex(/^(\+92|0)?3[0-9]{9}$/, "Must be a valid Pakistani mobile number"),
+  phone: pakistaniMobileSchema,
   city: z
     .string()
     .min(1, "Please select or enter your city")
@@ -88,10 +108,7 @@ export type SignInFormData = z.infer<typeof signInSchema>
 export const wholesaleRegistrationSchema = z.object({
   shopName: z.string().min(3, "Shop / Business name must be at least 3 characters"),
   ownerName: z.string().min(2, "Owner / Primary contact name is required"),
-  mobile: z
-    .string()
-    .min(10, "Please enter a valid Pakistani mobile number (+92 300 1234567)")
-    .regex(/^(\+92|0)?3[0-9]{9}$/, "Must be a valid Pakistani mobile number"),
+  mobile: pakistaniMobileSchema,
   email: z.string().email("Valid business email address is required"),
   city: z
     .string()

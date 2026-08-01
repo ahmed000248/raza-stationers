@@ -25,8 +25,8 @@ dotenv.config();
 const API_BASE = 'https://raza-stationers-api-staging.onrender.com';
 
 // Credentials set by scripts/database/set_staging_passwords.js
-const ADMIN_MOBILE   = '+920000000001';
-const OWNER_MOBILE   = '+920000000002';
+const ADMIN_MOBILE   = '03600000001';
+const OWNER_MOBILE   = '03600000002';
 const STAGING_PASS   = 'StagingAdmin@2024';
 
 // ─── Staging DB for cleanup ───────────────────────────────────────────────────
@@ -92,8 +92,8 @@ async function main() {
   let testBusinessId  = null;
   let testOrderId     = null;
 
-  const randomSuffix = Math.floor(1000000 + Math.random() * 9000000).toString();
-  const testMobile   = `+929${randomSuffix}`;
+  const randomSuffix = Math.floor(10000000 + Math.random() * 90000000).toString();
+  const testMobile   = `039${randomSuffix}`;
   const testBiz      = `E2E Staging Shop ${randomSuffix}`;
 
   try {
@@ -216,10 +216,12 @@ async function main() {
       clientBusinessId: testBusinessId,
       items: [{ productPackagingId: packagingId, quantity: 3 }],
       recipientName: 'Staging Recipient',
-      mobile: '+929999999990',
+      mobile: '03999999990',
       address: '1 Test Road',
       city: 'Karachi',
-      paymentMethod: 'cash',
+      paymentMethod: 'CASH_ON_DELIVERY',
+      fulfilmentMethod: 'delivery',
+      idempotencyKey: `staging-e2e-${Date.now()}`,
     }, { headers: { Authorization: `Bearer ${userToken}` } });
     testOrderId = orderRes.data.id;
     if (testOrderId) pass(`POST /orders  →  id=${testOrderId}`);
