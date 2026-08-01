@@ -26,15 +26,15 @@
 ```
 main  ← approved release lands here at Gate 17
  └── stabilization  (Phase 5 merged: commit 971f4c7)
-       └── phase-6-production-deployment  ← all Phase 6 work happens here
+       └── phase-7-production-deployment  ← all Phase 6 work happens here
 ```
 
 ```bash
 # One-time setup — do not run until plan is approved
 git checkout stabilization
 git pull origin stabilization
-git checkout -b phase-6-production-deployment
-git push -u origin phase-6-production-deployment
+git checkout -b phase-7-production-deployment
+git push -u origin phase-7-production-deployment
 ```
 
 **Staging services (`phase-5-staging-deployment`) are preserved as-is.** No changes to staging Render service, staging Vercel projects, or staging Supabase project at any point during Phase 6.

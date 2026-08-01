@@ -5,6 +5,7 @@ import { CartProvider } from "@/hooks/use-cart";
 import { AuthProvider } from "@/hooks/use-auth";
 import { SiteNav } from "@/components/site/SiteNav";
 import { SiteFooter } from "@/components/site/SiteFooter";
+import { FloatingCartFAB } from "@/components/cart/FloatingCartFAB";
 
 const fontSans = Poppins({
   subsets: ["latin"],
@@ -45,6 +46,7 @@ export default function RootLayout({
             <SiteNav />
             <main className="flex-1 w-full">{children}</main>
             <SiteFooter />
+            <FloatingCartFAB />
           </CartProvider>
         </AuthProvider>
       </body>
