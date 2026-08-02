@@ -7,9 +7,11 @@ import { PrismaService } from "../../prisma/prisma.service";
 @Injectable()
 export class SupabaseStrategy extends PassportStrategy(Strategy, "supabase") {
   constructor(private prisma: PrismaService) {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
     if (!supabaseUrl && process.env.NODE_ENV !== "test" && process.env.USE_TEST_KEY !== "true") {
-      throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL environment variable.");
+      throw new Error(
+        "Missing SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL) environment variable. Please configure it in your root .env or apps/api/.env file."
+      );
     }
     const jwksUri = `${(supabaseUrl || "https://mock.supabase.co").replace(/\/$/, "")}/auth/v1/jwks`;
 

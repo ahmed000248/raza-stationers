@@ -5,12 +5,10 @@ import { z } from "zod"
  * Primary logistics coverage in Karachi and major Punjab cities.
  */
 export const SUPPORTED_DELIVERY_CITIES = [
-  "Karachi",
-  "Lahore",
-  "Faisalabad",
+  "Wah Cantt",
+  "Hassan Abdal",
+  "Taxila",
   "Rawalpindi",
-  "Multan",
-  "Islamabad",
 ] as const
 
 export type SupportedCity = (typeof SUPPORTED_DELIVERY_CITIES)[number]
@@ -57,7 +55,7 @@ export const deliveryAddressSchema = z.object({
     .string()
     .min(1, "Please select or enter your city")
     .refine((val) => isCityInDeliveryZone(val), {
-      message: "This city is outside our delivery zones. Delivery is currently available in Karachi & major Punjab cities.",
+      message: "This city is outside our delivery zones. Delivery is currently available in Wah Cantt, Hassan Abdal, Taxila, and Rawalpindi.",
     }),
   address: z.string().min(10, "Complete shop/office street address is required"),
   deliveryNotes: z.string().optional(),
@@ -114,7 +112,7 @@ export const wholesaleRegistrationSchema = z.object({
     .string()
     .min(1, "Please select or enter your city")
     .refine((val) => isCityInDeliveryZone(val), {
-      message: "This city is outside our delivery zones. Delivery is currently available in Karachi & major Punjab cities.",
+      message: "This city is outside our delivery zones. Delivery is currently available in Wah Cantt, Hassan Abdal, Taxila, and Rawalpindi.",
     }),
   address: z.string().min(10, "Complete shop/market street address is required"),
   ntnCnic: z.string().min(5, "Valid NTN number or 13-digit CNIC is required for wholesale registration"),

@@ -6,7 +6,7 @@ import { BookOpen, ShieldCheck, Truck, Award, MapPin, ArrowRight } from "lucide-
 
 export const metadata = {
   title: "About Us | Raza Stationers",
-  description: "Learn about Raza Stationers, our Urdu Bazar Karachi heritage, and wholesale stationery distribution.",
+  description: "Learn about Raza Stationers, owned by Nafaj Taj and Kamran Malik in Wah Cantt.",
 }
 
 export default function AboutPage() {
@@ -19,16 +19,16 @@ export default function AboutPage() {
             <BookOpen className="size-8" />
           </div>
           <span className="text-xs font-semibold uppercase tracking-wider text-[var(--color-evergreen-600)] block">
-            FR-LNG-01 Brand Story & Heritage
+            Brand Story & Heritage
           </span>
           <h1 className="font-heading text-4xl sm:text-5xl font-extrabold tracking-tight text-[var(--color-ink-900)]">
-            Wholesale Stationery Excellence Since 1998
+            Wholesale & Retail Stationery Excellence
           </h1>
           <p dir="rtl" className="font-urdu text-xl text-[var(--color-evergreen-600)] font-semibold">
             رضا اسٹیشنرز — معیاری اور سستی ہول سیل اسٹیشنری کا بااعتماد نام
           </p>
           <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-            Founded in the heart of Karachi&apos;s historic Urdu Bazar, Raza Stationers has grown into one of Pakistan&apos;s most trusted wholesale paper merchants and office stationery suppliers.
+            Owned and managed by <strong>Nafaj Taj and Kamran Malik</strong>, Raza Stationers is a trusted wholesale paper merchant and office stationery supplier based at Main GT Road, New City Phase 1, Wah Cantt.
           </p>
         </div>
 
@@ -42,7 +42,7 @@ export default function AboutPage() {
               Direct Mill Sourcing
             </h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              We source paper, registers, and writing supplies directly from top paper mills and manufacturers, ensuring unbeatable wholesale rates for registered shops.
+              We source paper, registers, and writing supplies directly from top paper mills and manufacturers, ensuring competitive wholesale rates for registered shops.
             </p>
           </div>
 
@@ -51,10 +51,10 @@ export default function AboutPage() {
               <Truck className="size-5" />
             </div>
             <h3 className="font-heading font-bold text-lg text-[var(--color-ink-900)]">
-              Zone Logistics Coverage
+              Dedicated Delivery Zones
             </h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Our dedicated fleet handles next-day doorstep delivery to stationery markets across Karachi, Lahore, Faisalabad, Rawalpindi, Multan, and Islamabad (OF-04).
+              Our fleet handles door-to-door delivery across Wah Cantt, Hassan Abdal, Taxila, and Rawalpindi.
             </p>
           </div>
 
@@ -66,7 +66,7 @@ export default function AboutPage() {
               Wholesale Business Credit
             </h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              We support long-standing retail shop partners with 30-day revolving credit limits (PY-01) and transparent tax invoice documentation (OF-03).
+              We support long-standing retail shop partners with revolving credit limits and transparent invoicing documentation.
             </p>
           </div>
         </div>
@@ -76,17 +76,17 @@ export default function AboutPage() {
           <div className="flex items-center gap-3">
             <MapPin className="size-6 text-[var(--color-evergreen-600)]" />
             <h2 className="font-heading font-bold text-2xl text-[var(--color-ink-900)]">
-              Our Urdu Bazar Roots
+              Wah Cantt Headquarters
             </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-xs sm:text-sm text-muted-foreground leading-relaxed">
             <div className="space-y-3">
               <p>
-                Urdu Bazar Karachi is the nerve center of Pakistan&apos;s stationery and book trade. Starting as a modest paper stall over 25 years ago, Raza Stationers established its reputation on honest pricing, strict quality standards, and genuine customer care.
+                Located at <strong>Main GT Road, New City Phase 1, Wah Cantt</strong>, Raza Stationers is led by Nafaj Taj and Kamran Malik. We established our reputation on honest pricing, strict quality standards, and genuine customer care.
               </p>
               <p>
-                Today, we serve hundreds of retail stationery shops, educational institutions, book depots, and corporate offices with over 5,000 catalogued inventory items.
+                We serve retail stationery shops, educational institutions, book depots, and corporate offices across Wah Cantt, Hassan Abdal, Taxila, and Rawalpindi.
               </p>
             </div>
 
@@ -95,10 +95,10 @@ export default function AboutPage() {
                 Our Commitment to Wholesale Partners
               </h4>
               <ul className="space-y-2 list-disc list-inside text-xs">
-                <li>Strict tier-based pricing privacy (CD-04)</li>
-                <li>Clear unit conversion formats (PR-02: Piece, Dozen, Carton)</li>
-                <li>Digital tax invoice generation and order tracking (OF-03/FR-ORD-05)</li>
-                <li>Dedicated WhatsApp support for stock orders (+92 300 1234567)</li>
+                <li>Strict tier-based pricing privacy</li>
+                <li>Clear unit conversion formats (Piece, Dozen, Pack, Carton)</li>
+                <li>Digital tax invoice generation and order tracking</li>
+                <li>Dedicated phone support & WhatsApp ordering (03125120693)</li>
               </ul>
             </div>
           </div>
@@ -110,7 +110,7 @@ export default function AboutPage() {
             Ready to Supply Your Shop at Wholesale Prices?
           </h2>
           <p className="text-xs sm:text-sm text-white/80 max-w-xl mx-auto">
-            Register your shop credentials today and start saving on copy paper, registers, pens, and office files.
+            Register your shop credentials today and start saving on paper, registers, pens, and office files.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
             <Link href="/register">

@@ -42,7 +42,7 @@ export default function RootLayout({
       lang="en"
       className={`${fontSans.variable} ${fontHeading.variable} ${fontUrdu.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-[var(--color-canvas)] text-[var(--color-ink-900)]">
+      <body className="min-h-full bg-[var(--color-canvas)] text-[var(--color-ink-900)] overflow-x-hidden">
         <RegisterServiceWorker />
         <AdminAuthProvider><AdminShell>{children}</AdminShell></AdminAuthProvider>
       </body>

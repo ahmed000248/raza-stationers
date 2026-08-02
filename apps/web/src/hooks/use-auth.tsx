@@ -28,6 +28,12 @@ interface AuthContextValue {
     address: string
     city: string
   }) => Promise<void>
+  registerCustomer: (data: {
+    name: string
+    mobileNumber: string
+    password: string
+    email: string
+  }) => Promise<void>
   logout: () => Promise<void>
   loginWithGoogle: (returnTo?: string) => Promise<void>
   resetPassword: (email: string) => Promise<void>
@@ -222,10 +228,65 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       city: data.city,
     })
 
+    api.setAuthToken(token)
+
+    // Register user on NestJS side
+    await api.post("/auth/register-supabase", {
+      name: data.name,
+      mobileNumber: data.mobileNumber,
+    })
+
+    // Register client business details
+    await api.registerClient({
+      businessName: data.businessName,
+      businessType: data.businessType,
+      contactPerson: data.contactPerson,
+      mobileNumber: data.mobileNumber,
+      address: data.address,
+      city: data.city,
+    })
+
+    await fetchProfile(token)
+  }, [supabase, fetchProfile, api])
+
+  const registerCustomer = React.useCallback(async (data: {
+    name: string
+    mobileNumber: string
+    password: string
+    email: string
+  }) => {
+    const currentSession = (await supabase.auth.getSession()).data.session
+    let token = currentSession?.user.email?.toLowerCase() === data.email.toLowerCase() ? currentSession.access_token : null
+    if (!token) {
+      const { data: signUpData, error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: { data: { name: data.name, phone: data.mobileNumber } },
+      })
+      if (error) throw new Error(error.message)
+      token = signUpData.session?.access_token || null
+    }
+
+    if (!token) {
+      throw new Error("CONFIRMATION_PENDING")
+    }
+
+    api.setAuthToken(token)
+
+    // Register user on NestJS side
+    await api.post("/auth/register-supabase", {
+      name: data.name,
+      mobileNumber: data.mobileNumber,
+    })
+
     await fetchProfile(token)
   }, [supabase, fetchProfile, api])
 
   const loginWithGoogle = React.useCallback(async (returnTo = "/catalogue") => {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    if (!supabaseUrl || supabaseUrl.includes("placeholder.supabase.co")) {
+      throw new Error("Google authentication requires a configured Supabase project (NEXT_PUBLIC_SUPABASE_URL).")
+    }
     const safeReturnTo = returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/catalogue"
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
@@ -275,7 +336,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     return { isApprovedBusiness: false }
   }, [accountStatus, clientBusiness])
-
   if (!isLoaded) {
     return <BrandedLoader fullScreen label="Restoring your secure session…" />
   }
@@ -290,6 +350,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         pricingContext,
         login,
         register,
+        registerCustomer,
         logout,
         loginWithGoogle,
         resetPassword,

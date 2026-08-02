@@ -64,7 +64,7 @@ export function SiteFooter() {
             <ul className="space-y-2.5 text-xs text-white/75">
               <li className="flex items-start gap-2">
                 <Truck className="size-4 shrink-0 text-[var(--color-amber-500)] mt-0.5" />
-                <span>Karachi & major Punjab delivery zones supported.</span>
+                <span>Wah Cantt, Hassan Abdal, Taxila & Rawalpindi delivery zones supported.</span>
               </li>
               <li className="flex items-start gap-2">
                 <ShieldCheck className="size-4 shrink-0 text-[var(--color-amber-500)] mt-0.5" />
@@ -81,11 +81,11 @@ export function SiteFooter() {
             <div className="space-y-2 text-xs text-white/75">
               <div className="flex items-center gap-2">
                 <Phone className="size-4 text-[var(--color-amber-500)]" />
-                <span>+92 300 1234567</span>
+                <span>03125120693 (Nafaj Taj & Kamran Malik)</span>
               </div>
               <div className="flex items-start gap-2">
                 <MapPin className="size-4 text-[var(--color-amber-500)] shrink-0 mt-0.5" />
-                <span>Stationery Market, Karachi, Pakistan</span>
+                <span>Main GT Road, New City Phase 1, Wah Cantt, Pakistan</span>
               </div>
             </div>
           </div>

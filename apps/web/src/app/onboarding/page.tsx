@@ -28,7 +28,7 @@ export default function OnboardingPage() {
   const [mobileNumber, setMobileNumber] = React.useState("")
   const [businessName, setBusinessName] = React.useState("")
   const [address, setAddress] = React.useState("")
-  const [city, setCity] = React.useState("Karachi")
+  const [city, setCity] = React.useState("Wah Cantt")
   const [businessType, setBusinessType] = React.useState("stationery_shop")
   
   // Link Legacy Account Form States

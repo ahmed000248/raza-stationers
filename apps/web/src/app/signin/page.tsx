@@ -103,7 +103,10 @@ export default function SignInPage() {
             {loading === "google" ? "Connecting…" : "Continue with Google"}
           </Button>
 
-          <p className="text-center text-sm text-muted-foreground">New business customer? <Link href={`/register?returnTo=${encodeURIComponent(returnTo)}`} className="font-semibold text-[var(--color-evergreen-600)] hover:underline">Create an account</Link></p>
+          <div className="space-y-2 text-center text-sm text-muted-foreground">
+            <p>New customer? <Link href={`/signup?returnTo=${encodeURIComponent(returnTo)}`} className="font-semibold text-[var(--color-evergreen-600)] hover:underline">Create a Customer Account</Link></p>
+            <p className="text-xs">Wholesale / Business? <Link href={`/register?returnTo=${encodeURIComponent(returnTo)}`} className="font-semibold text-[var(--color-evergreen-600)] hover:underline">Register Business Account</Link></p>
+          </div>
         </div>
       </section>
     </div>

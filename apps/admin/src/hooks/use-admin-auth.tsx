@@ -13,7 +13,7 @@ interface AdminAuthContextValue {
   loading: boolean
   currentLevel: string
   nextLevel: string
-  login: (email: string, password: string) => Promise<{ requiresMfa: boolean; factorId?: string; challengeId?: string }>
+  login: (identifier: string, password: string) => Promise<{ requiresMfa: boolean; factorId?: string; challengeId?: string }>
   verifyMfa: (factorId: string, challengeId: string, code: string) => Promise<void>
   enrollMfa: () => Promise<{ factorId: string; qrCode: string; secret: string }>
   confirmEnrollMfa: (factorId: string, code: string) => Promise<void>
@@ -49,39 +49,40 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     setNextLevel("aal1")
   }, [supabase])
 
-  const fetchProfile = React.useCallback(async (token: string) => {
-    api.setAuthToken(token)
-    try {
-      const profile: any = await api.getProfile()
-      const staffRole: AdminRole = (profile.staffProfile?.staffRole || profile.role) as AdminRole
-      if (!["owner", "admin", "packing", "delivery"].includes(staffRole)) {
-        await supabase.auth.signOut()
-        throw new Error("This account is not authorized for the Admin application")
+  const fetchProfile = React.useCallback(
+    async (token: string): Promise<boolean> => {
+      api.setAuthToken(token)
+      try {
+        const profile: any = await api.getProfile()
+        const trustedRole: AdminRole = profile.staffProfile?.staffRole || profile.role
+
+        if (!["owner", "admin", "packing", "delivery"].includes(trustedRole)) {
+          setUser(null)
+          setRole(null)
+          return false
+        }
+
+        const u: User = {
+          id: profile.id,
+          name: profile.name,
+          mobileNumber: profile.mobileNumber,
+          passwordHash: "",
+          role: profile.role,
+          isActive: true,
+          createdAt: profile.createdAt,
+        }
+        setUser(u)
+        setRole(trustedRole)
+        return true
+      } catch (err) {
+        console.warn("Failed to fetch profile in AdminAuthProvider", err)
+        setUser(null)
+        setRole(null)
+        return false
       }
-      setUser({
-        id: profile.id,
-        name: profile.name,
-        mobileNumber: profile.mobileNumber,
-        passwordHash: "",
-        role: profile.role,
-        isActive: true,
-        createdAt: profile.createdAt,
-      })
-      setRole(staffRole)
-      
-      const { data: mfaData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
-      if (mfaData) {
-        setCurrentLevel(mfaData.currentLevel || "aal1")
-        setNextLevel(mfaData.nextLevel || "aal1")
-      }
-      return true
-    } catch (err) {
-      console.warn("Failed to load admin profile", err)
-      setUser(null)
-      setRole(null)
-      return false
-    }
-  }, [api, supabase])
+    },
+    [api]
+  )
 
   const refreshSession = React.useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession()
@@ -90,23 +91,31 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [supabase, fetchProfile])
 
+  // Setup Supabase auth listener & initial session fetch
   React.useEffect(() => {
     let active = true
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!active) return
       if (session) {
-        fetchProfile(session.access_token).finally(() => {
-          if (active) setLoading(false)
-        })
-      } else {
-        setLoading(false)
+        const { data: mfaData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+        if (mfaData) {
+          setCurrentLevel(mfaData.currentLevel || "aal1")
+          setNextLevel(mfaData.nextLevel || "aal1")
+        }
+        await fetchProfile(session.access_token)
       }
+      setLoading(false)
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!active) return
       if (session) {
+        const { data: mfaData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+        if (mfaData) {
+          setCurrentLevel(mfaData.currentLevel || "aal1")
+          setNextLevel(mfaData.nextLevel || "aal1")
+        }
         await fetchProfile(session.access_token)
       } else {
         setUser(null)
@@ -122,12 +131,33 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [supabase, fetchProfile])
 
-  const login = React.useCallback(async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) throw new Error(error.message)
-    if (!data.session) throw new Error("No session created")
+  const login = React.useCallback(async (identifier: string, password: string) => {
+    let token: string | null = null;
+    const isEmail = identifier.includes("@");
 
-    const token = data.session.access_token
+    if (isEmail) {
+      const { data, error } = await supabase.auth.signInWithPassword({ email: identifier, password })
+      if (error) throw new Error(error.message)
+      if (!data.session) throw new Error("No session created")
+      token = data.session.access_token;
+    } else {
+      const cleanMobile = identifier.trim();
+      const { data, error } = await supabase.auth.signInWithPassword({ email: cleanMobile, password })
+      if (!error && data?.session) {
+        token = data.session.access_token;
+      } else {
+        try {
+          const res: any = await api.post("/auth/login", { mobileNumber: cleanMobile, password });
+          if (res && res.accessToken) {
+            token = res.accessToken;
+          }
+        } catch {
+          throw new Error(error?.message || "Invalid email, mobile number, or password");
+        }
+      }
+    }
+
+    if (!token) throw new Error("Invalid credentials");
     api.setAuthToken(token)
 
     const profile: any = await api.getProfile()
@@ -140,7 +170,6 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     // Check MFA level
     const { data: mfaData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
     if (mfaData && mfaData.nextLevel === "aal2" && mfaData.currentLevel === "aal1") {
-      // User is enrolled but needs AAL2 verification
       const factors = await supabase.auth.mfa.listFactors()
       const totpFactor = factors.data?.totp?.[0]
       if (totpFactor) {
@@ -191,7 +220,6 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   }, [supabase])
 
   const confirmEnrollMfa = React.useCallback(async (factorId: string, code: string) => {
-    // Challenge the newly enrolled factor
     const challenge = await supabase.auth.mfa.challenge({ factorId })
     if (challenge.error) throw new Error(challenge.error.message)
 
@@ -202,7 +230,6 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     })
     if (verify.error) throw new Error(verify.error.message)
 
-    // Reload session/profile to update level
     const { data: { session } } = await supabase.auth.getSession()
     if (session) {
       await fetchProfile(session.access_token)
@@ -240,6 +267,12 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       {children}
     </AdminAuthContext.Provider>
   )
+}
+
+export function useAuth() {
+  const context = React.useContext(AdminAuthContext)
+  if (!context) throw new Error("useAdminAuth must be used within AdminAuthProvider")
+  return context
 }
 
 export function useAdminAuth() {

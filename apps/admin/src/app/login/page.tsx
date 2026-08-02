@@ -13,7 +13,7 @@ export default function AdminLoginPage() {
   const { login, verifyMfa } = useAdminAuth()
 
   const [step, setStep] = React.useState<Step>("credentials")
-  const [email, setEmail] = React.useState("")
+  const [identifier, setIdentifier] = React.useState("")
   const [password, setPassword] = React.useState("")
   const [mfaCode, setMfaCode] = React.useState("")
   const [factorId, setFactorId] = React.useState("")
@@ -28,8 +28,9 @@ export default function AdminLoginPage() {
 
   const handleCredentials = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!email || !email.includes("@")) {
-      setError("Please enter a valid email address")
+    const trimmed = identifier.trim()
+    if (!trimmed) {
+      setError("Please enter your email or mobile number")
       return
     }
     if (!password) {
@@ -39,7 +40,7 @@ export default function AdminLoginPage() {
     setLoading(true)
     setError("")
     try {
-      const result = await login(email, password)
+      const result = await login(trimmed, password)
       if (result.requiresMfa && result.factorId && result.challengeId) {
         setFactorId(result.factorId)
         setChallengeId(result.challengeId)
@@ -86,12 +87,12 @@ export default function AdminLoginPage() {
         {step === "credentials" && (
           <form onSubmit={handleCredentials} className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold">Email Address</label>
+              <label className="text-xs font-semibold">Email or mobile number</label>
               <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="owner@your-domain.example"
+                type="text"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                placeholder="owner@razastationers.com or 03001234567"
                 className="w-full h-10 px-3 rounded-xl border border-border bg-background text-sm outline-none focus:ring-2 focus:ring-ring"
               />
             </div>

@@ -34,8 +34,12 @@ export function GuestCtaBanner() {
             </Link>
 
             <Link href="/contact">
-              <Button size="lg" variant="outline" className="rounded-full text-white border-white/30 hover:bg-white/10">
-                <span>Talk to Sales Representative</span>
+              <Button
+                size="lg"
+                variant="outline"
+                className="rounded-full border-2 border-white/40 bg-transparent px-6 text-sm font-semibold text-white transition-all hover:border-white hover:bg-white hover:text-[var(--color-ink-900)] focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[var(--color-ink-900)] active:scale-95"
+              >
+                <span>Talk to sales representative</span>
               </Button>
             </Link>
           </div>

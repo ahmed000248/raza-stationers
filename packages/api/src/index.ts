@@ -260,66 +260,86 @@ export class RazaAPIClient {
     return this.postMethod(path, body);
   }
 
-  private async get(path: string, signal?: AbortSignal) {
-    const res = await fetch(`${this.baseUrl}${path}`, {
-      headers: this.getHeaders(),
-      signal,
-    });
+  private async handleErrorResponse(res: Response): Promise<never> {
     if (res.status === 401 && this.onUnauthorized) {
       this.onUnauthorized();
     }
-    if (!res.ok) {
-      const error = await res.text().catch(() => "Unknown error");
-      throw new Error(`${res.status} ${error}`);
+    const text = await res.text().catch(() => "Unknown error");
+    let message = text;
+    try {
+      const parsed = JSON.parse(text);
+      if (parsed.message) {
+        message = Array.isArray(parsed.message) ? parsed.message.join(", ") : parsed.message;
+      }
+    } catch {}
+    throw new Error(message);
+  }
+
+  private async get(path: string, signal?: AbortSignal) {
+    try {
+      const res = await fetch(`${this.baseUrl}${path}`, {
+        headers: this.getHeaders(),
+        signal,
+      });
+      if (!res.ok) await this.handleErrorResponse(res);
+      return res.json();
+    } catch (err: any) {
+      if (err.name === "AbortError") throw err;
+      if (err instanceof TypeError && err.message.includes("fetch")) {
+        throw new Error("Unable to connect to server. Please check your internet connection.");
+      }
+      throw err;
     }
-    return res.json();
   }
 
   private async delete(path: string) {
-    const res = await fetch(`${this.baseUrl}${path}`, {
-      method: "DELETE",
-      headers: this.getHeaders(),
-    });
-    if (res.status === 401 && this.onUnauthorized) {
-      this.onUnauthorized();
+    try {
+      const res = await fetch(`${this.baseUrl}${path}`, {
+        method: "DELETE",
+        headers: this.getHeaders(),
+      });
+      if (!res.ok) await this.handleErrorResponse(res);
+      return res.json();
+    } catch (err: any) {
+      if (err instanceof TypeError && err.message.includes("fetch")) {
+        throw new Error("Unable to connect to server. Please check your internet connection.");
+      }
+      throw err;
     }
-    if (!res.ok) {
-      const error = await res.text().catch(() => "Unknown error");
-      throw new Error(`${res.status} ${error}`);
-    }
-    return res.json();
   }
 
   private async put(path: string, body: unknown) {
-    const res = await fetch(`${this.baseUrl}${path}`, {
-      method: "PUT",
-      headers: this.getHeaders(),
-      body: JSON.stringify(body),
-    });
-    if (res.status === 401 && this.onUnauthorized) {
-      this.onUnauthorized();
+    try {
+      const res = await fetch(`${this.baseUrl}${path}`, {
+        method: "PUT",
+        headers: this.getHeaders(),
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) await this.handleErrorResponse(res);
+      return res.json();
+    } catch (err: any) {
+      if (err instanceof TypeError && err.message.includes("fetch")) {
+        throw new Error("Unable to connect to server. Please check your internet connection.");
+      }
+      throw err;
     }
-    if (!res.ok) {
-      const error = await res.text().catch(() => "Unknown error");
-      throw new Error(`${res.status} ${error}`);
-    }
-    return res.json();
   }
 
   private async postMethod(path: string, body?: unknown) {
-    const res = await fetch(`${this.baseUrl}${path}`, {
-      method: "POST",
-      headers: this.getHeaders(),
-      body: JSON.stringify(body),
-    });
-    if (res.status === 401 && this.onUnauthorized) {
-      this.onUnauthorized();
+    try {
+      const res = await fetch(`${this.baseUrl}${path}`, {
+        method: "POST",
+        headers: this.getHeaders(),
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) await this.handleErrorResponse(res);
+      return res.json();
+    } catch (err: any) {
+      if (err instanceof TypeError && err.message.includes("fetch")) {
+        throw new Error("Unable to connect to server. Please check your internet connection.");
+      }
+      throw err;
     }
-    if (!res.ok) {
-      const error = await res.text().catch(() => "Unknown error");
-      throw new Error(`${res.status} ${error}`);
-    }
-    return res.json();
   }
 
   private getHeaders(): Record<string, string> {

@@ -11,7 +11,7 @@ export default function ContactPage() {
   const [name, setName] = React.useState("")
   const [email, setEmail] = React.useState("")
   const [mobile, setMobile] = React.useState("")
-  const [city, setCity] = React.useState("Karachi")
+  const [city, setCity] = React.useState("Wah Cantt")
   const [topic, setTopic] = React.useState("Wholesale Account Query")
   const [message, setMessage] = React.useState("")
 
@@ -73,7 +73,7 @@ export default function ContactPage() {
                   <div>
                     <span className="font-semibold text-foreground block">Physical Address</span>
                     <span className="text-muted-foreground leading-relaxed block">
-                      Shop #42, Main Wholesale Market, Urdu Bazar, Karachi, Sindh, Pakistan
+                      Main GT Road, New City Phase 1, Wah Cantt, Pakistan
                     </span>
                   </div>
                 </div>
@@ -81,8 +81,8 @@ export default function ContactPage() {
                 <div className="flex items-center gap-3">
                   <Phone className="size-4 text-[var(--color-evergreen-600)] shrink-0" />
                   <div>
-                    <span className="font-semibold text-foreground block">Phone Support</span>
-                    <span className="text-muted-foreground">+92 21 3262 0000 / +92 300 1234567</span>
+                    <span className="font-semibold text-foreground block">Phone & Contact Owners</span>
+                    <span className="text-muted-foreground">03125120693 (Nafaj Taj & Kamran Malik)</span>
                   </div>
                 </div>
 
@@ -111,16 +111,16 @@ export default function ContactPage() {
                 <span>Direct WhatsApp Support</span>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                For quick stock availability or instant order booking, chat directly with our Urdu Bazar dispatch desk on WhatsApp.
+                For quick stock availability or instant order booking, chat directly with our dispatch desk on WhatsApp.
               </p>
               <a
-                href="https://wa.me/923001234567"
+                href="https://wa.me/923125120693"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--color-evergreen-600)] text-white text-xs font-semibold shadow-xs hover:bg-[var(--color-evergreen-600)]/90 transition-colors"
               >
                 <MessageSquare className="size-3.5" />
-                <span>Chat on WhatsApp (+92 300 1234567)</span>
+                <span>Chat on WhatsApp (03125120693)</span>
               </a>
             </div>
           </div>

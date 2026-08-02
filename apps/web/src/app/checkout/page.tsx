@@ -26,7 +26,7 @@ export default function CheckoutPage() {
 
   const [recipientName, setRecipientName] = React.useState(clientBusiness?.contactPerson || "")
   const [phone, setPhone] = React.useState(clientBusiness?.phone || "")
-  const [city, setCity] = React.useState(clientBusiness?.city || "Karachi")
+  const [city, setCity] = React.useState(clientBusiness?.city || "Wah Cantt")
   const [address, setAddress] = React.useState(clientBusiness?.address || "")
   const [deliveryNotes, setDeliveryNotes] = React.useState("")
   const [paymentMethod, setPaymentMethod] = React.useState<PaymentMethodType>("CASH_ON_DELIVERY")

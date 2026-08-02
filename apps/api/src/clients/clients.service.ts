@@ -41,27 +41,29 @@ export class ClientsService {
     });
     if (existing) throw new ConflictException("Business with this mobile already exists");
 
-    const business = await this.prisma.clientBusiness.create({
-      data: {
-        businessName: data.businessName,
-        businessType: data.businessType as any,
-        contactPerson: data.contactPerson,
-        mobileNumber,
-        address: data.address,
-        city: data.city,
-      },
-    });
+    return this.prisma.$transaction(async (tx) => {
+      const business = await tx.clientBusiness.create({
+        data: {
+          businessName: data.businessName,
+          businessType: data.businessType as any,
+          contactPerson: data.contactPerson,
+          mobileNumber,
+          address: data.address,
+          city: data.city,
+        },
+      });
 
-    await this.prisma.businessUserLink.create({
-      data: {
-        userId,
-        clientBusinessId: business.id,
-        role: "owner",
-        linkedById: userId,
-      },
-    });
+      await tx.businessUserLink.create({
+        data: {
+          userId,
+          clientBusinessId: business.id,
+          role: "owner",
+          linkedById: userId,
+        },
+      });
 
-    return business;
+      return business;
+    });
   }
 
   async findById(id: string) {

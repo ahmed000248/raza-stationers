@@ -1,7 +1,20 @@
 import * as path from "path";
+import * as fs from "fs";
 import * as dotenv from "dotenv";
-dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
-dotenv.config({ path: path.resolve(process.cwd(), ".env") });
+
+// Load environment configuration before loading NestJS modules
+const envPaths = [
+  path.resolve(process.cwd(), ".env"),
+  path.resolve(process.cwd(), "../../.env"),
+  path.resolve(__dirname, "../../../.env"),
+  path.resolve(process.cwd(), "apps/api/.env"),
+];
+
+for (const envPath of envPaths) {
+  if (fs.existsSync(envPath)) {
+    dotenv.config({ path: envPath });
+  }
+}
 import { NestFactory } from "@nestjs/core";
 import { ValidationPipe } from "@nestjs/common";
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";

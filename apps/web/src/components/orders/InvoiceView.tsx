@@ -55,7 +55,7 @@ export function InvoiceView({ order, onClose }: InvoiceViewProps) {
             Wholesale Stationers & Paper Merchants
           </p>
           <p className="text-xs text-muted-foreground">
-            Urdu Bazar, Karachi, Sindh, Pakistan
+            Main GT Road, New City Phase 1, Wah Cantt, Pakistan
           </p>
           <p className="text-[11px] text-muted-foreground mt-1">
             NTN: 1234567-8 • STRN: 3277876543210
@@ -149,7 +149,7 @@ export function InvoiceView({ order, onClose }: InvoiceViewProps) {
       {/* Footer Notes */}
       <div className="pt-6 border-t border-border/40 text-[11px] text-muted-foreground text-center space-y-1">
         <p className="font-semibold text-foreground">Thank you for ordering with Raza Stationers!</p>
-        <p>For order queries, contact support@razastationers.com or call +92 21 3262 0000.</p>
+        <p>For order queries, contact support@razastationers.com or call 03125120693.</p>
       </div>
     </div>
   )

@@ -25,8 +25,11 @@ export function SiteNav() {
   const accountHref = accountStatus === "guest" ? `/signin?returnTo=${encodeURIComponent(pathname)}` : "/account"
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/80 bg-[var(--color-canvas)]/95 backdrop-blur-md">
-      <nav aria-label="Primary navigation" className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
+    <header className="sticky top-3 z-40 px-3 sm:px-6 pointer-events-none">
+      <nav
+        aria-label="Primary navigation"
+        className="pointer-events-auto mx-auto flex h-14 sm:h-16 w-full max-w-6xl items-center justify-between gap-4 rounded-2xl border border-border/80 bg-[var(--color-canvas)]/90 px-4 shadow-xs backdrop-blur-md sm:px-6"
+      >
         <Link href="/" aria-label="Raza Stationers home" className="shrink-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-ring">
           <BrandLogo compact className="sm:hidden" />
           <BrandLogo className="hidden sm:inline-flex" />

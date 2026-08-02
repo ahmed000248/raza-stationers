@@ -69,13 +69,17 @@ export default function CataloguePage() {
   React.useEffect(() => { if (debouncedSearch !== current.q) updateParams({ q: debouncedSearch || null }) }, [debouncedSearch, current.q, updateParams])
   React.useEffect(() => { setSearchInput(current.q) }, [current.q])
 
+  const [retryKey, setRetryKey] = React.useState(0)
+
   React.useEffect(() => {
     const api = createAPIClient({ baseUrl: API_BASE })
     Promise.all([api.getCategories(), api.getCatalogueFilterOptions()]).then(([categoryData, optionData]: any[]) => {
       setCategories(categoryData || [])
       setUnits(optionData?.units || [])
-    }).catch(() => {})
-  }, [])
+    }).catch((err) => {
+      console.warn("Failed to load catalogue categories/options", err)
+    })
+  }, [retryKey])
 
   React.useEffect(() => {
     const controller = new AbortController()
@@ -84,10 +88,10 @@ export default function CataloguePage() {
     setError("")
     api.getProducts({ page: current.page, limit: ITEMS_PER_PAGE, search: current.q || undefined, categorySlug: current.category || undefined, saleType: current.saleType, stock: current.stock, unit: current.unit, minPrice: current.minPrice, maxPrice: current.maxPrice, sort: current.sort, signal: controller.signal })
       .then((data: any) => { setProducts(data.items || []); setTotal(data.total || 0) })
-      .catch((cause: unknown) => { if ((cause as Error)?.name !== "AbortError") { setProducts([]); setError("Catalogue results could not be loaded. Please try again.") } })
+      .catch((cause: unknown) => { if ((cause as Error)?.name !== "AbortError") { setProducts([]); setError("Catalogue results could not be loaded. Please check your connection and try again.") } })
       .finally(() => { if (!controller.signal.aborted) setLoading(false) })
     return () => controller.abort()
-  }, [current])
+  }, [current, retryKey])
 
   const reset = () => { setSearchInput(""); router.replace(pathname, { scroll: false }); setFiltersOpen(false) }
   const activeFilters = [current.category && ["category", current.category], current.saleType && ["saleType", current.saleType], current.stock && ["stock", current.stock.replaceAll("_", " ")], current.unit && ["unit", current.unit], current.minPrice !== undefined && ["minPrice", `From Rs. ${current.minPrice}`], current.maxPrice !== undefined && ["maxPrice", `To Rs. ${current.maxPrice}`]].filter(Boolean) as string[][]
@@ -116,8 +120,16 @@ export default function CataloguePage() {
         <div className="flex gap-6">
           <CategoryBrowser categories={categories} selectedSlug={current.category} onSelect={(category) => updateParams({ category })} />
           <section className="min-w-0 flex-1" aria-busy={loading}>
-            <div className="mb-3 flex items-center justify-between text-xs text-muted-foreground"><span>{loading ? "Loading results…" : `${total.toLocaleString("en-PK")} products`}</span>{error && <button type="button" onClick={() => updateParams({ page: current.page }, false)} className="font-semibold text-destructive underline">Retry</button>}</div>
-            {loading ? <CatalogueSkeleton /> : products.length === 0 ? <EmptyState icon={SearchX} title="No products match these filters" description={error || "Try clearing one or more filters."} actionLabel="Reset filters" onAction={reset} /> : <div className="overflow-hidden rounded-2xl border border-border bg-card">{products.map((product) => <ProductListRow key={product.id} product={product} pricingContext={pricingContext} />)}</div>}
+            <div className="mb-3 flex items-center justify-between text-xs text-muted-foreground"><span>{loading ? "Loading results…" : `${total.toLocaleString("en-PK")} products`}</span>{error && <button type="button" onClick={() => setRetryKey(k => k + 1)} className="font-semibold text-destructive underline">Retry</button>}</div>
+            {loading ? (
+              <CatalogueSkeleton />
+            ) : error ? (
+              <EmptyState icon={SearchX} title="Connection Error" description={error} actionLabel="Retry Connection" onAction={() => setRetryKey(k => k + 1)} />
+            ) : products.length === 0 ? (
+              <EmptyState icon={SearchX} title={activeFilters.length > 0 || current.q ? "No products match these filters" : "No products available"} description={activeFilters.length > 0 || current.q ? "Try clearing one or more filters." : "The catalogue currently has no active products listed."} actionLabel={activeFilters.length > 0 || current.q ? "Reset filters" : undefined} onAction={activeFilters.length > 0 || current.q ? reset : undefined} />
+            ) : (
+              <div className="overflow-hidden rounded-2xl border border-border bg-card">{products.map((product) => <ProductListRow key={product.id} product={product} pricingContext={pricingContext} />)}</div>
+            )}
             <CataloguePagination currentPage={current.page} totalPages={Math.ceil(total / ITEMS_PER_PAGE)} onPageChange={(page) => updateParams({ page }, false)} />
           </section>
         </div>

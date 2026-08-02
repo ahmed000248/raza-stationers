@@ -17,7 +17,7 @@ export function DeliveryZoneNotice({ selectedCity, errorMessage, className }: De
           <Truck className="size-4" />
           <span>OF-04 Delivery Zones</span>
         </span>
-        <span className="text-[11px] text-muted-foreground">Karachi & Punjab Major Cities</span>
+        <span className="text-[11px] text-muted-foreground">Wah Cantt & Regional Delivery Zones</span>
       </div>
 
       <div className="flex flex-wrap items-center gap-1.5">
