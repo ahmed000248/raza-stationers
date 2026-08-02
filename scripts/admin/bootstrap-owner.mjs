@@ -1,4 +1,5 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
+import path from "node:path";
 import pg from "pg";
 import { createClient } from "@supabase/supabase-js";
 
@@ -20,11 +21,22 @@ const name = process.env.RAZA_OWNER_NAME.trim();
 const mobile = localMobile(process.env.RAZA_OWNER_MOBILE);
 if (!email.includes("@") || name.length < 2) throw new Error("Owner email or name is invalid");
 
-const ssl = process.env.PGSSLROOTCERT
-  ? { rejectUnauthorized: true, ca: readFileSync(process.env.PGSSLROOTCERT, "utf8") }
-  : !/localhost|127\.0\.0\.1/.test(process.env.DATABASE_URL)
-    ? { rejectUnauthorized: true }
-    : false;
+function getSslConfig(url) {
+  if (!url || /localhost|127\.0\.0\.1/.test(url)) return false;
+  if (process.env.DATABASE_SSL_REJECT_UNAUTHORIZED === "false" || process.env.PGSSLMODE === "no-verify" || process.env.NODE_TLS_REJECT_UNAUTHORIZED === "0") {
+    return { rejectUnauthorized: false };
+  }
+  if (process.env.PGSSLROOTCERT && existsSync(process.env.PGSSLROOTCERT)) {
+    return { rejectUnauthorized: true, ca: readFileSync(process.env.PGSSLROOTCERT, "utf8") };
+  }
+  const certPath = path.resolve("supabase-ca.crt");
+  if (existsSync(certPath)) {
+    return { rejectUnauthorized: true, ca: readFileSync(certPath, "utf8") };
+  }
+  return { rejectUnauthorized: false };
+}
+
+const ssl = getSslConfig(process.env.DATABASE_URL);
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, ssl, max: 1 });
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
 
