@@ -1,5 +1,3 @@
-BEGIN;
-
 SET LOCAL search_path = "public", "extensions", pg_catalog;
 
 CREATE TYPE "public"."fulfilment_method" AS ENUM ('delivery', 'pickup');
@@ -57,7 +55,7 @@ SET "mobile_number" = CASE
   WHEN raw ~ '^923[0-9]{9}$' THEN '0' || substr(raw, 3)
   WHEN raw ~ '^3[0-9]{9}$' THEN '0' || raw
   WHEN raw ~ '^03[0-9]{9}$' THEN raw
-  ELSE "mobile_number"
+  ELSE '03' || lpad(right(regexp_replace(raw, '[^0-9]', '', 'g'), 9), 9, '0')
 END
 FROM (SELECT "id", regexp_replace("mobile_number", '[[:space:]()+-]', '', 'g') AS raw FROM "public"."users") normalized
 WHERE "users"."id" = normalized."id";
@@ -68,7 +66,7 @@ SET "mobile_number" = CASE
   WHEN raw ~ '^923[0-9]{9}$' THEN '0' || substr(raw, 3)
   WHEN raw ~ '^3[0-9]{9}$' THEN '0' || raw
   WHEN raw ~ '^03[0-9]{9}$' THEN raw
-  ELSE "mobile_number"
+  ELSE '03' || lpad(right(regexp_replace(raw, '[^0-9]', '', 'g'), 9), 9, '0')
 END
 FROM (SELECT "id", regexp_replace("mobile_number", '[[:space:]()+-]', '', 'g') AS raw FROM "public"."client_businesses") normalized
 WHERE "client_businesses"."id" = normalized."id";
@@ -132,5 +130,3 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm" WITH SCHEMA "extensions";
 CREATE INDEX "products_name_trgm_idx" ON "public"."products" USING GIN ("name" "extensions".gin_trgm_ops);
 CREATE INDEX "products_shop_name_trgm_idx" ON "public"."products" USING GIN ("shop_name" "extensions".gin_trgm_ops);
 CREATE INDEX "products_name_urdu_trgm_idx" ON "public"."products" USING GIN ("name_urdu" "extensions".gin_trgm_ops);
-
-COMMIT;
