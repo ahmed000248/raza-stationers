@@ -112,7 +112,7 @@ export function TotpEnrollView({ onEnroll, onConfirm }: TotpEnrollViewProps) {
 
             {/* Manual entry fallback */}
             <div className="space-y-1">
-              <p className="text-xs text-muted-foreground text-center">Can't scan? Enter this code manually:</p>
+              <p className="text-xs text-muted-foreground text-center">Can&apos;t scan? Enter this code manually:</p>
               <div className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2">
                 <code className="flex-1 text-xs font-mono break-all">{secret}</code>
                 <button type="button" onClick={handleCopySecret} className="shrink-0 text-muted-foreground hover:text-foreground transition-colors">
@@ -125,7 +125,7 @@ export function TotpEnrollView({ onEnroll, onConfirm }: TotpEnrollViewProps) {
               onClick={() => { setStep("verify"); setError("") }}
               className="w-full h-10 rounded-xl bg-[#051F20] text-white text-sm font-semibold flex items-center justify-center gap-2 hover:bg-[#0a3a3a] transition-colors"
             >
-              I've scanned it →
+              I&apos;ve scanned it →
             </button>
           </>
         )}
