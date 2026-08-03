@@ -13,7 +13,7 @@
 |---|---|---|---|---|
 | 0 | Pre-implementation audit | Complete | 2026-08-04 | D7, D8, D9 decisions locked |
 | 1 | Better Auth core install & configuration | Complete | 2026-08-04 | Prisma schema, Better Auth instance & NestJS endpoints mounted |
-| 2 | Role & permission mapping | Not started | — | — |
+| 2 | Role & permission mapping | Complete | 2026-08-04 | All 5 roles mapped directly via User.role & additionalFields |
 | 3 | Cookie-based sessions (web + admin) | Not started | — | — |
 | 4 | Migrate existing user flows | Not started | — | — |
 | 5 | Google OAuth via Better Auth | Not started | — | — |
