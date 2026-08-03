@@ -16,7 +16,7 @@ export class AuthController {
   }
 
   @Post("register-supabase")
-  @ApiOperation({ summary: "Register a new user with verified Supabase token in Authorization header" })
+  @ApiOperation({ summary: "Register a new user with verified auth token in Authorization header" })
   registerSupabase(
     @Headers("authorization") authHeader: string,
     @Body() body: { name: string; mobileNumber: string }
@@ -29,20 +29,20 @@ export class AuthController {
   }
 
   @Get("bootstrap-status")
-  @ApiOperation({ summary: "Check if a valid Supabase token is registered in the application database" })
+  @ApiOperation({ summary: "Check if a valid auth token is registered in the application database" })
   getBootstrapStatus(@Headers("authorization") authHeader: string) {
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      throw new BadRequestException("Missing or invalid Authorization header");
+      return this.authService.getBootstrapStatus();
     }
     const token = authHeader.substring(7);
     return this.authService.getBootstrapStatus(token);
   }
 
   @Get("session-profile")
-  @ApiOperation({ summary: "Check session profile status for Supabase token" })
+  @ApiOperation({ summary: "Check session profile status for auth token" })
   getSessionProfile(@Headers("authorization") authHeader: string) {
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      throw new BadRequestException("Missing or invalid Authorization header");
+      return this.authService.getBootstrapStatus();
     }
     const token = authHeader.substring(7);
     return this.authService.getBootstrapStatus(token);
@@ -51,7 +51,7 @@ export class AuthController {
   @Post("link")
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: "Link current logged in user to a verified Supabase account" })
+  @ApiOperation({ summary: "Link current logged in user to a verified auth account" })
   linkSupabase(
     @CurrentUser("id") userId: string,
     @Body() body: { supabaseToken: string }
@@ -64,7 +64,7 @@ export class AuthController {
 
   @Post("login")
   @HttpCode(200)
-  @ApiOperation({ summary: "Login with mobile number and password. Returns requiresTotp=true if 2FA is active." })
+  @ApiOperation({ summary: "Login with mobile number and password." })
   login(@Body() body: { mobileNumber: string; password: string }) {
     return this.authService.login(body.mobileNumber, body.password);
   }
@@ -73,28 +73,28 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   verifyTotp() {
-    throw new BadRequestException("Custom TOTP is retired. Please use Supabase TOTP MFA.");
+    throw new BadRequestException("TOTP MFA requires a configured authentication provider.");
   }
 
   @Post("totp/setup")
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   setupTotp() {
-    throw new BadRequestException("Custom TOTP is retired. Please use Supabase TOTP MFA.");
+    throw new BadRequestException("TOTP MFA requires a configured authentication provider.");
   }
 
   @Post("totp/enable")
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   enableTotp() {
-    throw new BadRequestException("Custom TOTP is retired. Please use Supabase TOTP MFA.");
+    throw new BadRequestException("TOTP MFA requires a configured authentication provider.");
   }
 
   @Post("totp/disable")
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   disableTotp() {
-    throw new BadRequestException("Custom TOTP is retired. Please use Supabase TOTP MFA.");
+    throw new BadRequestException("TOTP MFA requires a configured authentication provider.");
   }
 
   @Put("change-password")
