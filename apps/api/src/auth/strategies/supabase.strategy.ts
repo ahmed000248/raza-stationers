@@ -51,7 +51,7 @@ export class SupabaseStrategy extends PassportStrategy(Strategy, "supabase") {
           return;
         }
 
-        done(new Error("Unable to determine verification key for Supabase token"), null);
+        done(new Error("Unable to determine verification key for Supabase token"), undefined);
       },
       algorithms: ["RS256", "HS256", "ES256"],
     });
