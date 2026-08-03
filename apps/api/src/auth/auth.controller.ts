@@ -12,7 +12,7 @@ import { CurrentUser } from "./decorators/current-user.decorator";
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  @All("api/*")
+  @All(["api", "api/*"])
   async handleBetterAuthApi(@Req() req: Request, @Res() res: Response) {
     return toNodeHandler(auth)(req, res);
   }

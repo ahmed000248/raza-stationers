@@ -33,6 +33,8 @@ const authSecret =
   "raza-stationers-default-secret-key-123456";
 
 export const auth = betterAuth({
+  baseURL: process.env.BETTER_AUTH_URL || "https://raza-stationers-api-staging.onrender.com",
+  basePath: "/auth/api",
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
@@ -73,7 +75,9 @@ export const auth = betterAuth({
     twoFactor({
       issuer: "Raza Stationers",
     }),
-    dash(),
+    dash({
+      apiKey: process.env.BETTER_AUTH_API_KEY,
+    }),
   ],
   trustedOrigins: [
     "http://localhost:3000",
