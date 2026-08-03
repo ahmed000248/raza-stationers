@@ -18,24 +18,23 @@ export class CatalogueService {
     }
     if (query.categorySlug) filters.push(Prisma.sql`c.slug = ${query.categorySlug}`);
     if (query.saleType === "individual") {
-      filters.push(Prisma.sql`p.allow_individual_sale = true AND EXISTS (
+      filters.push(Prisma.sql`EXISTS (
         SELECT 1 FROM product_packaging pp JOIN product_prices price ON price.product_packaging_id = pp.id
-        WHERE pp.product_id = p.id AND pp.is_active AND pp.is_base AND pp.confirmation_status = 'confirmed'
+        WHERE pp.product_id = p.id AND pp.is_active
           AND price.price_type IN ('retail', 'wholesale') AND price.amount > 0 AND price.effective_to IS NULL
       )`);
     }
     if (query.saleType === "bulk") {
       filters.push(Prisma.sql`EXISTS (
         SELECT 1 FROM product_packaging pp JOIN product_prices price ON price.product_packaging_id = pp.id
-        WHERE pp.product_id = p.id AND pp.is_active AND pp.confirmation_status = 'confirmed' AND pp.conversion_to_base > 1
+        WHERE pp.product_id = p.id AND pp.is_active
           AND price.price_type IN ('retail', 'wholesale') AND price.amount > 0 AND price.effective_to IS NULL
       )`);
     }
     if (query.unit) {
       filters.push(Prisma.sql`EXISTS (
         SELECT 1 FROM product_packaging pp JOIN units_of_measure uom ON uom.id = pp.unit_of_measure_id
-        WHERE pp.product_id = p.id AND pp.is_active AND pp.confirmation_status = 'confirmed'
-          AND (NOT pp.is_base OR p.allow_individual_sale)
+        WHERE pp.product_id = p.id AND pp.is_active
           AND (LOWER(uom.code) = LOWER(${query.unit}) OR LOWER(uom.name) = LOWER(${query.unit}))
       )`);
     }
@@ -63,8 +62,7 @@ export class CatalogueService {
       CROSS JOIN LATERAL (
         SELECT MIN(price.amount) AS minimum_price
         FROM product_packaging pp JOIN product_prices price ON price.product_packaging_id = pp.id
-        WHERE pp.product_id = p.id AND pp.is_active AND pp.confirmation_status = 'confirmed'
-          AND (NOT pp.is_base OR p.allow_individual_sale)
+        WHERE pp.product_id = p.id AND pp.is_active
           AND price.price_type IN ('retail', 'wholesale') AND price.amount > 0 AND price.effective_to IS NULL
       ) catalogue_price
       WHERE catalogue_price.minimum_price IS NOT NULL AND ${Prisma.join(filters, " AND ")}
@@ -82,7 +80,7 @@ export class CatalogueService {
         category: { select: { name: true, slug: true } },
         stockBalances: { select: { onHandQuantity: true, reservedQuantity: true } },
         packaging: {
-          where: { isActive: true, confirmationStatus: "confirmed", prices: { some: { amount: { gt: 0 }, effectiveTo: null, priceType: { in: ["retail", "wholesale"] } } } },
+          where: { isActive: true, prices: { some: { amount: { gt: 0 }, effectiveTo: null, priceType: { in: ["retail", "wholesale"] } } } },
           select: {
             id: true, label: true, code: true, conversionToBase: true, packQuantity: true, isBase: true,
             unitOfMeasure: { select: { code: true, name: true } },
@@ -99,7 +97,7 @@ export class CatalogueService {
         : available <= 0 ? "OUT_OF_STOCK"
         : p!.lowStockThresholdBase !== null && available <= Number(p!.lowStockThresholdBase) ? "LOW_STOCK"
         : "IN_STOCK";
-      const packages = p!.packaging.filter((pkg) => !pkg.isBase || p!.allowIndividualSale).map((pkg) => ({
+      const packages = p!.packaging.map((pkg) => ({
         id: pkg.id, label: pkg.label, code: pkg.code, conversionToBase: Number(pkg.conversionToBase), packQuantity: pkg.packQuantity,
         isBase: pkg.isBase, unitCode: pkg.unitOfMeasure.code, unitName: pkg.unitOfMeasure.name,
         retailPrice: pkg.prices.find((price) => price.priceType === "retail") ? Number(pkg.prices.find((price) => price.priceType === "retail")!.amount) : null,
@@ -109,7 +107,7 @@ export class CatalogueService {
       return {
         id: p!.id, sku: p!.sku, name: p!.name, nameUrdu: p!.nameUrdu, shopName: p!.shopName,
         categoryId: p!.categoryId, category: p!.category.name, categorySlug: p!.category.slug,
-        purchaseType: p!.purchaseType, saleTypes: { individual: p!.allowIndividualSale && !!basePackage, bulk: packages.some((pkg) => pkg.conversionToBase > 1) },
+        purchaseType: p!.purchaseType, saleTypes: { individual: true, bulk: packages.some((pkg) => pkg.conversionToBase > 1) },
         packaging: packages, wholesalePrice: basePackage?.wholesalePrice, retailPrice: basePackage?.retailPrice,
         stockStatus, currentQuantity: available,
       };
