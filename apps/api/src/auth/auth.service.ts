@@ -23,47 +23,73 @@ export class AuthService {
       }
     }
 
-    const supabaseUrl = process.env.SUPABASE_URL;
-    if (!supabaseUrl) {
-      throw new Error("Missing SUPABASE_URL environment variable.");
-    }
-    const jwksUri = `${supabaseUrl.replace(/\/$/, "")}/auth/v1/jwks`;
-
-    const client = jwksRsa({
-      jwksUri,
-      cache: true,
-      rateLimit: true,
-    });
-
     const decoded = jwt.decode(token, { complete: true }) as any;
-    if (!decoded || !decoded.header || !decoded.header.kid) {
+    if (!decoded || !decoded.header) {
       throw new UnauthorizedException("Invalid token format");
     }
 
-    try {
-      const key = await client.getSigningKey(decoded.header.kid);
-      const signingKey = key.getPublicKey();
+    const alg = decoded.header.alg || "HS256";
+    const jwtSecret = process.env.SUPABASE_JWT_SECRET || process.env.JWT_SECRET;
 
-      return new Promise((resolve, reject) => {
-        jwt.verify(
-          token,
-          signingKey,
-          {
-            issuer: `${supabaseUrl.replace(/\/$/, "")}/auth/v1`,
-            algorithms: ["RS256"],
-          },
-          (err, payload) => {
-            if (err) {
-              reject(new UnauthorizedException("Invalid Supabase token signature"));
-            } else {
-              resolve(payload);
-            }
-          }
-        );
-      });
-    } catch (err) {
-      throw new UnauthorizedException("Token signature verification failed: " + err.message);
+    // 1. HS256 algorithm verification using JWT Secret
+    if (alg === "HS256" && jwtSecret) {
+      try {
+        return jwt.verify(token, jwtSecret, { algorithms: ["HS256"] }) as any;
+      } catch (err: any) {
+        throw new UnauthorizedException("Token signature verification failed: " + err.message);
+      }
     }
+
+    // 2. RS256 algorithm verification using Supabase JWKS
+    if (alg === "RS256" && decoded.header.kid) {
+      const supabaseUrl = process.env.SUPABASE_URL;
+      if (!supabaseUrl) {
+        throw new Error("Missing SUPABASE_URL environment variable.");
+      }
+      const jwksUri = `${supabaseUrl.replace(/\/$/, "")}/auth/v1/jwks`;
+
+      const client = jwksRsa({
+        jwksUri,
+        cache: true,
+        rateLimit: true,
+      });
+
+      try {
+        const key = await client.getSigningKey(decoded.header.kid);
+        const signingKey = key.getPublicKey();
+
+        return await new Promise((resolve, reject) => {
+          jwt.verify(
+            token,
+            signingKey,
+            {
+              issuer: `${supabaseUrl.replace(/\/$/, "")}/auth/v1`,
+              algorithms: ["RS256"],
+            },
+            (err, payload) => {
+              if (err) {
+                reject(new UnauthorizedException("Invalid Supabase token signature"));
+              } else {
+                resolve(payload);
+              }
+            }
+          );
+        });
+      } catch (err: any) {
+        throw new UnauthorizedException("Token signature verification failed: " + err.message);
+      }
+    }
+
+    // 3. Fallback verification attempt with JWT secret
+    if (jwtSecret) {
+      try {
+        return jwt.verify(token, jwtSecret) as any;
+      } catch (err: any) {
+        throw new UnauthorizedException("Token signature verification failed: " + err.message);
+      }
+    }
+
+    throw new UnauthorizedException("Token signature verification failed: Missing JWT secret or valid JWKS key");
   }
 
   async getBootstrapStatus(token: string) {
