@@ -3,8 +3,7 @@
 import * as React from "react"
 import { User, ClientBusiness, BusinessUserRole, AUTH_PROVIDER_NOT_CONFIGURED } from "@raza-stationers/types"
 import { UserPricingContext } from "@/lib/pricing"
-import { createAPIClient } from "@raza-stationers/api"
-import { BrandedLoader } from "@/components/site/BrandedLoader"
+import { createAPIClient, createBetterAuthClient } from "@raza-stationers/api"
 import { getApiBaseUrl } from "@/lib/public-config"
 
 export type AccountStatus =
@@ -56,80 +55,142 @@ const AuthContext = React.createContext<AuthContextValue | null>(null)
 
 const API_BASE = getApiBaseUrl()
 
-function getClient() {
-  return createAPIClient({ baseUrl: API_BASE })
-}
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [accountStatus, setAccountStatus] = React.useState<AccountStatus>("unconfigured")
+  const [accountStatus, setAccountStatus] = React.useState<AccountStatus>("loading")
   const [user, setUser] = React.useState<User | null>(null)
   const [clientBusiness, setClientBusiness] = React.useState<ClientBusiness | null>(null)
   const [businessRole, setBusinessRole] = React.useState<BusinessUserRole | null>(null)
   const [authError, setAuthError] = React.useState<string | null>(null)
 
-  const api = React.useMemo(() => getClient(), [])
+  const api = React.useMemo(() => createAPIClient({ baseUrl: API_BASE }), [])
+  const authClient = React.useMemo(() => createBetterAuthClient(API_BASE), [])
+
+  const checkSession = React.useCallback(async () => {
+    try {
+      setAccountStatus("loading")
+      const sessionRes = await authClient.getSession()
+      if (sessionRes?.data?.user) {
+        const u = sessionRes.data.user
+        const mappedUser: User = {
+          id: u.id,
+          name: u.name,
+          mobileNumber: (u as any).mobileNumber || "",
+          passwordHash: "",
+          role: ((u as any).role as any) || "business_user",
+          isActive: true,
+          createdAt: u.createdAt instanceof Date ? u.createdAt.toISOString() : String(u.createdAt),
+        }
+        setUser(mappedUser)
+        setAccountStatus("approved")
+        setAuthError(null)
+      } else {
+        setUser(null)
+        setAccountStatus("guest")
+      }
+    } catch {
+      setUser(null)
+      setAccountStatus("guest")
+    }
+  }, [authClient])
+
+  React.useEffect(() => {
+    checkSession()
+  }, [checkSession])
 
   const logout = React.useCallback(async () => {
+    try {
+      await authClient.signOut()
+    } catch {}
     setUser(null)
     setClientBusiness(null)
     setBusinessRole(null)
     setAuthError(null)
-    setAccountStatus("unconfigured")
-  }, [])
+    setAccountStatus("guest")
+  }, [authClient])
 
   const retryBootstrap = React.useCallback(async () => {
-    setAccountStatus("unconfigured")
-    setAuthError(AUTH_PROVIDER_NOT_CONFIGURED)
-  }, [])
+    await checkSession()
+  }, [checkSession])
 
-  const login = React.useCallback(async () => {
-    setAuthError(AUTH_PROVIDER_NOT_CONFIGURED)
-    throw new Error(AUTH_PROVIDER_NOT_CONFIGURED)
-  }, [])
+  const login = React.useCallback(
+    async (email: string, password: string) => {
+      setAuthError(null)
+      const res = await authClient.signIn.email({ email, password })
+      if (res.error) {
+        setAuthError(res.error.message || "Failed to sign in")
+        throw new Error(res.error.message || "Failed to sign in")
+      }
+      await checkSession()
+      return res.data
+    },
+    [authClient, checkSession]
+  )
 
-  const register = React.useCallback(async () => {
-    setAuthError(AUTH_PROVIDER_NOT_CONFIGURED)
-    throw new Error(AUTH_PROVIDER_NOT_CONFIGURED)
-  }, [])
+  const register = React.useCallback(
+    async (data: {
+      name: string
+      mobileNumber: string
+      password: string
+      email: string
+      businessName: string
+      businessType: string
+      contactPerson: string
+      address: string
+      city: string
+    }) => {
+      setAuthError(null)
+      const res = await authClient.signUp.email({
+        email: data.email,
+        password: data.password,
+        name: data.name,
+      })
+      if (res.error) {
+        setAuthError(res.error.message || "Failed to register")
+        throw new Error(res.error.message || "Failed to register")
+      }
+      await checkSession()
+    },
+    [authClient, checkSession]
+  )
 
-  const registerCustomer = React.useCallback(async () => {
-    setAuthError(AUTH_PROVIDER_NOT_CONFIGURED)
-    throw new Error(AUTH_PROVIDER_NOT_CONFIGURED)
-  }, [])
+  const registerCustomer = React.useCallback(
+    async (data: { name: string; mobileNumber: string; password: string; email: string }) => {
+      setAuthError(null)
+      const res = await authClient.signUp.email({
+        email: data.email,
+        password: data.password,
+        name: data.name,
+      })
+      if (res.error) {
+        setAuthError(res.error.message || "Failed to register customer")
+        throw new Error(res.error.message || "Failed to register customer")
+      }
+      await checkSession()
+    },
+    [authClient, checkSession]
+  )
 
   const verifyOtp = React.useCallback(async () => {
-    setAuthError(AUTH_PROVIDER_NOT_CONFIGURED)
-    throw new Error(AUTH_PROVIDER_NOT_CONFIGURED)
-  }, [])
-
-  const resendOtp = React.useCallback(async () => {
-    setAuthError(AUTH_PROVIDER_NOT_CONFIGURED)
-    throw new Error(AUTH_PROVIDER_NOT_CONFIGURED)
-  }, [])
-
-  const loginWithGoogle = React.useCallback(async () => {
-    setAuthError(AUTH_PROVIDER_NOT_CONFIGURED)
-    throw new Error(AUTH_PROVIDER_NOT_CONFIGURED)
-  }, [])
-
-  const resetPassword = React.useCallback(async () => {
-    setAuthError(AUTH_PROVIDER_NOT_CONFIGURED)
-    throw new Error(AUTH_PROVIDER_NOT_CONFIGURED)
-  }, [])
-
-  const getAccessToken = React.useCallback(async () => {
     return null
   }, [])
 
-  const updatePassword = React.useCallback(async () => {
-    setAuthError(AUTH_PROVIDER_NOT_CONFIGURED)
-    throw new Error(AUTH_PROVIDER_NOT_CONFIGURED)
-  }, [])
+  const resendOtp = React.useCallback(async () => {}, [])
 
-  const linkAccount = React.useCallback(async () => {
-    setAuthError(AUTH_PROVIDER_NOT_CONFIGURED)
-    throw new Error(AUTH_PROVIDER_NOT_CONFIGURED)
-  }, [])
+  const loginWithGoogle = React.useCallback(
+    async (returnTo?: string) => {
+      setAuthError(null)
+      await authClient.signIn.social({
+        provider: "google",
+        callbackURL: typeof window !== "undefined" ? window.location.origin + (returnTo || "/catalogue") : "/catalogue",
+      })
+    },
+    [authClient]
+  )
+
+  const resetPassword = React.useCallback(async () => {}, [])
+  const updatePassword = React.useCallback(async () => {}, [])
+  const linkAccount = React.useCallback(async () => {}, [])
+  const getAccessToken = React.useCallback(async () => null, [])
 
   const pricingContext: UserPricingContext = React.useMemo(() => {
     if (accountStatus === "approved" && clientBusiness?.accountStatus === "active") {

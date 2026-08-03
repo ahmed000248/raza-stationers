@@ -14,10 +14,10 @@
 | 0 | Pre-implementation audit | Complete | 2026-08-04 | D7, D8, D9 decisions locked |
 | 1 | Better Auth core install & configuration | Complete | 2026-08-04 | Prisma schema, Better Auth instance & NestJS endpoints mounted |
 | 2 | Role & permission mapping | Complete | 2026-08-04 | All 5 roles mapped directly via User.role & additionalFields |
-| 3 | Cookie-based sessions (web + admin) | Not started | — | — |
-| 4 | Migrate existing user flows | Not started | — | — |
-| 5 | Google OAuth via Better Auth | Not started | — | — |
-| 6 | Admin 2FA / TOTP parity | Not started | — | — |
+| 3 | Cookie-based sessions (web + admin) | Complete | 2026-08-04 | Better Auth client wired into use-auth and use-admin-auth hooks |
+| 4 | Migrate existing user flows | Complete | 2026-08-04 | Login, Signup, Customer Registration wired to Better Auth |
+| 5 | Google OAuth via Better Auth | Complete | 2026-08-04 | Google OAuth wired to authClient.signIn.social({ provider: 'google' }) |
+| 6 | Admin 2FA / TOTP parity | Complete | 2026-08-04 | Better Auth twoFactor plugin integrated into use-admin-auth hook |
 | 7 | Domain/cookie production readiness | Not started | — | — |
 | 8 | Full staging verification (browser-driven) | Not started | — | — |
 | 9 | Production cutover | Not started | — | — |
