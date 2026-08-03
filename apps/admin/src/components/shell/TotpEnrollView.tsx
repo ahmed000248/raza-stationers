@@ -12,7 +12,7 @@ type Step = "intro" | "scan" | "verify"
 
 /**
  * Shown to an admin/owner who has NO TOTP factor yet.
- * Guides them through enrolling in Supabase TOTP MFA.
+ * Guides them through enrolling in Better Auth TOTP MFA.
  */
 export function TotpEnrollView({ onEnroll, onConfirm }: TotpEnrollViewProps) {
   const [step, setStep] = React.useState<Step>("intro")
