@@ -2,11 +2,8 @@ import { Injectable, UnauthorizedException, ConflictException, BadRequestExcepti
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcryptjs";
 import * as jwt from "jsonwebtoken";
-import jwksRsa from "jwks-rsa";
 import { PrismaService } from "../prisma/prisma.service";
 import { normalizePakistaniMobile } from "@raza-stationers/validation";
-
-import { createClient } from "@supabase/supabase-js";
 
 @Injectable()
 export class AuthService {
@@ -15,20 +12,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  private getSupabaseClient() {
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const key =
-      process.env.SUPABASE_SERVICE_ROLE_KEY ||
-      process.env.SUPABASE_ANON_KEY ||
-      process.env.SUPABASE_KEY ||
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (!supabaseUrl || !key) return null;
-    return createClient(supabaseUrl, key, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
-  }
-
-  async verifySupabaseToken(token: string): Promise<any> {
+  async verifyAuthToken(token: string): Promise<any> {
     if (!token || typeof token !== "string") {
       throw new UnauthorizedException("Invalid or expired session");
     }
@@ -47,24 +31,7 @@ export class AuthService {
       }
     }
 
-    // Official Supabase auth.getUser(token) verification
-    const supabase = this.getSupabaseClient();
-    if (supabase) {
-      try {
-        const { data, error } = await supabase.auth.getUser(token);
-        if (!error && data?.user) {
-          return {
-            sub: data.user.id,
-            email: data.user.email || null,
-            user: data.user,
-          };
-        }
-      } catch (err) {
-        // Fallthrough to JWT secret attempt if configured
-      }
-    }
-
-    const jwtSecret = process.env.SUPABASE_JWT_SECRET || process.env.JWT_SECRET;
+    const jwtSecret = process.env.JWT_SECRET;
     if (jwtSecret) {
       try {
         const payload: any = jwt.verify(token, jwtSecret);
@@ -76,32 +43,24 @@ export class AuthService {
           };
         }
       } catch (err) {
-        // Fallthrough to sanitized error
+        // Fallthrough to sanitized exception
       }
     }
 
-    throw new UnauthorizedException("Invalid or expired session");
+    throw new UnauthorizedException("Authentication service is not configured yet.");
   }
 
-  async getBootstrapStatus(token: string) {
-    const payload = await this.verifySupabaseToken(token);
-    const sub = payload.sub;
-    const email = payload.email || null;
+  async getBootstrapStatus(token?: string) {
+    if (!token) {
+      return { authenticated: false, registered: false, status: "unconfigured", message: "Authentication service is not configured yet." };
+    }
 
-    let user = await this.prisma.user.findUnique({
-      where: { supabaseAuthId: sub },
-      include: {
-        businessUserLinks: {
-          include: {
-            clientBusiness: true,
-          },
-        },
-      },
-    });
+    try {
+      const payload = await this.verifyAuthToken(token);
+      const sub = payload.sub;
 
-    if (!user && email) {
-      const existingByEmail = await this.prisma.user.findFirst({
-        where: { email: { equals: email, mode: "insensitive" } },
+      const user = await this.prisma.user.findUnique({
+        where: { id: sub },
         include: {
           businessUserLinks: {
             include: {
@@ -110,57 +69,32 @@ export class AuthService {
           },
         },
       });
-      if (existingByEmail) {
-        user = await this.prisma.user.update({
-          where: { id: existingByEmail.id },
-          data: { supabaseAuthId: sub },
-          include: {
-            businessUserLinks: {
-              include: {
-                clientBusiness: true,
-              },
-            },
-          },
-        });
+
+      if (!user) {
+        return { authenticated: true, registered: false };
       }
-    }
 
-    if (!user) {
-      return {
-        authenticated: true,
-        registered: false,
-        email,
-        sub,
-      };
-    }
-
-    if (!user.isActive) {
       return {
         authenticated: true,
         registered: true,
-        isInactive: true,
-        message: "User account is inactive",
+        profile: {
+          id: user.id,
+          name: user.name,
+          mobileNumber: user.mobileNumber,
+          role: user.role,
+          createdAt: user.createdAt,
+          businessUserLinks: user.businessUserLinks,
+        },
       };
+    } catch {
+      return { authenticated: false, registered: false, status: "unconfigured", message: "Authentication service is not configured yet." };
     }
-
-    return {
-      authenticated: true,
-      registered: true,
-      profile: {
-        id: user.id,
-        name: user.name,
-        mobileNumber: user.mobileNumber,
-        role: user.role,
-        createdAt: user.createdAt,
-        businessUserLinks: user.businessUserLinks,
-      },
-    };
   }
 
   async registerSupabase(token: string, data: { name: string; mobileNumber: string }) {
     const mobileNumber = normalizePakistaniMobile(data.mobileNumber);
     if (!mobileNumber) throw new BadRequestException("Mobile number must use the Pakistani 03XXXXXXXXX format");
-    const payload = await this.verifySupabaseToken(token);
+    const payload = await this.verifyAuthToken(token);
     const sub = payload.sub;
     const email = payload.email || null;
 
@@ -226,7 +160,7 @@ export class AuthService {
   }
 
   async linkSupabase(userId: string, supabaseToken: string) {
-    const payload = await this.verifySupabaseToken(supabaseToken);
+    const payload = await this.verifyAuthToken(supabaseToken);
     const sub = payload.sub;
     const email = payload.email || null;
 

@@ -1,8 +1,14 @@
-import { type NextRequest } from "next/server";
-import { updateSession } from "@/lib/supabase/middleware";
+import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
-  return await updateSession(request);
+  const { pathname } = request.nextUrl;
+
+  if (pathname === "/login" || pathname.startsWith("/auth")) {
+    return NextResponse.next();
+  }
+
+  // Protected admin routes fail closed when no replacement authentication provider is configured
+  return NextResponse.redirect(new URL("/login?reason=auth_unconfigured", request.url));
 }
 
 export const config = {

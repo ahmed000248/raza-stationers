@@ -8,9 +8,9 @@ import { ToastContainer, ToastItem, ToastVariant } from "@raza-stationers/ui"
 import { useAdminAuth } from "@/hooks/use-admin-auth"
 import { TotpEnrollView } from "./TotpEnrollView"
 import { TotpChallengeView } from "./TotpChallengeView"
-import { createClient } from "@/lib/supabase/client"
 import { BrandedLoader } from "./BrandedLoader"
 import { usePathname, useRouter } from "next/navigation"
+import { AUTH_PROVIDER_NOT_CONFIGURED } from "@raza-stationers/types"
 
 interface AddToastInput {
   title: string
@@ -68,30 +68,12 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const role = adminRole as AdminRole
   const contextValue = React.useMemo(() => ({ role, userName: user?.name || "Staff", alertCount: 3, addToast }), [role, user, addToast])
 
-  // Issue a fresh challenge for an already-enrolled factor
   const issueFreshChallenge = React.useCallback(async () => {
-    const supabase = createClient()
-    const factors = await supabase.auth.mfa.listFactors()
-    const totp = factors.data?.totp?.[0]
-    if (!totp) throw new Error("No TOTP factor found")
-    const challenge = await supabase.auth.mfa.challenge({ factorId: totp.id })
-    if (challenge.error) throw new Error(challenge.error.message)
-    setPendingFactorId(totp.id)
-    setPendingChallengeId(challenge.data.id)
-    return { factorId: totp.id, challengeId: challenge.data.id }
+    throw new Error(AUTH_PROVIDER_NOT_CONFIGURED)
   }, [])
 
-  // For already-enrolled users showing the challenge view, prime the challenge on mount
-  const needsMfaStepUp =
-    MFA_REQUIRED_ROLES.includes(role) &&
-    nextLevel === "aal2" &&
-    currentLevel === "aal1"
-
-  const needsMfaEnrollment =
-    MFA_REQUIRED_ROLES.includes(role) &&
-    nextLevel === "aal1" &&
-    currentLevel === "aal1" &&
-    !!user  // user loaded — not yet enrolled
+  const needsMfaStepUp = false
+  const needsMfaEnrollment = false
 
   React.useEffect(() => {
     if (needsMfaStepUp && !pendingFactorId) {

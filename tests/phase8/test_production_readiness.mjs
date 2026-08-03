@@ -62,7 +62,6 @@ const backendFiles = [
 ];
 for (const file of backendFiles) {
   const source = read(file);
-  assert.match(source, /SUPABASE_URL/);
   assert.doesNotMatch(source, /NEXT_PUBLIC_SUPABASE_URL/);
 }
 

@@ -76,7 +76,7 @@ export default function SignInPage() {
             ))}
           </ul>
         </div>
-        <p className="relative text-xs text-white/55">Protected by Supabase authentication and secure server-side session cookies.</p>
+        <p className="relative text-xs text-white/55">Protected by secure authentication and session cookies.</p>
       </section>
 
       <section className="flex items-center justify-center py-6 sm:py-10">

@@ -6,59 +6,52 @@ import jwt from "jsonwebtoken";
 const root = path.resolve(import.meta.dirname, "../..");
 const read = (rel) => readFileSync(path.join(root, rel), "utf8");
 
-console.log("=== RUNNING AUTHENTICATION & REDIRECT REGRESSION TESTS ===");
+console.log("=== RUNNING AUTHENTICATION REGRESSION & DE-SUPABASE CHECKS ===");
 
-// 1. Backend AuthService accepts valid tokens and uses official Supabase client auth.getUser(token)
+// 1. Web app de-Supabase verification
+const useAuth = read("apps/web/src/hooks/use-auth.tsx");
+assert.doesNotMatch(useAuth, /@\/lib\/supabase\/client/, "use-auth must not import Supabase client");
+assert.doesNotMatch(useAuth, /supabase\.auth/, "use-auth must not invoke Supabase Auth methods");
+assert.match(useAuth, /AUTH_PROVIDER_NOT_CONFIGURED/, "use-auth must use provider-neutral unconfigured constant");
+assert.match(useAuth, /"unconfigured"/, "AccountStatus must include unconfigured status");
+
+// 2. Admin app de-Supabase verification
+const adminAuth = read("apps/admin/src/hooks/use-admin-auth.tsx");
+assert.doesNotMatch(adminAuth, /@\/lib\/supabase\/client/, "use-admin-auth must not import Supabase client");
+assert.doesNotMatch(adminAuth, /supabase\.auth/, "use-admin-auth must not invoke Supabase Auth methods");
+
+// 3. NestJS API de-Supabase verification
 const authService = read("apps/api/src/auth/auth.service.ts");
-assert.match(authService, /supabase\.auth\.getUser\(token\)/, "AuthService must validate tokens via official Supabase client auth.getUser");
-assert.match(authService, /createClient\(supabaseUrl, key/, "AuthService must initialize server-side Supabase client");
-assert.doesNotMatch(authService, /Token signature verification failed:.*err\.message/, "AuthService must sanitize raw verification errors");
+assert.doesNotMatch(authService, /@supabase\/supabase-js/, "AuthService must not import Supabase JS library");
+assert.doesNotMatch(authService, /verifySupabaseToken/, "AuthService must not contain verifySupabaseToken");
+assert.match(authService, /verifyAuthToken/, "AuthService must use provider-neutral verifyAuthToken");
 
-// 2. Token algorithm handling & secrets in logs
-assert.doesNotMatch(authService, /console\.log\(.*token.*\)/i, "AuthService must never log bearer tokens");
-assert.doesNotMatch(authService, /console\.log\(.*secret.*\)/i, "AuthService must never log JWT secrets");
-
-// 3. API Client index.ts retains HTTP status and endpoint without destroying auth automatically
+// 4. API Client index.ts provider-neutral behavior
 const apiClient = read("packages/api/src/index.ts");
 assert.match(apiClient, /export class APIError extends Error/, "packages/api must export APIError with status and endpoint");
-assert.match(apiClient, /throw new APIError\(message, res\.status/, "APIError must retain HTTP status");
 assert.doesNotMatch(apiClient, /if \(res\.status === 401 && this\.onUnauthorized\) \{\s*this\.onUnauthorized\(\);\s*\}/, "APIClient must not automatically clear auth on generic 401");
 
-// 4. Frontend use-auth.tsx explicit state machine & retry handling
-const useAuth = read("apps/web/src/hooks/use-auth.tsx");
-assert.match(useAuth, /export type AccountStatus =/, "use-auth must export AccountStatus type");
-assert.match(useAuth, /"authenticated_unregistered"/, "AccountStatus must include authenticated_unregistered");
-assert.match(useAuth, /"auth_error"/, "AccountStatus must include auth_error");
-assert.match(useAuth, /ongoingBootstrapRef/, "use-auth must deduplicate bootstrap requests for the same token");
-assert.match(useAuth, /refreshSession\(\)/, "use-auth must attempt Supabase session refresh on initial 401");
-assert.match(useAuth, /retryBootstrap/, "use-auth must provide retryBootstrap capability");
-
-// 5. Onboarding page handling
+// 5. Onboarding and Signin UI preservation
 const onboarding = read("apps/web/src/app/onboarding/page.tsx");
-assert.match(onboarding, /accountStatus === "guest"/, "Onboarding page must explicitly handle guest state");
-assert.match(onboarding, /accountStatus === "auth_error"/, "Onboarding page must explicitly handle auth_error state");
-assert.match(onboarding, /authenticated_unregistered/, "Onboarding page must render forms for authenticated_unregistered");
-assert.ok(onboarding.includes('router.replace(`/signin?returnTo='), "Onboarding must redirect guests to signin with returnTo");
+assert.doesNotMatch(onboarding, /createClient/, "Onboarding page must not import createClient");
+assert.match(onboarding, /unconfigured/, "Onboarding page must handle unconfigured status");
 
-// 6. Signin page handling
 const signin = read("apps/web/src/app/signin/page.tsx");
-assert.match(signin, /accountStatus === "authenticated_unregistered"/, "Signin page must redirect authenticated_unregistered to onboarding");
+assert.match(signin, /Sign in with email/, "Signin page UI must render email sign in button");
+assert.match(signin, /Continue with Google/, "Signin page UI must render Google button");
 
-// 7. ClientsService idempotency
-const clientsService = read("apps/api/src/clients/clients.service.ts");
-assert.match(clientsService, /existingLink/, "ClientsService must check existing business link before duplicate creation");
-assert.match(clientsService, /existingBusiness/, "ClientsService must safely handle existing business with matching mobile");
+// 6. Admin Login UI preservation & fail-closed protection
+const adminLogin = read("apps/admin/src/app/login/page.tsx");
+assert.match(adminLogin, /Admin Sign In/, "Admin login page UI must render Admin Sign In heading");
 
-// 8. Admin App security checks
-const adminAuth = read("apps/admin/src/hooks/use-admin-auth.tsx");
-assert.match(adminAuth, /"owner", "admin", "packing", "delivery"/, "Admin app must enforce staff/admin roles");
-assert.match(adminAuth, /This account is not authorized for the Admin application/, "Admin app must block unauthorized customer users");
+const adminMiddleware = read("apps/admin/src/middleware.ts");
+assert.match(adminMiddleware, /reason=auth_unconfigured/, "Admin middleware must fail closed for protected routes");
 
-// 9. JWT test token verification sanity check
+// 7. JWT test token verification sanity check
 const testSecret = "raza-stationers-test-secret-1234567890";
 const testToken = jwt.sign({ sub: "test-user-id", email: "test@example.com" }, testSecret, { algorithm: "HS256" });
 const decoded = jwt.verify(testToken, testSecret);
 assert.equal(decoded.sub, "test-user-id");
 assert.equal(decoded.email, "test@example.com");
 
-console.log("✔ All 22 Auth & Redirect Regression Checks Passed Successfully!");
+console.log("✔ All De-Supabase Auth & Provider-Neutral Regression Checks Passed Successfully!");

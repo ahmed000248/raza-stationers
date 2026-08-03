@@ -4,7 +4,6 @@ import * as React from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
-import { createClient } from "@/lib/supabase/client"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Bilingual } from "@/components/ui/bilingual"
@@ -18,7 +17,6 @@ export default function OnboardingPage() {
   const returnTo = requestedReturnTo?.startsWith("/") && !requestedReturnTo.startsWith("//") ? requestedReturnTo : "/catalogue"
   
   const { accountStatus, logout, register, registerCustomer, linkAccount, authError, retryBootstrap } = useAuth()
-  const supabase = React.useMemo(() => createClient(), [])
   
   // Tabs: "customer" | "wholesale" | "link"
   const [activeTab, setActiveTab] = React.useState<"customer" | "wholesale" | "link">("customer")
@@ -43,21 +41,11 @@ export default function OnboardingPage() {
   const [loading, setLoading] = React.useState(false)
   const [submitError, setSubmitError] = React.useState("")
 
-  // Pre-fill user name from Supabase identity metadata if available
-  React.useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user: sbUser } }: { data: { user: any } }) => {
-      if (sbUser?.user_metadata?.full_name) {
-        if (!custName) setCustName(sbUser.user_metadata.full_name)
-        if (!name) setName(sbUser.user_metadata.full_name)
-      }
-    })
-  }, [supabase, custName, name])
-
   // Explicit navigation behavior per state
   React.useEffect(() => {
     if (accountStatus === "approved" || accountStatus === "pending") {
       router.replace(returnTo)
-    } else if (accountStatus === "guest") {
+    } else if (accountStatus === "guest" || accountStatus === "unconfigured") {
       router.replace(`/signin?returnTo=${encodeURIComponent(returnTo)}`)
     }
   }, [accountStatus, router, returnTo])
@@ -98,15 +86,11 @@ export default function OnboardingPage() {
     setLoading(true)
     setSubmitError("")
     try {
-      const session = (await supabase.auth.getSession()).data.session
-      if (!session) throw new Error("No active session found")
-      const email = session.user.email || ""
-
       await registerCustomer({
         name: custName,
         mobileNumber: normalizePakistaniMobile(custMobile)!,
         password: "",
-        email,
+        email: "",
       })
       router.replace(returnTo)
     } catch (err: any) {
@@ -122,16 +106,11 @@ export default function OnboardingPage() {
     setLoading(true)
     setSubmitError("")
     try {
-      const session = (await supabase.auth.getSession()).data.session
-      if (!session) throw new Error("No active session found")
-      
-      const email = session.user.email || ""
-      
       await register({
         name,
         mobileNumber: normalizePakistaniMobile(mobileNumber)!,
         password: "",
-        email,
+        email: "",
         businessName,
         businessType,
         contactPerson: name,
@@ -152,10 +131,7 @@ export default function OnboardingPage() {
     setLoading(true)
     setSubmitError("")
     try {
-      const session = (await supabase.auth.getSession()).data.session
-      if (!session) throw new Error("No active session found")
-      
-      await linkAccount(session.access_token, normalizePakistaniMobile(legacyMobile)!, legacyPassword)
+      await linkAccount("", normalizePakistaniMobile(legacyMobile)!, legacyPassword)
       router.replace(returnTo)
     } catch (err: any) {
       setSubmitError(err.message || "Failed to link existing account. Check credentials.")

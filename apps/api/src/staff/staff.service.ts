@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException, ConflictException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { normalizePakistaniMobile } from "@raza-stationers/validation";
-import { createClient } from "@supabase/supabase-js";
 
 @Injectable()
 export class StaffService {
@@ -37,26 +36,7 @@ export class StaffService {
       return { ...existing, invitationStatus: "already_linked" };
     }
 
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!supabaseUrl || !serviceRoleKey) throw new ConflictException("Staff invitations are not configured on this environment");
-    const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } });
-    const invitation = await supabase.auth.admin.inviteUserByEmail(email, { data: { name: data.name.trim() } });
-    if (invitation.error || !invitation.data.user) throw new ConflictException(invitation.error?.message || "Supabase invitation failed");
-
-    let user;
-    try {
-      user = await this.prisma.$transaction(async (tx) => {
-        const created = await tx.user.create({ data: { name: data.name.trim(), email, mobileNumber, supabaseAuthId: invitation.data.user!.id, role: data.role, staffProfile: { create: { staffRole: data.role } } }, include: { staffProfile: true } });
-        await tx.auditLog.create({ data: { actorId: ownerId, action: "STAFF_INVITED", entityType: "User", entityId: created.id, afterData: { email, mobileNumber, role: data.role, supabaseAuthId: invitation.data.user!.id }, reason: "AAL2 owner invited staff from the private Admin application" } });
-        return created;
-      });
-    } catch (cause) {
-      const cleanup = await supabase.auth.admin.deleteUser(invitation.data.user.id);
-      if (cleanup.error) throw new ConflictException(`Staff record creation failed and the Supabase invitation requires manual cleanup: ${cleanup.error.message}`);
-      throw cause;
-    }
-    return { id: user.id, name: user.name, email: user.email, mobileNumber: user.mobileNumber, role: user.role, staffRole: user.staffProfile?.staffRole, isActive: user.isActive, invitationStatus: "invited" };
+    throw new ConflictException("Staff email invitations require a configured authentication provider.");
   }
 
   async toggleActive(id: string) {

@@ -498,3 +498,44 @@ export interface AuditLog {
   newValue?: unknown;
   createdAt: string;
 }
+
+// ---------------------------------------------------------------------------
+// Provider-Neutral Authentication Contracts — FR-AUTH
+// ---------------------------------------------------------------------------
+
+export const AUTH_PROVIDER_NOT_CONFIGURED = "Authentication service is not configured yet.";
+export interface AuthIdentity {
+  id: string;
+  email: string;
+  displayName?: string;
+  emailVerified?: boolean;
+  provider?: string;
+  createdAt?: string;
+}
+
+export interface AuthSession {
+  identity: AuthIdentity;
+  accessToken?: string;
+  expiresAt?: number;
+}
+
+export type AccountStatus =
+  | 'loading'
+  | 'guest'
+  | 'authenticated_unregistered'
+  | 'pending'
+  | 'approved'
+  | 'unconfigured'
+  | 'auth_error';
+
+export interface AuthProviderAdapter {
+  initialize(): Promise<void>;
+  signIn(credentials: { email: string; password: string }): Promise<{ success: boolean; error?: string }>;
+  signUp(details: { email: string; password: string; name?: string; mobileNumber?: string }): Promise<{ success: boolean; error?: string }>;
+  signInWithGoogle(returnTo?: string): Promise<void>;
+  signOut(): Promise<void>;
+  getSession(): Promise<AuthSession | null>;
+  getAccessToken(): Promise<string | null>;
+  subscribe(listener: (session: AuthSession | null) => void): () => void;
+  requestPasswordReset?(email: string): Promise<{ success: boolean; error?: string }>;
+}
