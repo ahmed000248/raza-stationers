@@ -1,5 +1,6 @@
 import { createAuthClient } from "better-auth/client";
 import { twoFactorClient } from "better-auth/client/plugins";
+import { sentinelClient } from "@better-auth/infra/client";
 
 export class APIError extends Error {
   public status: number;
@@ -22,7 +23,7 @@ export interface APIClientOptions {
 export function createBetterAuthClient(baseUrl: string) {
   return createAuthClient({
     baseURL: `${baseUrl}/auth/api`,
-    plugins: [twoFactorClient()],
+    plugins: [twoFactorClient(), sentinelClient()],
   });
 }
 

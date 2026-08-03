@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { twoFactor } from "better-auth/plugins";
+import { dash } from "@better-auth/infra";
 import * as bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
@@ -72,6 +73,7 @@ export const auth = betterAuth({
     twoFactor({
       issuer: "Raza Stationers",
     }),
+    dash(),
   ],
   trustedOrigins: [
     "http://localhost:3000",
