@@ -1,5 +1,8 @@
-import { Controller, Post, Put, Body, UseGuards, Get, Headers, BadRequestException, HttpCode } from "@nestjs/common";
+import { Controller, Post, Put, Body, UseGuards, Get, Headers, BadRequestException, HttpCode, All, Req, Res } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
+import { Request, Response } from "express";
+import { toNodeHandler } from "better-auth/node";
+import { auth } from "./better-auth";
 import { AuthService } from "./auth.service";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { CurrentUser } from "./decorators/current-user.decorator";
@@ -8,6 +11,11 @@ import { CurrentUser } from "./decorators/current-user.decorator";
 @Controller("auth")
 export class AuthController {
   constructor(private authService: AuthService) {}
+
+  @All("api/*")
+  async handleBetterAuthApi(@Req() req: Request, @Res() res: Response) {
+    return toNodeHandler(auth)(req, res);
+  }
 
   @Post("register")
   @ApiOperation({ summary: "Register a new user" })

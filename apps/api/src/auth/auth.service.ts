@@ -17,6 +17,23 @@ export class AuthService {
       throw new UnauthorizedException("Invalid or expired session");
     }
 
+    // 1. Check Better Auth Session table
+    try {
+      const dbSession = await this.prisma.session.findUnique({
+        where: { token },
+        include: { user: true },
+      });
+      if (dbSession && dbSession.expiresAt > new Date()) {
+        return {
+          sub: dbSession.userId,
+          email: dbSession.user.email || null,
+          role: dbSession.user.role,
+        };
+      }
+    } catch {
+      // Fallthrough to JWT verification
+    }
+
     if (process.env.NODE_ENV === "test" || process.env.USE_TEST_KEY === "true") {
       const secret = process.env.JWT_SECRET || "raza-stationers-test-secret-1234567890";
       try {

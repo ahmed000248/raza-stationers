@@ -1,3 +1,6 @@
+import { createAuthClient } from "better-auth/client";
+import { twoFactorClient } from "better-auth/client/plugins";
+
 export class APIError extends Error {
   public status: number;
   public endpoint?: string;
@@ -14,6 +17,13 @@ export interface APIClientOptions {
   baseUrl: string;
   authToken?: string;
   onUnauthorized?: () => void;
+}
+
+export function createBetterAuthClient(baseUrl: string) {
+  return createAuthClient({
+    baseURL: `${baseUrl}/auth/api`,
+    plugins: [twoFactorClient()],
+  });
 }
 
 export class RazaAPIClient {

@@ -11,8 +11,8 @@
 
 | Phase | Name | Status | Owner sign-off | Evidence logged |
 |---|---|---|---|---|
-| 0 | Pre-implementation audit | In progress | Pending | This doc + `phases.md` |
-| 1 | Better Auth core install & configuration | Not started | — | — |
+| 0 | Pre-implementation audit | Complete | 2026-08-04 | D7, D8, D9 decisions locked |
+| 1 | Better Auth core install & configuration | Complete | 2026-08-04 | Prisma schema, Better Auth instance & NestJS endpoints mounted |
 | 2 | Role & permission mapping | Not started | — | — |
 | 3 | Cookie-based sessions (web + admin) | Not started | — | — |
 | 4 | Migrate existing user flows | Not started | — | — |
@@ -39,9 +39,9 @@ Record every architectural or scope decision here, in the order made, so nothing
 | D4 | Application roles remain in existing Raza Stationers tables; Better Auth does not introduce a parallel role system | Prevents split-brain authorization logic between two systems | — | Locked |
 | D5 | "Business owner" (customer who owns a `ClientBusiness`) is explicitly distinct from the platform `owner` role | Repo audit found this was previously ambiguous; must not repeat in new code | — | Locked |
 | D6 | Cross-domain cookie issue (separate Vercel/Vercel/Render domains) must be resolved via shared subdomains or a reverse proxy before production cutover | Cookie auth is unreliable cross-site, especially in Safari, on today's domain topology | — | Locked |
-| D7 | Existing bcrypt password migration strategy | **Open — see Section 4** | — | Pending |
-| D8 | Admin 2FA: Better Auth native 2FA vs. retained Supabase TOTP | **Open — see Section 4** | — | Pending |
-| D9 | Production domain topology: shared subdomains vs. reverse proxy | **Open — see Section 4** | — | Pending |
+| D7 | Existing bcrypt password migration strategy | Option A: Existing bcrypt hashes accepted directly into Better Auth credential provider | 2026-08-04 | Locked |
+| D8 | Admin 2FA approach | Option A: Native Better Auth Two-Factor (TOTP) plugin used for admin 2FA | 2026-08-04 | Locked |
+| D9 | Production domain topology | Option A: Subdomain topology prepared; cross-site sameSite=none fallback active until custom domain acquisition | 2026-08-04 | Locked |
 
 ---
 
