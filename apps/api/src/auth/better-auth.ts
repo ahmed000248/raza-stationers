@@ -11,7 +11,7 @@ const authSecret =
   process.env.JWT_SECRET ||
   "raza-stationers-default-secret-key-123456";
 
-export const auth: ReturnType<typeof betterAuth> = betterAuth({
+export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
