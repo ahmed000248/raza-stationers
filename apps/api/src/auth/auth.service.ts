@@ -71,7 +71,7 @@ export class AuthService {
     const sub = payload.sub;
     const email = payload.email || null;
 
-    const user = await this.prisma.user.findUnique({
+    let user = await this.prisma.user.findUnique({
       where: { supabaseAuthId: sub },
       include: {
         businessUserLinks: {
@@ -81,6 +81,32 @@ export class AuthService {
         },
       },
     });
+
+    if (!user && email) {
+      const existingByEmail = await this.prisma.user.findFirst({
+        where: { email: { equals: email, mode: "insensitive" } },
+        include: {
+          businessUserLinks: {
+            include: {
+              clientBusiness: true,
+            },
+          },
+        },
+      });
+      if (existingByEmail) {
+        user = await this.prisma.user.update({
+          where: { id: existingByEmail.id },
+          data: { supabaseAuthId: sub },
+          include: {
+            businessUserLinks: {
+              include: {
+                clientBusiness: true,
+              },
+            },
+          },
+        });
+      }
+    }
 
     if (!user) {
       return {
