@@ -37,8 +37,8 @@ node tests/run_all_tests_disposable.mjs
 ```
 === DISPOSABLE TEST RUNNER CONFIG ===
 Test Schema: e2e_test_schema
-Test DATABASE_URL: postgresql://postgres.pqlmgqzpjjllhgalyhwz:***@aws-1-ap-south-1.pooler.supabase.com:6543/postgres?pgbouncer=true&schema=e2e_test_schema
-Test DIRECT_URL: postgresql://postgres.pqlmgqzpjjllhgalyhwz:***@aws-1-ap-south-1.pooler.supabase.com:5432/postgres?schema=e2e_test_schema
+Test DATABASE_URL: connection details removed; the test used an isolated schema.
+Test DIRECT_URL: connection details removed; the test used an isolated schema.
 =====================================
 
 [1/7] Initializing clean disposable schema e2e_test_schema...

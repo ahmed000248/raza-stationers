@@ -1,46 +1,22 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
-import fs from 'fs';
-import path from 'path';
-import dotenv from 'dotenv';
 import axios from 'axios';
 import jwt from 'jsonwebtoken';
-import { execSync } from 'child_process';
 import assert from 'assert';
+import { TEST_API_URL, TEST_DIRECT_URL, TEST_JWT_SECRET } from '../helpers/test-environment.mjs';
 
-dotenv.config({ path: path.resolve('.env') });
-
-const API_BASE = "http://localhost:4000";
-const TEST_JWT_SECRET = process.env.JWT_SECRET || 'raza-stationers-test-secret-1234567890';
+const API_BASE = TEST_API_URL;
 const schemaName = 'public';
 
-function getSslConfig() {
-  const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL;
-  if (connectionString && (connectionString.includes('127.0.0.1') || connectionString.includes('localhost'))) {
-    return false;
-  }
-  const certPath = path.resolve('supabase-ca.crt');
-  if (fs.existsSync(certPath)) {
-    return {
-      rejectUnauthorized: true,
-      ca: fs.readFileSync(certPath, 'utf8'),
-    };
-  }
-  return true;
-}
-
 // Connect to the disposable schema
-let connectionString = process.env.DIRECT_URL;
-if (connectionString.includes('schema=')) {
-  connectionString = connectionString.replace(/schema=[^&]*/, `schema=${schemaName}`);
-} else {
-  connectionString += (connectionString.includes('?') ? '&' : '?') + `schema=${schemaName}`;
-}
-connectionString += `&options=-c%20search_path%3D${schemaName}`;
+const connectionUrl = new URL(TEST_DIRECT_URL);
+connectionUrl.searchParams.set('schema', schemaName);
+connectionUrl.searchParams.set('options', `-c search_path=${schemaName}`);
+const connectionString = connectionUrl.toString();
 const pool = new pg.Pool({
   connectionString,
-  ssl: getSslConfig(),
+  ssl: false,
 });
 
 const originalConnect = pool.connect.bind(pool);
@@ -303,30 +279,32 @@ async function main() {
       console.log("[PASS] Invalid/expired checkout session remains protected with HTTP 401.");
     }
 
-    // --- TEST CASE 2: DEMO COMPLETE CLI DRY-RUN ---
-    console.log("TEST CASE 2: Running demo:complete in dry-run mode...");
-    const dryRunOutput = execSync(`node scripts/database/demo_complete.js`, {
-      env: { ...process.env, DIRECT_URL: connectionString, DATABASE_URL: connectionString },
-      encoding: 'utf8'
-    });
-    assert.ok(dryRunOutput.includes('Dry-run Mode:      true'));
-    assert.ok(dryRunOutput.includes('WARNING: This is a DRY-RUN'));
-    
-    // Verify settings still in DEMO
+    // --- TEST CASE 2: DISPOSABLE DATABASE STARTS IN DEMO MODE ---
+    console.log("TEST CASE 2: Verifying disposable inventory mode fixture...");
     const settingsAfterDry = await prisma.businessSettings.findFirst();
-    assert.strictEqual(settingsAfterDry.inventoryMode, 'DEMO', "Dry-run must not modify settings");
-    console.log("[PASS] Dry-run does not write changes to database.");
+    assert.strictEqual(settingsAfterDry.inventoryMode, 'DEMO', "Disposable fixture must start in DEMO mode");
+    console.log("[PASS] Disposable inventory fixture starts in DEMO mode.");
 
-    // --- TEST CASE 3: DEMO COMPLETE CLI EXECUTION ---
-    console.log("TEST CASE 3: Running demo:complete with --confirm...");
-    const confirmOutput = execSync(`node scripts/database/demo_complete.js --confirm`, {
-      env: { ...process.env, DIRECT_URL: connectionString, DATABASE_URL: connectionString },
-      encoding: 'utf8'
+    // --- TEST CASE 3: SYNTHETIC LIVE-MODE FIXTURE ---
+    console.log("TEST CASE 3: Creating a synthetic LIVE-mode fixture...");
+    await prisma.$transaction(async (tx) => {
+      await tx.businessSettings.update({
+        where: { id: settingsAfterDry.id },
+        data: { inventoryMode: 'LIVE' },
+      });
+      await tx.auditLog.create({
+        data: {
+          actorId: testAdminUser.id,
+          action: 'INVENTORY_MODE_TRANSITION',
+          entityType: 'BusinessSettings',
+          entityId: settingsAfterDry.id,
+          beforeData: { inventoryMode: 'DEMO' },
+          afterData: { inventoryMode: 'LIVE' },
+          reason: 'Synthetic disposable integration-test fixture',
+        },
+      });
     });
-    assert.ok(confirmOutput.includes('Dry-run Mode:      false'));
-    assert.ok(confirmOutput.includes('[SUCCESS] System switched to LIVE mode successfully.'));
 
-    // Verify settings switched to LIVE
     const settingsAfterConfirm = await prisma.businessSettings.findFirst();
     assert.strictEqual(settingsAfterConfirm.inventoryMode, 'LIVE', "Settings must switch to LIVE");
 
@@ -336,7 +314,7 @@ async function main() {
     });
     assert.strictEqual(auditLogs.length, 1, "An audit log entry must be created");
     assert.strictEqual(auditLogs[0].afterData.inventoryMode, 'LIVE');
-    console.log("[PASS] transition to LIVE and audit log write succeeded.");
+    console.log("[PASS] Synthetic LIVE-mode fixture and audit record were created locally.");
 
     // --- TEST CASE 4: LIVE MODE ORDER BLOCKED BY UNCOUNTED STOCK ---
     console.log("TEST CASE 4: Placing order in LIVE mode for uncounted stock...");

@@ -3,7 +3,7 @@
 **Execution Date**: 2026-07-30  
 **Branch**: `audit/deepseek-full-verification`  
 **HEAD Commit**: `6ebcc51` (fix: C1 remove mode:insensitive from catalogue query, C2 dashboard counts pending_review products)  
-**Database**: Supabase Development (`postgresql://postgres.xkmvdkdpycmhxkpeeoji:***@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres`)  
+**Database**: Retired Supabase development project (connection details removed)
 **Verdict**: `PASS — VERIFIED AND REMEDIATED`
 
 ---
@@ -41,7 +41,7 @@ All 17 completion gates have passed:
 - **NestJS**: `^11.0.0`
 - **PostgreSQL Server**: `PostgreSQL 17.6 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 15.2.0, 64-bit`
 - **Supabase Dev Project Reference**: `xkmvdkdpycmhxkpeeoji` (Redacted)
-- **Connection Type**: Direct Session Port 5432 with `sslmode=require` & `rejectUnauthorized: false` for dev driver adapter.
+- **Historical connection type**: Direct session connection with certificate validation disabled. This configuration is retired and prohibited.
 
 ---
 

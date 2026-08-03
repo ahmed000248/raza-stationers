@@ -480,7 +480,7 @@ When connecting the codebase to a fresh Supabase PostgreSQL database project, ve
 | Finding | Evidence / File | Severity | DB Migration Impact | Recommended Follow-up |
 | :--- | :--- | :--- | :--- | :--- |
 | **Active PL/pgSQL Deletion Triggers** | `20260726162130_initial_schema_v0_1/migration.sql` | **High** | Blocks Option B (targeted SQL cleanup) of staging tables in development. | Database resets/re-imports (Option A) should be preferred over targeted delete queries. |
-| **Bypassed TLS Certificate Verification** | `packages/db/src/importer/importer.ts`, `prisma.service.ts` | **Medium** | Disables certificate checks (`NODE_TLS_REJECT_UNAUTHORIZED = '0'`). | Configure proper CA certificates on the server environment for production. |
+| **Bypassed TLS Certificate Verification** | `packages/db/src/importer/importer.ts`, `prisma.service.ts` | **Medium** | Historical code disabled certificate checks. | Configure a trusted CA and full hostname verification. |
 | **Test Fixture Pollution** | `test_importer_hardened.mjs` | **Medium** | Leaves test mock records if run on development DB. | Isolate integration tests to run only on a separate, dedicated test database. |
 | **Mock Content in Frontend** | `apps/web/src/content/mock/` | **Low** | Unused mock modules present. | Remove placeholder data modules after API integration is verified. |
 

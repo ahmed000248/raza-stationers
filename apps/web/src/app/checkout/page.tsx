@@ -16,8 +16,9 @@ import { formatPKR } from "@/lib/pricing"
 import { normalizePakistaniMobile, PaymentMethodType, SUPPORTED_DELIVERY_CITIES } from "@raza-stationers/validation"
 import { createAPIClient } from "@raza-stationers/api"
 import { ArrowLeft, ArrowRight, Truck, Building2, Lock, Loader2, MapPin, Store } from "lucide-react"
+import { getApiBaseUrl } from "@/lib/public-config"
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
+const API_BASE = getApiBaseUrl()
 
 export default function CheckoutPage() {
   const router = useRouter()

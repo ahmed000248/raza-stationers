@@ -16,29 +16,7 @@ import pg from "pg";
 import { parseCatalogueCsv, parseCatalogueXlsx } from "./parser.js";
 import { validateCatalogueRows } from "./validator.js";
 import { ImportExecutionOptions, ImportExecutionResult, ParsedCatalogueRow } from "./types.js";
-import fsSync from "node:fs";
-import path from "node:path";
-
-function getSslConfig(connectionString?: string): any {
-  const cs = connectionString || process.env.DIRECT_URL || process.env.DATABASE_URL || "";
-  if (cs.includes("localhost") || cs.includes("127.0.0.1")) {
-    return false;
-  }
-  let currentDir = process.cwd();
-  for (let i = 0; i < 5; i++) {
-    const certPath = path.join(currentDir, "supabase-ca.crt");
-    if (fsSync.existsSync(certPath)) {
-      return {
-        rejectUnauthorized: true,
-        ca: fsSync.readFileSync(certPath, "utf8"),
-      };
-    }
-    const parent = path.dirname(currentDir);
-    if (parent === currentDir) break;
-    currentDir = parent;
-  }
-  return true;
-}
+import { getPostgresConnection } from "../postgres.js";
 
 export function generateSlug(name: string): string {
   const clean = name
@@ -51,14 +29,13 @@ export function generateSlug(name: string): string {
 
 export class CatalogueImporter {
   private static createPrismaClient(): { prisma: PrismaClient; pool: pg.Pool } {
-    const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL;
-    if (!connectionString) {
-      throw new Error("DIRECT_URL environment variable is not defined");
-    }
+    const rawUrl = process.env.DATABASE_URL?.trim();
+    if (!rawUrl) throw new Error("DATABASE_URL is required for catalogue importer runtime access.");
+    const { connectionString, ssl } = getPostgresConnection(rawUrl, "DATABASE_URL");
 
     const pool = new pg.Pool({
       connectionString,
-      ssl: getSslConfig(connectionString),
+      ssl,
       max: 10,
     });
 

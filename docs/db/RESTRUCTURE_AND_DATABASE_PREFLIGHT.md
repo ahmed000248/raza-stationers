@@ -115,7 +115,7 @@ Harmless read-only connection checks were executed against the new database:
 
 A search was performed across all project files:
 *   **Former Supabase project reference (`xkmvdkdpycmhxkpeeoji`)**: Found only in historical documentation (`deepseek-full-audit-and-remediation-report-v0.1.md` and `phase-0-baseline.md`). No active configurations or source files contain the old reference.
-*   **Bypassed TLS Certificate Verification (`process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'`)**: Active only in development/test run entry points and scripts to handle Supabase pooler connections.
+*   **Bypassed TLS Certificate Verification**: Historical development/test scripts disabled certificate validation for pooler connections. This is now prohibited; remote connections require the approved CA and hostname verification.
 
 ---
 

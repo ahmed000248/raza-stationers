@@ -11,8 +11,9 @@ import { Dialog } from "@/components/ui/dialog"
 import { formatPKR } from "@/lib/pricing"
 import { createAPIClient } from "@raza-stationers/api"
 import { ArrowLeft, Phone, Truck, FileText, RotateCcw, Clock, Loader2 } from "lucide-react"
+import { getApiBaseUrl } from "@/lib/public-config"
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
+const API_BASE = getApiBaseUrl()
 
 interface Props { params: Promise<{ id: string }> }
 

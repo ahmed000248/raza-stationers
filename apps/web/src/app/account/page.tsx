@@ -13,8 +13,9 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Building2, CreditCard, Bell, ShieldCheck, Lock, LogOut, Users, MessageSquare, Loader2, Check } from "lucide-react"
 import { createAPIClient } from "@raza-stationers/api"
+import { getApiBaseUrl } from "@/lib/public-config"
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
+const API_BASE = getApiBaseUrl()
 
 function SecurityTab() {
   const [currentPassword, setCurrentPassword] = React.useState("")

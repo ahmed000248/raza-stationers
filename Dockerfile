@@ -1,5 +1,5 @@
 # Stage 1: Build environment
-FROM node:20.19.0-alpine AS builder
+FROM node:22.14.0-alpine AS builder
 
 WORKDIR /app
 
@@ -11,6 +11,7 @@ COPY packages/db/package.json ./packages/db/
 COPY packages/types/package.json ./packages/types/
 COPY packages/validation/package.json ./packages/validation/
 COPY packages/ui/package.json ./packages/ui/
+COPY packages/api/package.json ./packages/api/
 COPY apps/api/package.json ./apps/api/
 COPY apps/web/package.json ./apps/web/
 COPY apps/admin/package.json ./apps/admin/
@@ -22,7 +23,7 @@ RUN npm ci --workspace=@raza-stationers/api-server --include-workspace-deps
 COPY . .
 
 # Generate Prisma Client
-RUN npm run db:generate
+RUN DIRECT_URL=postgresql://prisma@127.0.0.1:5432/phase8_build npm run db:generate
 
 # Build the workspaces needed for the API server
 RUN npm run build --workspace=@raza-stationers/types && \
@@ -34,7 +35,7 @@ RUN npm run build --workspace=@raza-stationers/types && \
 RUN npm prune --production --workspace=@raza-stationers/api-server --include-workspace-deps
 
 # Stage 2: Runtime environment
-FROM node:20.19.0-alpine AS runner
+FROM node:22.14.0-alpine AS runner
 
 WORKDIR /app
 

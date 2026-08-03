@@ -21,13 +21,35 @@ import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 import { AppModule } from "./app.module";
 
 async function bootstrap() {
+  const production = process.env.NODE_ENV === "production";
+  if (production) {
+    const required = ["DATABASE_URL", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "JWT_SECRET", "CORS_ORIGINS"];
+    const missing = required.filter((name) => !process.env[name]?.trim());
+    if (missing.length) throw new Error(`Missing required production environment variables: ${missing.join(", ")}`);
+    if (Buffer.byteLength(process.env.JWT_SECRET!, "utf8") < 32) {
+      throw new Error("JWT_SECRET must contain at least 32 bytes in production.");
+    }
+  }
+
   const app = await NestFactory.create(AppModule);
 
   app.enableShutdownHooks();
 
-  const corsOrigins = process.env.CORS_ORIGINS
-    ? process.env.CORS_ORIGINS.split(",")
-    : ["http://localhost:3000", "http://localhost:3001"];
+  const configuredOrigins = process.env.CORS_ORIGINS
+    ?.split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+  const corsOrigins = configuredOrigins?.length
+    ? configuredOrigins
+    : production
+      ? []
+      : ["http://localhost:3000", "http://localhost:3001"];
+  for (const origin of corsOrigins) {
+    const parsed = new URL(origin);
+    if (!["http:", "https:"].includes(parsed.protocol) || parsed.origin !== origin || origin === "*") {
+      throw new Error(`CORS_ORIGINS contains an invalid exact origin: ${origin}`);
+    }
+  }
 
   app.enableCors({
     origin: corsOrigins,

@@ -6,8 +6,9 @@ import { StaggerList } from "@/components/motion/stagger-list"
 import { useAuth } from "@/hooks/use-auth"
 import { createAPIClient } from "@raza-stationers/api"
 import { Sparkles, Loader2 } from "lucide-react"
+import { getApiBaseUrl } from "@/lib/public-config"
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
+const API_BASE = getApiBaseUrl()
 
 export function FeaturedSection() {
   const { pricingContext } = useAuth()

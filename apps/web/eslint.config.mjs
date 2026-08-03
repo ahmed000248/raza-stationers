@@ -20,12 +20,11 @@ const eslintConfig = defineConfig([
     },
   },
   globalIgnores([
-    // Exclude build outputs & third-party vendored library output
+    // Exclude build outputs
     ".next/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
-    "src/lib/gsap/**",
   ]),
 ]);
 

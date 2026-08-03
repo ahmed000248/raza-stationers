@@ -63,8 +63,8 @@ The following proven boilerplate, duplicate, or obsolete files were cleaned up:
 *   `raza-stationers-deepseek-full-audit-remediation.md` (Tracked, deleted) - Redundant review log.
 
 ### Repairs (Count: 5)
-*   [prisma.service.ts](file:///d:/Projects/Raza%20Stationers/apps/api/src/prisma/prisma.service.ts) - Removed insecure `rejectUnauthorized: false` and configured strict certificate verification using `supabase-ca.crt`.
-*   [importer.ts](file:///d:/Projects/Raza%20Stationers/packages/db/src/importer/importer.ts) - Removed insecure `rejectUnauthorized: false` and configured strict certificate verification using `supabase-ca.crt`.
+*   [prisma.service.ts](file:///d:/Projects/Raza%20Stationers/apps/api/src/prisma/prisma.service.ts) - Removed the certificate-validation bypass and configured strict verification using `supabase-ca.crt`.
+*   [importer.ts](file:///d:/Projects/Raza%20Stationers/packages/db/src/importer/importer.ts) - Removed the certificate-validation bypass and configured strict verification using `supabase-ca.crt`.
 *   [check_xlsx_categories.mjs](file:///d:/Projects/Raza%20Stationers/scripts/diagnostics/check_xlsx_categories.mjs) - Corrected relative import paths.
 *   [get_admin.mjs](file:///d:/Projects/Raza%20Stationers/scripts/development/get_admin.mjs) - Corrected relative node_modules paths.
 *   `packages/db/dist/importer/importer.js` - Recompiled compiled output to mirror source edits.
@@ -264,7 +264,7 @@ A  supabase-ca.crt
     *   0 complete PostgreSQL URLs exposed.
     *   0 JWT secrets exposed.
     *   0 API keys / service-role keys exposed.
-    *   `rejectUnauthorized: false` remains only in untracked, offline diagnostic scripts (`scripts/diagnostics/*`), and is completely absent from all active runtime source code.
+    *   Historical certificate-validation bypasses remained only in offline diagnostics at that checkpoint; those diagnostics are now retired.
 
 ---
 

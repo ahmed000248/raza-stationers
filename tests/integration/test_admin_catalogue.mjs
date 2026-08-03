@@ -3,34 +3,14 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
 import bcrypt from 'bcryptjs';
-import fs from 'fs';
-import path from 'path';
-import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
+import { TEST_API_URL, TEST_DIRECT_URL, TEST_JWT_SECRET } from '../helpers/test-environment.mjs';
 
-dotenv.config({ path: path.resolve('.env') });
-
-const API_BASE = "http://localhost:4000";
-const TEST_JWT_SECRET = process.env.JWT_SECRET || 'raza-stationers-test-secret-1234567890';
-
-function getSslConfig() {
-  const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL;
-  if (connectionString && (connectionString.includes('127.0.0.1') || connectionString.includes('localhost'))) {
-    return false;
-  }
-  const certPath = path.resolve('supabase-ca.crt');
-  if (fs.existsSync(certPath)) {
-    return {
-      rejectUnauthorized: true,
-      ca: fs.readFileSync(certPath, 'utf8'),
-    };
-  }
-  return true;
-}
+const API_BASE = TEST_API_URL;
 
 const pool = new pg.Pool({
-  connectionString: process.env.DIRECT_URL,
-  ssl: getSslConfig()
+  connectionString: TEST_DIRECT_URL,
+  ssl: false,
 });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });

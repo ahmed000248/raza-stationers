@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { useGSAP } from "@gsap/react"
-import { gsap } from "@/lib/gsap"
+import { gsap } from "gsap"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Bilingual } from "@/components/ui/bilingual"

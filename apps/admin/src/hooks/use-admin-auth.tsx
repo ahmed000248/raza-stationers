@@ -4,6 +4,7 @@ import * as React from "react"
 import { User } from "@raza-stationers/types"
 import { createAPIClient } from "@raza-stationers/api"
 import { createClient } from "@/lib/supabase/client"
+import { getApiBaseUrl } from "@/lib/public-config"
 
 export type AdminRole = "owner" | "admin" | "packing" | "delivery"
 
@@ -25,7 +26,7 @@ interface AdminAuthContextValue {
 
 const AdminAuthContext = React.createContext<AdminAuthContextValue | null>(null)
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
+const API_BASE = getApiBaseUrl()
 
 function getClient() {
   return createAPIClient({ baseUrl: API_BASE })

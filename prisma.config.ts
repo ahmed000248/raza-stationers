@@ -1,31 +1,37 @@
 import "dotenv/config";
+import { existsSync } from "node:fs";
+import path from "node:path";
 import { defineConfig } from "prisma/config";
-import * as path from "path";
-import * as fs from "fs";
 
-function getSecureDirectUrl(): string | undefined {
-  const rawUrl = process.env["DIRECT_URL"];
-  if (!rawUrl) return undefined;
-  
-  let currentDir = process.cwd();
-  let certPath = "";
-  for (let i = 0; i < 5; i++) {
-    const p = path.join(currentDir, "supabase-ca.crt");
-    if (fs.existsSync(p)) {
-      certPath = p;
-      break;
-    }
-    const parent = path.dirname(currentDir);
-    if (parent === currentDir) break;
-    currentDir = parent;
+const rawUrl = process.env.DIRECT_URL?.trim();
+if (!rawUrl) {
+  throw new Error("DIRECT_URL is required for Prisma CLI migration operations.");
+}
+
+let migrationUrl: URL;
+try {
+  migrationUrl = new URL(rawUrl);
+} catch {
+  throw new Error("DIRECT_URL must be a complete PostgreSQL URL.");
+}
+if (!["postgres:", "postgresql:"].includes(migrationUrl.protocol)) {
+  throw new Error("DIRECT_URL must use the postgresql:// or postgres:// scheme.");
+}
+
+const localHosts = new Set(["localhost", "127.0.0.1", "::1"]);
+if (localHosts.has(migrationUrl.hostname.toLowerCase())) {
+  migrationUrl.searchParams.set("sslmode", "disable");
+  migrationUrl.searchParams.delete("sslrootcert");
+} else {
+  const configuredCertificate = process.env.PGSSLROOTCERT?.trim();
+  const certificatePath = configuredCertificate
+    ? path.resolve(configuredCertificate)
+    : path.resolve("supabase-ca.crt");
+  if (!existsSync(certificatePath)) {
+    throw new Error("DIRECT_URL requires PGSSLROOTCERT or the repository supabase-ca.crt.");
   }
-  
-  if (!certPath) {
-    return rawUrl;
-  }
-  
-  const separator = rawUrl.includes("?") ? "&" : "?";
-  return `${rawUrl}${separator}sslmode=verify-full&sslrootcert=${encodeURIComponent(certPath)}`;
+  migrationUrl.searchParams.set("sslmode", "verify-full");
+  migrationUrl.searchParams.set("sslrootcert", certificatePath);
 }
 
 export default defineConfig({
@@ -34,6 +40,6 @@ export default defineConfig({
     path: "packages/db/prisma/migrations",
   },
   datasource: {
-    url: getSecureDirectUrl(),
+    url: migrationUrl.toString(),
   },
 });

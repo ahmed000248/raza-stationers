@@ -7,6 +7,7 @@ import { UserPricingContext } from "@/lib/pricing"
 import { createAPIClient } from "@raza-stationers/api"
 import { createClient } from "@/lib/supabase/client"
 import { BrandedLoader } from "@/components/site/BrandedLoader"
+import { getApiBaseUrl } from "@/lib/public-config"
 
 export type AccountStatus = "guest" | "pending" | "approved" | "unregistered"
 
@@ -44,7 +45,7 @@ interface AuthContextValue {
 
 const AuthContext = React.createContext<AuthContextValue | null>(null)
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
+const API_BASE = getApiBaseUrl()
 
 function getClient(onUnauthorized?: () => void) {
   return createAPIClient({ baseUrl: API_BASE, onUnauthorized })
@@ -284,7 +285,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loginWithGoogle = React.useCallback(async (returnTo = "/catalogue") => {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    if (!supabaseUrl || supabaseUrl.includes("placeholder.supabase.co")) {
+    if (!supabaseUrl) {
       throw new Error("Google authentication requires a configured Supabase project (NEXT_PUBLIC_SUPABASE_URL).")
     }
     const safeReturnTo = returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/catalogue"

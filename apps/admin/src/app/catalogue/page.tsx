@@ -8,8 +8,9 @@ import { ProductModal } from "@/components/catalogue/ProductModal"
 import { BulkImportModal } from "@/components/catalogue/BulkImportModal"
 import { createAPIClient } from "@raza-stationers/api"
 import { Loader2 } from "lucide-react"
+import { getApiBaseUrl } from "@/lib/public-config"
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
+const API_BASE = getApiBaseUrl()
 
 export default function ProductCataloguePage() {
   const [products, setProducts] = React.useState<any[]>([])

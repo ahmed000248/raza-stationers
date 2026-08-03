@@ -4,7 +4,7 @@ import path from "node:path";
 import pg from "pg";
 import { createClient } from "@supabase/supabase-js";
 
-const required = ["DATABASE_URL", "NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "RAZA_OWNER_EMAIL", "RAZA_OWNER_NAME", "RAZA_OWNER_MOBILE"];
+const required = ["DATABASE_URL", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "RAZA_OWNER_EMAIL", "RAZA_OWNER_NAME", "RAZA_OWNER_MOBILE"];
 const missing = required.filter((name) => !process.env[name]?.trim());
 if (missing.length) throw new Error(`Missing required environment variables: ${missing.join(", ")}`);
 
@@ -22,24 +22,30 @@ const name = process.env.RAZA_OWNER_NAME.trim();
 const mobile = localMobile(process.env.RAZA_OWNER_MOBILE);
 if (!email.includes("@") || name.length < 2) throw new Error("Owner email or name is invalid");
 
-function getSslConfig(url) {
-  if (!url || /localhost|127\.0\.0\.1/.test(url)) return false;
-  if (process.env.DATABASE_SSL_REJECT_UNAUTHORIZED === "false" || process.env.PGSSLMODE === "no-verify" || process.env.NODE_TLS_REJECT_UNAUTHORIZED === "0") {
-    return { rejectUnauthorized: false };
+function getDatabaseConfig(value) {
+  const url = new URL(value);
+  if (!["postgres:", "postgresql:"].includes(url.protocol)) throw new Error("DATABASE_URL must be a complete PostgreSQL URL");
+  const local = new Set(["localhost", "127.0.0.1", "::1"]).has(url.hostname.toLowerCase());
+  const normalized = new URL(url);
+  normalized.searchParams.delete("sslmode");
+  normalized.searchParams.delete("sslrootcert");
+  if (local) return { connectionString: normalized.toString(), ssl: false };
+  if ((process.env.DATABASE_SSL_MODE || url.searchParams.get("sslmode") || "verify-full").toLowerCase() !== "verify-full") {
+    throw new Error("Remote owner bootstrap requires DATABASE_SSL_MODE=verify-full");
   }
   if (process.env.PGSSLROOTCERT && existsSync(process.env.PGSSLROOTCERT)) {
-    return { rejectUnauthorized: true, ca: readFileSync(process.env.PGSSLROOTCERT, "utf8") };
+    return { connectionString: normalized.toString(), ssl: { rejectUnauthorized: true, ca: readFileSync(process.env.PGSSLROOTCERT, "utf8") } };
   }
   const certPath = path.resolve("supabase-ca.crt");
   if (existsSync(certPath)) {
-    return { rejectUnauthorized: true, ca: readFileSync(certPath, "utf8") };
+    return { connectionString: normalized.toString(), ssl: { rejectUnauthorized: true, ca: readFileSync(certPath, "utf8") } };
   }
-  return { rejectUnauthorized: false };
+  throw new Error("Remote owner bootstrap requires PGSSLROOTCERT or supabase-ca.crt");
 }
 
-const ssl = getSslConfig(process.env.DATABASE_URL);
-const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, ssl, max: 1 });
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
+const database = getDatabaseConfig(process.env.DATABASE_URL);
+const pool = new pg.Pool({ connectionString: database.connectionString, ssl: database.ssl, max: 1 });
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
 
 async function findAuthUserByEmail(targetEmail) {
   for (let page = 1; page <= 100; page += 1) {

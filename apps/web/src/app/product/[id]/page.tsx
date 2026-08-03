@@ -14,8 +14,9 @@ import { useCart } from "@/hooks/use-cart"
 import { useAuth } from "@/hooks/use-auth"
 import { createAPIClient } from "@raza-stationers/api"
 import { ArrowLeft, ShieldCheck, Truck, Loader2 } from "lucide-react"
+import { getApiBaseUrl } from "@/lib/public-config"
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
+const API_BASE = getApiBaseUrl()
 
 interface Props { params: Promise<{ id: string }> }
 

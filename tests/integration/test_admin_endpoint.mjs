@@ -2,9 +2,9 @@ import jwt from 'jsonwebtoken';
 import FormData from 'form-data';
 import fs from 'fs';
 import axios from 'axios';
+import { TEST_API_URL, TEST_JWT_SECRET } from '../helpers/test-environment.mjs';
 
-// The secret we injected into .env
-const secret = "raza-stationers-test-secret-1234567890";
+const secret = TEST_JWT_SECRET;
 
 const adminToken = jwt.sign(
   { sub: 'user_admin123', email: 'admin@razastationers.com', role: 'admin' },
@@ -28,7 +28,7 @@ async function testAuth(token, role) {
       contentType: 'text/csv',
     });
 
-    const res = await axios.post('http://localhost:4000/admin/imports/catalogue/plan', form, {
+    const res = await axios.post(`${TEST_API_URL}/admin/imports/catalogue/plan`, form, {
       headers: {
         ...form.getHeaders(),
         Authorization: `Bearer ${token}`

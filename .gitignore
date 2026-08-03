@@ -12,6 +12,8 @@ node_modules/
 
 # testing
 coverage/
+**/coverage/
+**/*.test.log
 tests/disposable_server.log
 
 # next.js
@@ -20,6 +22,9 @@ out/
 
 # production
 build/
+**/build/
+**/dist/
+**/graphify-out/
 
 # misc
 .DS_Store
@@ -31,8 +36,24 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# Environment files are local; templates are committed explicitly.
 .env*
+**/.env*
+!.env.example
+!apps/api/.env.example
+!apps/web/.env.local.example
+!apps/admin/.env.local.example
+
+# Generated Prisma clients and temporary database artifacts
+**/generated/prisma/
+*.dump
+*.sql.tmp
+*.sqlite
+*.sqlite3
+*.db
+compose.override.yaml
+compose.override.yml
+.docker.env
 
 # vercel
 .vercel
@@ -46,7 +67,6 @@ next-env.d.ts
 graphify-out/cache/
 
 
-/generated/prisma
 .codex-phase7-tmp/
 
 tools/__pycache__/

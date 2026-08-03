@@ -111,7 +111,7 @@ ESLint execution produces **0 ERRORS** and **143 TOTAL WARNINGS** across the mon
 | `Error: JWT_SECRET environment variable is missing` | Missing `JWT_SECRET` in `.env` | Copy `.env.example` to `.env` and set `JWT_SECRET=your_jwt_secret_token` |
 | `@prisma/client has no exported member` | Prisma Client not generated post `npm ci` | Run `npm run db:generate` |
 | `TypeError: Do not know how to serialize a BigInt` | Raw Prisma model stringified by Express | Endpoint must use `JSON.stringify` with BigInt string replacer |
-| `TLS / Self-signed certificate error` | Node.js `pg` driver connecting to Supabase | Ensure `ssl: { rejectUnauthorized: false }` or dev SSL flags are active |
+| `TLS / certificate error` | Node.js `pg` driver connecting to Supabase | Configure the approved CA certificate and full hostname verification; never bypass certificate validation |
 
 ---
 

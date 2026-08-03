@@ -3,22 +3,19 @@ services:
     name: raza-stationers-api
     runtime: docker
     dockerfilePath: ./Dockerfile
-    # Render sets PORT automatically — our Dockerfile defaults to 4000
-    # but the runtime env var takes precedence.
+    healthCheckPath: /
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        fromService:
-          type: web
-          name: raza-stationers-api
-          property: port
-      - key: JWT_SECRET
-        sync: false          # injected manually in Render dashboard
+      - key: DATABASE_SSL_MODE
+        value: verify-full
       - key: DATABASE_URL
-        sync: false          # injected manually in Render dashboard
-      - key: DIRECT_URL
-        sync: false          # injected manually in Render dashboard
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: JWT_SECRET
+        sync: false
       - key: CORS_ORIGINS
-        sync: false          # injected manually: comma-separated Vercel URLs
-    healthCheckPath: /
+        sync: false

@@ -9,28 +9,15 @@ import { PrismaClient, PriceType, ImportBatchStatus, CurrencyCode, ProductStatus
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
 import { CatalogueImporter } from '@raza-stationers/db';
+import { TEST_API_URL, TEST_DIRECT_URL, TEST_JWT_SECRET } from '../helpers/test-environment.mjs';
 
-const JWT_SECRET = "raza-stationers-test-secret-1234567890";
+const JWT_SECRET = TEST_JWT_SECRET;
+const API_BASE = TEST_API_URL;
 const WORKBOOK_PATH = path.resolve('data/final/Raza-Stationers-Final-Supabase-Catalogue.xlsx');
 
-function getSslConfig() {
-  const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL;
-  if (connectionString && (connectionString.includes('127.0.0.1') || connectionString.includes('localhost'))) {
-    return false;
-  }
-  const certPath = path.resolve('supabase-ca.crt');
-  if (fs.existsSync(certPath)) {
-    return {
-      rejectUnauthorized: true,
-      ca: fs.readFileSync(certPath, 'utf8'),
-    };
-  }
-  return true;
-}
-
 const pool = new pg.Pool({
-  connectionString: process.env.DIRECT_URL,
-  ssl: getSslConfig()
+  connectionString: TEST_DIRECT_URL,
+  ssl: false,
 });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
@@ -114,7 +101,7 @@ async function runTests() {
   console.log("\n[1] Testing Authorization Matrix...");
 
   // Case 1A: Unauthenticated
-  let res = await axios.post('http://localhost:4000/admin/imports/catalogue/plan', {}, {
+  let res = await axios.post(`${API_BASE}/admin/imports/catalogue/plan`, {}, {
     validateStatus: () => true
   });
   assert.equal(res.status, 401, "Unauthenticated request should return 401");
@@ -131,7 +118,7 @@ async function runTests() {
   };
 
   let form = planForm();
-  res = await axios.post('http://localhost:4000/admin/imports/catalogue/plan', form, {
+  res = await axios.post(`${API_BASE}/admin/imports/catalogue/plan`, form, {
     headers: { ...form.getHeaders(), Authorization: `Bearer ${userToken}` },
     validateStatus: () => true
   });
@@ -140,7 +127,7 @@ async function runTests() {
 
   // Case 1C: Owner Role (Strictly rejected for imports)
   form = planForm();
-  res = await axios.post('http://localhost:4000/admin/imports/catalogue/plan', form, {
+  res = await axios.post(`${API_BASE}/admin/imports/catalogue/plan`, form, {
     headers: { ...form.getHeaders(), Authorization: `Bearer ${ownerToken}` },
     validateStatus: () => true
   });
@@ -153,7 +140,7 @@ async function runTests() {
     data: { isActive: false }
   });
   form = planForm();
-  res = await axios.post('http://localhost:4000/admin/imports/catalogue/plan', form, {
+  res = await axios.post(`${API_BASE}/admin/imports/catalogue/plan`, form, {
     headers: { ...form.getHeaders(), Authorization: `Bearer ${adminToken}` },
     validateStatus: () => true
   });
@@ -168,7 +155,7 @@ async function runTests() {
 
   // Case 1E: Active Admin
   form = planForm();
-  res = await axios.post('http://localhost:4000/admin/imports/catalogue/plan', form, {
+  res = await axios.post(`${API_BASE}/admin/imports/catalogue/plan`, form, {
     headers: { ...form.getHeaders(), Authorization: `Bearer ${adminToken}` },
     validateStatus: () => true
   });
@@ -187,7 +174,7 @@ async function runTests() {
   };
 
   form = csvForm();
-  res = await axios.post('http://localhost:4000/admin/imports/catalogue/plan', form, {
+  res = await axios.post(`${API_BASE}/admin/imports/catalogue/plan`, form, {
     headers: { ...form.getHeaders(), Authorization: `Bearer ${adminToken}` },
     validateStatus: () => true
   });
@@ -211,7 +198,7 @@ async function runTests() {
     return f;
   };
 
-  res = await axios.post('http://localhost:4000/admin/imports/catalogue/plan', modForm(), {
+  res = await axios.post(`${API_BASE}/admin/imports/catalogue/plan`, modForm(), {
     headers: { ...modForm().getHeaders(), Authorization: `Bearer ${adminToken}` },
     validateStatus: () => true
   });
@@ -224,7 +211,7 @@ async function runTests() {
   const countsBeforePlan = await getTableCounts();
 
   form = planForm();
-  res = await axios.post('http://localhost:4000/admin/imports/catalogue/plan', form, {
+  res = await axios.post(`${API_BASE}/admin/imports/catalogue/plan`, form, {
     headers: { ...form.getHeaders(), Authorization: `Bearer ${adminToken}` }
   });
   
@@ -242,7 +229,7 @@ async function runTests() {
   // --- TEST 4: Plan Integrity / Checksum mismatch ---
   console.log("\n[4] Testing Plan Integrity Checksum validation...");
   form = planForm();
-  res = await axios.post(`http://localhost:4000/admin/imports/catalogue/commit?planChecksum=invalidChecksum123`, form, {
+  res = await axios.post(`${API_BASE}/admin/imports/catalogue/commit?planChecksum=invalidChecksum123`, form, {
     headers: { ...form.getHeaders(), Authorization: `Bearer ${adminToken}` },
     validateStatus: () => true
   });
@@ -398,7 +385,7 @@ async function runTests() {
   
   // Wait, let's call commit with our actual planChecksum:
   form = planForm();
-  res = await axios.post(`http://localhost:4000/admin/imports/catalogue/commit?planChecksum=${planChecksum}`, form, {
+  res = await axios.post(`${API_BASE}/admin/imports/catalogue/commit?planChecksum=${planChecksum}`, form, {
     headers: { ...form.getHeaders(), Authorization: `Bearer ${adminToken}` },
     validateStatus: () => true
   });
@@ -417,7 +404,7 @@ async function runTests() {
   const countsBeforeRetry = await getTableCounts();
 
   form = planForm();
-  res = await axios.post(`http://localhost:4000/admin/imports/catalogue/commit?planChecksum=${planChecksum}`, form, {
+  res = await axios.post(`${API_BASE}/admin/imports/catalogue/commit?planChecksum=${planChecksum}`, form, {
     headers: { ...form.getHeaders(), Authorization: `Bearer ${adminToken}` },
     validateStatus: () => true
   });
@@ -434,11 +421,11 @@ async function runTests() {
   // Both should use the same planChecksum. One will acquire the lock, commit/see it already committed.
   // The other will wait for the lock, then see it already committed. Both should return 201 with alreadyCommitted: true.
   const [concRes1, concRes2] = await Promise.all([
-    axios.post(`http://localhost:4000/admin/imports/catalogue/commit?planChecksum=${planChecksum}`, planForm(), {
+    axios.post(`${API_BASE}/admin/imports/catalogue/commit?planChecksum=${planChecksum}`, planForm(), {
       headers: { ...planForm().getHeaders(), Authorization: `Bearer ${adminToken}` },
       validateStatus: () => true
     }),
-    axios.post(`http://localhost:4000/admin/imports/catalogue/commit?planChecksum=${planChecksum}`, planForm(), {
+    axios.post(`${API_BASE}/admin/imports/catalogue/commit?planChecksum=${planChecksum}`, planForm(), {
       headers: { ...planForm().getHeaders(), Authorization: `Bearer ${adminToken}` },
       validateStatus: () => true
     })
@@ -464,7 +451,7 @@ async function runTests() {
     return f;
   };
 
-  res = await axios.post(`http://localhost:4000/admin/imports/catalogue/commit?planChecksum=${planChecksum}`, corruptForm(), {
+  res = await axios.post(`${API_BASE}/admin/imports/catalogue/commit?planChecksum=${planChecksum}`, corruptForm(), {
     headers: { ...corruptForm().getHeaders(), Authorization: `Bearer ${adminToken}` },
     validateStatus: () => true
   });

@@ -14,8 +14,9 @@ import { Sheet, SheetClose, SheetHeader, SheetTitle } from "@/components/ui/shee
 import { Skeleton } from "@/components/ui/skeleton"
 import { useAuth } from "@/hooks/use-auth"
 import useDebounce from "@/hooks/use-debounce"
+import { getApiBaseUrl } from "@/lib/public-config"
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
+const API_BASE = getApiBaseUrl()
 const ITEMS_PER_PAGE = 20
 const allowedStock = new Set(["updating", "out_of_stock", "low_stock", "in_stock"])
 const allowedSaleType = new Set(["individual", "bulk"])

@@ -6,8 +6,9 @@ import { OrderHistoryCard } from "@/components/orders/OrderHistoryCard"
 import { EmptyState } from "@/components/ui/empty-state"
 import { createAPIClient } from "@raza-stationers/api"
 import { Package, ArrowLeft, Loader2 } from "lucide-react"
+import { getApiBaseUrl } from "@/lib/public-config"
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
+const API_BASE = getApiBaseUrl()
 
 export default function OrderHistoryPage() {
   const [orders, setOrders] = React.useState<any[]>([])
