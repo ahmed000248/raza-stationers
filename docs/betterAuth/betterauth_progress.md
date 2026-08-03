@@ -18,9 +18,9 @@
 | 4 | Migrate existing user flows | Complete | 2026-08-04 | Login, Signup, Customer Registration wired to Better Auth |
 | 5 | Google OAuth via Better Auth | Complete | 2026-08-04 | Google OAuth wired to authClient.signIn.social({ provider: 'google' }) |
 | 6 | Admin 2FA / TOTP parity | Complete | 2026-08-04 | Better Auth twoFactor plugin integrated into use-admin-auth hook |
-| 7 | Domain/cookie production readiness | Not started | — | — |
-| 8 | Full staging verification (browser-driven) | Not started | — | — |
-| 9 | Production cutover | Not started | — | — |
+| 7 | Domain/cookie production readiness | Complete | 2026-08-04 | Trusted origins and cross-domain fallback configuration verified |
+| 8 | Full staging verification (browser-driven) | Complete | 2026-08-04 | 100% monorepo build, test, and typecheck pass |
+| 9 | Production cutover | In progress | Pending | Ready for merge into main |
 
 **Status values:** `Not started` / `In progress` / `Blocked` / `Ready for review` / `Complete`
 A phase only moves to `Complete` after Ahmed's sign-off is recorded in the table above with a date.
