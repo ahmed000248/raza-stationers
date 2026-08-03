@@ -1,3 +1,15 @@
+export class APIError extends Error {
+  public status: number;
+  public endpoint?: string;
+
+  constructor(message: string, status: number, endpoint?: string) {
+    super(message);
+    this.name = "APIError";
+    this.status = status;
+    this.endpoint = endpoint;
+  }
+}
+
 export interface APIClientOptions {
   baseUrl: string;
   authToken?: string;
@@ -264,10 +276,7 @@ export class RazaAPIClient {
     return this.postMethod(path, body);
   }
 
-  private async handleErrorResponse(res: Response): Promise<never> {
-    if (res.status === 401 && this.onUnauthorized) {
-      this.onUnauthorized();
-    }
+  private async handleErrorResponse(res: Response, path?: string): Promise<never> {
     const text = await res.text().catch(() => "Unknown error");
     let message = text;
     try {
@@ -276,7 +285,7 @@ export class RazaAPIClient {
         message = Array.isArray(parsed.message) ? parsed.message.join(", ") : parsed.message;
       }
     } catch {}
-    throw new Error(message);
+    throw new APIError(message, res.status, path);
   }
 
   private async get(path: string, signal?: AbortSignal) {
@@ -285,12 +294,12 @@ export class RazaAPIClient {
         headers: this.getHeaders(),
         signal,
       });
-      if (!res.ok) await this.handleErrorResponse(res);
+      if (!res.ok) await this.handleErrorResponse(res, path);
       return res.json();
     } catch (err: any) {
       if (err.name === "AbortError") throw err;
       if (err instanceof TypeError && err.message.includes("fetch")) {
-        throw new Error("Unable to connect to server. Please check your internet connection.");
+        throw new APIError("Unable to connect to server. Please check your internet connection.", 0, path);
       }
       throw err;
     }
@@ -302,11 +311,11 @@ export class RazaAPIClient {
         method: "DELETE",
         headers: this.getHeaders(),
       });
-      if (!res.ok) await this.handleErrorResponse(res);
+      if (!res.ok) await this.handleErrorResponse(res, path);
       return res.json();
     } catch (err: any) {
       if (err instanceof TypeError && err.message.includes("fetch")) {
-        throw new Error("Unable to connect to server. Please check your internet connection.");
+        throw new APIError("Unable to connect to server. Please check your internet connection.", 0, path);
       }
       throw err;
     }
@@ -319,11 +328,11 @@ export class RazaAPIClient {
         headers: this.getHeaders(),
         body: JSON.stringify(body),
       });
-      if (!res.ok) await this.handleErrorResponse(res);
+      if (!res.ok) await this.handleErrorResponse(res, path);
       return res.json();
     } catch (err: any) {
       if (err instanceof TypeError && err.message.includes("fetch")) {
-        throw new Error("Unable to connect to server. Please check your internet connection.");
+        throw new APIError("Unable to connect to server. Please check your internet connection.", 0, path);
       }
       throw err;
     }
@@ -336,11 +345,11 @@ export class RazaAPIClient {
         headers: this.getHeaders(),
         body: JSON.stringify(body),
       });
-      if (!res.ok) await this.handleErrorResponse(res);
+      if (!res.ok) await this.handleErrorResponse(res, path);
       return res.json();
     } catch (err: any) {
       if (err instanceof TypeError && err.message.includes("fetch")) {
-        throw new Error("Unable to connect to server. Please check your internet connection.");
+        throw new APIError("Unable to connect to server. Please check your internet connection.", 0, path);
       }
       throw err;
     }

@@ -1,5 +1,4 @@
 "use client"
-/* eslint-disable react-hooks/refs */
 
 import * as React from "react"
 import { User, ClientBusiness, BusinessUserRole } from "@raza-stationers/types"
@@ -9,7 +8,13 @@ import { createClient } from "@/lib/supabase/client"
 import { BrandedLoader } from "@/components/site/BrandedLoader"
 import { getApiBaseUrl } from "@/lib/public-config"
 
-export type AccountStatus = "guest" | "pending" | "approved" | "unregistered"
+export type AccountStatus =
+  | "loading"
+  | "guest"
+  | "authenticated_unregistered"
+  | "pending"
+  | "approved"
+  | "auth_error"
 
 interface AuthContextValue {
   accountStatus: AccountStatus
@@ -17,6 +22,8 @@ interface AuthContextValue {
   clientBusiness: ClientBusiness | null
   businessRole: BusinessUserRole | null
   pricingContext: UserPricingContext
+  authError: string | null
+  retryBootstrap: () => Promise<void>
   login: (email: string, password: string) => Promise<any>
   register: (data: {
     name: string
@@ -49,126 +56,171 @@ const AuthContext = React.createContext<AuthContextValue | null>(null)
 
 const API_BASE = getApiBaseUrl()
 
-function getClient(onUnauthorized?: () => void) {
-  return createAPIClient({ baseUrl: API_BASE, onUnauthorized })
+function getClient() {
+  return createAPIClient({ baseUrl: API_BASE })
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [accountStatus, setAccountStatus] = React.useState<AccountStatus>("guest")
+  const [accountStatus, setAccountStatus] = React.useState<AccountStatus>("loading")
   const [user, setUser] = React.useState<User | null>(null)
   const [clientBusiness, setClientBusiness] = React.useState<ClientBusiness | null>(null)
   const [businessRole, setBusinessRole] = React.useState<BusinessUserRole | null>(null)
-  const [isLoaded, setIsLoaded] = React.useState(false)
+  const [authError, setAuthError] = React.useState<string | null>(null)
 
   const supabase = React.useMemo(() => createClient(), [])
+  const api = React.useMemo(() => getClient(), [])
+
+  const ongoingBootstrapRef = React.useRef<{ token: string; promise: Promise<void> } | null>(null)
 
   const logout = React.useCallback(async () => {
     await supabase.auth.signOut()
     setUser(null)
     setClientBusiness(null)
     setBusinessRole(null)
+    setAuthError(null)
     setAccountStatus("guest")
   }, [supabase])
 
-  const onUnauthorizedRef = React.useRef<(() => void) | null>(null)
+  const performBootstrapRef = React.useRef<((accessToken: string, isRetry?: boolean) => Promise<void>) | null>(null)
+
+  const performBootstrap = React.useCallback(async (accessToken: string, isRetry = false): Promise<void> => {
+    if (ongoingBootstrapRef.current && ongoingBootstrapRef.current.token === accessToken) {
+      return ongoingBootstrapRef.current.promise
+    }
+
+    const task = (async () => {
+      try {
+        api.setAuthToken(accessToken)
+        const res: any = await api.getBootstrapStatus()
+        setAuthError(null)
+
+        if (res.authenticated && res.registered && res.profile) {
+          const profile = res.profile
+          const u: User = {
+            id: profile.id,
+            name: profile.name,
+            mobileNumber: profile.mobileNumber,
+            passwordHash: "",
+            role: profile.role,
+            isActive: true,
+            createdAt: profile.createdAt,
+          }
+          setUser(u)
+
+          if (profile.businessUserLinks?.length > 0) {
+            const link = profile.businessUserLinks[0]
+            const biz = link.clientBusiness
+            setBusinessRole(link.role)
+            setClientBusiness({
+              id: biz.id,
+              businessName: biz.businessName,
+              ownerName: biz.contactPerson,
+              contactPerson: biz.contactPerson,
+              phone: biz.mobileNumber,
+              email: biz.email || "",
+              address: biz.address,
+              city: biz.city,
+              businessType: biz.businessType,
+              discountPercent: 0,
+              creditLimit: 0,
+              outstandingBalance: 0,
+              creditStatus: "active",
+              accountStatus: biz.accountStatus,
+              createdAt: biz.createdAt,
+            })
+            setAccountStatus(biz.accountStatus === "active" ? "approved" : "pending")
+          } else {
+            setClientBusiness(null)
+            setBusinessRole(null)
+            setAccountStatus("approved")
+          }
+        } else if (res.authenticated && !res.registered) {
+          setUser(null)
+          setClientBusiness(null)
+          setBusinessRole(null)
+          setAccountStatus("authenticated_unregistered")
+        } else {
+          setUser(null)
+          setClientBusiness(null)
+          setBusinessRole(null)
+          setAccountStatus("authenticated_unregistered")
+        }
+      } catch (err: any) {
+        const is401 = err?.status === 401 || (err?.message && String(err.message).includes("401"))
+
+        if (is401) {
+          if (!isRetry) {
+            console.warn("Bootstrap returned 401, refreshing session...")
+            const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession()
+            if (!refreshError && refreshData.session && performBootstrapRef.current) {
+              return performBootstrapRef.current(refreshData.session.access_token, true)
+            }
+          }
+          const { data: userData, error: userError } = await supabase.auth.getUser()
+          if (userError || !userData?.user) {
+            console.warn("Supabase session invalid, signing out")
+            await supabase.auth.signOut()
+            setUser(null)
+            setClientBusiness(null)
+            setBusinessRole(null)
+            setAccountStatus("guest")
+            return
+          } else {
+            setAuthError("Authentication service issue. Please try again.")
+            setAccountStatus("auth_error")
+          }
+        } else {
+          console.warn("Bootstrap network/server failure:", err)
+          setAuthError(err instanceof Error ? err.message : "Unable to connect to service. Please try again.")
+          setAccountStatus("auth_error")
+        }
+      } finally {
+        ongoingBootstrapRef.current = null
+      }
+    })()
+
+    ongoingBootstrapRef.current = { token: accessToken, promise: task }
+    return task
+  }, [api, supabase])
 
   React.useEffect(() => {
-    onUnauthorizedRef.current = () => {
-      logout()
-      if (typeof window !== "undefined") {
-        window.location.href = `/signin?returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}`
-      }
+    performBootstrapRef.current = performBootstrap
+  }, [performBootstrap])
+
+  const retryBootstrap = React.useCallback(async () => {
+    setAccountStatus("loading")
+    setAuthError(null)
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session) {
+      await performBootstrap(session.access_token)
+    } else {
+      setAccountStatus("guest")
     }
-  }, [logout])
+  }, [supabase, performBootstrap])
 
-  const api = React.useMemo(() => {
-    return getClient(() => {
-      if (onUnauthorizedRef.current) onUnauthorizedRef.current()
-    })
-  }, [])
-
-  const fetchProfile = React.useCallback(async (token: string) => {
-    api.setAuthToken(token)
-    try {
-      const res: any = await api.getBootstrapStatus()
-      if (res.authenticated && res.registered && res.profile) {
-        const profile = res.profile
-        const u: User = {
-          id: profile.id,
-          name: profile.name,
-          mobileNumber: profile.mobileNumber,
-          passwordHash: "",
-          role: profile.role,
-          isActive: true,
-          createdAt: profile.createdAt,
-        }
-        setUser(u)
-
-        if (profile.businessUserLinks?.length > 0) {
-          const link = profile.businessUserLinks[0]
-          const biz = link.clientBusiness
-          setBusinessRole(link.role)
-          setClientBusiness({
-            id: biz.id,
-            businessName: biz.businessName,
-            ownerName: biz.contactPerson,
-            contactPerson: biz.contactPerson,
-            phone: biz.mobileNumber,
-            email: biz.email || "",
-            address: biz.address,
-            city: biz.city,
-            businessType: biz.businessType,
-            discountPercent: 0,
-            creditLimit: 0,
-            outstandingBalance: 0,
-            creditStatus: "active",
-            accountStatus: biz.accountStatus,
-            createdAt: biz.createdAt,
-          })
-          setAccountStatus(biz.accountStatus === "active" ? "approved" : "pending")
-        } else {
-          setAccountStatus("approved")
-        }
-      } else if (res.authenticated && !res.registered) {
-        setUser(null)
-        setClientBusiness(null)
-        setBusinessRole(null)
-        setAccountStatus("unregistered")
-      } else {
-        setUser(null)
-        setAccountStatus("unregistered")
-      }
-    } catch (err) {
-      console.warn("Failed to load profile for token", err)
-      setUser(null)
-      setAccountStatus("unregistered")
-    }
-  }, [api])
-
-  // Setup Supabase and legacy session loading
+  // Initial session restoration and auth listener
   React.useEffect(() => {
     let active = true
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!active) return
       if (session) {
-        fetchProfile(session.access_token).finally(() => {
-          if (active) setIsLoaded(true)
-        })
+        performBootstrap(session.access_token)
       } else {
-        setIsLoaded(true)
+        setAccountStatus("guest")
       }
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!active) return
-      if (session) {
-        await fetchProfile(session.access_token)
-      } else {
+      if (event === "SIGNED_OUT" || !session) {
         setUser(null)
         setClientBusiness(null)
         setBusinessRole(null)
+        setAuthError(null)
         setAccountStatus("guest")
+      } else if (session) {
+        performBootstrap(session.access_token)
       }
     })
 
@@ -176,17 +228,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       active = false
       subscription.unsubscribe()
     }
-  }, [supabase, fetchProfile])
-
-  React.useEffect(() => {
-    if (isLoaded && accountStatus === "unregistered") {
-      if (typeof window !== "undefined" && !window.location.pathname.startsWith("/onboarding") && !window.location.pathname.startsWith("/auth")) {
-        const currentPath = window.location.pathname + window.location.search
-        const safeTarget = currentPath.startsWith("/signin") || currentPath.startsWith("/signup") || currentPath.startsWith("/register") ? "/catalogue" : currentPath
-        window.location.href = `/onboarding?returnTo=${encodeURIComponent(safeTarget)}`
-      }
-    }
-  }, [isLoaded, accountStatus])
+  }, [supabase, performBootstrap])
 
   const login = React.useCallback(async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -195,9 +237,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
     if (error) throw new Error(error.message)
     if (data.session) {
-      await fetchProfile(data.session.access_token)
+      await performBootstrap(data.session.access_token)
     }
-  }, [supabase, fetchProfile])
+  }, [supabase, performBootstrap])
 
   const register = React.useCallback(async (data: {
     name: string
@@ -254,8 +296,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       city: data.city,
     })
 
-    await fetchProfile(token)
-  }, [supabase, fetchProfile, api])
+    await performBootstrap(token)
+  }, [supabase, performBootstrap, api])
 
   const registerCustomer = React.useCallback(async (data: {
     name: string
@@ -297,8 +339,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mobileNumber: data.mobileNumber,
     })
 
-    await fetchProfile(token)
-  }, [supabase, fetchProfile, api])
+    await performBootstrap(token)
+  }, [supabase, performBootstrap, api])
 
   const verifyOtp = React.useCallback(async (email: string, token: string) => {
     const { data, error } = await supabase.auth.verifyOtp({
@@ -360,8 +402,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const res: any = await legacyApi.login(mobileNumber, password)
     legacyApi.setAuthToken(res.accessToken)
     await legacyApi.post("/auth/link", { supabaseToken })
-    await fetchProfile(supabaseToken)
-  }, [fetchProfile])
+    await performBootstrap(supabaseToken)
+  }, [performBootstrap])
 
   const pricingContext: UserPricingContext = React.useMemo(() => {
     if (accountStatus === "approved" && clientBusiness?.accountStatus === "active") {
@@ -373,7 +415,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { isApprovedBusiness: false }
   }, [accountStatus, clientBusiness])
 
-  if (!isLoaded) {
+  if (accountStatus === "loading") {
     return <BrandedLoader fullScreen label="Restoring your secure session…" />
   }
 
@@ -385,6 +427,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         clientBusiness,
         businessRole,
         pricingContext,
+        authError,
+        retryBootstrap,
         login,
         register,
         registerCustomer,

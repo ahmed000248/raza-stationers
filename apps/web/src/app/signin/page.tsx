@@ -31,7 +31,7 @@ export default function SignInPage() {
   React.useEffect(() => {
     if (accountStatus === "approved" || accountStatus === "pending") {
       router.replace(returnTo)
-    } else if (accountStatus === "unregistered") {
+    } else if (accountStatus === "authenticated_unregistered") {
       router.replace(`/onboarding?returnTo=${encodeURIComponent(returnTo)}`)
     }
   }, [accountStatus, returnTo, router])

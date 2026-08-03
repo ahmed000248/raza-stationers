@@ -17,7 +17,7 @@ export default function OnboardingPage() {
   const requestedReturnTo = searchParams.get("returnTo")
   const returnTo = requestedReturnTo?.startsWith("/") && !requestedReturnTo.startsWith("//") ? requestedReturnTo : "/catalogue"
   
-  const { accountStatus, logout, register, registerCustomer, linkAccount } = useAuth()
+  const { accountStatus, logout, register, registerCustomer, linkAccount, authError, retryBootstrap } = useAuth()
   const supabase = React.useMemo(() => createClient(), [])
   
   // Tabs: "customer" | "wholesale" | "link"
@@ -53,10 +53,12 @@ export default function OnboardingPage() {
     })
   }, [supabase, custName, name])
 
-  // Redirect if not in unregistered state
+  // Explicit navigation behavior per state
   React.useEffect(() => {
-    if (accountStatus && accountStatus !== "unregistered") {
-      router.push(returnTo)
+    if (accountStatus === "approved" || accountStatus === "pending") {
+      router.replace(returnTo)
+    } else if (accountStatus === "guest") {
+      router.replace(`/signin?returnTo=${encodeURIComponent(returnTo)}`)
     }
   }, [accountStatus, router, returnTo])
 
@@ -106,7 +108,7 @@ export default function OnboardingPage() {
         password: "",
         email,
       })
-      router.push(returnTo)
+      router.replace(returnTo)
     } catch (err: any) {
       setSubmitError(err.message || "Failed to create customer profile. Please try again.")
     } finally {
@@ -136,7 +138,7 @@ export default function OnboardingPage() {
         address,
         city,
       })
-      router.push(returnTo)
+      router.replace(returnTo)
     } catch (err: any) {
       setSubmitError(err.message || "Failed to create wholesale profile. Please try again.")
     } finally {
@@ -154,7 +156,7 @@ export default function OnboardingPage() {
       if (!session) throw new Error("No active session found")
       
       await linkAccount(session.access_token, normalizePakistaniMobile(legacyMobile)!, legacyPassword)
-      router.push(returnTo)
+      router.replace(returnTo)
     } catch (err: any) {
       setSubmitError(err.message || "Failed to link existing account. Check credentials.")
     } finally {
@@ -162,7 +164,30 @@ export default function OnboardingPage() {
     }
   }
 
-  if (accountStatus !== "unregistered") {
+  if (accountStatus === "loading") {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="size-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  if (accountStatus === "auth_error") {
+    return (
+      <div className="py-12 px-6 min-h-screen flex items-center justify-center">
+        <div className="w-full max-w-md p-8 rounded-3xl border border-destructive/30 bg-card shadow-sm space-y-6 text-center">
+          <h2 className="font-heading font-bold text-xl text-destructive">Authentication Service Error</h2>
+          <p className="text-sm text-muted-foreground">{authError || "Unable to load your profile session. Please retry."}</p>
+          <div className="flex gap-3 justify-center">
+            <Button onClick={() => retryBootstrap()} className="rounded-full">Retry Connection</Button>
+            <Button variant="outline" onClick={() => logout()} className="rounded-full">Sign Out</Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (accountStatus !== "authenticated_unregistered") {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="size-8 animate-spin text-muted-foreground" />

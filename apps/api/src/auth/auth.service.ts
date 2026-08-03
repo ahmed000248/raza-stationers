@@ -6,6 +6,8 @@ import jwksRsa from "jwks-rsa";
 import { PrismaService } from "../prisma/prisma.service";
 import { normalizePakistaniMobile } from "@raza-stationers/validation";
 
+import { createClient } from "@supabase/supabase-js";
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -13,83 +15,72 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
+  private getSupabaseClient() {
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const key =
+      process.env.SUPABASE_SERVICE_ROLE_KEY ||
+      process.env.SUPABASE_ANON_KEY ||
+      process.env.SUPABASE_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!supabaseUrl || !key) return null;
+    return createClient(supabaseUrl, key, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+  }
+
   async verifySupabaseToken(token: string): Promise<any> {
+    if (!token || typeof token !== "string") {
+      throw new UnauthorizedException("Invalid or expired session");
+    }
+
     if (process.env.NODE_ENV === "test" || process.env.USE_TEST_KEY === "true") {
       const secret = process.env.JWT_SECRET || "raza-stationers-test-secret-1234567890";
       try {
-        return jwt.verify(token, secret) as any;
+        const payload: any = jwt.verify(token, secret);
+        return {
+          sub: payload.sub,
+          email: payload.email || null,
+          ...payload,
+        };
       } catch (err) {
-        throw new UnauthorizedException("Invalid test token");
+        throw new UnauthorizedException("Invalid or expired session");
       }
     }
 
-    const decoded = jwt.decode(token, { complete: true }) as any;
-    if (!decoded || !decoded.header) {
-      throw new UnauthorizedException("Invalid token format");
+    // Official Supabase auth.getUser(token) verification
+    const supabase = this.getSupabaseClient();
+    if (supabase) {
+      try {
+        const { data, error } = await supabase.auth.getUser(token);
+        if (!error && data?.user) {
+          return {
+            sub: data.user.id,
+            email: data.user.email || null,
+            user: data.user,
+          };
+        }
+      } catch (err) {
+        // Fallthrough to JWT secret attempt if configured
+      }
     }
 
-    const alg = decoded.header.alg || "HS256";
     const jwtSecret = process.env.SUPABASE_JWT_SECRET || process.env.JWT_SECRET;
-
-    // 1. HS256 algorithm verification using JWT Secret
-    if (alg === "HS256" && jwtSecret) {
-      try {
-        return jwt.verify(token, jwtSecret, { algorithms: ["HS256"] }) as any;
-      } catch (err: any) {
-        throw new UnauthorizedException("Token signature verification failed: " + err.message);
-      }
-    }
-
-    // 2. RS256 algorithm verification using Supabase JWKS
-    if (alg === "RS256" && decoded.header.kid) {
-      const supabaseUrl = process.env.SUPABASE_URL;
-      if (!supabaseUrl) {
-        throw new Error("Missing SUPABASE_URL environment variable.");
-      }
-      const jwksUri = `${supabaseUrl.replace(/\/$/, "")}/auth/v1/jwks`;
-
-      const client = jwksRsa({
-        jwksUri,
-        cache: true,
-        rateLimit: true,
-      });
-
-      try {
-        const key = await client.getSigningKey(decoded.header.kid);
-        const signingKey = key.getPublicKey();
-
-        return await new Promise((resolve, reject) => {
-          jwt.verify(
-            token,
-            signingKey,
-            {
-              issuer: `${supabaseUrl.replace(/\/$/, "")}/auth/v1`,
-              algorithms: ["RS256"],
-            },
-            (err, payload) => {
-              if (err) {
-                reject(new UnauthorizedException("Invalid Supabase token signature"));
-              } else {
-                resolve(payload);
-              }
-            }
-          );
-        });
-      } catch (err: any) {
-        throw new UnauthorizedException("Token signature verification failed: " + err.message);
-      }
-    }
-
-    // 3. Fallback verification attempt with JWT secret
     if (jwtSecret) {
       try {
-        return jwt.verify(token, jwtSecret) as any;
-      } catch (err: any) {
-        throw new UnauthorizedException("Token signature verification failed: " + err.message);
+        const payload: any = jwt.verify(token, jwtSecret);
+        if (payload && payload.sub) {
+          return {
+            sub: payload.sub,
+            email: payload.email || null,
+            ...payload,
+          };
+        }
+      } catch (err) {
+        // Fallthrough to sanitized error
       }
     }
 
-    throw new UnauthorizedException("Token signature verification failed: Missing JWT secret or valid JWKS key");
+    throw new UnauthorizedException("Invalid or expired session");
   }
 
   async getBootstrapStatus(token: string) {

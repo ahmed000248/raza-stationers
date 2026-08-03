@@ -34,12 +34,38 @@ export class ClientsService {
     address: string;
     city: string;
   }) {
+    const existingLink = await this.prisma.businessUserLink.findFirst({
+      where: { userId },
+      include: { clientBusiness: true },
+    });
+    if (existingLink) {
+      return existingLink.clientBusiness;
+    }
+
     const mobileNumber = normalizePakistaniMobile(data.mobileNumber);
     if (!mobileNumber) throw new ConflictException("Mobile number must use the Pakistani 03XXXXXXXXX format");
-    const existing = await this.prisma.clientBusiness.findFirst({
+    const existingBusiness = await this.prisma.clientBusiness.findFirst({
       where: { mobileNumber },
     });
-    if (existing) throw new ConflictException("Business with this mobile already exists");
+    if (existingBusiness) {
+      const link = await this.prisma.businessUserLink.findFirst({
+        where: {
+          userId,
+          clientBusinessId: existingBusiness.id,
+        },
+      });
+      if (!link) {
+        await this.prisma.businessUserLink.create({
+          data: {
+            userId,
+            clientBusinessId: existingBusiness.id,
+            role: "owner",
+            linkedById: userId,
+          },
+        });
+      }
+      return existingBusiness;
+    }
 
     return this.prisma.$transaction(async (tx) => {
       const business = await tx.clientBusiness.create({
