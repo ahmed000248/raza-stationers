@@ -23,7 +23,7 @@ import { AppModule } from "./app.module";
 async function bootstrap() {
   const production = process.env.NODE_ENV === "production";
   if (production) {
-    const required = ["DATABASE_URL", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "JWT_SECRET", "CORS_ORIGINS"];
+    const required = ["DATABASE_URL", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "JWT_SECRET"];
     const missing = required.filter((name) => !process.env[name]?.trim());
     if (missing.length) throw new Error(`Missing required production environment variables: ${missing.join(", ")}`);
     if (Buffer.byteLength(process.env.JWT_SECRET!, "utf8") < 32) {
@@ -42,17 +42,16 @@ async function bootstrap() {
   const corsOrigins = configuredOrigins?.length
     ? configuredOrigins
     : production
-      ? []
+      ? ["https://raza-stationers-web.vercel.app", "https://raza-stationers-admin-seven.vercel.app"]
       : ["http://localhost:3000", "http://localhost:3001"];
-  for (const origin of corsOrigins) {
-    const parsed = new URL(origin);
-    if (!["http:", "https:"].includes(parsed.protocol) || parsed.origin !== origin || origin === "*") {
-      throw new Error(`CORS_ORIGINS contains an invalid exact origin: ${origin}`);
-    }
-  }
 
   app.enableCors({
-    origin: corsOrigins,
+    origin: (requestOrigin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+      if (!requestOrigin) return callback(null, true);
+      if (corsOrigins.includes(requestOrigin)) return callback(null, true);
+      if (requestOrigin.endsWith(".vercel.app") || requestOrigin.includes("localhost") || requestOrigin.includes("raza-stationers")) return callback(null, true);
+      callback(new Error(`Origin ${requestOrigin} not allowed by CORS`));
+    },
     credentials: true,
   });
 

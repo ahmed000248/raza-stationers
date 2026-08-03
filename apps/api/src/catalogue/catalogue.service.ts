@@ -10,7 +10,7 @@ export class CatalogueService {
   async findProducts(query: PaginationDto) {
     const page = Number(query.page) || 1;
     const limit = Math.min(Number(query.limit) || 20, 100);
-    const filters: Prisma.Sql[] = [Prisma.sql`p.status = 'active'::product_status`];
+    const filters: Prisma.Sql[] = [Prisma.sql`p.status IN ('active'::product_status, 'pending_review'::product_status)`];
 
     if (query.search?.trim()) {
       const search = `%${query.search.trim()}%`;
@@ -140,7 +140,7 @@ export class CatalogueService {
         aliases: true,
       },
     });
-    if (!product || product.status !== "active") throw new NotFoundException("Product not found");
+    if (!product || product.status === "archived") throw new NotFoundException("Product not found");
     const publicProduct = { ...product, packaging: product.packaging.filter((pkg) => !pkg.isBase || product.allowIndividualSale) };
     return JSON.parse(JSON.stringify(publicProduct, (k, v) => (typeof v === "bigint" ? v.toString() : v)));
   }
@@ -153,7 +153,6 @@ export class CatalogueService {
         packaging: {
           where: {
             isActive: true,
-            confirmationStatus: "confirmed",
             prices: { some: { amount: { gt: 0 }, effectiveTo: null, priceType: { in: ["retail", "wholesale"] } } },
           },
           include: {
@@ -170,7 +169,7 @@ export class CatalogueService {
       },
     });
 
-    if (!product || product.status !== "active") throw new NotFoundException("Product not found");
+    if (!product || product.status === "archived") throw new NotFoundException("Product not found");
     const publicProduct = { ...product, packaging: product.packaging.filter((pkg) => !pkg.isBase || product.allowIndividualSale) };
     return JSON.parse(JSON.stringify(publicProduct, (k, v) => (typeof v === "bigint" ? v.toString() : v)));
   }
