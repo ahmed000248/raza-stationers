@@ -321,11 +321,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!supabaseUrl) {
       throw new Error("Google authentication requires a configured Supabase project (NEXT_PUBLIC_SUPABASE_URL).")
     }
-    const safeReturnTo = returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/catalogue"
+    const safeTarget = returnTo?.startsWith("/") && !returnTo.startsWith("//") && !returnTo.startsWith("/signin") && !returnTo.startsWith("/signup") && !returnTo.startsWith("/register") && !returnTo.startsWith("/auth") ? returnTo : "/catalogue"
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(safeReturnTo)}`,
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(safeTarget)}`,
       },
     })
     if (error) throw new Error(error.message)

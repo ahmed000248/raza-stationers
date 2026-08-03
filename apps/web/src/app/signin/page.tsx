@@ -10,7 +10,12 @@ import { Input } from "@/components/ui/input"
 import { useAuth } from "@/hooks/use-auth"
 
 function safeReturnTo(value: string | null) {
-  return value?.startsWith("/") && !value.startsWith("//") ? value : "/catalogue"
+  if (!value || !value.startsWith("/") || value.startsWith("//")) return "/catalogue"
+  const pathname = value.split("?")[0]
+  if (pathname === "/signin" || pathname === "/signup" || pathname === "/register" || pathname.startsWith("/auth")) {
+    return "/catalogue"
+  }
+  return value
 }
 
 export default function SignInPage() {

@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -10,7 +11,20 @@ import { PendingVerificationNotice } from "@/components/auth/PendingVerification
 import { isCityInDeliveryZone, normalizePakistaniMobile, SUPPORTED_DELIVERY_CITIES } from "@raza-stationers/validation"
 import { Building2, ArrowLeft, ArrowRight, FileText, Loader2 } from "lucide-react"
 
+function safeReturnTo(value: string | null) {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) return "/catalogue"
+  const pathname = value.split("?")[0]
+  if (pathname === "/signin" || pathname === "/signup" || pathname === "/register" || pathname.startsWith("/auth")) {
+    return "/catalogue"
+  }
+  return value
+}
+
 export default function WholesaleRegistrationPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const returnTo = safeReturnTo(searchParams.get("returnTo"))
+
   const { accountStatus, register } = useAuth()
 
   const [name, setName] = React.useState("")

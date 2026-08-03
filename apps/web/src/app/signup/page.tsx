@@ -9,10 +9,19 @@ import { Button } from "@/components/ui/button"
 import { normalizePakistaniMobile } from "@raza-stationers/validation"
 import { User, ArrowLeft, Loader2 } from "lucide-react"
 
+function safeReturnTo(value: string | null) {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) return "/catalogue"
+  const pathname = value.split("?")[0]
+  if (pathname === "/signin" || pathname === "/signup" || pathname === "/register" || pathname.startsWith("/auth")) {
+    return "/catalogue"
+  }
+  return value
+}
+
 export default function CustomerSignupPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const returnTo = searchParams.get("returnTo") || "/catalogue"
+  const returnTo = safeReturnTo(searchParams.get("returnTo"))
   const { accountStatus, registerCustomer } = useAuth()
 
   const [name, setName] = React.useState("")
