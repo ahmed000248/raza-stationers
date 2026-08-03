@@ -404,25 +404,43 @@ export async function runAdminBootstrap({ db, supabase, rl, env = process.env, l
   }
 }
 
+export async function ensureEnvironmentVariables(rl, env = process.env, logger = console) {
+  const promptMap = [
+    { key: "DATABASE_URL", prompt: "Enter DATABASE_URL: " },
+    { key: "SUPABASE_URL", prompt: "Enter SUPABASE_URL: " },
+    { key: "SUPABASE_SERVICE_ROLE_KEY", prompt: "Enter SUPABASE_SERVICE_ROLE_KEY: " },
+    { key: "RAZA_OWNER_EMAIL", prompt: "Enter Admin Email (RAZA_OWNER_EMAIL): " },
+    { key: "RAZA_OWNER_NAME", prompt: "Enter Admin Name (RAZA_OWNER_NAME): " },
+    { key: "RAZA_OWNER_MOBILE", prompt: "Enter Admin Mobile (03XXXXXXXXX) (RAZA_OWNER_MOBILE): " },
+  ];
+
+  for (const item of promptMap) {
+    if (!env[item.key]?.trim()) {
+      logger.log(`Notice: Environment variable ${item.key} is not set.`);
+      let val = "";
+      while (!val) {
+        val = (await promptQuestion(rl, item.prompt)).trim();
+      }
+      env[item.key] = val;
+    }
+  }
+}
+
 // Direct Execution Entrypoint
 async function main() {
-  const required = ["DATABASE_URL", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "RAZA_OWNER_EMAIL", "RAZA_OWNER_NAME", "RAZA_OWNER_MOBILE"];
-  const missing = required.filter((name) => !process.env[name]?.trim());
-  if (missing.length) {
-    console.error(`Missing required environment variables: ${missing.join(", ")}`);
-    process.exit(1);
-  }
-
-  const database = getDatabaseConfig(process.env.DATABASE_URL);
-  const pool = new pg.Pool({ connectionString: database.connectionString, ssl: database.ssl, max: 1 });
-  const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-
   const rl = readline.createInterface({ input, output });
   let dbClient;
+  let pool;
 
   try {
+    await ensureEnvironmentVariables(rl, process.env, console);
+
+    const database = getDatabaseConfig(process.env.DATABASE_URL);
+    pool = new pg.Pool({ connectionString: database.connectionString, ssl: database.ssl, max: 1 });
+    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+
     dbClient = await pool.connect();
     const result = await runAdminBootstrap({ db: dbClient, supabase, rl, env: process.env, logger: console });
     process.exitCode = result?.code ?? 0;
@@ -432,7 +450,7 @@ async function main() {
   } finally {
     rl.close();
     if (dbClient) dbClient.release();
-    await pool.end();
+    if (pool) await pool.end();
     delete process.env.RAZA_OWNER_INITIAL_PASSWORD;
   }
 }

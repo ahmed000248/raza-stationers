@@ -464,7 +464,31 @@ async function runTests() {
     console.log("✔ Scenario 12: Secrets never appear in logs passed.");
   }
 
-  console.log("All 12 Admin Bootstrap Unit Tests Passed Successfully!");
+  // Scenario 13: Interactive prompt for missing URLs & environment variables
+  {
+    const { ensureEnvironmentVariables } = await import("../../scripts/admin/bootstrap-owner.mjs");
+    const rl = createMockReadline([
+      "postgres://postgres:pass@localhost:5432/postgres",
+      "https://test.supabase.co",
+      "test-service-key",
+      "test@example.com",
+      "Test User",
+      "03101234567",
+    ]);
+    const logger = createMockLogger();
+    const mockEnv = {};
+
+    await ensureEnvironmentVariables(rl, mockEnv, logger);
+    assert.equal(mockEnv.DATABASE_URL, "postgres://postgres:pass@localhost:5432/postgres");
+    assert.equal(mockEnv.SUPABASE_URL, "https://test.supabase.co");
+    assert.equal(mockEnv.SUPABASE_SERVICE_ROLE_KEY, "test-service-key");
+    assert.equal(mockEnv.RAZA_OWNER_EMAIL, "test@example.com");
+    assert.equal(mockEnv.RAZA_OWNER_NAME, "Test User");
+    assert.equal(mockEnv.RAZA_OWNER_MOBILE, "03101234567");
+    console.log("✔ Scenario 13: Interactive prompt for missing URLs/env vars passed.");
+  }
+
+  console.log("All 13 Admin Bootstrap Unit Tests Passed Successfully!");
 }
 
 runTests().catch((err) => {
