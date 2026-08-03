@@ -96,9 +96,9 @@ export async function runAdminBootstrap({ db, supabase, rl, env = process.env, l
   logger.log("================================");
   logger.log("");
 
-  // Inspect database for existing privileged admin/owner accounts
+  // Inspect database for existing ACTIVE privileged admin/owner accounts
   const existingAdminsRes = await db.query(
-    "SELECT id, name, email, mobile_number, role, is_active, supabase_auth_id, created_at FROM public.users WHERE role IN ('owner'::public.user_role, 'admin'::public.user_role) ORDER BY created_at ASC"
+    "SELECT id, name, email, mobile_number, role, is_active, supabase_auth_id, created_at FROM public.users WHERE role IN ('owner'::public.user_role, 'admin'::public.user_role) AND is_active = true ORDER BY created_at ASC"
   );
   const existingAdmins = existingAdminsRes.rows;
 
@@ -391,7 +391,7 @@ export async function runAdminBootstrap({ db, supabase, rl, env = process.env, l
 
         logger.log("Primary admin replaced successfully.");
         logger.log(`New Active Admin: ${name} (${email})`);
-        logger.log(`Old Admin (${primaryAdmin.email}) status: Deactivated (historical records preserved).\n`);
+        logger.log(`Old Admin (${primaryAdmin.email || primaryAdmin.name || primaryAdmin.id}) status: Deactivated (historical records preserved).\n`);
         return { status: "replaced", code: 0, newUserId, oldUserId: primaryAdmin.id };
       } catch (err) {
         await db.query("ROLLBACK").catch(() => {});
