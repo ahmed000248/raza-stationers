@@ -53,7 +53,7 @@ function createMockDb(initialAdmins = [], options = {}) {
       }
 
       if (text.includes("SELECT id, name, email, mobile_number, role, is_active")) {
-        const activeAdmins = users.filter((u) => ["owner", "admin"].includes(u.role));
+        const activeAdmins = users.filter((u) => ["owner", "admin"].includes(u.role) && u.is_active);
         return { rowCount: activeAdmins.length, rows: activeAdmins };
       }
 
@@ -146,8 +146,11 @@ function createMockSupabase(users = [], options = {}) {
           authUsers.push(newUser);
           return { data: { user: newUser }, error: null };
         },
-        async updateUserById(userId, options) {
-          updatedPasswords.push({ userId, options });
+        async updateUserById(userId, updateOptions) {
+          if (options.failUpdateUser) {
+            return { data: { user: null }, error: new Error("Simulated Supabase updateUserById failure") };
+          }
+          updatedPasswords.push({ userId, options: updateOptions });
           return { data: { user: { id: userId } }, error: null };
         },
         async deleteUser(id) {
@@ -176,15 +179,15 @@ function createMockLogger() {
 async function runTests() {
   console.log("=== RUNNING BOOTSTRAP OWNER UNIT TESTS ===");
 
-  // 1. Mobile Normalization Utility Test
+  // Scenario 0: Pakistani Mobile Normalization
   assert.equal(normalizePakistaniMobile("03105008398"), "03105008398");
   assert.equal(normalizePakistaniMobile("+923105008398"), "03105008398");
-  assert.equal(normalizePakistaniMobile("00923105008398"), "03105008398");
-  assert.equal(normalizePakistaniMobile("3105008398"), "03105008398");
+  assert.equal(normalizePakistaniMobile("923105008398"), "03105008398");
+  assert.equal(normalizePakistaniMobile("0310-5008398"), "03105008398");
   assert.equal(normalizePakistaniMobile("invalid"), null);
   console.log("✔ Scenario 0: Pakistani Mobile Normalization passed.");
 
-  // Scenario 1: No existing admin -> user confirms creation (yes)
+  // Scenario 1: No existing admin -> confirm creation
   {
     const db = createMockDb([]);
     const supabase = createMockSupabase([]);
@@ -206,7 +209,7 @@ async function runTests() {
     console.log("✔ Scenario 1: No existing admin -> confirm creation passed.");
   }
 
-  // Scenario 2: No existing admin -> user cancels (no)
+  // Scenario 2: No existing admin -> cancel
   {
     const db = createMockDb([]);
     const supabase = createMockSupabase([]);
@@ -225,7 +228,7 @@ async function runTests() {
     console.log("✔ Scenario 2: No existing admin -> cancel passed.");
   }
 
-  // Scenario 3: Existing admin -> Option 1: add second admin
+  // Scenario 3: Existing admin -> Option 1: add a second admin (different email)
   {
     const existingAdmin = {
       id: "admin-1",
@@ -234,10 +237,9 @@ async function runTests() {
       mobile_number: "03001111111",
       role: "owner",
       is_active: true,
-      created_at: "2026-01-01T00:00:00Z",
     };
     const db = createMockDb([existingAdmin]);
-    const supabase = createMockSupabase([{ id: "sb-1", email: "firstadmin@example.com" }]);
+    const supabase = createMockSupabase([]);
     const rl = createMockReadline(["1", "yes"]);
     const logger = createMockLogger();
     const env = {
@@ -256,7 +258,7 @@ async function runTests() {
     console.log("✔ Scenario 3: Existing admin -> add second admin passed.");
   }
 
-  // Scenario 4: Existing admin -> Option 2: replace first admin
+  // Scenario 4: Existing admin -> Option 2: replace first admin (different email)
   {
     const existingAdmin = {
       id: "admin-1",
@@ -329,127 +331,160 @@ async function runTests() {
     console.log("✔ Scenario 6: Invalid menu input -> re-prompts passed.");
   }
 
-  // Scenario 7: Existing Supabase identity -> safely link it
-  {
-    const existingSbUser = { id: "sb-existing-id", email: "preexisting@example.com" };
-    const db = createMockDb([]);
-    const supabase = createMockSupabase([existingSbUser]);
-    const rl = createMockReadline(["yes", "1"]);
-    const logger = createMockLogger();
-    const env = {
-      RAZA_OWNER_EMAIL: "preexisting@example.com",
-      RAZA_OWNER_NAME: "Pre Existing",
-      RAZA_OWNER_MOBILE: "03109999999",
-    };
-
-    const res = await runAdminBootstrap({ db, supabase, rl, env, logger });
-    assert.equal(res.status, "created");
-    assert.equal(res.userId, "sb-existing-id");
-    assert.equal(db.users[0].supabase_auth_id, "sb-existing-id");
-    console.log("✔ Scenario 7: Existing Supabase identity -> safely link passed.");
-  }
-
-  // Scenario 8: Existing application user -> idempotent behavior
+  // Scenario 7: Option 1 + same active-admin email opens nested menu & keeps password
   {
     const existingAdmin = {
       id: "admin-1",
-      name: "First Admin",
-      email: "firstadmin@example.com",
-      mobile_number: "03001111111",
+      name: "Ahmed Raza",
+      email: "ahmedraa0007@gmail.com",
+      mobile_number: "03105008398",
       role: "owner",
       is_active: true,
     };
     const db = createMockDb([existingAdmin]);
-    const supabase = createMockSupabase([{ id: "sb-1", email: "firstadmin@example.com" }]);
-    const rl = createMockReadline(["1"]);
+    const supabase = createMockSupabase([{ id: "sb-ahmed", email: "ahmedraa0007@gmail.com" }]);
+    const rl = createMockReadline(["1", "1"]); // Option 1 (Add second admin), then Option 1 in nested menu (Keep password)
     const logger = createMockLogger();
     const env = {
-      RAZA_OWNER_EMAIL: "firstadmin@example.com",
-      RAZA_OWNER_NAME: "First Admin",
-      RAZA_OWNER_MOBILE: "03001111111",
+      RAZA_OWNER_EMAIL: "ahmedraa0007@gmail.com",
+      RAZA_OWNER_NAME: "Ahmed Raza",
+      RAZA_OWNER_MOBILE: "03105008398",
     };
 
     const res = await runAdminBootstrap({ db, supabase, rl, env, logger });
-    assert.equal(res.status, "idempotent_existing_admin");
-    assert.equal(res.code, 0);
+    assert.equal(res.status, "existing_admin_managed");
+    assert.equal(res.action, "keep");
+    assert.equal(supabase.updatedPasswords.length, 0, "Keep password must perform no updateUserById call");
+    assert.equal(db.users.length, 1, "No duplicate admin created");
+    assert.equal(db.users[0].is_active, true, "Database user remains active");
+    assert.equal(db.users[0].role, "owner", "Database user role remains owner");
+    const logText = logger.logs.join("\n");
+    assert.equal(logText.includes("The Supabase Auth identity already exists."), true);
+    console.log("✔ Scenario 7: Option 1 + same active-admin email opens nested menu & keeps password passed.");
+  }
+
+  // Scenario 8: Option 2 + same active-admin email opens nested menu & keeps password
+  {
+    const existingAdmin = {
+      id: "admin-1",
+      name: "Ahmed Raza",
+      email: "ahmedraa0007@gmail.com",
+      mobile_number: "03105008398",
+      role: "owner",
+      is_active: true,
+    };
+    const db = createMockDb([existingAdmin]);
+    const supabase = createMockSupabase([{ id: "sb-ahmed", email: "ahmedraa0007@gmail.com" }]);
+    const rl = createMockReadline(["2", "1"]); // Option 2 (Replace admin), then Option 1 in nested menu (Keep password)
+    const logger = createMockLogger();
+    const env = {
+      RAZA_OWNER_EMAIL: "ahmedraa0007@gmail.com",
+      RAZA_OWNER_NAME: "Ahmed Raza",
+      RAZA_OWNER_MOBILE: "03105008398",
+    };
+
+    const res = await runAdminBootstrap({ db, supabase, rl, env, logger });
+    assert.equal(res.status, "existing_admin_managed");
+    assert.equal(res.action, "keep");
+    assert.equal(supabase.updatedPasswords.length, 0);
     assert.equal(db.users.length, 1);
-    console.log("✔ Scenario 8: Existing application user -> idempotent passed.");
+    assert.equal(db.users[0].is_active, true);
+    console.log("✔ Scenario 8: Option 2 + same active-admin email opens nested menu & keeps password passed.");
   }
 
-  // Scenario 9: New admin creation fails in DB -> Supabase cleanup compensation
-  {
-    const db = createMockDb([], { failInsert: true });
-    const supabase = createMockSupabase([]);
-    const rl = createMockReadline(["yes"]);
-    const logger = createMockLogger();
-    const env = {
-      RAZA_OWNER_EMAIL: "failadmin@example.com",
-      RAZA_OWNER_NAME: "Fail Admin",
-      RAZA_OWNER_MOBILE: "03105555555",
-      RAZA_OWNER_INITIAL_PASSWORD: "SuperSecretPassword123!",
-    };
-
-    await assert.rejects(async () => {
-      await runAdminBootstrap({ db, supabase, rl, env, logger });
-    }, /Simulated DB Update Failure/);
-
-    assert.equal(supabase.deletedUserIds.length, 1);
-    console.log("✔ Scenario 9: New admin creation DB fails -> Supabase identity cleaned up passed.");
-  }
-
-  // Scenario 10: Replacement DB update fails -> original admin stays active & unchanged
+  // Scenario 9: Reset occurs only after exact RESET PASSWORD confirmation
   {
     const existingAdmin = {
       id: "admin-1",
-      name: "First Admin",
-      email: "firstadmin@example.com",
-      mobile_number: "03001111111",
-      role: "owner",
-      is_active: true,
-    };
-    const db = createMockDb([existingAdmin], { failUpdate: true });
-    const supabase = createMockSupabase([{ id: "sb-1", email: "firstadmin@example.com" }]);
-    const rl = createMockReadline(["2", "REPLACE"]);
-    const logger = createMockLogger();
-    const env = {
-      RAZA_OWNER_EMAIL: "newadmin@example.com",
-      RAZA_OWNER_NAME: "New Admin",
-      RAZA_OWNER_MOBILE: "03009999999",
-      RAZA_OWNER_INITIAL_PASSWORD: "SuperSecretPassword123!",
-    };
-
-    await assert.rejects(async () => {
-      await runAdminBootstrap({ db, supabase, rl, env, logger });
-    }, /Simulated DB Update Failure/);
-
-    assert.equal(db.users.find((u) => u.id === "admin-1").role, "owner");
-    console.log("✔ Scenario 10: Replacement DB update fails -> original admin stays active passed.");
-  }
-
-  // Scenario 11: Proposed email matches current admin -> replacement rejected
-  {
-    const existingAdmin = {
-      id: "admin-1",
-      name: "First Admin",
-      email: "firstadmin@example.com",
-      mobile_number: "03001111111",
+      name: "Ahmed Raza",
+      email: "ahmedraa0007@gmail.com",
+      mobile_number: "03105008398",
       role: "owner",
       is_active: true,
     };
     const db = createMockDb([existingAdmin]);
-    const supabase = createMockSupabase([{ id: "sb-1", email: "firstadmin@example.com" }]);
-    const rl = createMockReadline(["2"]);
+    const supabase = createMockSupabase([{ id: "sb-ahmed", email: "ahmedraa0007@gmail.com", user_metadata: { custom: "meta" } }]);
+    const rl = createMockReadline(["1", "2", "RESET PASSWORD"]); // Option 1 -> Reset password -> exact confirmation
     const logger = createMockLogger();
     const env = {
-      RAZA_OWNER_EMAIL: "firstadmin@example.com",
-      RAZA_OWNER_NAME: "First Admin",
-      RAZA_OWNER_MOBILE: "03001111111",
+      RAZA_OWNER_EMAIL: "ahmedraa0007@gmail.com",
+      RAZA_OWNER_NAME: "Ahmed Raza",
+      RAZA_OWNER_MOBILE: "03105008398",
+      RAZA_OWNER_INITIAL_PASSWORD: "NewSecurePassword123!",
     };
 
     const res = await runAdminBootstrap({ db, supabase, rl, env, logger });
-    assert.equal(res.status, "rejected_same_email");
-    assert.equal(res.code, 1);
-    console.log("✔ Scenario 11: Proposed email matches current admin -> replacement rejected passed.");
+    assert.equal(res.status, "existing_admin_managed");
+    assert.equal(res.action, "reset");
+    assert.equal(supabase.updatedPasswords.length, 1);
+    assert.equal(supabase.updatedPasswords[0].userId, "sb-ahmed");
+    assert.equal(supabase.updatedPasswords[0].options.password, "NewSecurePassword123!");
+    assert.equal(supabase.updatedPasswords[0].options.email_confirm, true);
+    assert.equal(supabase.updatedPasswords[0].options.user_metadata.custom, "meta", "Metadata merged");
+    assert.equal(supabase.updatedPasswords[0].options.user_metadata.name, "Ahmed Raza", "Metadata updated with name");
+    assert.equal(db.users.length, 1);
+    assert.equal(db.users[0].is_active, true);
+    console.log("✔ Scenario 9: Reset occurs only after exact RESET PASSWORD confirmation passed.");
+  }
+
+  // Scenario 10: Incorrect confirmation performs no Auth/database write
+  {
+    const existingAdmin = {
+      id: "admin-1",
+      name: "Ahmed Raza",
+      email: "ahmedraa0007@gmail.com",
+      mobile_number: "03105008398",
+      role: "owner",
+      is_active: true,
+    };
+    const db = createMockDb([existingAdmin]);
+    const supabase = createMockSupabase([{ id: "sb-ahmed", email: "ahmedraa0007@gmail.com" }]);
+    const rl = createMockReadline(["1", "2", "wrong_confirmation"]);
+    const logger = createMockLogger();
+    const env = {
+      RAZA_OWNER_EMAIL: "ahmedraa0007@gmail.com",
+      RAZA_OWNER_NAME: "Ahmed Raza",
+      RAZA_OWNER_MOBILE: "03105008398",
+      RAZA_OWNER_INITIAL_PASSWORD: "NewSecurePassword123!",
+    };
+
+    const res = await runAdminBootstrap({ db, supabase, rl, env, logger });
+    assert.equal(res.status, "cancelled");
+    assert.equal(supabase.updatedPasswords.length, 0, "No updateUserById call on incorrect confirmation");
+    assert.equal(db.auditLogs.length, 0, "No audit log write on cancelled password reset");
+    console.log("✔ Scenario 10: Incorrect confirmation performs no Auth/database write passed.");
+  }
+
+  // Scenario 11: updateUserById failure leaves role and linkage unchanged
+  {
+    const existingAdmin = {
+      id: "admin-1",
+      name: "Ahmed Raza",
+      email: "ahmedraa0007@gmail.com",
+      mobile_number: "03105008398",
+      role: "owner",
+      is_active: true,
+      supabase_auth_id: "sb-ahmed",
+    };
+    const db = createMockDb([existingAdmin]);
+    const supabase = createMockSupabase([{ id: "sb-ahmed", email: "ahmedraa0007@gmail.com" }], { failUpdateUser: true });
+    const rl = createMockReadline(["1", "2", "RESET PASSWORD"]);
+    const logger = createMockLogger();
+    const env = {
+      RAZA_OWNER_EMAIL: "ahmedraa0007@gmail.com",
+      RAZA_OWNER_NAME: "Ahmed Raza",
+      RAZA_OWNER_MOBILE: "03105008398",
+      RAZA_OWNER_INITIAL_PASSWORD: "NewSecurePassword123!",
+    };
+
+    await assert.rejects(async () => {
+      await runAdminBootstrap({ db, supabase, rl, env, logger });
+    }, /Simulated Supabase updateUserById failure/);
+
+    assert.equal(db.users[0].role, "owner", "Role unchanged on updateUserById failure");
+    assert.equal(db.users[0].supabase_auth_id, "sb-ahmed", "Linkage unchanged on updateUserById failure");
+    assert.equal(db.users[0].is_active, true, "IsActive unchanged on updateUserById failure");
+    console.log("✔ Scenario 11: updateUserById failure leaves role and linkage unchanged passed.");
   }
 
   // Scenario 12: Secrets never appear in logs
@@ -508,28 +543,6 @@ async function runTests() {
       true
     );
     console.log("✔ Scenario 14: Production Project Ref Guard validation passed.");
-  }
-
-  // Scenario 15: Existing Supabase Auth identity password reset workflow
-  {
-    const db = createMockDb([]);
-    const existingAuthUser = { id: "auth-123", email: "existingauth@example.com" };
-    const supabase = createMockSupabase([existingAuthUser]);
-    const rl = createMockReadline(["yes", "2", "RESET PASSWORD"]); // yes to create admin, option 2 for reset password, confirm RESET PASSWORD
-    const logger = createMockLogger();
-    const env = {
-      RAZA_OWNER_EMAIL: "existingauth@example.com",
-      RAZA_OWNER_NAME: "Existing Auth",
-      RAZA_OWNER_MOBILE: "03109999999",
-      RAZA_OWNER_INITIAL_PASSWORD: "NewResetPassword123!",
-    };
-
-    const res = await runAdminBootstrap({ db, supabase, rl, env, logger });
-    assert.equal(res.status, "created");
-    assert.equal(supabase.updatedPasswords.length, 1);
-    assert.equal(supabase.updatedPasswords[0].userId, "auth-123");
-    assert.equal(supabase.updatedPasswords[0].options.password, "NewResetPassword123!");
-    console.log("✔ Scenario 15: Existing Supabase Auth identity password reset workflow passed.");
   }
 
   console.log("All 15 Admin Bootstrap Unit Tests Passed Successfully!");

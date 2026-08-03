@@ -101,11 +101,10 @@ async function promptQuestion(rl, text) {
   throw new Error("Readline interface missing question method");
 }
 
-async function handleExistingAuthUserPassword({ supabase, authUser, email, env, rl, logger }) {
-  logger.log(`Notice: Supabase Auth user already exists for ${email}.`);
-  logger.log("What would you like to do with the password?");
-  logger.log("1. Keep existing password (link/promote current identity)");
-  logger.log("2. Set/reset password using RAZA_OWNER_INITIAL_PASSWORD");
+async function handleExistingAdminAccountManagement({ db, supabase, authUser, existingActiveAdmin, email, name, mobile, env, rl, logger }) {
+  logger.log("The Supabase Auth identity already exists.\n");
+  logger.log("1. Keep existing password and verify/link/promote account");
+  logger.log("2. Reset password using RAZA_OWNER_INITIAL_PASSWORD");
   logger.log("3. Cancel\n");
 
   let passChoice = "";
@@ -114,8 +113,30 @@ async function handleExistingAuthUserPassword({ supabase, authUser, email, env, 
   }
 
   if (passChoice === "3") {
-    logger.log("Operation cancelled. Password was not modified.");
-    return { action: "cancelled" };
+    logger.log("Admin account management cancelled. No changes were made.");
+    return { status: "cancelled", code: 0 };
+  }
+
+  if (passChoice === "1") {
+    try {
+      await db.query("BEGIN");
+      const userId = existingActiveAdmin.id;
+      await db.query(
+        "UPDATE public.users SET supabase_auth_id = $1, email = $2, mobile_number = $3, name = $4, is_active = true, updated_at = now() WHERE id = $5",
+        [authUser.id, email, mobile, name, userId]
+      );
+      const auditId = `admin-manage-${authUser.id}-${Date.now()}`;
+      await db.query(
+        "INSERT INTO public.audit_logs (id, actor_id, action, entity_type, entity_id, before_data, after_data, reason, created_at) VALUES ($1, $2, 'ADMIN_MANAGED', 'User', $2, NULL, $3::jsonb, 'Managed existing active admin account via CLI', now()) ON CONFLICT (id) DO NOTHING",
+        [auditId, userId, JSON.stringify({ email, mobileNumber: mobile, role: existingActiveAdmin.role, supabaseAuthId: authUser.id })]
+      );
+      await db.query("COMMIT");
+      logger.log(`Account verified/linked successfully for ${name} (${email}). Password kept intact.`);
+      return { status: "existing_admin_managed", action: "keep", code: 0, userId };
+    } catch (err) {
+      await db.query("ROLLBACK").catch(() => {});
+      throw err;
+    }
   }
 
   if (passChoice === "2") {
@@ -124,21 +145,40 @@ async function handleExistingAuthUserPassword({ supabase, authUser, email, env, 
     const confirmText = (await promptQuestion(rl, "Type RESET PASSWORD to confirm: ")).trim();
     if (confirmText !== "RESET PASSWORD") {
       logger.log("Password reset cancelled. Keeping existing password.");
-      return { action: "keep" };
+      return { status: "cancelled", code: 0 };
     }
 
+    const mergedMetadata = { ...(authUser?.user_metadata || {}), name };
     const updated = await supabase.auth.admin.updateUserById(authUser.id, {
       password,
       email_confirm: true,
+      user_metadata: mergedMetadata,
     });
+
     if (updated.error) {
       throw updated.error;
     }
-    logger.log("Supabase Auth password updated successfully.");
-    return { action: "reset" };
-  }
 
-  return { action: "keep" };
+    try {
+      await db.query("BEGIN");
+      const userId = existingActiveAdmin.id;
+      await db.query(
+        "UPDATE public.users SET supabase_auth_id = $1, email = $2, mobile_number = $3, name = $4, is_active = true, updated_at = now() WHERE id = $5",
+        [authUser.id, email, mobile, name, userId]
+      );
+      const auditId = `admin-pass-reset-${authUser.id}-${Date.now()}`;
+      await db.query(
+        "INSERT INTO public.audit_logs (id, actor_id, action, entity_type, entity_id, before_data, after_data, reason, created_at) VALUES ($1, $2, 'ADMIN_PASSWORD_RESET', 'User', $2, NULL, $3::jsonb, 'Reset password for existing admin via CLI', now()) ON CONFLICT (id) DO NOTHING",
+        [auditId, userId, JSON.stringify({ email, mobileNumber: mobile, role: existingActiveAdmin.role, supabaseAuthId: authUser.id })]
+      );
+      await db.query("COMMIT");
+      logger.log(`Supabase Auth password reset successfully for ${email}.`);
+      return { status: "existing_admin_managed", action: "reset", code: 0, userId };
+    } catch (err) {
+      await db.query("ROLLBACK").catch(() => {});
+      throw err;
+    }
+  }
 }
 
 export async function runAdminBootstrap({ db, supabase, rl, env = process.env, logger = console }) {
@@ -193,10 +233,18 @@ export async function runAdminBootstrap({ db, supabase, rl, env = process.env, l
       authUser = created.data.user;
       createdAuthUser = true;
     } else {
-      const res = await handleExistingAuthUserPassword({ supabase, authUser, email, env, rl, logger });
-      if (res.action === "cancelled") {
-        return { status: "cancelled", code: 0 };
-      }
+      return await handleExistingAdminAccountManagement({
+        db,
+        supabase,
+        authUser,
+        existingActiveAdmin: { id: authUser.id, role: "owner" },
+        email,
+        name,
+        mobile,
+        env,
+        rl,
+        logger,
+      });
     }
 
     try {
@@ -274,11 +322,34 @@ export async function runAdminBootstrap({ db, supabase, rl, env = process.env, l
       // -----------------------------------------------------------
       const { email, name, mobile } = validateAdminInput(env, { requirePassword: false });
 
-      const isExistingAdmin = existingAdmins.some((a) => a.email?.toLowerCase() === email);
-      if (isExistingAdmin) {
-        logger.log("The proposed email already belongs to an active admin account.");
-        logger.log("No duplicate admin records were created.");
-        return { status: "idempotent_existing_admin", code: 0 };
+      const existingActiveAdmin = existingAdmins.find((a) => a.email?.toLowerCase() === email);
+      if (existingActiveAdmin) {
+        let authUser = await findAuthUserByEmail(supabase, email);
+        if (!authUser) {
+          const { password } = validateAdminInput(env, { requirePassword: true });
+          const created = await supabase.auth.admin.createUser({
+            email,
+            password,
+            email_confirm: true,
+            user_metadata: { name },
+          });
+          if (created.error || !created.data.user) {
+            throw created.error || new Error("Supabase admin creation returned no user");
+          }
+          authUser = created.data.user;
+        }
+        return await handleExistingAdminAccountManagement({
+          db,
+          supabase,
+          authUser,
+          existingActiveAdmin,
+          email,
+          name,
+          mobile,
+          env,
+          rl,
+          logger,
+        });
       }
 
       logger.log(`\nProposed new admin:`);
@@ -312,11 +383,6 @@ export async function runAdminBootstrap({ db, supabase, rl, env = process.env, l
         }
         authUser = created.data.user;
         createdAuthUser = true;
-      } else {
-        const res = await handleExistingAuthUserPassword({ supabase, authUser, email, env, rl, logger });
-        if (res.action === "cancelled") {
-          return { status: "cancelled", code: 0 };
-        }
       }
 
       try {
@@ -366,9 +432,34 @@ export async function runAdminBootstrap({ db, supabase, rl, env = process.env, l
       // -----------------------------------------------------------
       const { email, name, mobile } = validateAdminInput(env, { requirePassword: false });
 
-      if (email === primaryAdmin.email?.toLowerCase()) {
-        logger.log("New admin email matches the current admin email. Replacement rejected.");
-        return { status: "rejected_same_email", code: 1 };
+      const existingActiveAdmin = existingAdmins.find((a) => a.email?.toLowerCase() === email);
+      if (existingActiveAdmin) {
+        let authUser = await findAuthUserByEmail(supabase, email);
+        if (!authUser) {
+          const { password } = validateAdminInput(env, { requirePassword: true });
+          const created = await supabase.auth.admin.createUser({
+            email,
+            password,
+            email_confirm: true,
+            user_metadata: { name },
+          });
+          if (created.error || !created.data.user) {
+            throw created.error || new Error("Supabase admin creation returned no user");
+          }
+          authUser = created.data.user;
+        }
+        return await handleExistingAdminAccountManagement({
+          db,
+          supabase,
+          authUser,
+          existingActiveAdmin,
+          email,
+          name,
+          mobile,
+          env,
+          rl,
+          logger,
+        });
       }
 
       logger.log("WARNING: You are about to replace the current primary admin.\n");
@@ -402,11 +493,6 @@ export async function runAdminBootstrap({ db, supabase, rl, env = process.env, l
         }
         authUser = created.data.user;
         createdAuthUser = true;
-      } else {
-        const res = await handleExistingAuthUserPassword({ supabase, authUser, email, env, rl, logger });
-        if (res.action === "cancelled") {
-          return { status: "cancelled", code: 0 };
-        }
       }
 
       try {
