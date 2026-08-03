@@ -23,12 +23,9 @@ import { AppModule } from "./app.module";
 async function bootstrap() {
   const production = process.env.NODE_ENV === "production";
   if (production) {
-    const required = ["DATABASE_URL", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "JWT_SECRET"];
+    const required = ["DATABASE_URL"];
     const missing = required.filter((name) => !process.env[name]?.trim());
     if (missing.length) throw new Error(`Missing required production environment variables: ${missing.join(", ")}`);
-    if (Buffer.byteLength(process.env.JWT_SECRET!, "utf8") < 32) {
-      throw new Error("JWT_SECRET must contain at least 32 bytes in production.");
-    }
   }
 
   const app = await NestFactory.create(AppModule);
