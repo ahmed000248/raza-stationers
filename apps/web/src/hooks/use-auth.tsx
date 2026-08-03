@@ -221,7 +221,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (!token) {
-      throw new Error("CONFIRMATION_PENDING")
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      })
+      if (!signInError && signInData.session) {
+        token = signInData.session.access_token
+      }
+    }
+
+    if (!token) {
+      throw new Error("Account created successfully, but automatic sign-in failed. Please sign in with your email and password.")
     }
 
     api.setAuthToken(token)
@@ -264,7 +274,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (!token) {
-      throw new Error("CONFIRMATION_PENDING")
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      })
+      if (!signInError && signInData.session) {
+        token = signInData.session.access_token
+      }
+    }
+
+    if (!token) {
+      throw new Error("Account created successfully, but automatic sign-in failed. Please sign in with your email and password.")
     }
 
     api.setAuthToken(token)
