@@ -29,7 +29,11 @@ export default function SignInPage() {
   const [loading, setLoading] = React.useState<"password" | "google" | null>(null)
 
   React.useEffect(() => {
-    if (accountStatus !== "guest" && accountStatus !== "unregistered") router.replace(returnTo)
+    if (accountStatus === "approved" || accountStatus === "pending") {
+      router.replace(returnTo)
+    } else if (accountStatus === "unregistered") {
+      router.replace(`/onboarding?returnTo=${encodeURIComponent(returnTo)}`)
+    }
   }, [accountStatus, returnTo, router])
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -40,7 +44,6 @@ export default function SignInPage() {
     setLoading("password")
     try {
       await login(email.trim(), password)
-      router.replace(returnTo)
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Sign in failed. Please try again.")
     } finally {

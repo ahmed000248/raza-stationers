@@ -181,7 +181,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     if (isLoaded && accountStatus === "unregistered") {
       if (typeof window !== "undefined" && !window.location.pathname.startsWith("/onboarding") && !window.location.pathname.startsWith("/auth")) {
-        window.location.href = `/onboarding?returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}`
+        const currentPath = window.location.pathname + window.location.search
+        const safeTarget = currentPath.startsWith("/signin") || currentPath.startsWith("/signup") || currentPath.startsWith("/register") ? "/catalogue" : currentPath
+        window.location.href = `/onboarding?returnTo=${encodeURIComponent(safeTarget)}`
       }
     }
   }, [isLoaded, accountStatus])
