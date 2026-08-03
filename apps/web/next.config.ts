@@ -11,6 +11,7 @@ function getApiOrigin(): string | null {
 }
 
 const nextConfig: NextConfig = {
+  transpilePackages: ["@raza-stationers/validation", "@raza-stationers/types", "@raza-stationers/api", "@raza-stationers/ui"],
   experimental: {
     turbopackLocalPostcssConfig: true,
   },
