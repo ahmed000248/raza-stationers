@@ -16,42 +16,36 @@ async function runAuthRegressionTests() {
   assert.equal(normalizePakistaniMobile("invalid"), null);
   console.log("✔ Test 1: Mobile normalization passed.");
 
-  // Test 2: AuthService.getBootstrapStatus mock flow verification
-  const mockPrisma = {
-    user: {
-      async findUnique({ where }) {
-        if (where.supabaseAuthId === "sub-registered") {
-          return {
-            id: "user-1",
-            name: "Registered User",
-            mobileNumber: "03105008398",
-            role: "customer",
-            isActive: true,
-            createdAt: new Date(),
-            businessUserLinks: [],
-          };
-        }
-        if (where.supabaseAuthId === "sub-inactive") {
-          return {
-            id: "user-2",
-            name: "Inactive User",
-            mobileNumber: "03101111111",
-            role: "customer",
-            isActive: false,
-            createdAt: new Date(),
-            businessUserLinks: [],
-          };
-        }
-        return null; // Unregistered Google identity
-      },
+  // Test 2: Provider-neutral getBootstrapStatus mock flow verification
+  const mockUsers = {
+    "user-registered": {
+      id: "user-registered",
+      name: "Registered User",
+      mobileNumber: "03105008398",
+      role: "business_user",
+      isActive: true,
+      createdAt: new Date(),
+      businessUserLinks: [],
+    },
+    "user-inactive": {
+      id: "user-inactive",
+      name: "Inactive User",
+      mobileNumber: "03101111111",
+      role: "business_user",
+      isActive: false,
+      createdAt: new Date(),
+      businessUserLinks: [],
     },
   };
 
-  // Mock AuthService getBootstrapStatus logic
-  async function mockGetBootstrapStatus(sub, email) {
-    const user = await mockPrisma.user.findUnique({ where: { supabaseAuthId: sub } });
+  // Mock provider-neutral getBootstrapStatus (looks up by user ID, not supabaseAuthId)
+  async function mockGetBootstrapStatus(token) {
+    if (!token) {
+      return { authenticated: false, registered: false, status: "unconfigured", message: "Authentication service is not configured yet." };
+    }
+    const user = mockUsers[token] ?? null;
     if (!user) {
-      return { authenticated: true, registered: false, email, sub };
+      return { authenticated: true, registered: false };
     }
     if (!user.isActive) {
       return { authenticated: true, registered: true, isInactive: true, message: "User account is inactive" };
@@ -63,26 +57,31 @@ async function runAuthRegressionTests() {
     };
   }
 
-  // Check 1: Unregistered identity returns authenticated: true, registered: false
-  const unregRes = await mockGetBootstrapStatus("sub-new-google-user", "newgoogle@example.com");
+  // Check 1: No token → unconfigured
+  const noTokenRes = await mockGetBootstrapStatus(null);
+  assert.equal(noTokenRes.authenticated, false);
+  assert.equal(noTokenRes.status, "unconfigured");
+  console.log("✔ Test 2: No token returns unconfigured status passed.");
+
+  // Check 2: Unregistered identity returns registered: false
+  const unregRes = await mockGetBootstrapStatus("sub-unknown");
   assert.equal(unregRes.authenticated, true);
   assert.equal(unregRes.registered, false);
-  assert.equal(unregRes.email, "newgoogle@example.com");
-  console.log("✔ Test 2: Unregistered Google identity returns registered: false passed.");
+  console.log("✔ Test 3: Unregistered identity returns registered: false passed.");
 
-  // Check 2: Active registered user returns registered: true and profile
-  const regRes = await mockGetBootstrapStatus("sub-registered", "reg@example.com");
+  // Check 3: Active registered user returns registered: true and profile
+  const regRes = await mockGetBootstrapStatus("user-registered");
   assert.equal(regRes.authenticated, true);
   assert.equal(regRes.registered, true);
   assert.equal(regRes.profile.name, "Registered User");
-  console.log("✔ Test 3: Registered user returns registered: true and profile passed.");
+  console.log("✔ Test 4: Registered user returns registered: true and profile passed.");
 
-  // Check 3: Inactive user returns isInactive: true
-  const inactRes = await mockGetBootstrapStatus("sub-inactive", "inactive@example.com");
+  // Check 4: Inactive user returns isInactive: true
+  const inactRes = await mockGetBootstrapStatus("user-inactive");
   assert.equal(inactRes.authenticated, true);
   assert.equal(inactRes.registered, true);
   assert.equal(inactRes.isInactive, true);
-  console.log("✔ Test 4: Inactive user status check passed.");
+  console.log("✔ Test 5: Inactive user status check passed.");
 
   console.log("All Auth Regression Unit Tests Passed Successfully!");
 }
