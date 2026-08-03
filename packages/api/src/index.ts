@@ -33,6 +33,10 @@ export class RazaAPIClient {
     return this.get("/users/me");
   }
 
+  async getBootstrapStatus() {
+    return this.get("/auth/bootstrap-status");
+  }
+
   // Catalogue
   async getProducts(params?: { page?: number; limit?: number; search?: string; categorySlug?: string; saleType?: "individual" | "bulk"; unit?: string; stock?: "updating" | "out_of_stock" | "low_stock" | "in_stock"; minPrice?: number; maxPrice?: number; sort?: "name_asc" | "name_desc" | "newest"; signal?: AbortSignal }) {
     const searchParams = new URLSearchParams();

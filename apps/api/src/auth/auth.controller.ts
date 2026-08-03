@@ -28,6 +28,26 @@ export class AuthController {
     return this.authService.registerSupabase(token, body);
   }
 
+  @Get("bootstrap-status")
+  @ApiOperation({ summary: "Check if a valid Supabase token is registered in the application database" })
+  getBootstrapStatus(@Headers("authorization") authHeader: string) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      throw new BadRequestException("Missing or invalid Authorization header");
+    }
+    const token = authHeader.substring(7);
+    return this.authService.getBootstrapStatus(token);
+  }
+
+  @Get("session-profile")
+  @ApiOperation({ summary: "Check session profile status for Supabase token" })
+  getSessionProfile(@Headers("authorization") authHeader: string) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      throw new BadRequestException("Missing or invalid Authorization header");
+    }
+    const token = authHeader.substring(7);
+    return this.authService.getBootstrapStatus(token);
+  }
+
   @Post("link")
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()

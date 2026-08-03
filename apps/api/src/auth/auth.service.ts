@@ -66,6 +66,54 @@ export class AuthService {
     }
   }
 
+  async getBootstrapStatus(token: string) {
+    const payload = await this.verifySupabaseToken(token);
+    const sub = payload.sub;
+    const email = payload.email || null;
+
+    const user = await this.prisma.user.findUnique({
+      where: { supabaseAuthId: sub },
+      include: {
+        businessUserLinks: {
+          include: {
+            clientBusiness: true,
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      return {
+        authenticated: true,
+        registered: false,
+        email,
+        sub,
+      };
+    }
+
+    if (!user.isActive) {
+      return {
+        authenticated: true,
+        registered: true,
+        isInactive: true,
+        message: "User account is inactive",
+      };
+    }
+
+    return {
+      authenticated: true,
+      registered: true,
+      profile: {
+        id: user.id,
+        name: user.name,
+        mobileNumber: user.mobileNumber,
+        role: user.role,
+        createdAt: user.createdAt,
+        businessUserLinks: user.businessUserLinks,
+      },
+    };
+  }
+
   async registerSupabase(token: string, data: { name: string; mobileNumber: string }) {
     const mobileNumber = normalizePakistaniMobile(data.mobileNumber);
     if (!mobileNumber) throw new BadRequestException("Mobile number must use the Pakistani 03XXXXXXXXX format");
@@ -77,7 +125,14 @@ export class AuthService {
       where: { supabaseAuthId: sub },
     });
     if (existingBySub) {
-      throw new ConflictException("This Supabase account is already registered");
+      return {
+        user: {
+          id: existingBySub.id,
+          name: existingBySub.name,
+          mobileNumber: existingBySub.mobileNumber,
+          role: existingBySub.role,
+        },
+      };
     }
 
     const existingByMobile = await this.prisma.user.findUnique({

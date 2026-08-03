@@ -15,6 +15,18 @@ export function normalizePakistaniMobile(value) {
   return /^03\d{9}$/.test(digits) ? digits : null;
 }
 
+export function validateProductionProject(env) {
+  const isTest = env.NODE_ENV === "test" || (process.env.NODE_ENV === "test" && env.NODE_ENV !== "production") || env.IGNORE_PROJECT_REF_CHECK === "true" || env.IGNORE_PROJECT_REF_CHECK === true;
+  if (isTest) return true;
+
+  const supabaseUrl = env.SUPABASE_URL || "";
+  const expectedRef = env.EXPECTED_SUPABASE_PROJECT_REF || "pqlmgqzpjjllhgalyhwz";
+  if (!supabaseUrl.includes(expectedRef)) {
+    throw new Error(`Target SUPABASE_URL does not match expected production project reference '${expectedRef}'.`);
+  }
+  return true;
+}
+
 export function validateAdminInput(env, options = {}) {
   const requirePassword = options.requirePassword ?? false;
   const email = env.RAZA_OWNER_EMAIL?.trim().toLowerCase();
@@ -35,7 +47,7 @@ export function validateAdminInput(env, options = {}) {
 
   if (requirePassword) {
     if (!password || password.length < 12) {
-      throw new Error("RAZA_OWNER_INITIAL_PASSWORD (minimum 12 characters) is required when creating a new Supabase user");
+      throw new Error("RAZA_OWNER_INITIAL_PASSWORD (minimum 12 characters) is required when setting a password");
     }
   }
 
@@ -83,14 +95,55 @@ async function promptQuestion(rl, text) {
   if (typeof rl.question === "function") {
     return await rl.question(text);
   }
-  // Mock fallback for tests passing array or helper
   if (typeof rl.next === "function") {
     return rl.next();
   }
   throw new Error("Readline interface missing question method");
 }
 
+async function handleExistingAuthUserPassword({ supabase, authUser, email, env, rl, logger }) {
+  logger.log(`Notice: Supabase Auth user already exists for ${email}.`);
+  logger.log("What would you like to do with the password?");
+  logger.log("1. Keep existing password (link/promote current identity)");
+  logger.log("2. Set/reset password using RAZA_OWNER_INITIAL_PASSWORD");
+  logger.log("3. Cancel\n");
+
+  let passChoice = "";
+  while (!["1", "2", "3"].includes(passChoice)) {
+    passChoice = (await promptQuestion(rl, "Select password option (1/2/3): ")).trim();
+  }
+
+  if (passChoice === "3") {
+    logger.log("Operation cancelled. Password was not modified.");
+    return { action: "cancelled" };
+  }
+
+  if (passChoice === "2") {
+    const { password } = validateAdminInput(env, { requirePassword: true });
+    logger.log(`WARNING: You are about to reset the password for ${email}.`);
+    const confirmText = (await promptQuestion(rl, "Type RESET PASSWORD to confirm: ")).trim();
+    if (confirmText !== "RESET PASSWORD") {
+      logger.log("Password reset cancelled. Keeping existing password.");
+      return { action: "keep" };
+    }
+
+    const updated = await supabase.auth.admin.updateUserById(authUser.id, {
+      password,
+      email_confirm: true,
+    });
+    if (updated.error) {
+      throw updated.error;
+    }
+    logger.log("Supabase Auth password updated successfully.");
+    return { action: "reset" };
+  }
+
+  return { action: "keep" };
+}
+
 export async function runAdminBootstrap({ db, supabase, rl, env = process.env, logger = console }) {
+  validateProductionProject(env);
+
   logger.log("================================");
   logger.log("     Admin Account Creation     ");
   logger.log("================================");
@@ -123,7 +176,6 @@ export async function runAdminBootstrap({ db, supabase, rl, env = process.env, l
       return { status: "cancelled", code: 0 };
     }
 
-    // User confirmed 'yes' / 'y'
     let createdAuthUser = false;
     let authUser = await findAuthUserByEmail(supabase, email);
 
@@ -140,6 +192,11 @@ export async function runAdminBootstrap({ db, supabase, rl, env = process.env, l
       }
       authUser = created.data.user;
       createdAuthUser = true;
+    } else {
+      const res = await handleExistingAuthUserPassword({ supabase, authUser, email, env, rl, logger });
+      if (res.action === "cancelled") {
+        return { status: "cancelled", code: 0 };
+      }
     }
 
     try {
@@ -217,7 +274,6 @@ export async function runAdminBootstrap({ db, supabase, rl, env = process.env, l
       // -----------------------------------------------------------
       const { email, name, mobile } = validateAdminInput(env, { requirePassword: false });
 
-      // Check if proposed email is already an existing admin
       const isExistingAdmin = existingAdmins.some((a) => a.email?.toLowerCase() === email);
       if (isExistingAdmin) {
         logger.log("The proposed email already belongs to an active admin account.");
@@ -256,6 +312,11 @@ export async function runAdminBootstrap({ db, supabase, rl, env = process.env, l
         }
         authUser = created.data.user;
         createdAuthUser = true;
+      } else {
+        const res = await handleExistingAuthUserPassword({ supabase, authUser, email, env, rl, logger });
+        if (res.action === "cancelled") {
+          return { status: "cancelled", code: 0 };
+        }
       }
 
       try {
@@ -341,6 +402,11 @@ export async function runAdminBootstrap({ db, supabase, rl, env = process.env, l
         }
         authUser = created.data.user;
         createdAuthUser = true;
+      } else {
+        const res = await handleExistingAuthUserPassword({ supabase, authUser, email, env, rl, logger });
+        if (res.action === "cancelled") {
+          return { status: "cancelled", code: 0 };
+        }
       }
 
       try {
@@ -368,7 +434,6 @@ export async function runAdminBootstrap({ db, supabase, rl, env = process.env, l
           );
         }
 
-        // Only after new admin is created and verified, deactivate old admin
         if (primaryAdmin.id !== newUserId) {
           await db.query(
             "UPDATE public.users SET is_active = false, updated_at = now() WHERE id = $1",

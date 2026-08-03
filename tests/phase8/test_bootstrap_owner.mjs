@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { runAdminBootstrap, validateAdminInput, normalizePakistaniMobile } from "../../scripts/admin/bootstrap-owner.mjs";
 
+process.env.NODE_ENV = "test";
+
 function createMockReadline(inputs = []) {
   let index = 0;
   return {
@@ -121,10 +123,12 @@ function createMockDb(initialAdmins = [], options = {}) {
 function createMockSupabase(users = [], options = {}) {
   let authUsers = [...users];
   let deletedUserIds = [];
+  let updatedPasswords = [];
 
   return {
     authUsers,
     deletedUserIds,
+    updatedPasswords,
     auth: {
       admin: {
         async listUsers({ page = 1, perPage = 100 } = {}) {
@@ -141,6 +145,10 @@ function createMockSupabase(users = [], options = {}) {
           };
           authUsers.push(newUser);
           return { data: { user: newUser }, error: null };
+        },
+        async updateUserById(userId, options) {
+          updatedPasswords.push({ userId, options });
+          return { data: { user: { id: userId } }, error: null };
         },
         async deleteUser(id) {
           deletedUserIds.push(id);
@@ -326,7 +334,7 @@ async function runTests() {
     const existingSbUser = { id: "sb-existing-id", email: "preexisting@example.com" };
     const db = createMockDb([]);
     const supabase = createMockSupabase([existingSbUser]);
-    const rl = createMockReadline(["yes"]);
+    const rl = createMockReadline(["yes", "1"]);
     const logger = createMockLogger();
     const env = {
       RAZA_OWNER_EMAIL: "preexisting@example.com",
@@ -488,7 +496,43 @@ async function runTests() {
     console.log("✔ Scenario 13: Interactive prompt for missing URLs/env vars passed.");
   }
 
-  console.log("All 13 Admin Bootstrap Unit Tests Passed Successfully!");
+  // Scenario 14: Production Project Ref Guard validation
+  {
+    const { validateProductionProject } = await import("../../scripts/admin/bootstrap-owner.mjs");
+    assert.throws(
+      () => validateProductionProject({ NODE_ENV: "production", SUPABASE_URL: "https://wrongref.supabase.co" }),
+      /Target SUPABASE_URL does not match expected production project reference/
+    );
+    assert.equal(
+      validateProductionProject({ NODE_ENV: "production", SUPABASE_URL: "https://pqlmgqzpjjllhgalyhwz.supabase.co" }),
+      true
+    );
+    console.log("✔ Scenario 14: Production Project Ref Guard validation passed.");
+  }
+
+  // Scenario 15: Existing Supabase Auth identity password reset workflow
+  {
+    const db = createMockDb([]);
+    const existingAuthUser = { id: "auth-123", email: "existingauth@example.com" };
+    const supabase = createMockSupabase([existingAuthUser]);
+    const rl = createMockReadline(["yes", "2", "RESET PASSWORD"]); // yes to create admin, option 2 for reset password, confirm RESET PASSWORD
+    const logger = createMockLogger();
+    const env = {
+      RAZA_OWNER_EMAIL: "existingauth@example.com",
+      RAZA_OWNER_NAME: "Existing Auth",
+      RAZA_OWNER_MOBILE: "03109999999",
+      RAZA_OWNER_INITIAL_PASSWORD: "NewResetPassword123!",
+    };
+
+    const res = await runAdminBootstrap({ db, supabase, rl, env, logger });
+    assert.equal(res.status, "created");
+    assert.equal(supabase.updatedPasswords.length, 1);
+    assert.equal(supabase.updatedPasswords[0].userId, "auth-123");
+    assert.equal(supabase.updatedPasswords[0].options.password, "NewResetPassword123!");
+    console.log("✔ Scenario 15: Existing Supabase Auth identity password reset workflow passed.");
+  }
+
+  console.log("All 15 Admin Bootstrap Unit Tests Passed Successfully!");
 }
 
 runTests().catch((err) => {

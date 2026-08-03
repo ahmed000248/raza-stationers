@@ -35,6 +35,8 @@ interface AuthContextValue {
     password: string
     email: string
   }) => Promise<void>
+  verifyOtp: (email: string, token: string) => Promise<any>
+  resendOtp: (email: string) => Promise<void>
   logout: () => Promise<void>
   loginWithGoogle: (returnTo?: string) => Promise<void>
   resetPassword: (email: string) => Promise<void>
@@ -88,42 +90,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchProfile = React.useCallback(async (token: string) => {
     api.setAuthToken(token)
     try {
-      const profile: any = await api.getProfile()
-      const u: User = {
-        id: profile.id,
-        name: profile.name,
-        mobileNumber: profile.mobileNumber,
-        passwordHash: "",
-        role: profile.role,
-        isActive: true,
-        createdAt: profile.createdAt,
-      }
-      setUser(u)
+      const res: any = await api.getBootstrapStatus()
+      if (res.authenticated && res.registered && res.profile) {
+        const profile = res.profile
+        const u: User = {
+          id: profile.id,
+          name: profile.name,
+          mobileNumber: profile.mobileNumber,
+          passwordHash: "",
+          role: profile.role,
+          isActive: true,
+          createdAt: profile.createdAt,
+        }
+        setUser(u)
 
-      if (profile.businessUserLinks?.length > 0) {
-        const link = profile.businessUserLinks[0]
-        const biz = link.clientBusiness
-        setBusinessRole(link.role)
-        setClientBusiness({
-          id: biz.id,
-          businessName: biz.businessName,
-          ownerName: biz.contactPerson,
-          contactPerson: biz.contactPerson,
-          phone: biz.mobileNumber,
-          email: biz.email || "",
-          address: biz.address,
-          city: biz.city,
-          businessType: biz.businessType,
-          discountPercent: 0,
-          creditLimit: 0,
-          outstandingBalance: 0,
-          creditStatus: "active",
-          accountStatus: biz.accountStatus,
-          createdAt: biz.createdAt,
-        })
-        setAccountStatus(biz.accountStatus === "active" ? "approved" : "pending")
+        if (profile.businessUserLinks?.length > 0) {
+          const link = profile.businessUserLinks[0]
+          const biz = link.clientBusiness
+          setBusinessRole(link.role)
+          setClientBusiness({
+            id: biz.id,
+            businessName: biz.businessName,
+            ownerName: biz.contactPerson,
+            contactPerson: biz.contactPerson,
+            phone: biz.mobileNumber,
+            email: biz.email || "",
+            address: biz.address,
+            city: biz.city,
+            businessType: biz.businessType,
+            discountPercent: 0,
+            creditLimit: 0,
+            outstandingBalance: 0,
+            creditStatus: "active",
+            accountStatus: biz.accountStatus,
+            createdAt: biz.createdAt,
+          })
+          setAccountStatus(biz.accountStatus === "active" ? "approved" : "pending")
+        } else {
+          setAccountStatus("approved")
+        }
+      } else if (res.authenticated && !res.registered) {
+        setUser(null)
+        setClientBusiness(null)
+        setBusinessRole(null)
+        setAccountStatus("unregistered")
       } else {
-        setAccountStatus("approved")
+        setUser(null)
+        setAccountStatus("unregistered")
       }
     } catch (err) {
       console.warn("Failed to load profile for token", err)
@@ -229,24 +242,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       city: data.city,
     })
 
-    api.setAuthToken(token)
-
-    // Register user on NestJS side
-    await api.post("/auth/register-supabase", {
-      name: data.name,
-      mobileNumber: data.mobileNumber,
-    })
-
-    // Register client business details
-    await api.registerClient({
-      businessName: data.businessName,
-      businessType: data.businessType,
-      contactPerson: data.contactPerson,
-      mobileNumber: data.mobileNumber,
-      address: data.address,
-      city: data.city,
-    })
-
     await fetchProfile(token)
   }, [supabase, fetchProfile, api])
 
@@ -282,6 +277,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     await fetchProfile(token)
   }, [supabase, fetchProfile, api])
+
+  const verifyOtp = React.useCallback(async (email: string, token: string) => {
+    const { data, error } = await supabase.auth.verifyOtp({
+      email,
+      token,
+      type: "email",
+    })
+    if (error) throw new Error(error.message)
+    return data.session
+  }, [supabase])
+
+  const resendOtp = React.useCallback(async (email: string) => {
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email,
+    })
+    if (error) throw new Error(error.message)
+  }, [supabase])
 
   const loginWithGoogle = React.useCallback(async (returnTo = "/catalogue") => {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -337,6 +350,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     return { isApprovedBusiness: false }
   }, [accountStatus, clientBusiness])
+
   if (!isLoaded) {
     return <BrandedLoader fullScreen label="Restoring your secure session…" />
   }
@@ -352,6 +366,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         register,
         registerCustomer,
+        verifyOtp,
+        resendOtp,
         logout,
         loginWithGoogle,
         resetPassword,
