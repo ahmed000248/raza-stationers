@@ -3,8 +3,28 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { twoFactor } from "better-auth/plugins";
 import * as bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { getPostgresConnection } from "@raza-stationers/db";
+import pg from "pg";
 
-const prisma = new PrismaClient();
+function createPrismaClient(): PrismaClient {
+  const rawUrl = process.env.DATABASE_URL?.trim();
+  if (!rawUrl) {
+    return new PrismaClient({
+      adapter: new PrismaPg(new pg.Pool({ connectionString: "postgresql://localhost:5432/dummy" })),
+    });
+  }
+  const { connectionString, ssl, info } = getPostgresConnection(rawUrl, "DATABASE_URL");
+  const pool = new pg.Pool({
+    connectionString,
+    ssl,
+    max: 10,
+    options: `-c search_path=${info.schema},public`,
+  });
+  return new PrismaClient({ adapter: new PrismaPg(pool) });
+}
+
+const prisma = createPrismaClient();
 
 const authSecret =
   process.env.BETTER_AUTH_SECRET ||
