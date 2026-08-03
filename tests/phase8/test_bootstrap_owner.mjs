@@ -99,11 +99,11 @@ function createMockDb(initialAdmins = [], options = {}) {
         return { rowCount: 1, rows: [] };
       }
 
-      if (text.startsWith("UPDATE public.users SET role = 'staff'")) {
+      if (text.startsWith("UPDATE public.users SET is_active = false")) {
         const userId = params[0];
         const u = users.find((item) => item.id === userId);
         if (u) {
-          u.role = "staff";
+          u.is_active = false;
         }
         return { rowCount: 1, rows: [] };
       }
@@ -273,7 +273,7 @@ async function runTests() {
     const res = await runAdminBootstrap({ db, supabase, rl, env, logger });
     assert.equal(res.status, "replaced");
     assert.equal(res.code, 0);
-    assert.equal(db.users.find((u) => u.id === "admin-1").role, "staff");
+    assert.equal(db.users.find((u) => u.id === "admin-1").is_active, false);
     assert.equal(db.users.find((u) => u.email === "replacement@example.com").role, "owner");
     console.log("✔ Scenario 4: Existing admin -> replace first admin passed.");
   }

@@ -368,10 +368,10 @@ export async function runAdminBootstrap({ db, supabase, rl, env = process.env, l
           );
         }
 
-        // Only after new admin is created and verified, demote old admin
+        // Only after new admin is created and verified, deactivate old admin
         if (primaryAdmin.id !== newUserId) {
           await db.query(
-            "UPDATE public.users SET role = 'staff'::public.user_role, updated_at = now() WHERE id = $1",
+            "UPDATE public.users SET is_active = false, updated_at = now() WHERE id = $1",
             [primaryAdmin.id]
           );
         }
@@ -391,7 +391,7 @@ export async function runAdminBootstrap({ db, supabase, rl, env = process.env, l
 
         logger.log("Primary admin replaced successfully.");
         logger.log(`New Active Admin: ${name} (${email})`);
-        logger.log(`Old Admin (${primaryAdmin.email}) status: Demoted to staff role (historical records preserved).\n`);
+        logger.log(`Old Admin (${primaryAdmin.email}) status: Deactivated (historical records preserved).\n`);
         return { status: "replaced", code: 0, newUserId, oldUserId: primaryAdmin.id };
       } catch (err) {
         await db.query("ROLLBACK").catch(() => {});
