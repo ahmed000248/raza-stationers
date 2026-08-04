@@ -147,7 +147,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         mobileNumber: data.mobileNumber,
       } as any)
       if (res.error) {
-        const errMsg = res.error.message || (typeof res.error === 'string' ? res.error : "Failed to register")
+        const errObj = res.error as any
+        const errMsg = (typeof errObj === "string" ? errObj : errObj?.message) || "Failed to register"
         setAuthError(errMsg)
         throw new Error(errMsg)
       }
@@ -167,7 +168,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         mobileNumber: data.mobileNumber,
       } as any)
       if (res.error) {
-        const errMsg = res.error.message || (typeof res.error === 'string' ? res.error : "Failed to register customer")
+        const errObj = res.error as any
+        const errMsg = (typeof errObj === "string" ? errObj : errObj?.message) || "Failed to register customer"
         setAuthError(errMsg)
         throw new Error(errMsg)
       }
