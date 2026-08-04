@@ -303,6 +303,7 @@ export class RazaAPIClient {
     try {
       const res = await fetch(`${this.baseUrl}${path}`, {
         headers: this.getHeaders(),
+        credentials: "include",
         signal,
       });
       if (!res.ok) await this.handleErrorResponse(res, path);
@@ -321,6 +322,7 @@ export class RazaAPIClient {
       const res = await fetch(`${this.baseUrl}${path}`, {
         method: "DELETE",
         headers: this.getHeaders(),
+        credentials: "include",
       });
       if (!res.ok) await this.handleErrorResponse(res, path);
       return res.json();
@@ -337,6 +339,7 @@ export class RazaAPIClient {
       const res = await fetch(`${this.baseUrl}${path}`, {
         method: "PUT",
         headers: this.getHeaders(),
+        credentials: "include",
         body: JSON.stringify(body),
       });
       if (!res.ok) await this.handleErrorResponse(res, path);
@@ -354,6 +357,7 @@ export class RazaAPIClient {
       const res = await fetch(`${this.baseUrl}${path}`, {
         method: "POST",
         headers: this.getHeaders(),
+        credentials: "include",
         body: JSON.stringify(body),
       });
       if (!res.ok) await this.handleErrorResponse(res, path);
