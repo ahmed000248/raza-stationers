@@ -1,0 +1,6 @@
+{
+  "name": "Raza Stationers Mobile App",
+  "description": "Native mobile customer app for Raza Stationers, connecting wholesale & retail customers with catalog browsing, unit pricing, order tracking, credit management, and Better Auth authentication.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
