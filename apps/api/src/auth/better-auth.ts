@@ -35,6 +35,13 @@ const authSecret =
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL || "https://raza-stationers-api-staging.onrender.com",
   basePath: "/auth/api",
+  advanced: {
+    useSecureCookies: true,
+    defaultCookieAttributes: {
+      sameSite: "none",
+      secure: true,
+    },
+  },
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
