@@ -284,14 +284,14 @@ export class AuthService {
     return { success: true };
   }
 
-  private generateToken(user: { id: string; name: string; mobileNumber: string; role: string }) {
-    const payload = { sub: user.id, mobileNumber: user.mobileNumber, role: user.role };
+  private generateToken(user: { id: string; name: string; mobileNumber: string | null; role: string }) {
+    const payload = { sub: user.id, mobileNumber: user.mobileNumber || "", role: user.role };
     return {
       accessToken: this.jwtService.sign(payload),
       user: {
         id: user.id,
         name: user.name,
-        mobileNumber: user.mobileNumber,
+        mobileNumber: user.mobileNumber || "",
         role: user.role,
       },
     };
