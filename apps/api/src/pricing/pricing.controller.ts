@@ -1,11 +1,11 @@
 import { Controller, Get, Param, Query, UseGuards } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { BetterAuthGuard } from "../auth/guards/better-auth.guard";
 import { PricingService } from "./pricing.service";
 
 @ApiTags("Pricing")
 @Controller("pricing")
-@UseGuards(JwtAuthGuard)
+@UseGuards(BetterAuthGuard)
 @ApiBearerAuth()
 export class PricingController {
   constructor(private pricingService: PricingService) {}

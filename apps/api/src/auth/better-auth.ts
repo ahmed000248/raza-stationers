@@ -68,10 +68,10 @@ function createPrismaClient(): PrismaClient {
 
 const prisma = createPrismaClient();
 
-const authSecret =
-  process.env.BETTER_AUTH_SECRET ||
-  process.env.JWT_SECRET ||
-  "raza-stationers-default-secret-key-123456";
+const authSecret = process.env.BETTER_AUTH_SECRET || process.env.JWT_SECRET;
+if (!authSecret) {
+  throw new Error("BETTER_AUTH_SECRET (or JWT_SECRET) environment variable is required.");
+}
 
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL || "https://raza-stationers-api-staging.onrender.com",
@@ -134,9 +134,7 @@ export const auth = betterAuth({
     twoFactor({
       issuer: "Raza Stationers",
     }),
-    dash({
-      apiKey: process.env.BETTER_AUTH_API_KEY,
-    }),
+    ...(process.env.BETTER_AUTH_API_KEY ? [dash({ apiKey: process.env.BETTER_AUTH_API_KEY })] : []),
   ],
   trustedOrigins: [
     "http://localhost:3000",

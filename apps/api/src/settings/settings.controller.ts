@@ -1,13 +1,13 @@
 import { Controller, Get, Put, Body, UseGuards } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { BetterAuthGuard } from "../auth/guards/better-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { Roles } from "../auth/decorators/roles.decorator";
 import { SettingsService } from "./settings.service";
 
 @ApiTags("Settings")
 @Controller("settings")
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(BetterAuthGuard, RolesGuard)
 @Roles("owner")
 @ApiBearerAuth()
 export class SettingsController {

@@ -4,7 +4,7 @@ import { Request, Response } from "express";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./better-auth";
 import { AuthService } from "./auth.service";
-import { JwtAuthGuard } from "./guards/jwt-auth.guard";
+import { BetterAuthGuard } from "./guards/better-auth.guard";
 import { CurrentUser } from "./decorators/current-user.decorator";
 
 @ApiTags("Auth")
@@ -57,7 +57,7 @@ export class AuthController {
   }
 
   @Post("link")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Link current logged in user to a verified auth account" })
   linkSupabase(
@@ -78,35 +78,35 @@ export class AuthController {
   }
 
   @Post("totp/verify")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   @ApiBearerAuth()
   verifyTotp() {
     throw new BadRequestException("TOTP MFA requires a configured authentication provider.");
   }
 
   @Post("totp/setup")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   @ApiBearerAuth()
   setupTotp() {
     throw new BadRequestException("TOTP MFA requires a configured authentication provider.");
   }
 
   @Post("totp/enable")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   @ApiBearerAuth()
   enableTotp() {
     throw new BadRequestException("TOTP MFA requires a configured authentication provider.");
   }
 
   @Post("totp/disable")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   @ApiBearerAuth()
   disableTotp() {
     throw new BadRequestException("TOTP MFA requires a configured authentication provider.");
   }
 
   @Put("change-password")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Change password for authenticated user" })
   changePassword(@CurrentUser("id") userId: string, @Body() body: { currentPassword: string; newPassword: string }) {

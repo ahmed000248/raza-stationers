@@ -425,7 +425,7 @@ enum NotificationType {
 
 model User {
   id               String    @id @default(cuid())
-  mobileNumber     String    @unique @map("mobile_number")
+  mobileNumber     String?   @unique @map("mobile_number")
   email            String?   @unique
   emailVerified    Boolean   @default(false) @map("email_verified")
   image            String?

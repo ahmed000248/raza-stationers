@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Put, Param, Body, UseGuards } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { BetterAuthGuard } from "../auth/guards/better-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { Roles } from "../auth/decorators/roles.decorator";
 import { StaffService } from "./staff.service";
@@ -8,7 +8,7 @@ import { CurrentUser } from "../auth/decorators/current-user.decorator";
 
 @ApiTags("Staff")
 @Controller("staff")
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(BetterAuthGuard, RolesGuard)
 @Roles("owner")
 @ApiBearerAuth()
 export class StaffController {

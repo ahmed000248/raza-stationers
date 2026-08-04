@@ -9,13 +9,31 @@ services:
         value: production
       - key: DATABASE_SSL_MODE
         value: verify-full
-      - key: DATABASE_URL
-        sync: false
-      - key: SUPABASE_URL
-        sync: false
-      - key: SUPABASE_SERVICE_ROLE_KEY
+      - key: DIRECT_URL
         sync: false
       - key: JWT_SECRET
+        sync: false
+      - key: BETTER_AUTH_SECRET
+        sync: false
+      - key: BETTER_AUTH_URL
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: BETTER_AUTH_API_KEY
+        sync: false
+      - key: NEXT_PUBLIC_WEB_URL
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_FROM
         sync: false
       - key: CORS_ORIGINS
         sync: false

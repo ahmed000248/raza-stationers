@@ -81,7 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           createdAt: u.createdAt instanceof Date ? u.createdAt.toISOString() : String(u.createdAt),
         }
         setUser(mappedUser)
-        setAccountStatus("approved")
+        setAccountStatus(mappedUser.mobileNumber ? "approved" : "authenticated_unregistered")
         setAuthError(null)
       } else {
         setUser(null)

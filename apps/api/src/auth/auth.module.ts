@@ -6,6 +6,8 @@ import { AuthService } from "./auth.service";
 import { JwtStrategy } from "./strategies/jwt.strategy";
 import { SupabaseStrategy } from "./strategies/supabase.strategy";
 
+import { BetterAuthGuard } from "./guards/better-auth.guard";
+
 @Module({
   imports: [
     PassportModule.register({ defaultStrategy: "jwt" }),
@@ -23,7 +25,7 @@ import { SupabaseStrategy } from "./strategies/supabase.strategy";
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, SupabaseStrategy],
-  exports: [AuthService],
+  providers: [AuthService, JwtStrategy, SupabaseStrategy, BetterAuthGuard],
+  exports: [AuthService, BetterAuthGuard],
 })
 export class AuthModule {}

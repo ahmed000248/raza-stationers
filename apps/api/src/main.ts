@@ -46,8 +46,10 @@ async function bootstrap() {
   app.enableCors({
     origin: (requestOrigin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
       if (!requestOrigin) return callback(null, true);
-      if (corsOrigins.includes(requestOrigin)) return callback(null, true);
-      if (requestOrigin.endsWith(".vercel.app") || requestOrigin.includes("localhost") || requestOrigin.includes("raza-stationers")) return callback(null, true);
+      if (/^https:\/\/raza-stationers-(web|admin)(-[a-z0-9-]+)?\.vercel\.app$/.test(requestOrigin)) {
+        return callback(null, true);
+      }
+      if (requestOrigin.includes("localhost")) return callback(null, true);
       callback(new Error(`Origin ${requestOrigin} not allowed by CORS`));
     },
     credentials: true,

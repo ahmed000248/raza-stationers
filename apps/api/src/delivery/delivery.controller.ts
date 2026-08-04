@@ -1,13 +1,13 @@
 import { Controller, Get, Post, Put, Param, Query, Body, UseGuards } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { BetterAuthGuard } from "../auth/guards/better-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { Roles } from "../auth/decorators/roles.decorator";
 import { DeliveryService } from "./delivery.service";
 
 @ApiTags("Delivery")
-@Controller()
-@UseGuards(JwtAuthGuard, RolesGuard)
+@Controller("delivery")
+@UseGuards(BetterAuthGuard, RolesGuard)
 @Roles("owner", "admin", "delivery")
 @ApiBearerAuth()
 export class DeliveryController {

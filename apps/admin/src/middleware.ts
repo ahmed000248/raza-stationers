@@ -1,3 +1,4 @@
+import { getSessionCookie } from "better-auth/cookies";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
@@ -7,8 +8,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Protected admin routes fail closed when no replacement authentication provider is configured
-  return NextResponse.redirect(new URL("/login?reason=auth_unconfigured", request.url));
+  // Cookie-existence check; client-side AdminShell performs full cross-origin verification
+  const sessionCookie = getSessionCookie(request);
+  if (!sessionCookie) {
+    return NextResponse.redirect(new URL("/login?reason=auth_unconfigured", request.url));
+  }
+
+  return NextResponse.next();
 }
 
 export const config = {

@@ -4,11 +4,12 @@ import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { Roles } from "../auth/decorators/roles.decorator";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
+import { BetterAuthGuard } from "../auth/guards/better-auth.guard";
 import { InventoryService } from "./inventory.service";
 
 @ApiTags("Inventory")
-@Controller()
-@UseGuards(JwtAuthGuard)
+@Controller("inventory")
+@UseGuards(BetterAuthGuard)
 @ApiBearerAuth()
 export class InventoryController {
   constructor(private inventoryService: InventoryService) {}

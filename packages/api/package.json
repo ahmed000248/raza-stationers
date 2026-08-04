@@ -11,7 +11,7 @@
   "dependencies": {
     "@better-auth/infra": "^0.3.7",
     "@raza-stationers/types": "*",
-    "better-auth": "^1.1.0"
+    "better-auth": "^1.6.25"
   },
   "devDependencies": {
     "typescript": "^5"
