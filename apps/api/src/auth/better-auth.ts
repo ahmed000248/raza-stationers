@@ -134,7 +134,6 @@ export const auth = betterAuth({
     twoFactor({
       issuer: "Raza Stationers",
     }),
-    ...(process.env.BETTER_AUTH_API_KEY ? [dash({ apiKey: process.env.BETTER_AUTH_API_KEY })] : []),
   ],
   trustedOrigins: [
     "http://localhost:3000",
