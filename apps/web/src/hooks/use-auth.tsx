@@ -198,7 +198,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const resetPassword = React.useCallback(
     async (email: string) => {
       setAuthError(null)
-      const res = await authClient.forgetPassword({
+      const res = await (authClient as any).forgetPassword({
         email,
         redirectTo: "/reset-password",
       })
@@ -219,7 +219,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!resetToken) {
         throw new Error("Reset token is missing or expired. Please request a new password reset link.")
       }
-      const res = await authClient.resetPassword({
+      const res = await (authClient as any).resetPassword({
         newPassword: password,
         token: resetToken,
       })
