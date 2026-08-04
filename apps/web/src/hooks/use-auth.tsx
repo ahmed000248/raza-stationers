@@ -195,8 +195,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [authClient]
   )
 
-  const resetPassword = React.useCallback(async () => {}, [])
-  const updatePassword = React.useCallback(async () => {}, [])
+  const resetPassword = React.useCallback(
+    async (email: string) => {
+      setAuthError(null)
+      const res = await authClient.forgetPassword({
+        email,
+        redirectTo: "/reset-password",
+      })
+      if (res.error) {
+        const errObj = res.error as any
+        const errMsg = (typeof errObj === "string" ? errObj : errObj?.message) || "Failed to send reset password link"
+        setAuthError(errMsg)
+        throw new Error(errMsg)
+      }
+    },
+    [authClient]
+  )
+
+  const updatePassword = React.useCallback(
+    async (password: string, token?: string) => {
+      setAuthError(null)
+      const resetToken = token || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("token") : null)
+      if (!resetToken) {
+        throw new Error("Reset token is missing or expired. Please request a new password reset link.")
+      }
+      const res = await authClient.resetPassword({
+        newPassword: password,
+        token: resetToken,
+      })
+      if (res.error) {
+        const errObj = res.error as any
+        const errMsg = (typeof errObj === "string" ? errObj : errObj?.message) || "Failed to reset password. Link may be expired."
+        setAuthError(errMsg)
+        throw new Error(errMsg)
+      }
+    },
+    [authClient]
+  )
   const linkAccount = React.useCallback(async () => {}, [])
   const getAccessToken = React.useCallback(async () => null, [])
 
