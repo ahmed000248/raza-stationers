@@ -1,19 +1,9 @@
-import { getSessionCookie } from "better-auth/cookies";
 import { NextResponse, type NextRequest } from "next/server";
 
+// Middleware cannot see cross-domain Better Auth session cookies (which belong to the API origin).
+// Protected admin routes are enforced client-side by AdminShell/useAdminAuth via cross-origin fetch.
+// Legacy fail-closed fallback reason=auth_unconfigured is handled by AdminShell.
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  if (pathname === "/login" || pathname.startsWith("/auth")) {
-    return NextResponse.next();
-  }
-
-  // Cookie-existence check; client-side AdminShell performs full cross-origin verification
-  const sessionCookie = getSessionCookie(request);
-  if (!sessionCookie) {
-    return NextResponse.redirect(new URL("/login?reason=auth_unconfigured", request.url));
-  }
-
   return NextResponse.next();
 }
 
