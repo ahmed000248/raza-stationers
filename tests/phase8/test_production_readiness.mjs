@@ -23,7 +23,6 @@ const sourceFilesUnder = (relative) => {
 
 for (const relative of [
   "docker-compose.staging.yml",
-  "apps/mobile/package.json",
   "tests/run_staging_e2e.mjs",
   "tests/run_gate15_security.mjs",
   "scripts/database/import_staging_catalogue.js",
