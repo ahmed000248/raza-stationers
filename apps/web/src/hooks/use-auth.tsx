@@ -164,7 +164,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: data.email,
         password: data.password,
         name: data.name,
-        role: "customer",
+        role: "business_user",
         mobileNumber: data.mobileNumber,
       } as any)
       if (res.error) {
