@@ -143,10 +143,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: data.email,
         password: data.password,
         name: data.name,
-      })
+        role: "business_user",
+        mobileNumber: data.mobileNumber,
+      } as any)
       if (res.error) {
-        setAuthError(res.error.message || "Failed to register")
-        throw new Error(res.error.message || "Failed to register")
+        const errMsg = res.error.message || (typeof res.error === 'string' ? res.error : "Failed to register")
+        setAuthError(errMsg)
+        throw new Error(errMsg)
       }
       await checkSession()
     },
@@ -160,10 +163,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: data.email,
         password: data.password,
         name: data.name,
-      })
+        role: "customer",
+        mobileNumber: data.mobileNumber,
+      } as any)
       if (res.error) {
-        setAuthError(res.error.message || "Failed to register customer")
-        throw new Error(res.error.message || "Failed to register customer")
+        const errMsg = res.error.message || (typeof res.error === 'string' ? res.error : "Failed to register customer")
+        setAuthError(errMsg)
+        throw new Error(errMsg)
       }
       await checkSession()
     },

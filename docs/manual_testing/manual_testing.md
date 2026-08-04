@@ -63,3 +63,6 @@ when this passes then admin can be tested
 3. Wholesale Account registration : Button working , displaying email verification sent to email but no mail can be seen (recommended solution: add a OTP verification send an OTP to the customer email address and verify it from the website)
 
 
+### ADMIN
+
+1. Admin set to ahmedraa0007@gmail.com through the bootstrap file but not working , showing invalid credentials.
