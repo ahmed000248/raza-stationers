@@ -125,10 +125,18 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       if (res.error) {
         throw new Error(res.error.message || "Failed to enable 2FA")
       }
+      const totpURI = (res.data as any)?.totpURI || ""
+      let secretKey = totpURI
+      try {
+        if (totpURI.startsWith("otpauth://")) {
+          const url = new URL(totpURI)
+          secretKey = url.searchParams.get("secret") || totpURI
+        }
+      } catch {}
       return {
         factorId: "totp",
-        qrCode: (res.data as any)?.totpURI || "",
-        secret: (res.data as any)?.totpURI || "",
+        qrCode: totpURI,
+        secret: secretKey,
       }
     },
     [authClient]

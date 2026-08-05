@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { Smartphone, Copy, CheckCircle } from "lucide-react"
+import QRCode from "qrcode"
 
 interface TotpEnrollViewProps {
   onEnroll: (password: string) => Promise<{ factorId: string; qrCode: string; secret: string }>
@@ -36,7 +37,8 @@ export function TotpEnrollView({ onEnroll, onConfirm }: TotpEnrollViewProps) {
     try {
       const result = await onEnroll(password)
       setFactorId(result.factorId)
-      setQrCode(result.qrCode)
+      const qrDataUrl = await QRCode.toDataURL(result.qrCode, { margin: 2, width: 250 })
+      setQrCode(qrDataUrl)
       setSecret(result.secret)
       setStep("scan")
     } catch (err: any) {
