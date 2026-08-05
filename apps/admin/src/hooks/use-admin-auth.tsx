@@ -57,11 +57,11 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
         setRole((mappedUser.role as AdminRole) || "admin")
 
         const is2faEnabled = Boolean((u as any).twoFactorEnabled)
-        const is2faVerified = Boolean((res.data.session as any)?.twoFactorVerified)
+        const isSessionVerified = typeof window !== "undefined" && Boolean(sessionStorage.getItem(`totp_verified_${u.id}`))
 
         if (is2faEnabled) {
           setNextLevel("aal2")
-          setCurrentLevel(is2faVerified ? "aal2" : "aal1")
+          setCurrentLevel(isSessionVerified ? "aal2" : "aal1")
         } else {
           setCurrentLevel("aal1")
           setNextLevel("aal1")
@@ -84,11 +84,15 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = React.useCallback(async () => {
     try {
+      if (user?.id && typeof window !== "undefined") {
+        sessionStorage.removeItem(`totp_verified_${user.id}`)
+      }
       await authClient.signOut()
     } catch {}
     setUser(null)
     setRole(null)
-  }, [authClient])
+    setCurrentLevel("aal1")
+  }, [authClient, user?.id])
 
   const login = React.useCallback(
     async (identifier: string, password: string) => {
@@ -116,9 +120,13 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       if (res.error) {
         throw new Error(res.error.message || "Invalid 2FA code")
       }
+      if (user?.id && typeof window !== "undefined") {
+        sessionStorage.setItem(`totp_verified_${user.id}`, "true")
+      }
+      setCurrentLevel("aal2")
       await refreshSession()
     },
-    [authClient, refreshSession]
+    [authClient, refreshSession, user?.id]
   )
 
   const enrollMfa = React.useCallback(
@@ -153,9 +161,13 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       if (res.error) {
         throw new Error(res.error.message || "Failed to confirm 2FA code")
       }
+      if (user?.id && typeof window !== "undefined") {
+        sessionStorage.setItem(`totp_verified_${user.id}`, "true")
+      }
+      setCurrentLevel("aal2")
       await refreshSession()
     },
-    [authClient, refreshSession]
+    [authClient, refreshSession, user?.id]
   )
 
   const unenrollMfa = React.useCallback(
