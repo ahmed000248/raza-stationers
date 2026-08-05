@@ -1,11 +1,11 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
+import { CanActivate, ExecutionContext, Injectable, Optional, UnauthorizedException } from "@nestjs/common";
 import { fromNodeHeaders } from "better-auth/node";
 import { auth } from "../better-auth";
 import { AuthService } from "../auth.service";
 
 @Injectable()
 export class BetterAuthGuard implements CanActivate {
-  constructor(private authService?: AuthService) {}
+  constructor(@Optional() private authService?: AuthService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();

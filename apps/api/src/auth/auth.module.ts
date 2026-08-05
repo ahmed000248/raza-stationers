@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { Global, Module } from "@nestjs/common";
 import { JwtModule } from "@nestjs/jwt";
 import { PassportModule } from "@nestjs/passport";
 import { AuthController } from "./auth.controller";
@@ -8,6 +8,7 @@ import { SupabaseStrategy } from "./strategies/supabase.strategy";
 
 import { BetterAuthGuard } from "./guards/better-auth.guard";
 
+@Global()
 @Module({
   imports: [
     PassportModule.register({ defaultStrategy: "jwt" }),
