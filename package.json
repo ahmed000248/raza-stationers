@@ -42,6 +42,7 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "@better-auth/infra": "^0.3.7"
+    "@better-auth/infra": "^0.3.7",
+    "kysely": "^0.29.4"
   }
 }
