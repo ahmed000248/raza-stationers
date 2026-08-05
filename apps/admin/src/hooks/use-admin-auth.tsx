@@ -51,12 +51,17 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
           role: ((u as any).role as any) || "admin",
           isActive: true,
           createdAt: u.createdAt instanceof Date ? u.createdAt.toISOString() : String(u.createdAt),
-        }
+          twoFactorEnabled: Boolean((u as any).twoFactorEnabled),
+        } as any
         setUser(mappedUser)
         setRole((mappedUser.role as AdminRole) || "admin")
-        if ((u as any).twoFactorEnabled) {
-          setCurrentLevel("aal2")
+
+        const is2faEnabled = Boolean((u as any).twoFactorEnabled)
+        const is2faVerified = Boolean((res.data.session as any)?.twoFactorVerified)
+
+        if (is2faEnabled) {
           setNextLevel("aal2")
+          setCurrentLevel(is2faVerified ? "aal2" : "aal1")
         } else {
           setCurrentLevel("aal1")
           setNextLevel("aal1")

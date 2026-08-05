@@ -116,19 +116,16 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   // ── MFA Challenge Gate ────────────────────────────────────────────────────────
   // Admin/owner enrolled but session is only AAL1 — needs step-up
   if (needsMfaStepUp) {
-    if (!pendingFactorId || !pendingChallengeId) {
-      return <BrandedLoader label="Preparing two-factor verification…" />
-    }
     return (
       <>
         <TotpChallengeView
-          factorId={pendingFactorId}
-          challengeId={pendingChallengeId}
-          onVerify={async (fId, cId, code) => {
-            await verifyMfa(fId, cId, code)
+          factorId="totp"
+          challengeId="totp"
+          onVerify={async (_fId, _cId, code) => {
+            await verifyMfa("totp", "totp", code)
             await refreshSession()
           }}
-          onNewChallenge={issueFreshChallenge}
+          onNewChallenge={async () => ({ factorId: "totp", challengeId: "totp" })}
         />
         <ToastContainer toasts={toasts} onDismiss={handleDismissToast} />
       </>
