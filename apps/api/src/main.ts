@@ -37,19 +37,32 @@ async function bootstrap() {
     ?.split(",")
     .map((origin) => origin.trim())
     .filter(Boolean);
-  const corsOrigins = configuredOrigins?.length
-    ? configuredOrigins
-    : production
-      ? ["https://raza-stationers-web.vercel.app", "https://raza-stationers-admin-seven.vercel.app"]
-      : ["http://localhost:3000", "http://localhost:3001"];
+  const allowedExactOrigins = new Set(
+    configuredOrigins?.length
+      ? configuredOrigins
+      : [
+          "http://localhost:3000",
+          "http://localhost:3001",
+          "http://localhost:3002",
+          "http://localhost:4000",
+          "https://raza-stationers-web.vercel.app",
+          "https://raza-stationers-admin-seven.vercel.app",
+        ]
+  );
 
   app.enableCors({
     origin: (requestOrigin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
       if (!requestOrigin) return callback(null, true);
+      if (allowedExactOrigins.has(requestOrigin)) return callback(null, true);
       if (/^https:\/\/raza-stationers-(web|admin)(-[a-z0-9-]+)?\.vercel\.app$/.test(requestOrigin)) {
         return callback(null, true);
       }
-      if (requestOrigin.includes("localhost")) return callback(null, true);
+      try {
+        const url = new URL(requestOrigin);
+        if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
+          return callback(null, true);
+        }
+      } catch {}
       callback(new Error(`Origin ${requestOrigin} not allowed by CORS`));
     },
     credentials: true,

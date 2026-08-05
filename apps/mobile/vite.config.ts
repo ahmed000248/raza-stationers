@@ -6,6 +6,10 @@ import {defineConfig} from 'vite';
 export default defineConfig(() => {
   return {
     plugins: [react(), tailwindcss()],
+    define: {
+      'process.env.EXPO_PUBLIC_API_URL': JSON.stringify(process.env.EXPO_PUBLIC_API_URL || 'https://raza-stationers-api-staging.onrender.com'),
+      'process.env.NEXT_PUBLIC_API_URL': JSON.stringify(process.env.NEXT_PUBLIC_API_URL || 'https://raza-stationers-api-staging.onrender.com'),
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

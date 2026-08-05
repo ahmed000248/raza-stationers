@@ -64,26 +64,12 @@ export async function createOrderApi(orderPayload: Partial<Order>): Promise<Orde
     });
     if (res.ok) {
       const data = await res.json();
-      return data.order;
+      return data.order || data;
     }
-  } catch (err) {
-    console.warn('API error creating order, fallback to local', err);
+    const errText = await res.text().catch(() => "Order placement failed");
+    throw new Error(errText || "Failed to place order");
+  } catch (err: any) {
+    console.error('API error creating order:', err);
+    throw new Error(err.message || 'Unable to connect to backend service to place order');
   }
-
-  const newId = `RS-${Math.floor(20500 + Math.random() * 500)}`;
-  return {
-    id: newId,
-    date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-    stageIndex: 0,
-    city: orderPayload.city || 'Wah Cantt',
-    address: orderPayload.address || 'College Road, Wah Cantt',
-    recipientName: orderPayload.recipientName || 'Valued Customer',
-    phone: orderPayload.phone || '0300 1234567',
-    items: orderPayload.items || [],
-    subtotal: orderPayload.subtotal || 0,
-    deliveryFee: orderPayload.deliveryFee || 0,
-    totalAmount: orderPayload.totalAmount || 0,
-    paymentMethod: orderPayload.paymentMethod || 'cod',
-    transferRef: orderPayload.transferRef
-  };
 }

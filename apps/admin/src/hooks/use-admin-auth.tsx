@@ -117,8 +117,11 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   )
 
   const enrollMfa = React.useCallback(
-    async (password?: string) => {
-      const res = await authClient.twoFactor.enable({ password: password || "" })
+    async (password: string) => {
+      if (!password || !password.trim()) {
+        throw new Error("Password is required to enable 2FA")
+      }
+      const res = await authClient.twoFactor.enable({ password })
       if (res.error) {
         throw new Error(res.error.message || "Failed to enable 2FA")
       }
@@ -143,8 +146,11 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   )
 
   const unenrollMfa = React.useCallback(
-    async (factorId?: string, password?: string) => {
-      const res = await authClient.twoFactor.disable({ password: password || "" })
+    async (password: string) => {
+      if (!password || !password.trim()) {
+        throw new Error("Password is required to disable 2FA")
+      }
+      const res = await authClient.twoFactor.disable({ password })
       if (res.error) {
         throw new Error(res.error.message || "Failed to disable 2FA")
       }

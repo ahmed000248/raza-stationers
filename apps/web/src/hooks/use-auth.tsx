@@ -55,6 +55,20 @@ const AuthContext = React.createContext<AuthContextValue | null>(null)
 
 const API_BASE = getApiBaseUrl()
 
+function OnboardingGate({ children }: { children: React.ReactNode }) {
+  const { accountStatus } = useAuth()
+  const pathname = usePathname()
+  const router = useRouter()
+
+  React.useEffect(() => {
+    if (accountStatus === "authenticated_unregistered" && pathname !== "/onboarding" && !pathname.startsWith("/auth")) {
+      router.replace("/onboarding")
+    }
+  }, [accountStatus, pathname, router])
+
+  return <>{children}</>
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [accountStatus, setAccountStatus] = React.useState<AccountStatus>("loading")
   const [user, setUser] = React.useState<User | null>(null)
@@ -83,15 +97,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(mappedUser)
         setAccountStatus(mappedUser.mobileNumber ? "approved" : "authenticated_unregistered")
         setAuthError(null)
+
+        api.getMyClient().then((res: any) => {
+          if (res?.clientBusiness) {
+            setClientBusiness(res.clientBusiness)
+            setBusinessRole(res.role || "business_owner")
+          }
+        }).catch(() => {})
       } else {
         setUser(null)
+        setClientBusiness(null)
+        setBusinessRole(null)
         setAccountStatus("guest")
       }
     } catch {
       setUser(null)
       setAccountStatus("guest")
     }
-  }, [authClient])
+  }, [authClient, api])
 
   React.useEffect(() => {
     checkSession()

@@ -135,6 +135,10 @@ export class RazaAPIClient {
     return this.post("/clients", data);
   }
 
+  async getMyClient() {
+    return this.get("/clients/me");
+  }
+
   async getClient(id: string) {
     return this.get(`/clients/${id}`);
   }

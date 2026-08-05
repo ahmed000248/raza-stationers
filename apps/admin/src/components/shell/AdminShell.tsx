@@ -72,8 +72,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     throw new Error(AUTH_PROVIDER_NOT_CONFIGURED)
   }, [])
 
-  const needsMfaStepUp = false
-  const needsMfaEnrollment = false
+  const isMfaRole = Boolean(role && MFA_REQUIRED_ROLES.includes(role))
+  const userTwoFactorEnabled = Boolean((user as any)?.twoFactorEnabled)
+
+  const needsMfaEnrollment = isMfaRole && !userTwoFactorEnabled
+  const needsMfaStepUp = isMfaRole && userTwoFactorEnabled && currentLevel !== "aal2"
 
   React.useEffect(() => {
     if (needsMfaStepUp && !pendingFactorId) {

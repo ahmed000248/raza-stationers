@@ -6,6 +6,15 @@ import { normalizePakistaniMobile } from "@raza-stationers/validation";
 export class ClientsService {
   constructor(private prisma: PrismaService) {}
 
+  async findMyClient(userId: string) {
+    const link = await this.prisma.businessUserLink.findFirst({
+      where: { userId },
+      include: { clientBusiness: true },
+    });
+    if (!link) return { clientBusiness: null, role: null };
+    return { clientBusiness: link.clientBusiness, role: link.role };
+  }
+
   async findAll(query: { page?: number; limit?: number; status?: string }) {
     const page = query.page || 1;
     const limit = query.limit || 20;

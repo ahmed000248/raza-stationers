@@ -30,6 +30,14 @@ export class ClientsController {
     return this.clientsService.register(userId, body);
   }
 
+  @Get("me")
+  @UseGuards(BetterAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Get current user linked client business" })
+  findMyClient(@CurrentUser("id") userId: string) {
+    return this.clientsService.findMyClient(userId);
+  }
+
   @Get(":id")
   @UseGuards(BetterAuthGuard)
   @ApiBearerAuth()
