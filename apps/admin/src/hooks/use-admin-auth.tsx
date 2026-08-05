@@ -15,9 +15,9 @@ interface AdminAuthContextValue {
   nextLevel: string
   login: (identifier: string, password: string) => Promise<{ requiresMfa: boolean; factorId?: string; challengeId?: string }>
   verifyMfa: (factorId: string, challengeId: string, code: string) => Promise<void>
-  enrollMfa: (password?: string) => Promise<{ factorId: string; qrCode: string; secret: string }>
+  enrollMfa: (password: string) => Promise<{ factorId: string; qrCode: string; secret: string }>
   confirmEnrollMfa: (factorId: string, code: string) => Promise<void>
-  unenrollMfa: (factorId?: string, password?: string) => Promise<void>
+  unenrollMfa: (password: string) => Promise<void>
   logout: () => Promise<void>
   refreshSession: () => Promise<void>
   api: ReturnType<typeof createAPIClient>
