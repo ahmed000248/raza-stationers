@@ -44,10 +44,6 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
 
-  // MFA challenge state (for already-enrolled users who need AAL2 step-up)
-  const [pendingFactorId, setPendingFactorId] = React.useState<string | null>(null)
-  const [pendingChallengeId, setPendingChallengeId] = React.useState<string | null>(null)
-
   React.useEffect(() => {
     if (loading) return
     if (!user && pathname !== "/login") router.replace(`/login?next=${encodeURIComponent(pathname)}`)
@@ -68,21 +64,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const role = adminRole as AdminRole
   const contextValue = React.useMemo(() => ({ role, userName: user?.name || "Staff", alertCount: 3, addToast }), [role, user, addToast])
 
-  const issueFreshChallenge = React.useCallback(async () => {
-    throw new Error(AUTH_PROVIDER_NOT_CONFIGURED)
-  }, [])
-
   const isMfaRole = Boolean(role && MFA_REQUIRED_ROLES.includes(role))
   const userTwoFactorEnabled = Boolean((user as any)?.twoFactorEnabled)
 
   const needsMfaEnrollment = isMfaRole && !userTwoFactorEnabled
   const needsMfaStepUp = isMfaRole && userTwoFactorEnabled && currentLevel !== "aal2"
-
-  React.useEffect(() => {
-    if (needsMfaStepUp && !pendingFactorId) {
-      issueFreshChallenge().catch(console.error)
-    }
-  }, [needsMfaStepUp, pendingFactorId, issueFreshChallenge])
 
   // ── Loading ──────────────────────────────────────────────────────────────────
   if (loading) {
