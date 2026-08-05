@@ -1658,14 +1658,15 @@ model Verification {
 }
 
 model TwoFactor {
-  id                      String   @id
+  id                      String    @id
   secret                  String
-  backupCodes             String   @map("backup_codes")
-  userId                  String   @unique @map("user_id")
-  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  verified                Boolean? @default(false)
-  failedVerificationCount Int?     @default(0) @map("failed_verification_count")
-  transientSecret         String?  @map("transient_secret")
+  backupCodes             String    @map("backup_codes")
+  userId                  String    @unique @map("user_id")
+  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  verified                Boolean?  @default(false)
+  failedVerificationCount Int?      @default(0) @map("failed_verification_count")
+  transientSecret         String?   @map("transient_secret")
+  lockedUntil             DateTime? @map("locked_until")
 
   @@map("two_factor")
 }
