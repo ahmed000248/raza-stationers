@@ -44,6 +44,6 @@
   "dependencies": {
     "@better-auth/infra": "^0.3.7",
     "kysely": "^0.28.5",
-    "lucide-react": "^1.28.0"
+    "lucide-react": "^0.474.0"
   }
 }

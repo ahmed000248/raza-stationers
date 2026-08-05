@@ -24,6 +24,9 @@ export function createBetterAuthClient(baseUrl: string) {
   return createAuthClient({
     baseURL: `${baseUrl}/auth/api`,
     plugins: [twoFactorClient()],
+    fetchOptions: {
+      credentials: "include",
+    },
   });
 }
 
