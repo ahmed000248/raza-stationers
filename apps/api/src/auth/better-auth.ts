@@ -73,6 +73,8 @@ const authSecret = process.env.BETTER_AUTH_SECRET || process.env.JWT_SECRET!;
 const isProd = process.env.NODE_ENV === "production";
 const authUrl = process.env.BETTER_AUTH_URL;
 
+const googleRedirectURI = process.env.GOOGLE_REDIRECT_URI?.trim();
+
 export const auth = betterAuth({
   baseURL: authUrl || "http://localhost:4000",
   basePath: "/auth/api",
@@ -127,6 +129,7 @@ export const auth = betterAuth({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
       enabled: Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
+      ...(googleRedirectURI ? { redirectURI: googleRedirectURI } : {}),
     },
   },
   plugins: [

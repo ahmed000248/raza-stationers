@@ -272,14 +272,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loginWithGoogle = React.useCallback(
     async (returnTo?: string) => {
-      setAuthError(null)
-      await authClient.signIn.social({
+      setAuthError(null);
+
+      if (typeof window === "undefined") {
+        throw new Error("Google sign-in must start in the browser.");
+      }
+
+      const origin = window.location.origin;
+      const destination = returnTo || "/catalogue";
+
+      const result = await authClient.signIn.social({
         provider: "google",
-        callbackURL: typeof window !== "undefined" ? window.location.origin + (returnTo || "/catalogue") : "/catalogue",
-      })
+        callbackURL: `${origin}${destination}`,
+        errorCallbackURL: `${origin}/signin?error=google_oauth`,
+        newUserCallbackURL: `${origin}/onboarding`,
+      });
+
+      if (result?.error) {
+        throw new Error(
+          result.error.message || "Google sign-in could not be started."
+        );
+      }
     },
     [authClient]
-  )
+  );
 
   const resetPassword = React.useCallback(
     async (email: string) => {

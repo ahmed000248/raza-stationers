@@ -39,4 +39,15 @@ export function validateEnvironment(): void {
   if (hasGoogleId !== hasGoogleSecret) {
     throw new Error("Both GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are required when configuring Google OAuth.");
   }
+
+  if (
+    isProd &&
+    hasGoogleId &&
+    hasGoogleSecret &&
+    !process.env.GOOGLE_REDIRECT_URI?.trim()
+  ) {
+    throw new Error(
+      "GOOGLE_REDIRECT_URI is required when Google OAuth is enabled in production."
+    );
+  }
 }
