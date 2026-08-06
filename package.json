@@ -42,7 +42,8 @@
     "test:phase9:h06": "node tests/phase9/test_h06_revocation.mjs",
     "test:phase9:h07": "node tests/phase9/test_h07_database_security.mjs",
     "test:phase9:h08": "node tests/phase9/test_h08_trusted_origins.mjs",
-    "test:phase9:m01": "node tests/phase9/test_m01_unauthorized_state_clearing.mjs",
+    "test:phase9": "node tests/phase9/run_all_phase9_tests.mjs",
+    "test:phase9:m02": "node tests/phase9/run_all_phase9_tests.mjs",
     "test:integration": "node tests/run_all_tests_disposable.mjs",
     "admin:bootstrap-owner": "node scripts/admin/bootstrap-owner.mjs",
     "verify": "npm run db:validate && npm run db:generate && npm run typecheck && npm run lint && npm run build"

@@ -30,7 +30,7 @@
 | 15 | H-07 | Supabase RLS does not provide tenant isolation | High | PASSED | 875fc1b |
 | 16 | H-08 | Trusted origins and cookie settings are inconsistent | High | PASSED | c16f4b6 |
 | 17 | M-01 | Unauthorized responses do not clear stale frontend state | Medium | PASSED | 6e7cae8 |
-| 18 | M-02 | Phase 9 has no dedicated authentication regression suite | Medium | NOT STARTED | |
+| 18 | M-02 | Phase 9 has no dedicated authentication regression suite | Medium | PASSED | 71e644b |
 | 19 | M-03 | Important foreign keys lack indexes | Medium | NOT STARTED | |
 | 20 | M-04 | Product creation can leave partial records | Medium | NOT STARTED | |
 
@@ -458,10 +458,30 @@
 - Tests Run:
   - `npm run test:phase9:m01`
   - `npm test`
-- Test Results: All unit and regression tests passed 100%. Verified invocation of `onUnauthorized` callback on 401 responses and state clearing across web and admin React auth providers.
 - Remaining Risks: None. Frontend user and session state are cleared immediately on HTTP 401 responses.
 - Commit Hash: 6e7cae8
 - Notes: M-01 implementation and verification complete.
+
+### M-02 — Phase 9 has no dedicated authentication regression suite
+
+- Status: PASSED
+- Started At: 2026-08-06T20:22:00+05:00
+- Completed At: 2026-08-06T20:23:00+05:00
+- Root Cause Confirmed: Dedicated runner for Phase 9 Better Auth migration & security issues was missing from root scripts.
+- Files Changed:
+  - tests/phase9/run_all_phase9_tests.mjs (NEW)
+  - package.json
+  - docs/manual_testing/third_audit_progress.md
+- Database Changes: None
+- Environment Changes: None
+- Tests Run:
+  - `npm run test:phase9`
+  - `npm test`
+- Test Results: All unit and regression tests passed 100%. Executed all 17 Phase 9 test scripts sequentially via `run_all_phase9_tests.mjs`.
+- Remaining Risks: None. `npm run test:phase9` provides a dedicated, reproducible Phase 9 regression suite.
+- Commit Hash: 71e644b
+- Notes: M-02 implementation and verification complete.
+
 
 
 
