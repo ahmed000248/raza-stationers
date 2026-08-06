@@ -281,17 +281,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const origin = window.location.origin;
       const destination = returnTo || "/catalogue";
 
-      const result = await authClient.signIn.social({
-        provider: "google",
-        callbackURL: `${origin}${destination}`,
-        errorCallbackURL: `${origin}/signin?error=google_oauth`,
-        newUserCallbackURL: `${origin}/onboarding`,
-      });
+      try {
+        const result = await authClient.signIn.social({
+          provider: "google",
+          callbackURL: `${origin}${destination}`,
+          errorCallbackURL: `${origin}/signin?error=google_oauth`,
+          newUserCallbackURL: `${origin}/onboarding`,
+        });
 
-      if (result?.error) {
-        throw new Error(
-          result.error.message || "Google sign-in could not be started."
-        );
+        if (result?.error) {
+          const msg = result.error.message || "Google sign-in could not be started.";
+          setAuthError(msg);
+          throw new Error(msg);
+        }
+      } catch (err: any) {
+        const msg = err?.message?.includes("404") || err?.status === 404 || String(err).includes("404")
+          ? "Google OAuth is not enabled on the backend. Please check GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in Render environment variables."
+          : err?.message || "Google sign-in could not be started.";
+        setAuthError(msg);
+        throw new Error(msg);
       }
     },
     [authClient]
