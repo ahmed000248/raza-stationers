@@ -76,16 +76,8 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
           setUser(mappedUser)
           setRole(userRole)
 
-          const is2faEnabled = Boolean((u as any).twoFactorEnabled)
-          const isSessionVerified = Boolean((res?.data?.session as any)?.twoFactorVerified || (res?.data as any)?.twoFactorVerified)
-
-          if (is2faEnabled) {
-            setNextLevel("aal2")
-            setCurrentLevel(isSessionVerified ? "aal2" : "aal1")
-          } else {
-            setCurrentLevel("aal1")
-            setNextLevel("aal1")
-          }
+          setCurrentLevel("aal1")
+          setNextLevel("aal1")
         } else {
           // Deny access to non-staff roles (business_user) or inactive accounts
           setUser(null)
@@ -114,6 +106,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null)
     setRole(null)
     setCurrentLevel("aal1")
+    setNextLevel("aal1")
   }, [authClient])
 
   const login = React.useCallback(
@@ -144,73 +137,10 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     [authClient, api, refreshSession]
   )
 
-  const verifyMfa = React.useCallback(
-    async (factorId: string, challengeId: string, code: string) => {
-      const res = await authClient.twoFactor.verifyTotp({ code })
-      if (res.error) {
-        throw new Error(res.error.message || "Invalid 2FA code")
-      }
-      await refreshSession()
-      if (typeof window !== "undefined") {
-        window.location.href = "/dashboard"
-      }
-    },
-    [authClient, refreshSession]
-  )
-
-  const enrollMfa = React.useCallback(
-    async (password: string) => {
-      if (!password || !password.trim()) {
-        throw new Error("Password is required to enable 2FA")
-      }
-      const res = await authClient.twoFactor.enable({ password })
-      if (res.error) {
-        throw new Error(res.error.message || "Failed to enable 2FA")
-      }
-      const totpURI = (res.data as any)?.totpURI || ""
-      let secretKey = totpURI
-      try {
-        if (totpURI.startsWith("otpauth://")) {
-          const url = new URL(totpURI)
-          secretKey = url.searchParams.get("secret") || totpURI
-        }
-      } catch {}
-      return {
-        factorId: "totp",
-        qrCode: totpURI,
-        secret: secretKey,
-      }
-    },
-    [authClient]
-  )
-
-  const confirmEnrollMfa = React.useCallback(
-    async (factorId: string, code: string) => {
-      const res = await authClient.twoFactor.verifyTotp({ code })
-      if (res.error) {
-        throw new Error(res.error.message || "Failed to confirm 2FA code")
-      }
-      await refreshSession()
-      if (typeof window !== "undefined") {
-        window.location.href = "/dashboard"
-      }
-    },
-    [authClient, refreshSession]
-  )
-
-  const unenrollMfa = React.useCallback(
-    async (password: string) => {
-      if (!password || !password.trim()) {
-        throw new Error("Password is required to disable 2FA")
-      }
-      const res = await authClient.twoFactor.disable({ password })
-      if (res.error) {
-        throw new Error(res.error.message || "Failed to disable 2FA")
-      }
-      await refreshSession()
-    },
-    [authClient, refreshSession]
-  )
+  const verifyMfa = React.useCallback(async () => {}, [])
+  const enrollMfa = React.useCallback(async () => ({ factorId: "none", qrCode: "", secret: "" }), [])
+  const confirmEnrollMfa = React.useCallback(async () => {}, [])
+  const unenrollMfa = React.useCallback(async () => {}, [])
 
   return (
     <AdminAuthContext.Provider

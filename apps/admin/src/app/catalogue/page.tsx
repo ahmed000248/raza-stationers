@@ -20,15 +20,20 @@ export default function ProductCataloguePage() {
   const [productModalOpen, setProductModalOpen] = React.useState(false)
   const [editingProduct, setEditingProduct] = React.useState<any>(null)
   const [bulkImportModalOpen, setBulkImportModalOpen] = React.useState(false)
+  const [fetchError, setFetchError] = React.useState("")
 
   const api = React.useMemo(() => createAPIClient({ baseUrl: API_BASE }), [])
 
   const fetchAll = React.useCallback(async () => {
     setLoading(true)
+    setFetchError("")
     try {
       const data = await api.getAdminProducts({ limit: 3000 })
       setProducts(data.items || [])
-    } catch {
+    } catch (error) {
+      console.error("[Admin Catalogue] Failed to load products:", error)
+      const message = error instanceof Error ? error.message : "Failed to load products from the backend"
+      setFetchError(message)
       setProducts([])
     } finally {
       setLoading(false)
@@ -138,6 +143,20 @@ export default function ProductCataloguePage() {
           />
         </div>
       </div>
+
+      {fetchError && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 space-y-2">
+          <p className="font-semibold">Could not load products</p>
+          <p className="text-xs">{fetchError}</p>
+          <button
+            type="button"
+            onClick={fetchAll}
+            className="rounded-lg border border-red-300 bg-white px-3 py-1.5 text-xs font-semibold hover:bg-red-50 transition-colors"
+          >
+            Try again
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <div className="flex justify-center py-12">
