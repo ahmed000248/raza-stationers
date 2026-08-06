@@ -30,7 +30,11 @@ export class BetterAuthGuard implements CanActivate {
         mobileNumber = (session.user as any).mobileNumber || null;
         role = (session.user as any).role || "business_user";
         userTwoFactorEnabled = Boolean((session.user as any).twoFactorEnabled);
-        sessionTwoFactorVerified = true;
+        sessionTwoFactorVerified = Boolean(
+          (session.session as any)?.twoFactorVerified ||
+          (session.session as any)?.mfaVerifiedAt ||
+          (session as any)?.twoFactorVerified
+        );
       } else if (this.authService) {
         const authHeader = request.headers.authorization || request.headers.Authorization;
         if (authHeader && typeof authHeader === "string" && authHeader.startsWith("Bearer ")) {
@@ -42,6 +46,7 @@ export class BetterAuthGuard implements CanActivate {
             name = verified.name || "User";
             mobileNumber = verified.mobileNumber || null;
             role = verified.role || "business_user";
+            sessionTwoFactorVerified = Boolean(verified.twoFactorVerified);
           }
         }
       }
@@ -50,7 +55,7 @@ export class BetterAuthGuard implements CanActivate {
         throw new UnauthorizedException("Invalid or expired session");
       }
 
-      const aal = userTwoFactorEnabled && !sessionTwoFactorVerified ? "aal1" : "aal2";
+      const aal = userTwoFactorEnabled && sessionTwoFactorVerified ? "aal2" : "aal1";
 
       request.user = {
         id: userId,

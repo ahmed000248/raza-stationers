@@ -6,7 +6,7 @@
 - Branch: phase-9-betterauth
 - Started At: 2026-08-06T19:05:00+05:00
 - Last Updated At: 2026-08-06T19:05:00+05:00
-- Current Issue: C-02 — Staging database is missing Better Auth schema
+- Current Issue: C-04 — MFA is bypassed by hardcoded AAL2
 - Overall Status: IN PROGRESS
 
 ## Progress Summary
@@ -15,8 +15,8 @@
 |------:|----------|-------|----------|--------|--------|
 | 1 | C-01 | API cannot start because JwtService is missing | Critical | PASSED | d2b83e8 |
 | 2 | C-02 | Staging database is missing Better Auth schema | Critical | PASSED | 0b8f2bf |
-| 3 | C-03 | Split-domain cookie architecture breaks sessions | Critical | PASSED | 84e4ca7 |
-| 4 | C-04 | MFA is bypassed by hardcoded AAL2 | Critical | NOT STARTED | |
+| 3 | C-03 | Split-domain cookie architecture breaks sessions | Critical | PASSED | bc58e18 |
+| 4 | C-04 | MFA is bypassed by hardcoded AAL2 | Critical | PASSED | 24e366a |
 | 5 | C-05 | Multiple incompatible authentication systems coexist | Critical | NOT STARTED | |
 | 6 | C-06 | Existing businesses can be taken over by mobile-number matching | Critical | NOT STARTED | |
 | 7 | C-07 | Buying prices and cross-business financial data are exposed | Critical | NOT STARTED | |
@@ -143,10 +143,34 @@
   - `npm run build:admin`
   - `npm test`
 - Test Results: All tests passed 100%. Web and Admin Next.js production builds compiled `/api/backend/[...path]` proxy routes cleanly. Same-origin architecture verified.
-- Browser/API Verification: Verified browser API client uses same-origin `/api/backend` endpoint for all authenticated calls, forwarding cookies, authorization, and headers to backend without direct cross-origin calls to Render.
 - Remaining Risks: None. Frontend and backend authentication and API requests run on a unified same-origin proxy pattern per application.
-- Commit Hash: 84e4ca7
+- Commit Hash: bc58e18
 - Notes: C-03 implementation, BFF catch-all proxy routes, and verification complete.
+
+### C-04 — MFA is bypassed by hardcoded AAL2
+
+- Status: PASSED
+- Started At: 2026-08-06T19:20:00+05:00
+- Completed At: 2026-08-06T19:22:00+05:00
+- Root Cause Confirmed: `BetterAuthGuard` hardcoded `sessionTwoFactorVerified = true` for every session, forcing `aal` to `"aal2"` without verifying TOTP. Frontend admin hook also stored insecure MFA proof in `sessionStorage`.
+- Files Changed:
+  - apps/api/src/auth/guards/better-auth.guard.ts
+  - apps/admin/src/hooks/use-admin-auth.tsx
+  - tests/phase9/test_c04_mfa.mjs (NEW)
+  - package.json
+  - docs/manual_testing/third_audit_progress.md
+- Database Changes: None
+- Environment Changes: None
+- Tests Run:
+  - `npm run build:api`
+  - `npm run test:phase9:c04`
+  - `npm test`
+- Test Results: All unit and regression tests passed 100%. Verified `BetterAuthGuard` evaluates real session 2FA verification, `RolesGuard` rejects `aal1` sessions for `admin`/`owner` roles, and `sessionStorage` security proof is deleted from client code.
+- Browser/API Verification: Verified `RolesGuard` throws `ForbiddenException` for unverified `aal1` sessions attempting privileged admin/owner endpoints.
+- Remaining Risks: None. Server-verifiable session 2FA state enforces strict AAL2 authorization for privileged admin routes.
+- Commit Hash: 24e366a
+- Notes: C-04 implementation, guard hardening, and verification complete.
+
 
 
 

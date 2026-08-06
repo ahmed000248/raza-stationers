@@ -60,7 +60,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
         setRole((mappedUser.role as AdminRole) || "admin")
 
         const is2faEnabled = Boolean((u as any).twoFactorEnabled)
-        const isSessionVerified = typeof window !== "undefined" && Boolean(sessionStorage.getItem(`totp_verified_${u.id}`))
+        const isSessionVerified = Boolean((res?.data?.session as any)?.twoFactorVerified || (res?.data as any)?.twoFactorVerified)
 
         if (is2faEnabled) {
           setNextLevel("aal2")
@@ -87,15 +87,12 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = React.useCallback(async () => {
     try {
-      if (user?.id && typeof window !== "undefined") {
-        sessionStorage.removeItem(`totp_verified_${user.id}`)
-      }
       await authClient.signOut()
     } catch {}
     setUser(null)
     setRole(null)
     setCurrentLevel("aal1")
-  }, [authClient, user])
+  }, [authClient])
 
   const login = React.useCallback(
     async (identifier: string, password: string) => {
@@ -131,13 +128,9 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       if (res.error) {
         throw new Error(res.error.message || "Invalid 2FA code")
       }
-      if (user?.id && typeof window !== "undefined") {
-        sessionStorage.setItem(`totp_verified_${user.id}`, "true")
-      }
-      setCurrentLevel("aal2")
       await refreshSession()
     },
-    [authClient, refreshSession, user]
+    [authClient, refreshSession]
   )
 
   const enrollMfa = React.useCallback(
@@ -172,13 +165,9 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       if (res.error) {
         throw new Error(res.error.message || "Failed to confirm 2FA code")
       }
-      if (user?.id && typeof window !== "undefined") {
-        sessionStorage.setItem(`totp_verified_${user.id}`, "true")
-      }
-      setCurrentLevel("aal2")
       await refreshSession()
     },
-    [authClient, refreshSession, user]
+    [authClient, refreshSession]
   )
 
   const unenrollMfa = React.useCallback(
