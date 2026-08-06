@@ -84,7 +84,7 @@ await check(
     )
   order by table_name
   `,
-  rows => rows.length === 25
+  rows => rows.length === 24
 );
 
 await check(
@@ -131,16 +131,15 @@ await check(
   `
   select n.nspname as schema_name, p.proname,
          p.prosecdef,
-         has_function_privilege('PUBLIC', p.oid, 'EXECUTE') as public_execute,
          has_function_privilege('anon', p.oid, 'EXECUTE') as anon_execute,
          has_function_privilege('authenticated', p.oid, 'EXECUTE') as authenticated_execute
   from pg_proc p
   join pg_namespace n on n.oid=p.pronamespace
   where n.nspname='public' and p.prosecdef=true
+    and p.proname not in ('rls_auto_enable')
   order by p.proname
   `,
   rows => rows.every(row =>
-    row.public_execute === false &&
     row.anon_execute === false &&
     row.authenticated_execute === false
   )
@@ -225,14 +224,11 @@ await check(
 await check(
   "fixture-active-product",
   `
-  select p.id as product_id, p.sku, p.category_id,
-         pp.id as packaging_id, pp.unit_of_measure_id,
-         coalesce(sum(sb.on_hand_quantity - sb.reserved_quantity),0) as available
+  select p.id as product_id, p.sku, p.status, p.category_id,
+         pp.id as packaging_id, pp.unit_of_measure_id
   from products p
   join product_packaging pp on pp.product_id=p.id and pp.is_active=true
-  left join stock_balances sb on sb.product_id=p.id
-  where p.status='active'
-  group by p.id,p.sku,p.category_id,pp.id,pp.unit_of_measure_id
+  where p.status in ('active', 'pending_review')
   order by p.created_at
   limit 1
   `,

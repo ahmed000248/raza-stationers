@@ -44,6 +44,9 @@ yarn-error.log*
 !apps/web/.env.local.example
 !apps/admin/.env.local.example
 
+.env.production.verification
+artifacts/production-verification/browser/
+
 # Generated Prisma clients and temporary database artifacts
 **/generated/prisma/
 *.dump
