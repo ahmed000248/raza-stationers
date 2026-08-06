@@ -41,7 +41,14 @@ export class InvoicingService {
     });
   }
 
-  async findByBusiness(clientBusinessId: string) {
+  async findByBusiness(clientBusinessId: string, user?: { id: string; role: string }) {
+    if (user && user.role !== "owner" && user.role !== "admin") {
+      const activeLink = await this.prisma.businessUserLink.findFirst({
+        where: { userId: user.id, clientBusinessId, endedAt: null },
+      });
+      if (!activeLink) throw new NotFoundException("Invoices not found");
+    }
+
     return this.prisma.invoice.findMany({
       where: { clientBusinessId },
       include: { order: { select: { id: true, orderNumber: true, status: true } } },
@@ -49,7 +56,7 @@ export class InvoicingService {
     });
   }
 
-  async findById(id: string) {
+  async findById(id: string, user?: { id: string; role: string }) {
     const invoice = await this.prisma.invoice.findUnique({
       where: { id },
       include: {
@@ -58,6 +65,14 @@ export class InvoicingService {
       },
     });
     if (!invoice) throw new NotFoundException("Invoice not found");
+
+    if (user && user.role !== "owner" && user.role !== "admin") {
+      const activeLink = await this.prisma.businessUserLink.findFirst({
+        where: { userId: user.id, clientBusinessId: invoice.clientBusinessId, endedAt: null },
+      });
+      if (!activeLink) throw new NotFoundException("Invoice not found");
+    }
+
     return invoice;
   }
 }

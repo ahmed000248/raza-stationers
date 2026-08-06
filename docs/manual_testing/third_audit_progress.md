@@ -19,7 +19,7 @@
 | 4 | C-04 | MFA is bypassed by hardcoded AAL2 | Critical | PASSED | 24e366a |
 | 5 | C-05 | Multiple incompatible authentication systems coexist | Critical | PASSED | c0f09a0 |
 | 6 | C-06 | Existing businesses can be taken over by mobile-number matching | Critical | PASSED | 0d93510 |
-| 7 | C-07 | Buying prices and cross-business financial data are exposed | Critical | NOT STARTED | |
+| 7 | C-07 | Buying prices and cross-business financial data are exposed | Critical | PASSED | 3d1f35b |
 | 8 | C-08 | Mobile app has mock authentication and mock authorization | Critical | NOT STARTED | |
 | 9 | H-01 | Admin route protection is not secure | High | NOT STARTED | |
 | 10 | H-02 | Password reset leaks tokens and has unreliable delivery | High | NOT STARTED | |
@@ -214,10 +214,39 @@
   - `npm run test:phase9:c06`
   - `npm test`
 - Test Results: All unit and regression tests passed 100%. Verified duplicate mobile registration throws `ConflictException` (`BUSINESS_ALREADY_REGISTERED`), `GET /clients` is restricted to `owner`/`admin`, and cross-business details/credit queries return `NotFoundException` for unlinked users.
-- Browser/API Verification: Verified unlinked users cannot read or link to foreign client business records.
 - Remaining Risks: None. Phone-number matching automatic link branch deleted. Object-level authorization enforced with `endedAt: null` filters.
 - Commit Hash: 0d93510
 - Notes: C-06 implementation and verification complete.
+
+### C-07 — Buying prices and cross-business financial data are exposed
+
+- Status: PASSED
+- Started At: 2026-08-06T19:43:00+05:00
+- Completed At: 2026-08-06T19:47:00+05:00
+- Root Cause Confirmed: Pricing endpoints exposed internal `buyingPrice` to non-admin customers and allowed arbitrary customer business ID queries. Global dashboard stats and returns/invoices lacked proper role/link authorization.
+- Files Changed:
+  - apps/api/src/pricing/pricing.service.ts
+  - apps/api/src/pricing/pricing.controller.ts
+  - apps/api/src/dashboard/dashboard.controller.ts
+  - apps/api/src/returns/returns.service.ts
+  - apps/api/src/returns/returns.controller.ts
+  - apps/api/src/invoicing/invoicing.service.ts
+  - apps/api/src/invoicing/invoicing.controller.ts
+  - tests/phase9/test_c07_financial_protection.mjs (NEW)
+  - package.json
+  - docs/manual_testing/third_audit_progress.md
+- Database Changes: None
+- Environment Changes: None
+- Tests Run:
+  - `npm run build:api`
+  - `npm run test:phase9:c07`
+  - `npm test`
+- Test Results: All unit and regression tests passed 100%. Verified customer price resolution strips `buyingPrice` and `wholesalePrice`, `GET /dashboard/stats` requires `owner`/`admin` role, and return/invoice endpoints validate active business ownership.
+- Browser/API Verification: Verified customer response payloads never contain internal buying prices or margin calculations.
+- Remaining Risks: None. Customer business ID is resolved from server-managed active link (`endedAt: null`).
+- Commit Hash: 3d1f35b
+- Notes: C-07 implementation and verification complete.
+
 
 
 

@@ -1,6 +1,7 @@
 import { Controller, Get, Param, Query, UseGuards } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
 import { BetterAuthGuard } from "../auth/guards/better-auth.guard";
+import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { PricingService } from "./pricing.service";
 
 @ApiTags("Pricing")
@@ -11,9 +12,13 @@ export class PricingController {
   constructor(private pricingService: PricingService) {}
 
   @Get("resolve/:sku")
-  @ApiOperation({ summary: "Resolve effective price for a product (5-tier resolution)" })
-  resolvePrice(@Param("sku") sku: string, @Query("clientBusinessId") clientBusinessId?: string) {
-    return this.pricingService.getResolvedPrice(sku, clientBusinessId);
+  @ApiOperation({ summary: "Resolve effective price for a product" })
+  resolvePrice(
+    @Param("sku") sku: string,
+    @CurrentUser() user: any,
+    @Query("clientBusinessId") clientBusinessId?: string,
+  ) {
+    return this.pricingService.getResolvedPrice(sku, user, clientBusinessId);
   }
 
   @Get("products/:sku")

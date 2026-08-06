@@ -13,19 +13,19 @@ export class ReturnsController {
 
   @Post("returns")
   @ApiOperation({ summary: "Request a return" })
-  create(@CurrentUser("id") userId: string, @Body() body: { orderId: string; invoiceId: string; reason: string }) {
-    return this.returnsService.create({ ...body, userId });
+  create(@CurrentUser() user: any, @Body() body: { orderId: string; invoiceId: string; reason: string }) {
+    return this.returnsService.create({ ...body, userId: user.id, userRole: user.role });
   }
 
   @Get("returns/:id")
   @ApiOperation({ summary: "Get return details" })
-  findById(@Param("id") id: string) {
-    return this.returnsService.findById(id);
+  findById(@Param("id") id: string, @CurrentUser() user: any) {
+    return this.returnsService.findById(id, user);
   }
 
   @Get("order-returns/:orderId")
   @ApiOperation({ summary: "List returns for an order" })
-  findByOrder(@Param("orderId") orderId: string) {
-    return this.returnsService.findByOrder(orderId);
+  findByOrder(@Param("orderId") orderId: string, @CurrentUser() user: any) {
+    return this.returnsService.findByOrder(orderId, user);
   }
 }
