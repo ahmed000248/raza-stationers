@@ -151,6 +151,9 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error(res.error.message || "Invalid 2FA code")
       }
       await refreshSession()
+      if (typeof window !== "undefined") {
+        window.location.href = "/dashboard"
+      }
     },
     [authClient, refreshSession]
   )
@@ -188,6 +191,9 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error(res.error.message || "Failed to confirm 2FA code")
       }
       await refreshSession()
+      if (typeof window !== "undefined") {
+        window.location.href = "/dashboard"
+      }
     },
     [authClient, refreshSession]
   )

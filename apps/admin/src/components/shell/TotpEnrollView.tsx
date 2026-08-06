@@ -65,7 +65,9 @@ export function TotpEnrollView({ onEnroll, onConfirm }: TotpEnrollViewProps) {
     setError("")
     try {
       await onConfirm(factorId, clean)
-      // onConfirm refreshes the session — AdminShell will re-render at AAL2
+      if (typeof window !== "undefined") {
+        window.location.href = "/dashboard"
+      }
     } catch (err: any) {
       setError(err.message || "Invalid code — try again")
       setCode("")
