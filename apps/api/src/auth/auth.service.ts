@@ -243,6 +243,16 @@ export class AuthService {
       },
     });
 
+    await this.prisma.account.create({
+      data: {
+        id: `account-${user.id}`,
+        userId: user.id,
+        accountId: user.id,
+        providerId: "credential",
+        password: hashedPassword,
+      },
+    });
+
     return this.generateToken(user);
   }
 
@@ -264,11 +274,20 @@ export class AuthService {
       },
     });
 
-    if (!user || !user.passwordHash) {
+    if (!user) {
       throw new UnauthorizedException("Invalid credentials");
     }
 
-    const isValid = await bcrypt.compare(password, user.passwordHash);
+    const account = await this.prisma.account.findFirst({
+      where: { userId: user.id, providerId: "credential" },
+    });
+    const hashToCompare = account?.password || user.passwordHash;
+
+    if (!hashToCompare) {
+      throw new UnauthorizedException("Invalid credentials");
+    }
+
+    const isValid = await bcrypt.compare(password, hashToCompare);
     if (!isValid) {
       throw new UnauthorizedException("Invalid credentials");
     }
@@ -308,13 +327,35 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new UnauthorizedException("User not found");
 
-    if (!user.passwordHash) {
-      throw new BadRequestException("This account does not have a local password set");
+    // Check password against Better Auth account credentials or legacy passwordHash
+    const account = await this.prisma.account.findFirst({
+      where: { userId, providerId: "credential" },
+    });
+    const hashToCompare = account?.password || user.passwordHash;
+
+    if (!hashToCompare) {
+      throw new BadRequestException("This account does not have a password set");
     }
-    const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
+    const isValid = await bcrypt.compare(currentPassword, hashToCompare);
     if (!isValid) throw new UnauthorizedException("Current password is incorrect");
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update Better Auth account credential row AND users table for full compatibility
+    await this.prisma.account.upsert({
+      where: { id: `account-${userId}` },
+      create: {
+        id: `account-${userId}`,
+        userId,
+        accountId: userId,
+        providerId: "credential",
+        password: hashedPassword,
+      },
+      update: {
+        password: hashedPassword,
+      },
+    });
+
     await this.prisma.user.update({ where: { id: userId }, data: { passwordHash: hashedPassword } });
     return { success: true };
   }

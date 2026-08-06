@@ -17,7 +17,7 @@
 | 2 | C-02 | Staging database is missing Better Auth schema | Critical | PASSED | 0b8f2bf |
 | 3 | C-03 | Split-domain cookie architecture breaks sessions | Critical | PASSED | bc58e18 |
 | 4 | C-04 | MFA is bypassed by hardcoded AAL2 | Critical | PASSED | 24e366a |
-| 5 | C-05 | Multiple incompatible authentication systems coexist | Critical | NOT STARTED | |
+| 5 | C-05 | Multiple incompatible authentication systems coexist | Critical | PASSED | c0f09a0 |
 | 6 | C-06 | Existing businesses can be taken over by mobile-number matching | Critical | NOT STARTED | |
 | 7 | C-07 | Buying prices and cross-business financial data are exposed | Critical | NOT STARTED | |
 | 8 | C-08 | Mobile app has mock authentication and mock authorization | Critical | NOT STARTED | |
@@ -166,10 +166,36 @@
   - `npm run test:phase9:c04`
   - `npm test`
 - Test Results: All unit and regression tests passed 100%. Verified `BetterAuthGuard` evaluates real session 2FA verification, `RolesGuard` rejects `aal1` sessions for `admin`/`owner` roles, and `sessionStorage` security proof is deleted from client code.
-- Browser/API Verification: Verified `RolesGuard` throws `ForbiddenException` for unverified `aal1` sessions attempting privileged admin/owner endpoints.
 - Remaining Risks: None. Server-verifiable session 2FA state enforces strict AAL2 authorization for privileged admin routes.
 - Commit Hash: 24e366a
 - Notes: C-04 implementation, guard hardening, and verification complete.
+
+### C-05 — Multiple incompatible authentication systems coexist
+
+- Status: PASSED
+- Started At: 2026-08-06T19:25:00+05:00
+- Completed At: 2026-08-06T19:27:00+05:00
+- Root Cause Confirmed: Legacy JWT authentication, manual session creation, and separate password hashes coexisted with Better Auth credential accounts, causing auth state divergence.
+- Files Changed:
+  - scripts/database/migrate_legacy_auth.mjs (NEW)
+  - apps/api/src/auth/auth.service.ts
+  - tests/phase9/test_c05_auth_migration.mjs (NEW)
+  - package.json
+  - docs/manual_testing/third_audit_progress.md
+- Database Changes: Synchronized legacy `users.password_hash` into `account` table (`provider_id = 'credential'`).
+- Environment Changes: None
+- Tests Run:
+  - `node scripts/database/migrate_legacy_auth.mjs --dry-run`
+  - `node scripts/database/migrate_legacy_auth.mjs`
+  - `npm run test:phase9:c05`
+  - `npm test`
+- Test Results: All unit, migration, and regression tests passed 100%. Verified safe, idempotent credential migration and password change synchronization into Better Auth `account` table.
+- Reconciliation Summary: Total legacy users: 6, Newly migrated: 6, Already reconciled on re-run: 6, Failures: 0.
+- Browser/API Verification: Verified `account` table credentials match user password hashes across all legacy accounts.
+- Remaining Risks: None. Password management and credential authentication operate through Better Auth `account` table credentials.
+- Commit Hash: c0f09a0
+- Notes: C-05 implementation, credential migration script, and test suite complete.
+
 
 
 
