@@ -80,10 +80,22 @@ export class AuthController {
     const input = body.identifier || body.email || body.mobileNumber || "";
     const result = await this.authService.login(input, body.password);
     if (result.sessionToken) {
+      // Mirror BetterAuth's own cookie attributes (see better-auth.ts's
+      // `advanced.defaultCookieAttributes`) exactly. These two login paths
+      // (BetterAuth's own email/password flow, and this custom endpoint for
+      // mobile-number login) issue the same cookie name and must agree on
+      // SameSite/Secure or client behavior becomes inconsistent depending
+      // on which path a given login happened to take. All auth traffic
+      // reaches this API through each frontend's own same-origin proxy
+      // (see apps/admin and apps/web's /api/auth/[...all]/route.ts), so
+      // "lax" is correct here -- "none" is unnecessary for a same-origin
+      // proxied request and only adds friction in browsers that require
+      // cookie partitioning (CHIPS) for SameSite=None.
+      const isProd = process.env.NODE_ENV === "production";
       res.cookie("better-auth.session_token", result.sessionToken, {
         httpOnly: true,
-        secure: true,
-        sameSite: "none",
+        secure: isProd,
+        sameSite: "lax",
         path: "/",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });

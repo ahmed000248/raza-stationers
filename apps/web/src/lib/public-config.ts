@@ -8,7 +8,14 @@ export function getApiBaseUrl(): string {
     process.env.API_URL?.trim();
 
   if (!configured) {
-    return "https://raza-stationers-api-staging.onrender.com";
+    // Fail loudly rather than silently falling back to staging -- a
+    // missing NEXT_PUBLIC_API_URL/API_URL should be caught at build/boot
+    // time, not masked by quietly pointing server-rendered requests at a
+    // different backend than what the client-side code will use.
+    throw new Error(
+      "NEXT_PUBLIC_API_URL (or API_URL) is not set for server-side rendering. " +
+      "Set it to the real backend origin for this environment."
+    );
   }
 
   const parsed = new URL(configured);

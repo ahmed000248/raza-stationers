@@ -77,7 +77,19 @@ const getAuthBaseUrl = () => {
     return configured.replace(/\/$/, "");
   }
   if (isProd) {
-    return "https://raza-stationers-web.vercel.app/api";
+    // validateEnvironment() already requires BETTER_AUTH_URL in production
+    // and throws at boot if it's missing, so this branch should be
+    // unreachable in a correctly configured deployment. It previously
+    // hardcoded the *frontend* web app's URL as the API's own baseURL,
+    // which is wrong regardless (this must be the API's own origin, e.g.
+    // https://raza-stationers-api.onrender.com) and would silently break
+    // OAuth redirect URIs and cookie/session handling if ever hit.
+    // Fail loudly instead of returning a plausible-looking wrong value.
+    throw new Error(
+      "BETTER_AUTH_URL is not set in production. Set it to this API's own " +
+      "public origin (e.g. https://raza-stationers-api.onrender.com), not a " +
+      "frontend app's URL."
+    );
   }
   return "http://localhost:4000";
 };
