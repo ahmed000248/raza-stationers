@@ -140,17 +140,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [checkSession])
 
   const login = React.useCallback(
-    async (email: string, password: string) => {
+    async (identifier: string, password: string) => {
       setAuthError(null)
-      const res = await authClient.signIn.email({ email, password })
-      if (res.error) {
-        setAuthError(res.error.message || "Failed to sign in")
-        throw new Error(res.error.message || "Failed to sign in")
+      try {
+        const res = await authClient.signIn.email({ email: identifier, password })
+        if (!res.error) {
+          await checkSession()
+          return res.data
+        }
+      } catch {}
+
+      // Fallback to custom login endpoint for email/mobile accounts
+      try {
+        await api.login(identifier, password)
+        await checkSession()
+        return { success: true }
+      } catch (err: any) {
+        const msg = err?.message || "Invalid credentials"
+        setAuthError(msg)
+        throw new Error(msg)
       }
-      await checkSession()
-      return res.data
     },
-    [authClient, checkSession]
+    [authClient, api, checkSession]
   )
 
   const register = React.useCallback(
