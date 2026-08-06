@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, NotFoundException, ConflictException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { PaginationDto } from "./dto/pagination.dto";
 import { Prisma } from "@prisma/client";
@@ -196,41 +196,62 @@ export class CatalogueService {
   }
 
   async createProduct(data: { name: string; categoryId: string; purchaseType?: string; shopName?: string; description?: string; wholesalePrice?: number }, userId: string) {
-    const cat = await this.prisma.category.findUnique({ where: { id: data.categoryId } });
-    if (!cat) throw new NotFoundException("Category not found");
+    return this.prisma.$transaction(async (tx) => {
+      const cat = await tx.category.findUnique({ where: { id: data.categoryId } });
+      if (!cat) throw new NotFoundException("Category not found");
 
-    // Allocate real SKU first
-    const skuResult = await this.prisma.$queryRawUnsafe<{ sku: string; sku_number: string }[]>(`SELECT sku, "sku_number"::text FROM public.allocate_product_sku()`);
-    const skuStr = skuResult[0]?.sku || "RS-999999";
-    const skuNum = parseInt(skuResult[0]?.sku_number || "999999", 10);
+      const uom = await tx.unitOfMeasure.findFirst({ where: { isActive: true } });
+      if (!uom) throw new ConflictException("No active unit of measure is configured");
 
-    const product = await this.prisma.product.create({
-      data: {
-        name: data.name,
-        shopName: data.shopName,
-        description: data.description,
-        purchaseType: (data.purchaseType as any) || "unconfirmed",
-        status: "pending_review",
-        categoryId: data.categoryId,
-        sku: skuStr,
-        skuNumber: skuNum,
-      },
-    });
+      // Allocate real SKU inside transaction
+      const skuResult = await tx.$queryRawUnsafe<{ sku: string; sku_number: string }[]>(`SELECT sku, "sku_number"::text FROM public.allocate_product_sku()`);
+      const skuStr = skuResult[0]?.sku || "RS-999999";
+      const skuNum = parseInt(skuResult[0]?.sku_number || "999999", 10);
 
-    const uom = await this.prisma.unitOfMeasure.findFirst({ where: { isActive: true } });
-
-    const pkg = await this.prisma.productPackaging.create({
-      data: { productId: product.id, unitOfMeasureId: uom?.id || "", code: "BASE", label: "Piece", conversionToBase: 1, isBase: true, isActive: true, confirmationStatus: "confirmed" },
-    });
-
-    if (data.wholesalePrice && data.wholesalePrice > 0) {
-      await this.prisma.productPrice.create({
-        data: { productPackagingId: pkg.id, priceType: "wholesale", amount: data.wholesalePrice, effectiveFrom: new Date(), createdById: userId },
+      const product = await tx.product.create({
+        data: {
+          name: data.name,
+          shopName: data.shopName,
+          description: data.description,
+          purchaseType: (data.purchaseType as any) || "unconfirmed",
+          status: "pending_review",
+          categoryId: data.categoryId,
+          sku: skuStr,
+          skuNumber: skuNum,
+        },
       });
-    }
 
-    const result = await this.prisma.product.findUnique({ where: { id: product.id }, include: { category: true, packaging: { include: { prices: true } } } });
-    return JSON.parse(JSON.stringify(result, (k, v) => (typeof v === "bigint" ? v.toString() : v)));
+      const pkg = await tx.productPackaging.create({
+        data: {
+          productId: product.id,
+          unitOfMeasureId: uom.id,
+          code: "BASE",
+          label: "Piece",
+          conversionToBase: 1,
+          isBase: true,
+          isActive: true,
+          confirmationStatus: "confirmed",
+        },
+      });
+
+      if (data.wholesalePrice && data.wholesalePrice > 0) {
+        await tx.productPrice.create({
+          data: {
+            productPackagingId: pkg.id,
+            priceType: "wholesale",
+            amount: data.wholesalePrice,
+            effectiveFrom: new Date(),
+            createdById: userId,
+          },
+        });
+      }
+
+      const result = await tx.product.findUnique({
+        where: { id: product.id },
+        include: { category: true, packaging: { include: { prices: true } } },
+      });
+      return JSON.parse(JSON.stringify(result, (k, v) => (typeof v === "bigint" ? v.toString() : v)));
+    });
   }
 
   async updateProduct(id: string, data: { name?: string; categoryId?: string; shopName?: string; description?: string; purchaseType?: string }) {

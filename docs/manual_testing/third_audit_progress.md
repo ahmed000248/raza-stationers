@@ -32,7 +32,7 @@
 | 17 | M-01 | Unauthorized responses do not clear stale frontend state | Medium | PASSED | 6e7cae8 |
 | 18 | M-02 | Phase 9 has no dedicated authentication regression suite | Medium | PASSED | 71e644b |
 | 19 | M-03 | Important foreign keys lack indexes | Medium | PASSED | a035950 |
-| 20 | M-04 | Product creation can leave partial records | Medium | NOT STARTED | |
+| 20 | M-04 | Product creation can leave partial records | Medium | PASSED | 6430604 |
 
 ## Current Issue Implementation Plan
 
@@ -499,10 +499,33 @@
 - Tests Run:
   - `npm run test:phase9:m03`
   - `npm test`
-- Test Results: All unit and regression tests passed 100%. Verified index definitions across all target tables.
 - Remaining Risks: None. Query performance for multi-table joins is optimized.
 - Commit Hash: a035950
 - Notes: M-03 implementation and verification complete.
+
+### M-04 — Product creation can leave partial records
+
+- Status: PASSED
+- Started At: 2026-08-06T20:27:00+05:00
+- Completed At: 2026-08-06T20:29:00+05:00
+- Root Cause Confirmed: `CatalogueService.createProduct` performed non-transactional database writes and used a fallback empty string `unitOfMeasureId: uom?.id || ""` if active UOM was absent.
+- Files Changed:
+  - apps/api/src/catalogue/catalogue.service.ts
+  - tests/phase9/run_all_phase9_tests.mjs
+  - tests/phase9/test_m04_atomic_product_creation.mjs (NEW)
+  - package.json
+  - docs/manual_testing/third_audit_progress.md
+- Database Changes: None
+- Environment Changes: None
+- Tests Run:
+  - `npm run build:api`
+  - `npm run test:phase9:m04`
+  - `npm test`
+- Test Results: All unit and regression tests passed 100%. Verified interactive Prisma transaction wrapper and active Unit of Measure validation.
+- Remaining Risks: None. Product, packaging, and initial price records are created atomically or rolled back entirely.
+- Commit Hash: 6430604
+- Notes: M-04 implementation and verification complete.
+
 
 
 

@@ -19,6 +19,7 @@ const phase9Tests = [
   "test_h08_trusted_origins.mjs",
   "test_m01_unauthorized_state_clearing.mjs",
   "test_m03_fk_indexes.mjs",
+  "test_m04_atomic_product_creation.mjs",
 ];
 
 console.log("=== RUNNING ALL PHASE 9 REGRESSION TEST SUITES ===");
