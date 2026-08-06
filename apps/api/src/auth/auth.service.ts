@@ -246,27 +246,62 @@ export class AuthService {
     return this.generateToken(user);
   }
 
-  async login(mobileNumber: string, password: string) {
-    mobileNumber = normalizePakistaniMobile(mobileNumber) || mobileNumber.trim();
-    const user = await this.prisma.user.findUnique({
-      where: { mobileNumber },
-    });
-    if (!user) {
+  async login(identifier: string, password: string) {
+    if (!identifier || typeof identifier !== "string" || !password || typeof password !== "string") {
       throw new UnauthorizedException("Invalid credentials");
     }
 
-    if (!password || typeof password !== 'string') {
+    const trimmed = identifier.trim();
+    const normalizedMobile = normalizePakistaniMobile(trimmed);
+
+    const user = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          ...(normalizedMobile ? [{ mobileNumber: normalizedMobile }] : []),
+          { mobileNumber: trimmed },
+          { email: trimmed.toLowerCase() },
+        ],
+      },
+    });
+
+    if (!user || !user.passwordHash) {
       throw new UnauthorizedException("Invalid credentials");
     }
-    if (!user.passwordHash) {
-      throw new UnauthorizedException("Invalid credentials");
-    }
+
     const isValid = await bcrypt.compare(password, user.passwordHash);
     if (!isValid) {
       throw new UnauthorizedException("Invalid credentials");
     }
 
-    return this.generateToken(user);
+    // Create session in BetterAuth Session table for seamless session compatibility
+    const sessionToken = require("crypto").randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    try {
+      await this.prisma.session.create({
+        data: {
+          id: sessionToken,
+          token: sessionToken,
+          userId: user.id,
+          expiresAt,
+        },
+      });
+    } catch {}
+
+    const payload = { sub: user.id, mobileNumber: user.mobileNumber || "", email: user.email || "", role: user.role };
+    const jwtToken = this.jwtService.sign ? this.jwtService.sign(payload) : sessionToken;
+
+    return {
+      accessToken: sessionToken || jwtToken,
+      sessionToken,
+      user: {
+        id: user.id,
+        name: user.name,
+        mobileNumber: user.mobileNumber || "",
+        email: user.email || "",
+        role: user.role,
+      },
+    };
   }
 
   async changePassword(userId: string, currentPassword: string, newPassword: string) {

@@ -72,9 +72,23 @@ export class AuthController {
 
   @Post("login")
   @HttpCode(200)
-  @ApiOperation({ summary: "Login with mobile number and password." })
-  login(@Body() body: { mobileNumber: string; password: string }) {
-    return this.authService.login(body.mobileNumber, body.password);
+  @ApiOperation({ summary: "Login with email, mobile number, or identifier and password." })
+  async login(
+    @Body() body: { identifier?: string; mobileNumber?: string; email?: string; password: string },
+    @Res({ passthrough: true }) res: Response
+  ) {
+    const input = body.identifier || body.email || body.mobileNumber || "";
+    const result = await this.authService.login(input, body.password);
+    if (result.sessionToken) {
+      res.cookie("better-auth.session_token", result.sessionToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+        path: "/",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+    }
+    return result;
   }
 
   @Post("totp/verify")

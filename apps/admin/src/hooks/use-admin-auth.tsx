@@ -99,22 +99,30 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = React.useCallback(
     async (identifier: string, password: string) => {
-      const res = await authClient.signIn.email({
-        email: identifier,
-        password,
-      })
-      if (res.error) {
-        throw new Error(res.error.message || "Admin authentication failed")
-      }
+      try {
+        const res = await authClient.signIn.email({
+          email: identifier,
+          password,
+        })
+        if (!res.error) {
+          if ((res.data as any)?.twoFactorRedirect) {
+            return { requiresMfa: true }
+          }
+          await refreshSession()
+          return { requiresMfa: false }
+        }
+      } catch {}
 
-      if ((res.data as any)?.twoFactorRedirect) {
-        return { requiresMfa: true }
+      // Fallback to custom login endpoint for email/mobile accounts
+      try {
+        await api.login(identifier, password)
+        await refreshSession()
+        return { requiresMfa: false }
+      } catch (err: any) {
+        throw new Error(err?.message || "Admin authentication failed")
       }
-
-      await refreshSession()
-      return { requiresMfa: false }
     },
-    [authClient, refreshSession]
+    [authClient, api, refreshSession]
   )
 
   const verifyMfa = React.useCallback(
