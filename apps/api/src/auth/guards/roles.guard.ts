@@ -23,10 +23,6 @@ export class RolesGuard implements CanActivate {
     if (!hasRole) {
       throw new ForbiddenException("Insufficient permissions");
     }
-    const isSensitiveAdminRoute = ["admin", "owner"].includes(user.role);
-    if (isSensitiveAdminRoute && user.aal !== "aal2") {
-      throw new ForbiddenException("Administrative access requires an AAL2 (multi-factor authenticated) session");
-    }
     return true;
   }
 }

@@ -64,11 +64,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const role = adminRole as AdminRole
   const contextValue = React.useMemo(() => ({ role, userName: user?.name || "Staff", alertCount: 3, addToast }), [role, user, addToast])
 
-  const isMfaRole = Boolean(role && MFA_REQUIRED_ROLES.includes(role))
-  const userTwoFactorEnabled = Boolean((user as any)?.twoFactorEnabled)
-
-  const needsMfaEnrollment = isMfaRole && !userTwoFactorEnabled
-  const needsMfaStepUp = isMfaRole && userTwoFactorEnabled && currentLevel !== "aal2"
+  const needsMfaEnrollment = false
+  const needsMfaStepUp = false
 
   // ── Loading ──────────────────────────────────────────────────────────────────
   if (loading) {

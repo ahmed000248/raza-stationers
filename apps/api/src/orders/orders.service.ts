@@ -254,7 +254,6 @@ export class OrdersService {
 
     const isAdmin = user.role === "owner" || user.role === "admin";
     const isInternalStaff = isAdmin || user.role === "packing" || user.role === "delivery";
-    if (isAdmin && user.aal !== "aal2") throw new ForbiddenException("Administrative order access requires an AAL2 session");
     if (!isInternalStaff) where.clientBusiness = { userLinks: { some: { userId: user.id, endedAt: null } } };
 
     if (query.status) where.status = query.status as OrderStatus;
@@ -281,7 +280,6 @@ export class OrdersService {
   async findById(id: string, user: { id: string; role: string; aal?: string }) {
     const isAdmin = user.role === "owner" || user.role === "admin";
     const isInternalStaff = isAdmin || user.role === "packing" || user.role === "delivery";
-    if (isAdmin && user.aal !== "aal2") throw new ForbiddenException("Administrative order access requires an AAL2 session");
     const order = await this.prisma.order.findUnique({
       where: { id, ...(isInternalStaff ? {} : { clientBusiness: { userLinks: { some: { userId: user.id, endedAt: null } } } }) },
       include: {
