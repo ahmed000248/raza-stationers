@@ -10,7 +10,6 @@ import { getPostgresConnection } from "@raza-stationers/db";
 import pg from "pg";
 
 async function sendResetPasswordEmail(to: string, resetUrl: string) {
-  console.log(`[Better Auth] Reset Password URL for ${to}: ${resetUrl}`);
   const host = process.env.SMTP_HOST || process.env.EMAIL_SERVER_HOST;
   const user = process.env.SMTP_USER || process.env.EMAIL_SERVER_USER;
   const pass = process.env.SMTP_PASS || process.env.EMAIL_SERVER_PASSWORD;
@@ -38,14 +37,15 @@ async function sendResetPasswordEmail(to: string, resetUrl: string) {
               <a href="${resetUrl}" style="background-color: #064e3b; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Reset Password</a>
             </p>
             <p style="color: #6b7280; font-size: 14px;">If you did not request a password reset, you can safely ignore this email.</p>
-            <p style="color: #9ca3af; font-size: 12px; margin-top: 24px;">Direct link: <a href="${resetUrl}">${resetUrl}</a></p>
           </div>
         `,
       });
-      console.log(`[Better Auth] Reset Password email sent successfully to ${to}`);
-    } catch (err) {
-      console.error(`[Better Auth] Failed to send email via SMTP:`, err);
+      console.log(`[Better Auth] Reset Password email sent successfully.`);
+    } catch (err: any) {
+      console.error(`[Better Auth] Failed to send reset email via SMTP:`, err.message || err);
     }
+  } else {
+    console.warn(`[Better Auth] SMTP is not configured. Reset email not dispatched.`);
   }
 }
 
@@ -131,10 +131,8 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     autoSignIn: true,
-    async sendResetPassword({ user, url, token }) {
-      const webUrl = process.env.NEXT_PUBLIC_WEB_URL || process.env.WEB_URL || "https://raza-stationers-web.vercel.app";
-      const resetUrl = `${webUrl}/reset-password?token=${token}`;
-      await sendResetPasswordEmail(user.email, resetUrl);
+    async sendResetPassword({ user, url }) {
+      await sendResetPasswordEmail(user.email, url);
     },
     password: {
       hash: async (password: string) => {

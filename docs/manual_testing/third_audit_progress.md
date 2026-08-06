@@ -22,7 +22,7 @@
 | 7 | C-07 | Buying prices and cross-business financial data are exposed | Critical | PASSED | 3d1f35b |
 | 8 | C-08 | Mobile app has mock authentication and mock authorization | Critical | PASSED | 230697f |
 | 9 | H-01 | Admin route protection is not secure | High | PASSED | 077ab65 |
-| 10 | H-02 | Password reset leaks tokens and has unreliable delivery | High | NOT STARTED | |
+| 10 | H-02 | Password reset leaks tokens and has unreliable delivery | High | PASSED | 04fbcc7 |
 | 11 | H-03 | Signup does not complete business onboarding | High | NOT STARTED | |
 | 12 | H-04 | Public catalogue exposes pending products and incorrect sale types | High | NOT STARTED | |
 | 13 | H-05 | Accounting, returns, and delivery routes do not match clients | High | NOT STARTED | |
@@ -284,10 +284,32 @@
 - Tests Run:
   - `npm run test:phase9:h01`
   - `npm test`
-- Test Results: All unit and regression tests passed 100%. Verified role fallback removal, explicit role whitelist (`owner`, `admin`, `packing`, `delivery`), `isActive` check, and Access Denied screen rendering.
 - Remaining Risks: None. Missing role defaults to `null` and non-staff roles are strictly denied.
 - Commit Hash: 077ab65
 - Notes: H-01 implementation and verification complete.
+
+### H-02 — Password reset leaks tokens and has unreliable delivery
+
+- Status: PASSED
+- Started At: 2026-08-06T19:58:00+05:00
+- Completed At: 2026-08-06T20:00:00+05:00
+- Root Cause Confirmed: Password reset logging printed the raw reset URL with sensitive tokens to console logs, and email template printed raw URLs. `resetPassword` error handling exposed user enumeration.
+- Files Changed:
+  - apps/api/src/auth/better-auth.ts
+  - apps/web/src/hooks/use-auth.tsx
+  - tests/phase9/test_h02_password_reset.mjs (NEW)
+  - package.json
+  - docs/manual_testing/third_audit_progress.md
+- Database Changes: None
+- Environment Changes: None
+- Tests Run:
+  - `npm run test:phase9:h02`
+  - `npm test`
+- Test Results: All unit and regression tests passed 100%. Verified complete removal of reset token logging, exact URL usage, and generic response for email enumeration protection.
+- Remaining Risks: None. Password reset tokens are never logged or exposed in client responses.
+- Commit Hash: 04fbcc7
+- Notes: H-02 implementation and verification complete.
+
 
 
 

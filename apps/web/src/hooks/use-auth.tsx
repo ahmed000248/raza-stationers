@@ -236,15 +236,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const resetPassword = React.useCallback(
     async (email: string) => {
       setAuthError(null)
-      const res = await (authClient as any).forgetPassword({
-        email,
-        redirectTo: "/reset-password",
-      })
-      if (res.error) {
-        const errObj = res.error as any
-        const errMsg = (typeof errObj === "string" ? errObj : errObj?.message) || "Failed to send reset password link"
-        setAuthError(errMsg)
-        throw new Error(errMsg)
+      try {
+        await (authClient as any).forgetPassword({
+          email,
+          redirectTo: "/reset-password",
+        })
+      } catch {
+        // Always succeed to prevent user/email enumeration attacks
       }
     },
     [authClient]
