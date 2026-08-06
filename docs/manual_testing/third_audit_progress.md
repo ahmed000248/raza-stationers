@@ -24,7 +24,7 @@
 | 9 | H-01 | Admin route protection is not secure | High | PASSED | 077ab65 |
 | 10 | H-02 | Password reset leaks tokens and has unreliable delivery | High | PASSED | 04fbcc7 |
 | 11 | H-03 | Signup does not complete business onboarding | High | PASSED | cf40998 |
-| 12 | H-04 | Public catalogue exposes pending products and incorrect sale types | High | NOT STARTED | |
+| 12 | H-04 | Public catalogue exposes pending products and incorrect sale types | High | PASSED | 757906c |
 | 13 | H-05 | Accounting, returns, and delivery routes do not match clients | High | NOT STARTED | |
 | 14 | H-06 | Inactive users and changed roles retain access | High | NOT STARTED | |
 | 15 | H-07 | Supabase RLS does not provide tenant isolation | High | NOT STARTED | |
@@ -325,10 +325,32 @@
 - Tests Run:
   - `npm run test:phase9:h03`
   - `npm test`
-- Test Results: All unit and regression tests passed 100%. Verified business registration trigger during signup, server-derived account status from `clientBusiness.accountStatus`, and `OnboardingGate` activation.
 - Remaining Risks: None. Onboarding is complete, server-derived, and wrapped with `OnboardingGate`.
 - Commit Hash: cf40998
 - Notes: H-03 implementation and verification complete.
+
+### H-04 — Public catalogue exposes pending products and incorrect sale types
+
+- Status: PASSED
+- Started At: 2026-08-06T20:04:00+05:00
+- Completed At: 2026-08-06T20:06:00+05:00
+- Root Cause Confirmed: Public catalogue query included `pending_review` products alongside `active` products. Individual and bulk filters used duplicate SQL, and `saleTypes.individual` defaulted to `true` instead of using `product.allowIndividualSale`.
+- Files Changed:
+  - apps/api/src/catalogue/catalogue.service.ts
+  - tests/phase9/test_h04_catalogue_visibility.mjs (NEW)
+  - package.json
+  - docs/manual_testing/third_audit_progress.md
+- Database Changes: None
+- Environment Changes: None
+- Tests Run:
+  - `npm run build:api`
+  - `npm run test:phase9:h04`
+  - `npm test`
+- Test Results: All unit and regression tests passed 100%. Verified public listing filters strictly on `status = 'active'`, individual sale filter checks `allow_individual_sale = true`, bulk filter checks `conversion_to_base > 1`, and public detail endpoints reject non-active products.
+- Remaining Risks: None. Non-active products are hidden from public view and accessible only via admin endpoints.
+- Commit Hash: 757906c
+- Notes: H-04 implementation and verification complete.
+
 
 
 

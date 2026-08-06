@@ -10,7 +10,7 @@ export class CatalogueService {
   async findProducts(query: PaginationDto) {
     const page = Number(query.page) || 1;
     const limit = Math.min(Number(query.limit) || 20, 100);
-    const filters: Prisma.Sql[] = [Prisma.sql`p.status IN ('active'::product_status, 'pending_review'::product_status)`];
+    const filters: Prisma.Sql[] = [Prisma.sql`p.status = 'active'::product_status`];
 
     if (query.search?.trim()) {
       const search = `%${query.search.trim()}%`;
@@ -18,16 +18,16 @@ export class CatalogueService {
     }
     if (query.categorySlug) filters.push(Prisma.sql`c.slug = ${query.categorySlug}`);
     if (query.saleType === "individual") {
-      filters.push(Prisma.sql`EXISTS (
+      filters.push(Prisma.sql`p.allow_individual_sale = true AND EXISTS (
         SELECT 1 FROM product_packaging pp JOIN product_prices price ON price.product_packaging_id = pp.id
-        WHERE pp.product_id = p.id AND pp.is_active
+        WHERE pp.product_id = p.id AND pp.is_active AND pp.is_base
           AND price.price_type IN ('retail', 'wholesale') AND price.amount > 0 AND price.effective_to IS NULL
       )`);
     }
     if (query.saleType === "bulk") {
       filters.push(Prisma.sql`EXISTS (
         SELECT 1 FROM product_packaging pp JOIN product_prices price ON price.product_packaging_id = pp.id
-        WHERE pp.product_id = p.id AND pp.is_active
+        WHERE pp.product_id = p.id AND pp.is_active AND pp.conversion_to_base > 1
           AND price.price_type IN ('retail', 'wholesale') AND price.amount > 0 AND price.effective_to IS NULL
       )`);
     }
@@ -107,7 +107,7 @@ export class CatalogueService {
       return {
         id: p!.id, sku: p!.sku, name: p!.name, nameUrdu: p!.nameUrdu, shopName: p!.shopName,
         categoryId: p!.categoryId, category: p!.category.name, categorySlug: p!.category.slug,
-        purchaseType: p!.purchaseType, saleTypes: { individual: true, bulk: packages.some((pkg) => pkg.conversionToBase > 1) },
+        purchaseType: p!.purchaseType, saleTypes: { individual: p!.allowIndividualSale, bulk: packages.some((pkg) => pkg.conversionToBase > 1) },
         packaging: packages, wholesalePrice: basePackage?.wholesalePrice, retailPrice: basePackage?.retailPrice,
         stockStatus, currentQuantity: available,
       };
@@ -140,7 +140,7 @@ export class CatalogueService {
         aliases: true,
       },
     });
-    if (!product || product.status === "archived") throw new NotFoundException("Product not found");
+    if (!product || product.status !== "active") throw new NotFoundException("Product not found");
     const publicProduct = { ...product, packaging: product.packaging.filter((pkg) => !pkg.isBase || product.allowIndividualSale) };
     return JSON.parse(JSON.stringify(publicProduct, (k, v) => (typeof v === "bigint" ? v.toString() : v)));
   }
@@ -169,7 +169,7 @@ export class CatalogueService {
       },
     });
 
-    if (!product || product.status === "archived") throw new NotFoundException("Product not found");
+    if (!product || product.status !== "active") throw new NotFoundException("Product not found");
     const publicProduct = { ...product, packaging: product.packaging.filter((pkg) => !pkg.isBase || product.allowIndividualSale) };
     return JSON.parse(JSON.stringify(publicProduct, (k, v) => (typeof v === "bigint" ? v.toString() : v)));
   }
