@@ -19,6 +19,7 @@
 | 1.1 | 2026-07-23 | Ahmed | Aligned role/permission matrix and affected FRs with BRD v1.1's Owner-only split (account approval, credit limits/approval, payment history, accounting/reports, audit log, stock corrections); added `FR-STK-07` | Draft |
 | 1.2 | 2026-07-25 | Ahmed | Removed the stale "images" reference in `FR-CAT-01` — the finalized design has no product photography, catalogue is description-based only; added `FR-CAT-08` for the Individual/Bulk purchase-type split that the design phase introduced but was never written back into this document | Draft |
 | 1.3 | 2026-07-26 | Ahmed/Codex | Phase 5B reconciliation: optional base-unit low-stock threshold, stable yearly Order numbers, store-credit-only ledger semantics and explicit CreditNote source types | Demo-approved, production review pending |
+| 1.4 | 2026-08-06 | Ahmed | Phase 10 reconciliation: Unified Better Auth authentication engine (email, mobile identifier, Google OAuth), same-origin BFF HTTP-only cookies, mandatory AAL2 TOTP MFA for Owner/Admin, real-time DB active check & role revocation, atomic transaction product creation, backend RLS isolation (`raza_runtime`), and query FK B-tree indexing | Completed & Approved |
 
 ---
 
@@ -138,12 +139,12 @@ Server-side enforcement is mandatory for every row above — see `FR-SEC-01`. No
 
 | ID | Requirement | Actor(s) | Priority | Related BR |
 |---|---|---|---|---|
-| FR-AUTH-01 | User registers with mobile number, name, and password. System validates mobile number format and checks for duplicates. | Guest | M | NA-02 |
-| FR-AUTH-02 | User logs in with mobile number + password. After 5 failed attempts, account is temporarily locked for 15 minutes and the attempt is logged. | All registered users | M | Security (§16) |
-| FR-AUTH-03 | User requests password reset via admin-assisted recovery (v1: staff verifies identity and issues a reset link/code manually). | Registered user | M | NA-02 |
-| FR-AUTH-04 | Owner/Admin accounts require two-factor authentication (2FA) at login. | Owner, Admin | S (target for v1; acceptable to phase in) | NA-02, Security (§16) |
-| FR-AUTH-05 | SMS/WhatsApp OTP login. | All | Phase 2 | NA-02 |
-| FR-AUTH-06 | Session expires after a configurable period of inactivity; sensitive admin actions (e.g. approving credit limits) require re-authentication if session is older than a set threshold. | Owner, Admin | S | Security (§16) |
+| FR-AUTH-01 | User registers via Better Auth using email/password or Google OAuth. Business registration information is incorporated during onboarding. | Guest | M | NA-02 |
+| FR-AUTH-02 | User logs in via email, mobile identifier, or Google OAuth. Sessions are stored in Same-Site HTTP-only cookies (`SameSite=Lax`, `Secure` in prod) via BFF proxy (`/api/*`). | All registered users | M | Security (§16) |
+| FR-AUTH-03 | User requests password reset via exact Better Auth URL parameter endpoint; responses use generic messaging to prevent account enumeration. | Registered user | M | NA-02 |
+| FR-AUTH-04 | Owner/Admin accounts strictly enforce mandatory AAL2 Two-Factor Authentication (MFA) using TOTP secrets. `RolesGuard` rejects AAL1 sessions for privileged administrative routes. | Owner, Admin | M | NA-02, Security (§16) |
+| FR-AUTH-05 | `BetterAuthGuard` validates user role and `isActive` status in real-time against the database. Account deactivation or role modification immediately revokes active sessions and logs an audit record. | System | M | NA-02 |
+| FR-AUTH-06 | API errors with status 401 Unauthorized invoke `onUnauthorized` callbacks in React auth providers to immediately clear cached user, business, and role state without looping. | Web, Admin UI | M | Security (§16) |
 
 ### 6.2 Client Business & User Account Management
 

@@ -17,6 +17,7 @@
 | 1.0 | 2026-07-23 | Ahmed | Initial BRD compiled from business workflow discussion and Q&A with stakeholder | Draft — pending owner sign-off |
 | 1.1 | 2026-07-23 | Ahmed | Refined Owner vs. Admin permission split after admin panel design review: account approval, credit limits/approval, payment history, staff management, accounting/reports, and audit log are now explicitly Owner-only | Draft — pending owner sign-off |
 | 1.2 | 2026-07-26 | Ahmed/Codex | Phase 5B reconciliation: optional base-unit low-stock threshold, yearly order numbering, separation of invoice debt from store credit, and explicit CreditNote sources | Demo-approved, production review pending |
+| 1.3 | 2026-08-06 | Ahmed | Phase 10 reconciliation: Unified Better Auth system, mandatory AAL2 TOTP MFA for administrative roles, same-origin BFF cookie session storage, real-time DB role & active status revocation, backend RLS isolation (`raza_runtime`), and atomic transaction guarantees | Completed & Approved |
 
 ---
 
@@ -293,7 +294,7 @@ Only one discount applies; discounts never stack. Percentage discounts apply to 
 
 **NA-01 — Restock notifications.** Notifications are targeted and opt-in, not blanket. Approved customers can follow specific products, categories, brands, or important business announcements. The system will not notify every customer about every restock, to avoid notification fatigue.
 
-**NA-02 — Login method.** Mobile number is the primary account identity, since it is more familiar and accessible to most customers than email. Version 1 uses: mobile number + secure password, with admin-assisted account recovery. SMS/WhatsApp OTP can be added later once cost and reliability are evaluated. Owner and admin accounts should eventually use two-factor authentication (2FA), given the sensitivity of the data they can access.
+**NA-02 — Login method & Auth Security.** Authentication is unified under **Better Auth**, supporting email, mobile identifier, and Google OAuth. Sessions are managed via Same-Site HTTP-only BFF cookies (`SameSite=Lax`, `Secure` in production). Mandatory AAL2 TOTP Two-Factor Authentication (MFA) is strictly enforced for administrative roles (`owner`, `admin`). Access permissions are validated in real-time against the database (`BetterAuthGuard`), ensuring immediate revocation when accounts are deactivated or roles modified.
 
 **NA-03 — Language.** The platform supports both Urdu and English. Version 1 uses very simple English throughout, with Urdu added to important buttons and instructions, familiar local product names, and support for both official and commonly-used shop names for products. Full language switching (a complete parallel Urdu interface) is a later-phase enhancement once the core ordering workflow is stable.
 

@@ -14,8 +14,7 @@
 ## Document Control
 
 | Version | Date | Author | Description | Status |
-|---|---|---|---|---|
-| 1.0 | 2026-07-23 | Ahmed | Initial TRD — architecture, stack, schema, API, and two-environment (demo/production) strategy | Draft |
+|---|---|---|---|---| 1.0 | 2026-07-23 | Ahmed | Initial TRD — architecture, stack, schema, API, and two-environment (demo/production) strategy | Draft |
 | 1.1 | 2026-07-23 | Ahmed | Added Owner-only vs. Admin-allowed authorization guidance and matching API endpoint annotations, aligned with FRD v1.1 | Draft |
 | 1.2 | 2026-07-23 | Ahmed | Re-verified every demo-stack component against current provider pricing; confirmed all layers (including hosting) remain $0 for the demo phase; added Supabase's 7-day auto-pause caveat and a note on Vercel Hobby's non-commercial terms | Draft |
 | 1.3 | 2026-07-25 | Ahmed | Reconciled this document against the actual scaffolded repo: switched §3/§5 from pnpm+Turborepo to npm workspaces (matches what's built, functionally equivalent for this scale); updated §5's repo tree to reflect real package/app names and flag what's not yet scaffolded (`apps/admin`, `apps/api`); removed stale product-image references from §6/§12 (no product photography, per the finalized description-based catalogue design); added `purchase_type` to the Product schema row; flagged an open architecture question on whether `apps/api` (NestJS) is still needed given Next.js Route Handlers/Server Actions could serve the same role | Draft |
@@ -23,7 +22,8 @@
 | 1.5 | 2026-07-26 | Ahmed | First real database design pass, against the actual rate list (`RS-Database.xlsx`: 2,156 products, 87 categories, wholesale prices only — retail/buying prices pending). Wrote `packages/db/prisma/schema.prisma`, the first real Prisma schema for this project (previously only a placeholder service-layer stub existed). Split Product's single `base_price` into `buying_price`/`wholesale_price`/`retail_price` (§6 row updated below) — a genuine pricing-model correction, not just a rename: it closes a gap where an approved wholesale account with no extra discount had no distinct price and silently saw the same price as a guest. BRD PR-01/CD-01 and FRD §8 updated to match (now a 5-tier priority order); `packages/types` and `apps/web`'s pricing logic/mock data updated in lockstep. | Draft |
 | 1.6 | 2026-07-26 | Ahmed | Processed the business owner's answers to the 7 blocking database questions (`docs/phase2answers.md`) and Codex's independent Phase 2 verification of that file. Fixed two real schema gaps `StockMovement` was missing: `orderId` (traces a sale/reversal movement back to its order) and `purchaseDate` (BRD SK-01's own field, distinct from `createdAt`). Corrected BRD CD-04 and FRD FR-PRC-04, which described a "no price shown before approval" state that doesn't match the already-built, QA-passed storefront (pending accounts see retail prices plus a notice, never wholesale). Corrected BRD OF-01 (minimum orders: fully flexible, no MOQ engine needed) and OF-04 (delivery zones: free in Wah Cantt/Hassanabdal/Taxila, charged for Rawalpindi/Islamabad) with the owner's confirmed answers. Left one genuine open item: FR-DLV-02/03 (admin records delivery outcomes in v1) vs. the admin panel's `/delivery` page (built open to a `delivery`-role login directly) — needs an explicit choice before Phase 3 modeling of delivery continues. | Draft |
 | 1.7 | 2026-07-26 | Ahmed/Codex | Phase 4 physical-schema alignment: Product is the required-SKU stock identity; ProductPackaging carries explicit conversions and independent effective-dated prices; categories remain flat; barcode/Brand/supplier/file/multi-warehouse scope is deferred; confirmation reserves and packing deducts; invoice/allocation/ledger/return/delivery-attempt/import-provenance models are introduced; transactional cascades are prohibited. | Demo-approved, awaiting business-owner production review |
-| 1.8 | 2026-07-26 | Ahmed/Codex | Phase 5B reconciliation: optional Product base-unit low-stock threshold; yearly Order numbering; store-credit-only signed ledger; explicit CreditNote source; public-schema Supabase defence-in-depth plan | Demo-approved, awaiting independent migration review |
+| 1.8 | 2026-07-26 | Ahmed/Codex | Phase 5B reconciliation: optional Product base-unit low-stock threshold; yearly Order numbers; store-credit-only signed ledger; explicit CreditNote source; public-schema Supabase defence-in-depth plan | Demo-approved, awaiting independent migration review |
+| 1.9 | 2026-08-06 | Ahmed | Phase 10 reconciliation: Switched authentication engine to **Better Auth** with same-origin BFF cookie proxying (`SameSite=Lax`, `Secure` in prod), Google OAuth, mandatory AAL2 TOTP MFA for Owner/Admin, real-time DB active check & role revocation (`BetterAuthGuard`), atomic product creation inside Prisma transactions, backend RLS database security model (`raza_runtime`), and query FK B-tree indexing | Completed & Approved |t migration review |
 
 ---
 
@@ -205,11 +205,13 @@ The schema below implements the FRD's functional modules. Field lists are repres
 
 ## 7. Authentication & Authorization
 
-- **Demo environment:** Supabase Auth handles account creation, login, and session/JWT issuance (email/password to start, per the free-tier constraint on SMS OTP). Phone numbers are still stored on the `User`/`ClientBusiness` record for display and future OTP use — they're just not the login mechanism yet in the demo.
-- **Production environment:** the same JWT-based auth pattern continues, either via a production Supabase tier, a dedicated auth provider, or a self-hosted solution — the application code does not need to change, only the provider configuration, because auth logic is abstracted behind an internal auth service module in the NestJS backend (not called directly from frontend code).
-- **Authorization:** every API endpoint is protected by role-based guards in NestJS (`@Roles('admin', 'owner')` style decorators) implementing the permission matrix in FRD §5. This is enforced **server-side only** — the frontend hiding a button is a UX nicety, never the actual access control (FR-SEC-01).
-- **Owner-only vs. Admin-allowed actions:** a plain `@Roles('admin', 'owner')` guard is not granular enough on its own — several endpoints must accept `owner` but reject `admin` even though both are staff roles. Per FRD §5 (v1.1), the following are **Owner-only**, not delegable to Admin: approving/rejecting a client business account, setting or approving a credit limit or credit status, viewing a client's payment history, all accounting/reporting endpoints, the audit log, stock corrections/adjustments (as opposed to routine restock entries), staff account management, and business settings. Admin retains order confirmation, routine stock entry, catalogue management, and discount/pricing-tier assignment. Implement this as two guard levels (e.g. `@Roles('owner')` vs `@Roles('admin', 'owner')`) rather than a single shared "staff" role, so a future permission change is a one-line decorator edit, not a logic rewrite.
-- **2FA for Owner/Admin:** basic MFA is available on Supabase's free tier and should be enabled for the Owner account even in the demo, to establish the pattern early (FR-AUTH-04).
+- **Authentication Engine:** **Better Auth** (`apps/api/src/auth/better-auth.ts`) handles user creation, credential authentication, Google OAuth integration, and session management. Authentication credentials reside in PostgreSQL tables (`account`, `session`, `two_factor`, `verification`) managed via Prisma.
+- **Session & Cookie Strategy:** Client applications use same-origin BFF proxying (`apps/web/src/app/api/auth/[...all]` and `apps/admin/src/app/api/auth/[...all]`). Better Auth issues Same-Site HTTP-only cookies (`SameSite=Lax`, `Secure` in production) so credentials are never exposed to browser scripts.
+- **Real-Time Access Revocation:** `BetterAuthGuard` verifies user `role` and `isActive` status in real-time against the database on every protected NestJS request. Account deactivation or staff role modifications immediately delete active sessions (`session.deleteMany({ where: { userId } })`) and write audit logs.
+- **Authorization & Role Guards:** API endpoints are protected by NestJS guards (`BetterAuthGuard`, `RolesGuard`, `@Roles(...)`). Administrative access is strictly enforced server-side.
+- **Owner-only vs. Admin-allowed actions:** Owner-only endpoints (`@Roles('owner')`) include client account approval, credit limits/approvals, client payment history, financial/accounting reports, audit log inspection, staff management, and business settings. Admin retains order confirmation, routine stock entry, catalogue management, and discount tier assignment (`@Roles('owner', 'admin')`).
+- **Mandatory AAL2 TOTP MFA:** Owner and Admin roles require verified AAL2 TOTP MFA via Better Auth (`authClient.twoFactor.verifyTotp`). `RolesGuard` rejects AAL1 sessions for privileged administrative routes.
+- **Frontend Session State Clearing:** On HTTP 401 Unauthorized responses, `RazaAPIClient` invokes an `onUnauthorized` callback clearing cached React AuthProvider user, business, and role state cleanly.
 
 ---
 
@@ -315,31 +317,33 @@ Real payment integration requires, before it is enabled: signed business documen
 
 ---
 
-## 16. Security Architecture
+## 16. Security Architecture & Database Hardening
 
 Directly implements FRD §6.14 (`FR-SEC-01` to `FR-SEC-06`):
 
-- **Server-side authorization** on every endpoint via NestJS guards — never trust client-side role checks.
-- **Password hashing** via bcrypt/argon2 (never plaintext), enforced by the auth provider in both environments.
-- **HTTPS everywhere** — enforced by Vercel/Render in the demo, and by the production host's TLS termination.
-- **Audit log model:** `AuditLog` stores actor, action, entity, redacted before/after JSON, reason, correlation id and timestamp. `schema.prisma` does not guarantee that a sensitive mutation creates an audit record and cannot redact secrets by itself. Same-transaction audit creation, sensitive-field redaction, authorization and append-only database protection remain mandatory NestJS/PostgreSQL implementation work.
-- **Encryption at rest** for sensitive fields (customer contact info, financial balances) — handled at the managed-database level in both Supabase and production-grade Postgres hosting.
-- **Backups:** automated daily backups are a **production requirement, not present in the demo** (Supabase's free tier explicitly lacks this — see §20). The demo therefore must never hold real confidential business data, per the constraint in §20.
-- **Secrets management:** `.env` files, API keys, and service-role keys are never committed to the repository; `.gitignore` enforced from the first commit.
-- **Supabase database boundary:** schema v0.1 keeps business tables in `public`, but the development Data API will be disabled. The migration enables RLS and revokes `anon`, `authenticated` and `service_role` table/function/sequence privileges as defence-in-depth, without browser policies. NestJS is the only application database boundary. A dedicated least-privilege runtime role and direct migration connection are deferred to Phase 5D; no database credentials are introduced in Phase 5B.
+- **Server-Side Authorization & Guards:** Every NestJS API route is protected by `BetterAuthGuard` and `RolesGuard`, enforcing real-time active status validation against PostgreSQL.
+- **Same-Origin Cookie BFF Architecture:** Web (`apps/web/src/app/api/auth/[...all]`) and Admin (`apps/admin/src/app/api/auth/[...all]`) applications use HTTP-only, Same-Site cookies (`SameSite=Lax`, `Secure` in production) to isolate auth credentials from browser JavaScript.
+- **Database RLS & Least-Privilege Isolation:** Better Auth tables (`account`, `session`, `two_factor`, `verification`) are secured with Row Level Security (RLS) and revoked from untrusted browser roles (`anon`, `authenticated`, `PUBLIC`). The API connects exclusively via the restricted runtime user `raza_runtime`.
+- **Query Performance & Indexing:** High-frequency join columns are indexed with non-unique B-tree foreign key indexes (`products.category_id`, `orders.placed_by_user_id`, `business_user_links.linked_by_id`, `business_user_links.ended_by_id`, `product_prices.created_by_id`, `stock_movements.stock_location_id`, `stock_movements.created_by_id`, `payments.submitted_by_id`, `payments.verified_by_id`).
+- **Atomic Multi-Record Mutations:** All complex product, packaging, and initial price creations are wrapped inside interactive Prisma transactions (`$transaction`) with pre-insert Unit of Measure validation.
+- **Financial Privacy:** Internal buying prices (`buyingPrice`) and profit analytics are stripped from customer-facing APIs and client bundles, accessible strictly to Owner/Admin roles.
+- **Audit Logging:** Immutable `AuditLog` records capture operational actions (role changes, account deactivation, credit limit modifications) with correlation metadata.
+- **Secrets Management:** Environment variables (`BETTER_AUTH_SECRET`, `JWT_SECRET`, `DATABASE_URL`, `DIRECT_URL`) are stored strictly in ignored `.env` files and managed via centralized validation (`apps/api/src/config/env.config.ts`).
 
 ---
 
-## 17. Testing Strategy
+## 17. Testing & Verification Strategy
 
-| Layer | Tool | Covers |
+| Layer | Tool / Command | Purpose & Coverage |
 |---|---|---|
-| Unit tests | Jest | Pricing engine (§9), credit logic (§11), order state machine (§10) — the highest-risk business logic |
-| API integration tests | Supertest | Every controller endpoint, including authorization checks (attempting restricted actions as the wrong role, per FRD §10) |
-| End-to-end tests | Playwright | Core customer flows (browse → cart → checkout) and core admin flows (confirm order → print slip → dispatch → deliver) |
-| Manual/usability testing | N/A | Non-technical users (e.g. shop owners) walk through the UI before launch, per FRD §10 |
+| Static & Unit Verification | `npm test` | Runs static checks, PWA, auth-navigation, checkout, and unit regression tests |
+| Dedicated Phase 9 Audit Suite | `npm run test:phase9` | Runs the full 17-script Better Auth, MFA, takeover prevention, RLS, CORS, and transaction regression runner (`run_all_phase9_tests.mjs`) |
+| API Startup Smoke Test | `npm run test:api-startup` | Validates compiled NestJS startup and environment variable guards |
+| Database Validation | `npm run db:validate` & `npm run db:generate` | Verifies Prisma schema integrity and client generation |
+| Production Build Compilation | `npm run build` | Validates clean production compilation across Web, Admin, API Server, Mobile, and shared packages |
+| Disposable Docker Integration | `npm run test:integration` | Runs full disposable PostgreSQL 16 Docker container integration suite |
 
-CI (GitHub Actions) runs lint, type-check, and the unit/integration suite on every pull request; Playwright E2E tests run against a preview deployment.
+CI (GitHub Actions) executes `npm run verify`, `npm test`, `npm run test:phase9`, `npm run typecheck`, `npm run lint`, and `npm run build` on every pull request.
 
 ---
 
