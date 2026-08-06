@@ -3,11 +3,11 @@ import { PRODUCTS } from '../data/products';
 import { MOCK_ORDERS, MOCK_USERS } from '../data/mockData';
 
 export function getApiBaseUrl(): string {
-  const envUrl = process.env.EXPO_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_URL;
-  if (envUrl && envUrl.trim() !== '') {
-    return envUrl.replace(/\/$/, '');
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (envUrl && typeof envUrl === "string" && envUrl.trim() !== "") {
+    return envUrl.replace(/\/$/, "");
   }
-  return '';
+  return "";
 }
 
 export function formatPKR(num: number): string {

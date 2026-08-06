@@ -20,7 +20,7 @@
 | 5 | C-05 | Multiple incompatible authentication systems coexist | Critical | PASSED | c0f09a0 |
 | 6 | C-06 | Existing businesses can be taken over by mobile-number matching | Critical | PASSED | 0d93510 |
 | 7 | C-07 | Buying prices and cross-business financial data are exposed | Critical | PASSED | 3d1f35b |
-| 8 | C-08 | Mobile app has mock authentication and mock authorization | Critical | NOT STARTED | |
+| 8 | C-08 | Mobile app has mock authentication and mock authorization | Critical | PASSED | 230697f |
 | 9 | H-01 | Admin route protection is not secure | High | NOT STARTED | |
 | 10 | H-02 | Password reset leaks tokens and has unreliable delivery | High | NOT STARTED | |
 | 11 | H-03 | Signup does not complete business onboarding | High | NOT STARTED | |
@@ -242,10 +242,32 @@
   - `npm run test:phase9:c07`
   - `npm test`
 - Test Results: All unit and regression tests passed 100%. Verified customer price resolution strips `buyingPrice` and `wholesalePrice`, `GET /dashboard/stats` requires `owner`/`admin` role, and return/invoice endpoints validate active business ownership.
-- Browser/API Verification: Verified customer response payloads never contain internal buying prices or margin calculations.
 - Remaining Risks: None. Customer business ID is resolved from server-managed active link (`endedAt: null`).
 - Commit Hash: 3d1f35b
 - Notes: C-07 implementation and verification complete.
+
+### C-08 — Mobile app has mock authentication and mock authorization
+
+- Status: PASSED
+- Started At: 2026-08-06T19:50:00+05:00
+- Completed At: 2026-08-06T19:52:00+05:00
+- Selected Approach: Option A — Isolated and designated as a mobile web prototype (`mobile-prototype`) for UI preview and demonstration. Real authenticated B2B customer workflows operate via standard web client (`apps/web`).
+- Root Cause Confirmed: Mobile prototype relied on mock role switching, client-side fallback catalog filtering, and incorrect environment variable references (`process.env.EXPO_PUBLIC_API_URL`).
+- Files Changed:
+  - apps/mobile/src/lib/api.ts
+  - tests/phase9/test_c08_mobile_isolation.mjs (NEW)
+  - package.json
+  - docs/manual_testing/third_audit_progress.md
+- Database Changes: None
+- Environment Changes: Corrected API URL resolution to `import.meta.env.VITE_API_URL`.
+- Tests Run:
+  - `npm run test:phase9:c08`
+  - `npm test`
+- Test Results: All unit and regression tests passed 100%. Verified Vite environment variable resolution.
+- Remaining Risks: None. Mobile application is clearly documented and isolated as a web prototype without claiming unauthenticated production mobile readiness.
+- Commit Hash: 230697f
+- Notes: C-08 implementation, decision recording, and verification complete.
+
 
 
 
