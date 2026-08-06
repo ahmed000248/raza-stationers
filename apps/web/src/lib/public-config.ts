@@ -1,5 +1,8 @@
 export function getApiBaseUrl(): string {
-  const configured = process.env.NEXT_PUBLIC_API_URL?.trim();
+  if (typeof window !== "undefined") {
+    return "/api/backend";
+  }
+  const configured = process.env.NEXT_PUBLIC_API_URL?.trim() || process.env.API_URL?.trim();
   if (!configured) {
     return "https://raza-stationers-api-staging.onrender.com";
   }
@@ -9,3 +12,4 @@ export function getApiBaseUrl(): string {
   }
   return parsed.origin;
 }
+

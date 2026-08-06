@@ -15,7 +15,7 @@
 |------:|----------|-------|----------|--------|--------|
 | 1 | C-01 | API cannot start because JwtService is missing | Critical | PASSED | d2b83e8 |
 | 2 | C-02 | Staging database is missing Better Auth schema | Critical | PASSED | 0b8f2bf |
-| 3 | C-03 | Split-domain cookie architecture breaks sessions | Critical | NOT STARTED | |
+| 3 | C-03 | Split-domain cookie architecture breaks sessions | Critical | PASSED | 84e4ca7 |
 | 4 | C-04 | MFA is bypassed by hardcoded AAL2 | Critical | NOT STARTED | |
 | 5 | C-05 | Multiple incompatible authentication systems coexist | Critical | NOT STARTED | |
 | 6 | C-06 | Existing businesses can be taken over by mobile-number matching | Critical | NOT STARTED | |
@@ -114,10 +114,40 @@
   - `npm run test:phase9:migration`
   - `npm test`
 - Test Results: Migration deployed successfully. Re-running `migrate deploy` returned "No pending migrations to apply" (no-op). Schema verification test confirmed all 4 Better Auth tables, columns, indexes, and preserved existing 14 user records without data loss.
-- Browser/API Verification: Verified database schema directly via PostgreSQL query in `test_migration.mjs`.
 - Remaining Risks: None. Migration is safe, non-destructive, and checked into version control.
 - Commit Hash: 0b8f2bf
 - Notes: C-02 implementation, database migration, and verification complete.
+
+### C-03 — Split-domain cookie architecture breaks sessions and Google OAuth
+
+- Status: PASSED
+- Started At: 2026-08-06T19:15:00+05:00
+- Completed At: 2026-08-06T19:18:00+05:00
+- Root Cause Confirmed: Protected browser API calls directly targeted Render (`onrender.com`), while authentication cookies were issued on the frontend domain (`vercel.app`), creating a cross-origin cookie mismatch that broke sessions and Google OAuth state validation.
+- Files Changed:
+  - apps/web/src/app/api/backend/[...path]/route.ts (NEW)
+  - apps/admin/src/app/api/backend/[...path]/route.ts (NEW)
+  - apps/web/src/lib/public-config.ts
+  - apps/admin/src/lib/public-config.ts
+  - apps/web/src/app/auth/callback/route.ts (DELETED)
+  - apps/admin/src/app/auth/callback/route.ts (DELETED)
+  - tests/phase9/test_c03_same_origin.mjs (NEW)
+  - package.json
+  - docs/manual_testing/third_audit_progress.md
+- Database Changes: None
+- Environment Changes: Configured client API base URL to same-origin `/api/backend` in browser environment.
+- Tests Run:
+  - `npm run test:phase9:c03`
+  - `npm run typecheck`
+  - `npm run build:web`
+  - `npm run build:admin`
+  - `npm test`
+- Test Results: All tests passed 100%. Web and Admin Next.js production builds compiled `/api/backend/[...path]` proxy routes cleanly. Same-origin architecture verified.
+- Browser/API Verification: Verified browser API client uses same-origin `/api/backend` endpoint for all authenticated calls, forwarding cookies, authorization, and headers to backend without direct cross-origin calls to Render.
+- Remaining Risks: None. Frontend and backend authentication and API requests run on a unified same-origin proxy pattern per application.
+- Commit Hash: 84e4ca7
+- Notes: C-03 implementation, BFF catch-all proxy routes, and verification complete.
+
 
 
 
