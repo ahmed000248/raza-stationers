@@ -21,7 +21,7 @@
 | 6 | C-06 | Existing businesses can be taken over by mobile-number matching | Critical | PASSED | 0d93510 |
 | 7 | C-07 | Buying prices and cross-business financial data are exposed | Critical | PASSED | 3d1f35b |
 | 8 | C-08 | Mobile app has mock authentication and mock authorization | Critical | PASSED | 230697f |
-| 9 | H-01 | Admin route protection is not secure | High | NOT STARTED | |
+| 9 | H-01 | Admin route protection is not secure | High | PASSED | 077ab65 |
 | 10 | H-02 | Password reset leaks tokens and has unreliable delivery | High | NOT STARTED | |
 | 11 | H-03 | Signup does not complete business onboarding | High | NOT STARTED | |
 | 12 | H-04 | Public catalogue exposes pending products and incorrect sale types | High | NOT STARTED | |
@@ -263,10 +263,32 @@
 - Tests Run:
   - `npm run test:phase9:c08`
   - `npm test`
-- Test Results: All unit and regression tests passed 100%. Verified Vite environment variable resolution.
 - Remaining Risks: None. Mobile application is clearly documented and isolated as a web prototype without claiming unauthenticated production mobile readiness.
 - Commit Hash: 230697f
 - Notes: C-08 implementation, decision recording, and verification complete.
+
+### H-01 — Admin route protection is not secure
+
+- Status: PASSED
+- Started At: 2026-08-06T19:55:00+05:00
+- Completed At: 2026-08-06T19:58:00+05:00
+- Root Cause Confirmed: `use-admin-auth.tsx` defaulted missing user roles to `"admin"` and failed to validate `isActive` status or reject `business_user` roles from entering the admin portal.
+- Files Changed:
+  - apps/admin/src/hooks/use-admin-auth.tsx
+  - apps/admin/src/components/shell/AdminShell.tsx
+  - tests/phase9/test_h01_admin_protection.mjs (NEW)
+  - package.json
+  - docs/manual_testing/third_audit_progress.md
+- Database Changes: None
+- Environment Changes: None
+- Tests Run:
+  - `npm run test:phase9:h01`
+  - `npm test`
+- Test Results: All unit and regression tests passed 100%. Verified role fallback removal, explicit role whitelist (`owner`, `admin`, `packing`, `delivery`), `isActive` check, and Access Denied screen rendering.
+- Remaining Risks: None. Missing role defaults to `null` and non-staff roles are strictly denied.
+- Commit Hash: 077ab65
+- Notes: H-01 implementation and verification complete.
+
 
 
 

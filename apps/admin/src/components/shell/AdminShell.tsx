@@ -81,6 +81,14 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   }
 
   if (!adminRole) {
+    if (user) {
+      return (
+        <div className="flex min-h-screen flex-col items-center justify-center bg-[var(--canvas)] p-6 text-center">
+          <h1 className="text-xl font-bold text-[var(--ink-900)]">Access Denied</h1>
+          <p className="mt-2 text-sm text-[var(--ink-600)]">Your account role does not have permission to access the operations portal.</p>
+        </div>
+      )
+    }
     return <BrandedLoader label="Verifying portal permissions..." />
   }
 

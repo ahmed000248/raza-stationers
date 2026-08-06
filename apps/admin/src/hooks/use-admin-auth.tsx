@@ -51,23 +51,34 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
           name: u.name,
           mobileNumber: (u as any).mobileNumber || "",
           passwordHash: "",
-          role: ((u as any).role as any) || "admin",
+          role: (u as any).role || null,
           isActive: true,
           createdAt: u.createdAt instanceof Date ? u.createdAt.toISOString() : String(u.createdAt),
           twoFactorEnabled: Boolean((u as any).twoFactorEnabled),
         } as any
-        setUser(mappedUser)
-        setRole((mappedUser.role as AdminRole) || "admin")
+        const ALLOWED_ADMIN_ROLES: AdminRole[] = ["owner", "admin", "packing", "delivery"]
+        const userRole = (u as any).role as AdminRole
+        const isAllowedRole = ALLOWED_ADMIN_ROLES.includes(userRole)
+        const isActive = (u as any).isActive !== false
 
-        const is2faEnabled = Boolean((u as any).twoFactorEnabled)
-        const isSessionVerified = Boolean((res?.data?.session as any)?.twoFactorVerified || (res?.data as any)?.twoFactorVerified)
+        if (isAllowedRole && isActive) {
+          setUser(mappedUser)
+          setRole(userRole)
 
-        if (is2faEnabled) {
-          setNextLevel("aal2")
-          setCurrentLevel(isSessionVerified ? "aal2" : "aal1")
+          const is2faEnabled = Boolean((u as any).twoFactorEnabled)
+          const isSessionVerified = Boolean((res?.data?.session as any)?.twoFactorVerified || (res?.data as any)?.twoFactorVerified)
+
+          if (is2faEnabled) {
+            setNextLevel("aal2")
+            setCurrentLevel(isSessionVerified ? "aal2" : "aal1")
+          } else {
+            setCurrentLevel("aal1")
+            setNextLevel("aal1")
+          }
         } else {
-          setCurrentLevel("aal1")
-          setNextLevel("aal1")
+          // Deny access to non-staff roles (business_user) or inactive accounts
+          setUser(null)
+          setRole(null)
         }
       } else {
         setUser(null)
