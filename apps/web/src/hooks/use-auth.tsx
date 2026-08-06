@@ -13,6 +13,8 @@ export type AccountStatus =
   | "authenticated_unregistered"
   | "pending"
   | "approved"
+  | "suspended"
+  | "rejected"
   | "unconfigured"
   | "auth_error"
 
@@ -226,11 +228,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Complete business registration
       try {
         await api.registerClient({
-          name: data.businessName,
+          businessName: data.businessName,
           businessType: data.businessType,
           contactPerson: data.contactPerson || data.name,
           mobileNumber: data.mobileNumber,
-          email: data.email,
           address: data.address,
           city: data.city,
         })
