@@ -29,7 +29,7 @@
 | 14 | H-06 | Inactive users and changed roles retain access | High | PASSED | 675597d |
 | 15 | H-07 | Supabase RLS does not provide tenant isolation | High | PASSED | 875fc1b |
 | 16 | H-08 | Trusted origins and cookie settings are inconsistent | High | PASSED | c16f4b6 |
-| 17 | M-01 | Unauthorized responses do not clear stale frontend state | Medium | NOT STARTED | |
+| 17 | M-01 | Unauthorized responses do not clear stale frontend state | Medium | PASSED | 6e7cae8 |
 | 18 | M-02 | Phase 9 has no dedicated authentication regression suite | Medium | NOT STARTED | |
 | 19 | M-03 | Important foreign keys lack indexes | Medium | NOT STARTED | |
 | 20 | M-04 | Product creation can leave partial records | Medium | NOT STARTED | |
@@ -436,10 +436,33 @@
   - `npm run build:api`
   - `npm run test:phase9:h08`
   - `npm test`
-- Test Results: All unit and regression tests passed 100%. Verified startup failure on partial Google OAuth configuration, unified CORS/trusted origin calculation, and environment-aware cookie attributes (`useSecureCookies: isProd`, `sameSite: "lax"`, `secure: isProd`).
 - Remaining Risks: None. Origin calculation and cookie configuration are unified and production-aware.
 - Commit Hash: c16f4b6
 - Notes: H-08 implementation and verification complete.
+
+### M-01 — Unauthorized responses do not clear stale frontend state
+
+- Status: PASSED
+- Started At: 2026-08-06T20:20:00+05:00
+- Completed At: 2026-08-06T20:21:00+05:00
+- Root Cause Confirmed: `RazaAPIClient` accepted an `onUnauthorized` callback parameter but failed to invoke it when handling 401 Unauthorized responses.
+- Files Changed:
+  - packages/api/src/index.ts
+  - apps/web/src/hooks/use-auth.tsx
+  - apps/admin/src/hooks/use-admin-auth.tsx
+  - tests/phase9/test_m01_unauthorized_state_clearing.mjs (NEW)
+  - package.json
+  - docs/manual_testing/third_audit_progress.md
+- Database Changes: None
+- Environment Changes: None
+- Tests Run:
+  - `npm run test:phase9:m01`
+  - `npm test`
+- Test Results: All unit and regression tests passed 100%. Verified invocation of `onUnauthorized` callback on 401 responses and state clearing across web and admin React auth providers.
+- Remaining Risks: None. Frontend user and session state are cleared immediately on HTTP 401 responses.
+- Commit Hash: 6e7cae8
+- Notes: M-01 implementation and verification complete.
+
 
 
 

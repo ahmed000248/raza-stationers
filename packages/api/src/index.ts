@@ -303,6 +303,11 @@ export class RazaAPIClient {
   }
 
   private async handleErrorResponse(res: Response, path?: string): Promise<never> {
+    if (res.status === 401 && this.onUnauthorized) {
+      try {
+        this.onUnauthorized();
+      } catch {}
+    }
     const text = await res.text().catch(() => "Unknown error");
     let message = text;
     try {

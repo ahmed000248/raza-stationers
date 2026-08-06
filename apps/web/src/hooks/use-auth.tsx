@@ -77,7 +77,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [businessRole, setBusinessRole] = React.useState<BusinessUserRole | null>(null)
   const [authError, setAuthError] = React.useState<string | null>(null)
 
-  const api = React.useMemo(() => createAPIClient({ baseUrl: API_BASE }), [])
+  const clearAuthState = React.useCallback(() => {
+    setUser(null)
+    setClientBusiness(null)
+    setBusinessRole(null)
+    setAuthError(null)
+    setAccountStatus("guest")
+  }, [])
+
+  const api = React.useMemo(() => createAPIClient({
+    baseUrl: API_BASE,
+    onUnauthorized: () => {
+      clearAuthState()
+    },
+  }), [clearAuthState])
   const authClient = React.useMemo(() => {
     const baseUrl = typeof window !== "undefined" ? `${window.location.origin}/api` : API_BASE
     return createBetterAuthClient(baseUrl)

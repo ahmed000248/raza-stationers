@@ -34,7 +34,18 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   const [currentLevel, setCurrentLevel] = React.useState<string>("aal1")
   const [nextLevel, setNextLevel] = React.useState<string>("aal1")
 
-  const api = React.useMemo(() => createAPIClient({ baseUrl: API_BASE }), [])
+  const clearAdminState = React.useCallback(() => {
+    setUser(null)
+    setRole(null)
+    setCurrentLevel("aal1")
+  }, [])
+
+  const api = React.useMemo(() => createAPIClient({
+    baseUrl: API_BASE,
+    onUnauthorized: () => {
+      clearAdminState()
+    },
+  }), [clearAdminState])
   const authClient = React.useMemo(() => {
     const baseUrl = typeof window !== "undefined" ? `${window.location.origin}/api` : API_BASE
     return createBetterAuthClient(baseUrl)
