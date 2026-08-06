@@ -87,6 +87,7 @@ assert.deepEqual(migrations, [
   "20260801120000_add_totp_fields",
   "20260801190000_add_supabase_auth_id",
   "20260802120000_phase7_post_deployment_refinement",
+  "20260806150000_better_auth_schema",
 ]);
 
 for (const [file, expected] of [

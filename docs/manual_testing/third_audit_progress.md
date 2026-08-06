@@ -6,7 +6,7 @@
 - Branch: phase-9-betterauth
 - Started At: 2026-08-06T19:05:00+05:00
 - Last Updated At: 2026-08-06T19:05:00+05:00
-- Current Issue: C-01 — API cannot start because JwtService is missing
+- Current Issue: C-02 — Staging database is missing Better Auth schema
 - Overall Status: IN PROGRESS
 
 ## Progress Summary
@@ -14,7 +14,7 @@
 | Order | Issue ID | Title | Priority | Status | Commit |
 |------:|----------|-------|----------|--------|--------|
 | 1 | C-01 | API cannot start because JwtService is missing | Critical | PASSED | d2b83e8 |
-| 2 | C-02 | Staging database is missing Better Auth schema | Critical | NOT STARTED | |
+| 2 | C-02 | Staging database is missing Better Auth schema | Critical | PASSED | 0b8f2bf |
 | 3 | C-03 | Split-domain cookie architecture breaks sessions | Critical | NOT STARTED | |
 | 4 | C-04 | MFA is bypassed by hardcoded AAL2 | Critical | NOT STARTED | |
 | 5 | C-05 | Multiple incompatible authentication systems coexist | Critical | NOT STARTED | |
@@ -36,15 +36,17 @@
 
 ## Current Issue Implementation Plan
 
-- Issue: C-01 — API cannot start because JwtService is missing
-- Root Cause: AuthService injects JwtService, but AuthModule does not import JwtModule.
-- Files to Inspect: apps/api/src/auth/auth.service.ts, apps/api/src/auth/auth.module.ts, apps/api/src/main.ts, package.json, apps/api/package.json
+- Issue: C-02 — Staging database is missing Better Auth schema
+- Root Cause: Prisma schema contains Better Auth models (session, account, verification, two_factor) and User fields (email_verified, image, two_factor_enabled), but no migration was generated/applied for Phase 9 to staging.
+- Files to Inspect: packages/db/prisma/schema.prisma, packages/db/prisma/migrations/*, Dockerfile, package.json, render.yaml
 - Planned Changes:
-  1. Register JwtModule in AuthModule with JwtModule.registerAsync.
-  2. Validate required JWT_SECRET configuration in production in main.ts and AuthModule.
-  3. Create API startup smoke test in tests/phase9/test_api_startup.mjs.
-  4. Add "test:api-startup" script to package.json.
-- Tests to Run: `npm run typecheck --workspace=@raza-stationers/api-server`, `npm run build:api`, `npm run test:api-startup`
+  1. Inspect existing migrations to determine pre-Phase 9 baseline (`20260802120000_phase7_post_deployment_refinement`).
+  2. Create a checked-in SQL migration `20260806150000_better_auth_schema` under `packages/db/prisma/migrations/`.
+  3. Ensure migration adds Better Auth user fields safely (nullable first, backfill defaults, non-null where appropriate) and creates session, account, verification, two_factor tables with correct PKs, FKs, unique constraints, and indexes without dropping existing data.
+  4. Add migration verification script `tests/phase9/test_migration.mjs` and npm scripts (`db:migrate:deploy`, `test:phase9:migration`).
+  5. Run `npx prisma migrate deploy` against staging database and verify all Better Auth tables, columns, and indexes.
+- Tests to Run: `npm run db:validate`, `npm run db:generate`, `npm run test:phase9:migration`, `npx prisma migrate deploy --schema=packages/db/prisma/schema.prisma`
+
 
 ## Issue Completion Records
 
@@ -89,5 +91,33 @@
 - Remaining Risks: None. Legacy JwtModule correctly registered until C-05 auth cleanup.
 - Commit Hash: d2b83e8
 - Notes: C-01 implementation and verification complete.
+
+### C-02 — Staging database is missing Better Auth schema
+
+- Status: PASSED
+- Started At: 2026-08-06T19:12:00+05:00
+- Completed At: 2026-08-06T19:14:00+05:00
+- Root Cause Confirmed: Prisma schema defined Better Auth models (`session`, `account`, `verification`, `two_factor`) and user columns (`email_verified`, `image`, `two_factor_enabled`), but no Phase 9 migration existed or had been applied to staging.
+- Files Changed:
+  - packages/db/prisma/migrations/20260806150000_better_auth_schema/migration.sql
+  - tests/phase9/test_migration.mjs
+  - tests/phase8/test_production_readiness.mjs
+  - package.json
+  - docs/manual_testing/third_audit_progress.md
+- Database Changes: Applied checked-in Prisma migration `20260806150000_better_auth_schema` to staging PostgreSQL database. Added `email_verified`, `image`, `two_factor_enabled` columns to `users`, and created `session`, `account`, `verification`, `two_factor` tables with primary keys, foreign keys, and unique indexes.
+- Environment Changes: None.
+- Tests Run:
+  - `npm run db:validate`
+  - `npm run db:generate`
+  - `npx prisma migrate status --schema=packages/db/prisma/schema.prisma`
+  - `npx prisma migrate deploy --schema=packages/db/prisma/schema.prisma` (run twice to verify idempotency)
+  - `npm run test:phase9:migration`
+  - `npm test`
+- Test Results: Migration deployed successfully. Re-running `migrate deploy` returned "No pending migrations to apply" (no-op). Schema verification test confirmed all 4 Better Auth tables, columns, indexes, and preserved existing 14 user records without data loss.
+- Browser/API Verification: Verified database schema directly via PostgreSQL query in `test_migration.mjs`.
+- Remaining Risks: None. Migration is safe, non-destructive, and checked into version control.
+- Commit Hash: 0b8f2bf
+- Notes: C-02 implementation, database migration, and verification complete.
+
 
 
