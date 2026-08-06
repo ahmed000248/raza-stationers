@@ -23,7 +23,7 @@ import { AppModule } from "./app.module";
 async function bootstrap() {
   const production = process.env.NODE_ENV === "production";
   if (production) {
-    const required = ["DATABASE_URL"];
+    const required = ["DATABASE_URL", "JWT_SECRET"];
     const missing = required.filter((name) => !process.env[name]?.trim());
     if (missing.length) throw new Error(`Missing required production environment variables: ${missing.join(", ")}`);
   }

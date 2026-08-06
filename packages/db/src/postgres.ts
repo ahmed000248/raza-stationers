@@ -33,8 +33,16 @@ function findCertificate(): string | null {
   const configured = process.env.PGSSLROOTCERT?.trim();
   if (configured) {
     const resolved = path.resolve(configured);
-    if (!existsSync(resolved)) throw new Error(`PGSSLROOTCERT path '${configured}' does not reference an existing certificate.`);
-    return resolved;
+    if (existsSync(resolved)) return resolved;
+    let current = process.cwd();
+    for (let depth = 0; depth < 6; depth += 1) {
+      const candidate = path.join(current, configured);
+      if (existsSync(candidate)) return candidate;
+      const parent = path.dirname(current);
+      if (parent === current) break;
+      current = parent;
+    }
+    throw new Error(`PGSSLROOTCERT path '${configured}' does not reference an existing certificate.`);
   }
   const searched: string[] = [];
   let current = process.cwd();
