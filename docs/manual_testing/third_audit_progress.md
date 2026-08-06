@@ -31,7 +31,7 @@
 | 16 | H-08 | Trusted origins and cookie settings are inconsistent | High | PASSED | c16f4b6 |
 | 17 | M-01 | Unauthorized responses do not clear stale frontend state | Medium | PASSED | 6e7cae8 |
 | 18 | M-02 | Phase 9 has no dedicated authentication regression suite | Medium | PASSED | 71e644b |
-| 19 | M-03 | Important foreign keys lack indexes | Medium | NOT STARTED | |
+| 19 | M-03 | Important foreign keys lack indexes | Medium | PASSED | a035950 |
 | 20 | M-04 | Product creation can leave partial records | Medium | NOT STARTED | |
 
 ## Current Issue Implementation Plan
@@ -477,10 +477,33 @@
 - Tests Run:
   - `npm run test:phase9`
   - `npm test`
-- Test Results: All unit and regression tests passed 100%. Executed all 17 Phase 9 test scripts sequentially via `run_all_phase9_tests.mjs`.
 - Remaining Risks: None. `npm run test:phase9` provides a dedicated, reproducible Phase 9 regression suite.
 - Commit Hash: 71e644b
 - Notes: M-02 implementation and verification complete.
+
+### M-03 — Important foreign keys lack indexes
+
+- Status: PASSED
+- Started At: 2026-08-06T20:24:00+05:00
+- Completed At: 2026-08-06T20:26:00+05:00
+- Root Cause Confirmed: High-frequency join columns (`products.category_id`, `orders.placed_by_user_id`, `business_user_links.linked_by_id`, `business_user_links.ended_by_id`, `product_prices.created_by_id`, `stock_movements.stock_location_id`, `stock_movements.created_by_id`, `payments.submitted_by_id`, `payments.verified_by_id`) lacked supporting database indexes.
+- Files Changed:
+  - packages/db/prisma/migrations/20260806170000_add_fk_indexes/migration.sql (NEW)
+  - tests/phase8/test_production_readiness.mjs
+  - tests/phase9/run_all_phase9_tests.mjs
+  - tests/phase9/test_m03_fk_indexes.mjs (NEW)
+  - package.json
+  - docs/manual_testing/third_audit_progress.md
+- Database Changes: Added non-unique B-tree indexes for all query-critical foreign keys via migration `20260806170000_add_fk_indexes`.
+- Environment Changes: None
+- Tests Run:
+  - `npm run test:phase9:m03`
+  - `npm test`
+- Test Results: All unit and regression tests passed 100%. Verified index definitions across all target tables.
+- Remaining Risks: None. Query performance for multi-table joins is optimized.
+- Commit Hash: a035950
+- Notes: M-03 implementation and verification complete.
+
 
 
 

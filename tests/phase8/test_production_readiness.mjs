@@ -89,6 +89,7 @@ assert.deepStrictEqual(migrationDirs, [
   "20260802120000_phase7_post_deployment_refinement",
   "20260806150000_better_auth_schema",
   "20260806160000_h07_database_security",
+  "20260806170000_add_fk_indexes",
 ]);
 
 for (const [file, expected] of [

@@ -18,6 +18,7 @@ const phase9Tests = [
   "test_h07_database_security.mjs",
   "test_h08_trusted_origins.mjs",
   "test_m01_unauthorized_state_clearing.mjs",
+  "test_m03_fk_indexes.mjs",
 ];
 
 console.log("=== RUNNING ALL PHASE 9 REGRESSION TEST SUITES ===");
