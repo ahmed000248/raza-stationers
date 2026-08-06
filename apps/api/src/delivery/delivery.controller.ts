@@ -6,7 +6,7 @@ import { Roles } from "../auth/decorators/roles.decorator";
 import { DeliveryService } from "./delivery.service";
 
 @ApiTags("Delivery")
-@Controller("delivery")
+@Controller()
 @UseGuards(BetterAuthGuard, RolesGuard)
 @Roles("owner", "admin", "delivery")
 @ApiBearerAuth()

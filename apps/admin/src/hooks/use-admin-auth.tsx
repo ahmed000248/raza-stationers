@@ -35,7 +35,10 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   const [nextLevel, setNextLevel] = React.useState<string>("aal1")
 
   const api = React.useMemo(() => createAPIClient({ baseUrl: API_BASE }), [])
-  const authClient = React.useMemo(() => createBetterAuthClient(API_BASE), [])
+  const authClient = React.useMemo(() => {
+    const baseUrl = typeof window !== "undefined" ? `${window.location.origin}/api` : API_BASE
+    return createBetterAuthClient(baseUrl)
+  }, [])
 
   const refreshSession = React.useCallback(async () => {
     try {
@@ -92,7 +95,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null)
     setRole(null)
     setCurrentLevel("aal1")
-  }, [authClient, user?.id])
+  }, [authClient, user])
 
   const login = React.useCallback(
     async (identifier: string, password: string) => {
@@ -126,7 +129,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       setCurrentLevel("aal2")
       await refreshSession()
     },
-    [authClient, refreshSession, user?.id]
+    [authClient, refreshSession, user]
   )
 
   const enrollMfa = React.useCallback(
@@ -167,7 +170,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       setCurrentLevel("aal2")
       await refreshSession()
     },
-    [authClient, refreshSession, user?.id]
+    [authClient, refreshSession, user]
   )
 
   const unenrollMfa = React.useCallback(

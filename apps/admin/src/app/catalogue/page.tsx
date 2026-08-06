@@ -26,7 +26,7 @@ export default function ProductCataloguePage() {
   const fetchAll = React.useCallback(async () => {
     setLoading(true)
     try {
-      const data = await api.getAdminProducts({ limit: 500 })
+      const data = await api.getAdminProducts({ limit: 3000 })
       setProducts(data.items || [])
     } catch {
       setProducts([])

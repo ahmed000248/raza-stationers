@@ -18,7 +18,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
     { id: 'catalogue', label: 'Catalogue', urdu: 'کیٹلاگ', icon: Grid },
     { id: 'cart', label: 'Cart', urdu: 'کارٹ', icon: ShoppingBag, badge: cartCount },
     { id: 'account', label: 'Account', urdu: 'اکاؤنٹ', icon: User }
-  ] as const;
+  ];
 
   return (
     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 w-[calc(100%-2rem)] max-w-[360px]">

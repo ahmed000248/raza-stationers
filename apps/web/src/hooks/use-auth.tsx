@@ -78,7 +78,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [authError, setAuthError] = React.useState<string | null>(null)
 
   const api = React.useMemo(() => createAPIClient({ baseUrl: API_BASE }), [])
-  const authClient = React.useMemo(() => createBetterAuthClient(API_BASE), [])
+  const authClient = React.useMemo(() => {
+    const baseUrl = typeof window !== "undefined" ? `${window.location.origin}/api` : API_BASE
+    return createBetterAuthClient(baseUrl)
+  }, [])
 
   const checkSession = React.useCallback(async () => {
     try {

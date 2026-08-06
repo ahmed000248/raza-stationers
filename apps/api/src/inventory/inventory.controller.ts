@@ -1,6 +1,5 @@
 import { Controller, Get, Post, Param, Query, Body, UseGuards } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { Roles } from "../auth/decorators/roles.decorator";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
@@ -8,7 +7,7 @@ import { BetterAuthGuard } from "../auth/guards/better-auth.guard";
 import { InventoryService } from "./inventory.service";
 
 @ApiTags("Inventory")
-@Controller("inventory")
+@Controller()
 @UseGuards(BetterAuthGuard)
 @ApiBearerAuth()
 export class InventoryController {

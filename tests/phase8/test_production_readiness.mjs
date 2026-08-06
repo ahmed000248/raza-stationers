@@ -56,7 +56,7 @@ assert.doesNotMatch(prismaService, /DIRECT_URL/);
 
 const backendFiles = [
   "apps/api/src/auth/auth.service.ts",
-  "apps/api/src/auth/strategies/supabase.strategy.ts",
+  "apps/api/src/auth/better-auth.ts",
   "apps/api/src/staff/staff.service.ts",
 ];
 for (const file of backendFiles) {
