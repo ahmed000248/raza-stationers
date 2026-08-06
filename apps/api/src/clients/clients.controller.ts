@@ -12,9 +12,10 @@ export class ClientsController {
   constructor(private clientsService: ClientsService) {}
 
   @Get()
-  @UseGuards(BetterAuthGuard)
+  @UseGuards(BetterAuthGuard, RolesGuard)
+  @Roles("owner", "admin")
   @ApiBearerAuth()
-  @ApiOperation({ summary: "List all client businesses" })
+  @ApiOperation({ summary: "List all client businesses (owner/admin only)" })
   findAll(@Query() query: { page?: number; limit?: number; status?: string }) {
     return this.clientsService.findAll(query);
   }
@@ -42,8 +43,8 @@ export class ClientsController {
   @UseGuards(BetterAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Get client business details" })
-  findById(@Param("id") id: string) {
-    return this.clientsService.findById(id);
+  findById(@Param("id") id: string, @CurrentUser() user: any) {
+    return this.clientsService.findById(id, user);
   }
 
   @Put(":id/approve")
@@ -68,7 +69,7 @@ export class ClientsController {
   @UseGuards(BetterAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Get credit account summary for a client" })
-  getCredit(@Param("id") id: string) {
-    return this.clientsService.getCreditSummary(id);
+  getCredit(@Param("id") id: string, @CurrentUser() user: any) {
+    return this.clientsService.getCreditSummary(id, user);
   }
 }

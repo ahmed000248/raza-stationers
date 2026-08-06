@@ -6,7 +6,7 @@
 - Branch: phase-9-betterauth
 - Started At: 2026-08-06T19:05:00+05:00
 - Last Updated At: 2026-08-06T19:05:00+05:00
-- Current Issue: C-04 — MFA is bypassed by hardcoded AAL2
+- Current Issue: C-06 — Prevent Business Account Takeover
 - Overall Status: IN PROGRESS
 
 ## Progress Summary
@@ -18,7 +18,7 @@
 | 3 | C-03 | Split-domain cookie architecture breaks sessions | Critical | PASSED | bc58e18 |
 | 4 | C-04 | MFA is bypassed by hardcoded AAL2 | Critical | PASSED | 24e366a |
 | 5 | C-05 | Multiple incompatible authentication systems coexist | Critical | PASSED | c0f09a0 |
-| 6 | C-06 | Existing businesses can be taken over by mobile-number matching | Critical | NOT STARTED | |
+| 6 | C-06 | Existing businesses can be taken over by mobile-number matching | Critical | PASSED | 0d93510 |
 | 7 | C-07 | Buying prices and cross-business financial data are exposed | Critical | NOT STARTED | |
 | 8 | C-08 | Mobile app has mock authentication and mock authorization | Critical | NOT STARTED | |
 | 9 | H-01 | Admin route protection is not secure | High | NOT STARTED | |
@@ -191,10 +191,34 @@
   - `npm test`
 - Test Results: All unit, migration, and regression tests passed 100%. Verified safe, idempotent credential migration and password change synchronization into Better Auth `account` table.
 - Reconciliation Summary: Total legacy users: 6, Newly migrated: 6, Already reconciled on re-run: 6, Failures: 0.
-- Browser/API Verification: Verified `account` table credentials match user password hashes across all legacy accounts.
 - Remaining Risks: None. Password management and credential authentication operate through Better Auth `account` table credentials.
 - Commit Hash: c0f09a0
 - Notes: C-05 implementation, credential migration script, and test suite complete.
+
+### C-06 — Existing businesses can be taken over by mobile-number matching
+
+- Status: PASSED
+- Started At: 2026-08-06T19:28:00+05:00
+- Completed At: 2026-08-06T19:30:00+05:00
+- Root Cause Confirmed: Registering a business with an already-existing phone number automatically created an owner link for the registering user, creating a severe account takeover flaw.
+- Files Changed:
+  - apps/api/src/clients/clients.service.ts
+  - apps/api/src/clients/clients.controller.ts
+  - tests/phase9/test_c06_takeover_prevention.mjs (NEW)
+  - package.json
+  - docs/manual_testing/third_audit_progress.md
+- Database Changes: None
+- Environment Changes: None
+- Tests Run:
+  - `npm run build:api`
+  - `npm run test:phase9:c06`
+  - `npm test`
+- Test Results: All unit and regression tests passed 100%. Verified duplicate mobile registration throws `ConflictException` (`BUSINESS_ALREADY_REGISTERED`), `GET /clients` is restricted to `owner`/`admin`, and cross-business details/credit queries return `NotFoundException` for unlinked users.
+- Browser/API Verification: Verified unlinked users cannot read or link to foreign client business records.
+- Remaining Risks: None. Phone-number matching automatic link branch deleted. Object-level authorization enforced with `endedAt: null` filters.
+- Commit Hash: 0d93510
+- Notes: C-06 implementation and verification complete.
+
 
 
 

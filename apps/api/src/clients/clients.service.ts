@@ -8,7 +8,7 @@ export class ClientsService {
 
   async findMyClient(userId: string) {
     const link = await this.prisma.businessUserLink.findFirst({
-      where: { userId },
+      where: { userId, endedAt: null },
       include: { clientBusiness: true },
     });
     if (!link) return { clientBusiness: null, role: null };
@@ -44,7 +44,7 @@ export class ClientsService {
     city: string;
   }) {
     const existingLink = await this.prisma.businessUserLink.findFirst({
-      where: { userId },
+      where: { userId, endedAt: null },
       include: { clientBusiness: true },
     });
     if (existingLink) {
@@ -53,27 +53,15 @@ export class ClientsService {
 
     const mobileNumber = normalizePakistaniMobile(data.mobileNumber);
     if (!mobileNumber) throw new ConflictException("Mobile number must use the Pakistani 03XXXXXXXXX format");
+
     const existingBusiness = await this.prisma.clientBusiness.findFirst({
       where: { mobileNumber },
     });
     if (existingBusiness) {
-      const link = await this.prisma.businessUserLink.findFirst({
-        where: {
-          userId,
-          clientBusinessId: existingBusiness.id,
-        },
+      throw new ConflictException({
+        code: "BUSINESS_ALREADY_REGISTERED",
+        message: "A business with this mobile number is already registered in the system.",
       });
-      if (!link) {
-        await this.prisma.businessUserLink.create({
-          data: {
-            userId,
-            clientBusinessId: existingBusiness.id,
-            role: "owner",
-            linkedById: userId,
-          },
-        });
-      }
-      return existingBusiness;
     }
 
     return this.prisma.$transaction(async (tx) => {
@@ -101,11 +89,21 @@ export class ClientsService {
     });
   }
 
-  async findById(id: string) {
+  async findById(id: string, user?: { id: string; role: string }) {
+    if (user && user.role !== "owner" && user.role !== "admin") {
+      const activeLink = await this.prisma.businessUserLink.findFirst({
+        where: { userId: user.id, clientBusinessId: id, endedAt: null },
+      });
+      if (!activeLink) {
+        throw new NotFoundException("Client business not found");
+      }
+    }
+
     const business = await this.prisma.clientBusiness.findUnique({
       where: { id },
       include: {
         userLinks: {
+          where: { endedAt: null },
           include: { user: { select: { id: true, name: true, mobileNumber: true, role: true } } },
         },
         creditAccount: true,
@@ -149,7 +147,16 @@ export class ClientsService {
     });
   }
 
-  async getCreditSummary(id: string) {
+  async getCreditSummary(id: string, user?: { id: string; role: string }) {
+    if (user && user.role !== "owner" && user.role !== "admin") {
+      const activeLink = await this.prisma.businessUserLink.findFirst({
+        where: { userId: user.id, clientBusinessId: id, endedAt: null },
+      });
+      if (!activeLink) {
+        throw new NotFoundException("Client business not found");
+      }
+    }
+
     const business = await this.prisma.clientBusiness.findUnique({
       where: { id },
       include: { creditAccount: true },
