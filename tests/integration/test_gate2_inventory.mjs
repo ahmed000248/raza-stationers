@@ -272,7 +272,7 @@ async function main() {
     console.log("[PASS] Pickup snapshots configured instructions and never creates a delivery charge/record.");
 
     try {
-      await axios.post(`${API_BASE}/orders`, {}, { headers: { Authorization: 'Bearer invalid-expired-token' } });
+      await axios.post(`${API_BASE}/orders`, {}, { headers: { Authorization: 'Bearer invalid_token' } });
       assert.fail('Invalid access token should be rejected');
     } catch (err) {
       assert.strictEqual(err.response.status, 401);

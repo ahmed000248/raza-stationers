@@ -7,6 +7,7 @@
     "packages/*"
   ],
   "scripts": {
+    "security:scan": "node scripts/security/scan-sensitive-material.mjs",
     "dev": "npm run dev --workspace=@raza-stationers/web",
     "dev:admin": "npm run dev --workspace=@raza-stationers/admin",
     "dev:api": "npm run dev --workspace=@raza-stationers/api-server",
