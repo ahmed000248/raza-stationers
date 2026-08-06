@@ -194,6 +194,14 @@ export class RazaAPIClient {
     const qs = searchParams.toString();
     return this.get(`/deliveries${qs ? `?${qs}` : ""}`);
   }
+  async createDelivery(orderId: string) { return this.post("/deliveries", { orderId }); }
+  async getDelivery(id: string) { return this.get(`/deliveries/${id}`); }
+  async getDeliveryByOrder(orderId: string) { return this.get(`/deliveries/order/${orderId}`); }
+
+  // Returns
+  async requestReturn(data: { orderId: string; invoiceId: string; reason: string }) { return this.post("/returns", data); }
+  async getReturn(id: string) { return this.get(`/returns/${id}`); }
+  async getReturnsByOrder(orderId: string) { return this.get(`/returns/order/${orderId}`); }
 
   // Admin catalogue
   async getAdminProducts(params?: { page?: number; limit?: number; status?: string; categorySlug?: string }) {

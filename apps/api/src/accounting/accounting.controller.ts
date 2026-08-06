@@ -14,25 +14,25 @@ import { AccountingService } from "./accounting.service";
 export class AccountingController {
   constructor(private accountingService: AccountingService) {}
 
-  @Get("accounting/summary")
+  @Get("summary")
   @ApiOperation({ summary: "Get accounting summary (owner only)" })
   getSummary() { return this.accountingService.getSummary(); }
 
-  @Get("accounting/revenue")
+  @Get("revenue")
   @ApiOperation({ summary: "Get revenue breakdown by month" })
   getRevenue() { return this.accountingService.getRevenue(); }
 
-  @Get("accounting/expenses")
+  @Get("expenses")
   @ApiOperation({ summary: "List expenses" })
   getExpenses(@Query() query: { page?: number; limit?: number }) { return this.accountingService.getExpenses(query); }
 
-  @Post("accounting/expenses")
+  @Post("expenses")
   @ApiOperation({ summary: "Create expense entry" })
   createExpense(@Body() body: { amount: number; category: string; description: string }, @CurrentUser("id") userId: string) {
     return this.accountingService.createExpense(body, userId);
   }
 
-  @Get("accounting/outstanding")
+  @Get("outstanding")
   @ApiOperation({ summary: "List clients with outstanding credit" })
   getOutstanding() { return this.accountingService.getOutstandingClients(); }
 }

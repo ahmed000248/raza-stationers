@@ -11,19 +11,19 @@ import { ReturnsService } from "./returns.service";
 export class ReturnsController {
   constructor(private returnsService: ReturnsService) {}
 
-  @Post("returns")
+  @Post()
   @ApiOperation({ summary: "Request a return" })
   create(@CurrentUser() user: any, @Body() body: { orderId: string; invoiceId: string; reason: string }) {
     return this.returnsService.create({ ...body, userId: user.id, userRole: user.role });
   }
 
-  @Get("returns/:id")
+  @Get(":id")
   @ApiOperation({ summary: "Get return details" })
   findById(@Param("id") id: string, @CurrentUser() user: any) {
     return this.returnsService.findById(id, user);
   }
 
-  @Get("order-returns/:orderId")
+  @Get("order/:orderId")
   @ApiOperation({ summary: "List returns for an order" })
   findByOrder(@Param("orderId") orderId: string, @CurrentUser() user: any) {
     return this.returnsService.findByOrder(orderId, user);

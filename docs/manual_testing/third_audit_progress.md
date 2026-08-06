@@ -25,7 +25,7 @@
 | 10 | H-02 | Password reset leaks tokens and has unreliable delivery | High | PASSED | 04fbcc7 |
 | 11 | H-03 | Signup does not complete business onboarding | High | PASSED | cf40998 |
 | 12 | H-04 | Public catalogue exposes pending products and incorrect sale types | High | PASSED | 757906c |
-| 13 | H-05 | Accounting, returns, and delivery routes do not match clients | High | NOT STARTED | |
+| 13 | H-05 | Accounting, returns, and delivery routes do not match clients | High | PASSED | 791b7b0 |
 | 14 | H-06 | Inactive users and changed roles retain access | High | NOT STARTED | |
 | 15 | H-07 | Supabase RLS does not provide tenant isolation | High | NOT STARTED | |
 | 16 | H-08 | Trusted origins and cookie settings are inconsistent | High | NOT STARTED | |
@@ -346,10 +346,35 @@
   - `npm run build:api`
   - `npm run test:phase9:h04`
   - `npm test`
-- Test Results: All unit and regression tests passed 100%. Verified public listing filters strictly on `status = 'active'`, individual sale filter checks `allow_individual_sale = true`, bulk filter checks `conversion_to_base > 1`, and public detail endpoints reject non-active products.
 - Remaining Risks: None. Non-active products are hidden from public view and accessible only via admin endpoints.
 - Commit Hash: 757906c
 - Notes: H-04 implementation and verification complete.
+
+### H-05 — Accounting, returns, and delivery routes do not match clients
+
+- Status: PASSED
+- Started At: 2026-08-06T20:07:00+05:00
+- Completed At: 2026-08-06T20:09:00+05:00
+- Root Cause Confirmed: Route path prefixes were duplicated in `AccountingController` (`/accounting/accounting/...`) and `ReturnsController` (`/returns/returns/...`), and `DeliveryController` created deliveries from unmapped parameters.
+- Files Changed:
+  - apps/api/src/accounting/accounting.controller.ts
+  - apps/api/src/returns/returns.controller.ts
+  - apps/api/src/delivery/delivery.controller.ts
+  - packages/api/src/index.ts
+  - tests/phase9/test_h05_route_contracts.mjs (NEW)
+  - package.json
+  - docs/manual_testing/third_audit_progress.md
+- Database Changes: None
+- Environment Changes: None
+- Tests Run:
+  - `npm run build:api`
+  - `npm run test:phase9:h05`
+  - `npm test`
+- Test Results: All unit and regression tests passed 100%. Verified clean path resolution (`/accounting/*`, `/returns/*`, `/deliveries/*`), DTO parameter binding for delivery creation, and shared SDK method alignment.
+- Remaining Risks: None. Controller paths and SDK methods are aligned 100%.
+- Commit Hash: 791b7b0
+- Notes: H-05 implementation and verification complete.
+
 
 
 
