@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const getBackendUrl = () => {
-  const url = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+  const url = process.env.API_URL?.trim() || process.env.NEXT_PUBLIC_API_URL?.trim();
+  if (!url || url.includes("localhost") || url === "https://raza-stationers-api.onrender.com") {
+    return "https://raza-stationers-api-staging.onrender.com";
+  }
   return url.replace(/\/$/, "");
 };
 
