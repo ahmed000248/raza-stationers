@@ -42,12 +42,47 @@ export class StaffService {
   async toggleActive(id: string) {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundException("User not found");
-    return this.prisma.user.update({ where: { id }, data: { isActive: !user.isActive } });
+    const updated = await this.prisma.user.update({ where: { id }, data: { isActive: !user.isActive } });
+
+    // Revoke all active sessions upon deactivation/status change
+    await this.prisma.session.deleteMany({ where: { userId: id } });
+
+    // Write audit log
+    await this.prisma.auditLog.create({
+      data: {
+        entityType: "user",
+        entityId: id,
+        action: "toggle_active",
+        actorId: id,
+        afterData: { isActive: updated.isActive },
+      },
+    }).catch(() => {});
+
+    return updated;
   }
 
   async changeRole(id: string, role: string) {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundException("User not found");
-    return this.prisma.user.update({ where: { id }, data: { role: role as any, staffProfile: { upsert: { create: { staffRole: role as any }, update: { staffRole: role as any } } } } });
+    const updated = await this.prisma.user.update({
+      where: { id },
+      data: { role: role as any, staffProfile: { upsert: { create: { staffRole: role as any }, update: { staffRole: role as any } } } },
+    });
+
+    // Revoke sessions so stale session roles are revoked
+    await this.prisma.session.deleteMany({ where: { userId: id } });
+
+    // Write audit log
+    await this.prisma.auditLog.create({
+      data: {
+        entityType: "user",
+        entityId: id,
+        action: "change_role",
+        actorId: id,
+        afterData: { role },
+      },
+    }).catch(() => {});
+
+    return updated;
   }
 }

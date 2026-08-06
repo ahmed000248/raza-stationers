@@ -26,7 +26,7 @@
 | 11 | H-03 | Signup does not complete business onboarding | High | PASSED | cf40998 |
 | 12 | H-04 | Public catalogue exposes pending products and incorrect sale types | High | PASSED | 757906c |
 | 13 | H-05 | Accounting, returns, and delivery routes do not match clients | High | PASSED | 791b7b0 |
-| 14 | H-06 | Inactive users and changed roles retain access | High | NOT STARTED | |
+| 14 | H-06 | Inactive users and changed roles retain access | High | PASSED | 675597d |
 | 15 | H-07 | Supabase RLS does not provide tenant isolation | High | NOT STARTED | |
 | 16 | H-08 | Trusted origins and cookie settings are inconsistent | High | NOT STARTED | |
 | 17 | M-01 | Unauthorized responses do not clear stale frontend state | Medium | NOT STARTED | |
@@ -370,10 +370,33 @@
   - `npm run build:api`
   - `npm run test:phase9:h05`
   - `npm test`
-- Test Results: All unit and regression tests passed 100%. Verified clean path resolution (`/accounting/*`, `/returns/*`, `/deliveries/*`), DTO parameter binding for delivery creation, and shared SDK method alignment.
 - Remaining Risks: None. Controller paths and SDK methods are aligned 100%.
 - Commit Hash: 791b7b0
 - Notes: H-05 implementation and verification complete.
+
+### H-06 — Inactive users and changed roles retain access
+
+- Status: PASSED
+- Started At: 2026-08-06T20:11:00+05:00
+- Completed At: 2026-08-06T20:13:00+05:00
+- Root Cause Confirmed: `BetterAuthGuard` trusted static session data and hardcoded `isActive: true`, allowing deactivated users or users with altered roles to retain access.
+- Files Changed:
+  - apps/api/src/auth/guards/better-auth.guard.ts
+  - apps/api/src/staff/staff.service.ts
+  - tests/phase9/test_h06_revocation.mjs (NEW)
+  - package.json
+  - docs/manual_testing/third_audit_progress.md
+- Database Changes: None
+- Environment Changes: None
+- Tests Run:
+  - `npm run build:api`
+  - `npm run test:phase9:h06`
+  - `npm test`
+- Test Results: All unit and regression tests passed 100%. Verified real-time database user state validation (`isActive` & `role`), session deletion upon status/role modification, and audit log generation.
+- Remaining Risks: None. Sessions are checked against real-time database user state and invalidated on profile changes.
+- Commit Hash: 675597d
+- Notes: H-06 implementation and verification complete.
+
 
 
 

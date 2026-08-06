@@ -2,10 +2,14 @@ import { CanActivate, ExecutionContext, Injectable, Optional, UnauthorizedExcept
 import { fromNodeHeaders } from "better-auth/node";
 import { auth } from "../better-auth";
 import { AuthService } from "../auth.service";
+import { PrismaService } from "../../prisma/prisma.service";
 
 @Injectable()
 export class BetterAuthGuard implements CanActivate {
-  constructor(@Optional() private authService?: AuthService) {}
+  constructor(
+    @Optional() private authService?: AuthService,
+    @Optional() private prisma?: PrismaService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
@@ -55,6 +59,20 @@ export class BetterAuthGuard implements CanActivate {
         throw new UnauthorizedException("Invalid or expired session");
       }
 
+      let isActive = true;
+      if (this.prisma) {
+        const dbUser = await this.prisma.user.findUnique({
+          where: { id: userId },
+          select: { id: true, role: true, isActive: true, twoFactorEnabled: true },
+        });
+        if (!dbUser || !dbUser.isActive) {
+          throw new UnauthorizedException("User account is inactive or disabled");
+        }
+        role = dbUser.role || role;
+        isActive = Boolean(dbUser.isActive);
+        userTwoFactorEnabled = Boolean(dbUser.twoFactorEnabled);
+      }
+
       const aal = userTwoFactorEnabled && sessionTwoFactorVerified ? "aal2" : "aal1";
 
       request.user = {
@@ -65,7 +83,7 @@ export class BetterAuthGuard implements CanActivate {
         mobileNumber,
         role,
         aal,
-        isActive: true,
+        isActive,
       };
 
       return true;
