@@ -1,29 +1,37 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-// Middleware checks same-origin session cookies (reason=auth_unconfigured handled as fallback).
-export async function middleware(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow public routes, static assets, and api/auth endpoints
+  // Never protect API proxy requests, authentication endpoints,
+  // PWA files, or Next.js static assets.
   if (
     pathname === "/login" ||
-    pathname.startsWith("/api/auth") ||
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/favicon.ico") ||
-    /\.(?:svg|png|jpg|jpeg|gif|webp|css|js)$/.test(pathname)
+    pathname === "/manifest.webmanifest" ||
+    pathname === "/sw.js" ||
+    pathname.startsWith("/api/") ||
+    pathname.startsWith("/_next/") ||
+    pathname === "/favicon.ico" ||
+    /\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|json|webmanifest)$/.test(
+      pathname,
+    )
   ) {
     return NextResponse.next();
   }
 
-  // Check for presence of BetterAuth session cookies on same-origin domain
   const sessionToken =
     request.cookies.get("better-auth.session_token")?.value ||
+    request.cookies.get("__Secure-better-auth.session_token")?.value ||
     request.cookies.get("session_token")?.value ||
     request.cookies.get("better_auth_session")?.value;
 
-  if (!sessionToken && pathname !== "/login") {
+  if (!sessionToken) {
     const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("next", pathname);
+    loginUrl.searchParams.set(
+      "next",
+      `${request.nextUrl.pathname}${request.nextUrl.search}`,
+    );
+
     return NextResponse.redirect(loginUrl);
   }
 
@@ -32,6 +40,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|json|webmanifest)$).*)",
   ],
 };

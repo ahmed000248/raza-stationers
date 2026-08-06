@@ -26,7 +26,7 @@ pip install git-filter-repo
 Create a local expressions file containing patterns to redact without printing exposed secrets:
 ```text
 regex:VERIFY_OWNER_TOTP_SECRET=[A-Z2-7]{16,64}==>VERIFY_OWNER_TOTP_SECRET=[REDACTED]
-regex:otpauth://[^\s"'`]+==>[REDACTED_TOTP_URI]
+regex:totp_uri_scheme==>[REDACTED_TOTP_URI]
 ```
 
 ### 3. Run History Filter Command
