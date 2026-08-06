@@ -71,11 +71,11 @@ assert.match(disposable, /raza_test_db_/);
 assert.match(disposable, /pqlmgqzpjjllhgalyhwz/);
 assert.match(disposable, /test_run_sentinel/);
 
-const migrations = readdirSync(path.join(root, "packages/db/prisma/migrations"), { withFileTypes: true })
+const migrationDirs = readdirSync(path.join(root, "packages/db/prisma/migrations"), { withFileTypes: true })
   .filter((entry) => entry.isDirectory())
   .map((entry) => entry.name)
   .sort();
-assert.deepEqual(migrations, [
+assert.deepStrictEqual(migrationDirs, [
   "20260726162130_initial_schema_v0_1",
   "20260727021642_supabase_runtime_security",
   "20260727022832_supabase_function_default_privileges",
@@ -88,6 +88,7 @@ assert.deepEqual(migrations, [
   "20260801190000_add_supabase_auth_id",
   "20260802120000_phase7_post_deployment_refinement",
   "20260806150000_better_auth_schema",
+  "20260806160000_h07_database_security",
 ]);
 
 for (const [file, expected] of [

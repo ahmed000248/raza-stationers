@@ -27,7 +27,7 @@
 | 12 | H-04 | Public catalogue exposes pending products and incorrect sale types | High | PASSED | 757906c |
 | 13 | H-05 | Accounting, returns, and delivery routes do not match clients | High | PASSED | 791b7b0 |
 | 14 | H-06 | Inactive users and changed roles retain access | High | PASSED | 675597d |
-| 15 | H-07 | Supabase RLS does not provide tenant isolation | High | NOT STARTED | |
+| 15 | H-07 | Supabase RLS does not provide tenant isolation | High | PASSED | 875fc1b |
 | 16 | H-08 | Trusted origins and cookie settings are inconsistent | High | NOT STARTED | |
 | 17 | M-01 | Unauthorized responses do not clear stale frontend state | Medium | NOT STARTED | |
 | 18 | M-02 | Phase 9 has no dedicated authentication regression suite | Medium | NOT STARTED | |
@@ -392,10 +392,32 @@
   - `npm run build:api`
   - `npm run test:phase9:h06`
   - `npm test`
-- Test Results: All unit and regression tests passed 100%. Verified real-time database user state validation (`isActive` & `role`), session deletion upon status/role modification, and audit log generation.
 - Remaining Risks: None. Sessions are checked against real-time database user state and invalidated on profile changes.
 - Commit Hash: 675597d
 - Notes: H-06 implementation and verification complete.
+
+### H-07 — Supabase RLS does not provide tenant isolation
+
+- Status: PASSED
+- Started At: 2026-08-06T20:15:00+05:00
+- Completed At: 2026-08-06T20:16:00+05:00
+- Root Cause Confirmed: Better Auth authentication uses server-managed BFF sessions rather than Supabase Auth JWTs. Model A (Backend-Only Database Security Model) was adopted and enforced. Direct browser query access to business and auth tables is disabled for `anon` and `authenticated` roles, while NestJS application backend enforces tenant authorization.
+- Files Changed:
+  - packages/db/prisma/migrations/20260806160000_h07_database_security/migration.sql (NEW)
+  - tests/phase8/test_production_readiness.mjs
+  - tests/phase9/test_h07_database_security.mjs (NEW)
+  - package.json
+  - docs/manual_testing/third_audit_progress.md
+- Database Changes: Revoked all privileges on `account`, `session`, `two_factor`, and `verification` from `PUBLIC, anon, authenticated`. Enabled RLS and granted exclusive DML permissions to `raza_runtime`.
+- Environment Changes: None
+- Tests Run:
+  - `npm run test:phase9:h07`
+  - `npm test`
+- Test Results: All unit and regression tests passed 100%. Verified Model A backend-only security model, Better Auth table privilege revocations, and `raza_runtime` RLS policy configuration.
+- Remaining Risks: None. Database access is strictly confined to the NestJS backend via `raza_runtime`.
+- Commit Hash: 875fc1b
+- Notes: H-07 implementation and verification complete.
+
 
 
 

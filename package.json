@@ -23,7 +23,7 @@
     "db:migrate:deploy": "npx prisma migrate deploy --schema=packages/db/prisma/schema.prisma",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
-    "test": "node tests/phase7/test_static_refinement.mjs && node tests/phase8/test_production_readiness.mjs && node tests/phase8/test_auth_redirect_regression.mjs && node tests/phase8/test_auth_regression.mjs && node tests/phase8/test_bootstrap_owner.mjs && node tests/phase9/test_api_startup.mjs && node tests/phase9/test_migration.mjs && node tests/phase9/test_c03_same_origin.mjs && node tests/phase9/test_c04_mfa.mjs && node tests/phase9/test_c05_auth_migration.mjs && node tests/phase9/test_c06_takeover_prevention.mjs && node tests/phase9/test_c07_financial_protection.mjs && node tests/phase9/test_c08_mobile_isolation.mjs && node tests/phase9/test_h01_admin_protection.mjs && node tests/phase9/test_h02_password_reset.mjs && node tests/phase9/test_h03_signup_onboarding.mjs && node tests/phase9/test_h04_catalogue_visibility.mjs && node tests/phase9/test_h05_route_contracts.mjs && node tests/phase9/test_h06_revocation.mjs",
+    "test": "node tests/phase7/test_static_refinement.mjs && node tests/phase8/test_production_readiness.mjs && node tests/phase8/test_auth_redirect_regression.mjs && node tests/phase8/test_auth_regression.mjs && node tests/phase8/test_bootstrap_owner.mjs && node tests/phase9/test_api_startup.mjs && node tests/phase9/test_migration.mjs && node tests/phase9/test_c03_same_origin.mjs && node tests/phase9/test_c04_mfa.mjs && node tests/phase9/test_c05_auth_migration.mjs && node tests/phase9/test_c06_takeover_prevention.mjs && node tests/phase9/test_c07_financial_protection.mjs && node tests/phase9/test_c08_mobile_isolation.mjs && node tests/phase9/test_h01_admin_protection.mjs && node tests/phase9/test_h02_password_reset.mjs && node tests/phase9/test_h03_signup_onboarding.mjs && node tests/phase9/test_h04_catalogue_visibility.mjs && node tests/phase9/test_h05_route_contracts.mjs && node tests/phase9/test_h06_revocation.mjs && node tests/phase9/test_h07_database_security.mjs",
     "test:bootstrap": "node tests/phase8/test_bootstrap_owner.mjs",
     "test:phase7": "node tests/phase7/test_static_refinement.mjs",
     "test:api-startup": "node tests/phase9/test_api_startup.mjs",
@@ -40,6 +40,7 @@
     "test:phase9:h04": "node tests/phase9/test_h04_catalogue_visibility.mjs",
     "test:phase9:h05": "node tests/phase9/test_h05_route_contracts.mjs",
     "test:phase9:h06": "node tests/phase9/test_h06_revocation.mjs",
+    "test:phase9:h07": "node tests/phase9/test_h07_database_security.mjs",
     "test:integration": "node tests/run_all_tests_disposable.mjs",
     "admin:bootstrap-owner": "node scripts/admin/bootstrap-owner.mjs",
     "verify": "npm run db:validate && npm run db:generate && npm run typecheck && npm run lint && npm run build"
