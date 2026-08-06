@@ -10,6 +10,8 @@ export interface AdminCatalogueProduct {
   threshold: number
   unit: string
   purchaseType: ProductPurchaseType
+  status?: string
+  shopName?: string
 }
 
 export const MOCK_CATEGORIES = [

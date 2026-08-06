@@ -1,3 +1,7 @@
+import { createAuthClient } from "better-auth/client";
+import { twoFactorClient } from "better-auth/client/plugins";
+import { sentinelClient } from "@better-auth/infra/client";
+
 export class APIError extends Error {
   public status: number;
   public endpoint?: string;
@@ -14,6 +18,16 @@ export interface APIClientOptions {
   baseUrl: string;
   authToken?: string;
   onUnauthorized?: () => void;
+}
+
+export function createBetterAuthClient(baseUrl: string) {
+  return createAuthClient({
+    baseURL: `${baseUrl}/auth/api`,
+    plugins: [twoFactorClient()],
+    fetchOptions: {
+      credentials: "include",
+    },
+  });
 }
 
 export class RazaAPIClient {
@@ -122,6 +136,10 @@ export class RazaAPIClient {
     city: string;
   }) {
     return this.post("/clients", data);
+  }
+
+  async getMyClient() {
+    return this.get("/clients/me");
   }
 
   async getClient(id: string) {
@@ -292,6 +310,7 @@ export class RazaAPIClient {
     try {
       const res = await fetch(`${this.baseUrl}${path}`, {
         headers: this.getHeaders(),
+        credentials: "include",
         signal,
       });
       if (!res.ok) await this.handleErrorResponse(res, path);
@@ -310,6 +329,7 @@ export class RazaAPIClient {
       const res = await fetch(`${this.baseUrl}${path}`, {
         method: "DELETE",
         headers: this.getHeaders(),
+        credentials: "include",
       });
       if (!res.ok) await this.handleErrorResponse(res, path);
       return res.json();
@@ -326,6 +346,7 @@ export class RazaAPIClient {
       const res = await fetch(`${this.baseUrl}${path}`, {
         method: "PUT",
         headers: this.getHeaders(),
+        credentials: "include",
         body: JSON.stringify(body),
       });
       if (!res.ok) await this.handleErrorResponse(res, path);
@@ -343,6 +364,7 @@ export class RazaAPIClient {
       const res = await fetch(`${this.baseUrl}${path}`, {
         method: "POST",
         headers: this.getHeaders(),
+        credentials: "include",
         body: JSON.stringify(body),
       });
       if (!res.ok) await this.handleErrorResponse(res, path);

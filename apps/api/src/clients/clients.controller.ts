@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Put, Param, Body, Query, UseGuards } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { BetterAuthGuard } from "../auth/guards/better-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { Roles } from "../auth/decorators/roles.decorator";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
@@ -12,7 +12,7 @@ export class ClientsController {
   constructor(private clientsService: ClientsService) {}
 
   @Get()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: "List all client businesses" })
   findAll(@Query() query: { page?: number; limit?: number; status?: string }) {
@@ -20,7 +20,7 @@ export class ClientsController {
   }
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Register a new client business" })
   register(
@@ -30,8 +30,16 @@ export class ClientsController {
     return this.clientsService.register(userId, body);
   }
 
+  @Get("me")
+  @UseGuards(BetterAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Get current user linked client business" })
+  findMyClient(@CurrentUser("id") userId: string) {
+    return this.clientsService.findMyClient(userId);
+  }
+
   @Get(":id")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Get client business details" })
   findById(@Param("id") id: string) {
@@ -39,7 +47,7 @@ export class ClientsController {
   }
 
   @Put(":id/approve")
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(BetterAuthGuard, RolesGuard)
   @Roles("owner")
   @ApiBearerAuth()
   @ApiOperation({ summary: "Approve a pending client business (owner only)" })
@@ -48,7 +56,7 @@ export class ClientsController {
   }
 
   @Put(":id/credit")
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(BetterAuthGuard, RolesGuard)
   @Roles("owner")
   @ApiBearerAuth()
   @ApiOperation({ summary: "Update credit limit for a client (owner only)" })
@@ -57,7 +65,7 @@ export class ClientsController {
   }
 
   @Get(":id/credit")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Get credit account summary for a client" })
   getCredit(@Param("id") id: string) {

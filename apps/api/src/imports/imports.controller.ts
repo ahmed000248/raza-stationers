@@ -1,6 +1,6 @@
 import { Controller, Post, UseGuards, UseInterceptors, UploadedFile, BadRequestException, ConflictException, Query } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { BetterAuthGuard } from '../auth/guards/better-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -43,7 +43,7 @@ function validateXlsxFile(file: any) {
 }
 
 @Controller('admin/imports/catalogue')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(BetterAuthGuard, RolesGuard)
 export class ImportsController {
   
   @Post('plan')

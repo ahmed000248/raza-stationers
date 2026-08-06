@@ -2,9 +2,10 @@
 
 import * as React from "react"
 import { Smartphone, Copy, CheckCircle } from "lucide-react"
+import QRCode from "qrcode"
 
 interface TotpEnrollViewProps {
-  onEnroll: () => Promise<{ factorId: string; qrCode: string; secret: string }>
+  onEnroll: (password: string) => Promise<{ factorId: string; qrCode: string; secret: string }>
   onConfirm: (factorId: string, code: string) => Promise<void>
 }
 
@@ -12,10 +13,11 @@ type Step = "intro" | "scan" | "verify"
 
 /**
  * Shown to an admin/owner who has NO TOTP factor yet.
- * Guides them through enrolling in Supabase TOTP MFA.
+ * Guides them through enrolling in Better Auth TOTP MFA.
  */
 export function TotpEnrollView({ onEnroll, onConfirm }: TotpEnrollViewProps) {
   const [step, setStep] = React.useState<Step>("intro")
+  const [password, setPassword] = React.useState("")
   const [factorId, setFactorId] = React.useState("")
   const [qrCode, setQrCode] = React.useState("")
   const [secret, setSecret] = React.useState("")
@@ -24,13 +26,19 @@ export function TotpEnrollView({ onEnroll, onConfirm }: TotpEnrollViewProps) {
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState("")
 
-  const handleStart = async () => {
+  const handleStart = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!password.trim()) {
+      setError("Please enter your current password")
+      return
+    }
     setLoading(true)
     setError("")
     try {
-      const result = await onEnroll()
+      const result = await onEnroll(password)
       setFactorId(result.factorId)
-      setQrCode(result.qrCode)
+      const qrDataUrl = await QRCode.toDataURL(result.qrCode, { margin: 2, width: 250 })
+      setQrCode(qrDataUrl)
       setSecret(result.secret)
       setStep("scan")
     } catch (err: any) {
@@ -71,7 +79,7 @@ export function TotpEnrollView({ onEnroll, onConfirm }: TotpEnrollViewProps) {
       <div className="w-full max-w-sm p-8 space-y-6">
 
         {step === "intro" && (
-          <>
+          <form onSubmit={handleStart} className="space-y-4">
             <div className="text-center space-y-2">
               <div className="flex justify-center">
                 <div className="p-4 rounded-full bg-[#051F20]/10">
@@ -80,18 +88,29 @@ export function TotpEnrollView({ onEnroll, onConfirm }: TotpEnrollViewProps) {
               </div>
               <h1 className="font-heading text-2xl font-bold text-[var(--ink-900)]">Set Up Two-Factor Auth</h1>
               <p className="text-sm text-muted-foreground">
-                Admin accounts require a one-time password (TOTP) authenticator. You only need to set this up once.
+                Admin accounts require a one-time password (TOTP) authenticator. Enter your password to continue.
               </p>
+            </div>
+            <div className="space-y-1.5 text-left">
+              <label className="text-xs font-semibold">Current Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter current password"
+                className="w-full h-10 px-3 rounded-xl border border-border bg-background text-sm outline-none focus:ring-2 focus:ring-ring"
+                required
+              />
             </div>
             {error && <p className="text-xs text-destructive font-medium text-center">{error}</p>}
             <button
-              onClick={handleStart}
+              type="submit"
               disabled={loading}
               className="w-full h-10 rounded-xl bg-[#051F20] text-white text-sm font-semibold flex items-center justify-center gap-2 hover:bg-[#0a3a3a] disabled:opacity-50 transition-colors"
             >
               {loading ? "Preparing..." : "Set Up Authenticator"}
             </button>
-          </>
+          </form>
         )}
 
         {step === "scan" && (

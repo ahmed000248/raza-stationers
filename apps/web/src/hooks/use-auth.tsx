@@ -3,8 +3,8 @@
 import * as React from "react"
 import { User, ClientBusiness, BusinessUserRole, AUTH_PROVIDER_NOT_CONFIGURED } from "@raza-stationers/types"
 import { UserPricingContext } from "@/lib/pricing"
-import { createAPIClient } from "@raza-stationers/api"
-import { BrandedLoader } from "@/components/site/BrandedLoader"
+import { createAPIClient, createBetterAuthClient } from "@raza-stationers/api"
+import { usePathname, useRouter } from "next/navigation"
 import { getApiBaseUrl } from "@/lib/public-config"
 
 export type AccountStatus =
@@ -56,80 +56,211 @@ const AuthContext = React.createContext<AuthContextValue | null>(null)
 
 const API_BASE = getApiBaseUrl()
 
-function getClient() {
-  return createAPIClient({ baseUrl: API_BASE })
+function OnboardingGate({ children }: { children: React.ReactNode }) {
+  const { accountStatus } = useAuth()
+  const pathname = usePathname()
+  const router = useRouter()
+
+  React.useEffect(() => {
+    if (accountStatus === "authenticated_unregistered" && pathname !== "/onboarding" && !pathname.startsWith("/auth")) {
+      router.replace("/onboarding")
+    }
+  }, [accountStatus, pathname, router])
+
+  return <>{children}</>
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [accountStatus, setAccountStatus] = React.useState<AccountStatus>("unconfigured")
+  const [accountStatus, setAccountStatus] = React.useState<AccountStatus>("loading")
   const [user, setUser] = React.useState<User | null>(null)
   const [clientBusiness, setClientBusiness] = React.useState<ClientBusiness | null>(null)
   const [businessRole, setBusinessRole] = React.useState<BusinessUserRole | null>(null)
   const [authError, setAuthError] = React.useState<string | null>(null)
 
-  const api = React.useMemo(() => getClient(), [])
+  const api = React.useMemo(() => createAPIClient({ baseUrl: API_BASE }), [])
+  const authClient = React.useMemo(() => {
+    const baseUrl = typeof window !== "undefined" ? `${window.location.origin}/api` : API_BASE
+    return createBetterAuthClient(baseUrl)
+  }, [])
+
+  const checkSession = React.useCallback(async () => {
+    try {
+      setAccountStatus("loading")
+      const sessionRes = await authClient.getSession()
+      if (sessionRes?.data?.user) {
+        const u = sessionRes.data.user
+        const mappedUser: User = {
+          id: u.id,
+          name: u.name,
+          mobileNumber: (u as any).mobileNumber || "",
+          passwordHash: "",
+          role: ((u as any).role as any) || "business_user",
+          isActive: true,
+          createdAt: u.createdAt instanceof Date ? u.createdAt.toISOString() : String(u.createdAt),
+        }
+        setUser(mappedUser)
+        setAccountStatus(mappedUser.mobileNumber ? "approved" : "authenticated_unregistered")
+        setAuthError(null)
+
+        api.getMyClient().then((res: any) => {
+          if (res?.clientBusiness) {
+            setClientBusiness(res.clientBusiness)
+            setBusinessRole(res.role || "business_owner")
+          }
+        }).catch(() => {})
+      } else {
+        setUser(null)
+        setClientBusiness(null)
+        setBusinessRole(null)
+        setAccountStatus("guest")
+      }
+    } catch {
+      setUser(null)
+      setAccountStatus("guest")
+    }
+  }, [authClient, api])
+
+  React.useEffect(() => {
+    checkSession()
+  }, [checkSession])
 
   const logout = React.useCallback(async () => {
+    try {
+      await authClient.signOut()
+    } catch {}
     setUser(null)
     setClientBusiness(null)
     setBusinessRole(null)
     setAuthError(null)
-    setAccountStatus("unconfigured")
-  }, [])
+    setAccountStatus("guest")
+  }, [authClient])
 
   const retryBootstrap = React.useCallback(async () => {
-    setAccountStatus("unconfigured")
-    setAuthError(AUTH_PROVIDER_NOT_CONFIGURED)
-  }, [])
+    await checkSession()
+  }, [checkSession])
 
-  const login = React.useCallback(async () => {
-    setAuthError(AUTH_PROVIDER_NOT_CONFIGURED)
-    throw new Error(AUTH_PROVIDER_NOT_CONFIGURED)
-  }, [])
+  const login = React.useCallback(
+    async (email: string, password: string) => {
+      setAuthError(null)
+      const res = await authClient.signIn.email({ email, password })
+      if (res.error) {
+        setAuthError(res.error.message || "Failed to sign in")
+        throw new Error(res.error.message || "Failed to sign in")
+      }
+      await checkSession()
+      return res.data
+    },
+    [authClient, checkSession]
+  )
 
-  const register = React.useCallback(async () => {
-    setAuthError(AUTH_PROVIDER_NOT_CONFIGURED)
-    throw new Error(AUTH_PROVIDER_NOT_CONFIGURED)
-  }, [])
+  const register = React.useCallback(
+    async (data: {
+      name: string
+      mobileNumber: string
+      password: string
+      email: string
+      businessName: string
+      businessType: string
+      contactPerson: string
+      address: string
+      city: string
+    }) => {
+      setAuthError(null)
+      const res = await authClient.signUp.email({
+        email: data.email,
+        password: data.password,
+        name: data.name,
+        role: "business_user",
+        mobileNumber: data.mobileNumber,
+      } as any)
+      if (res.error) {
+        const errObj = res.error as any
+        const errMsg = (typeof errObj === "string" ? errObj : errObj?.message) || "Failed to register"
+        setAuthError(errMsg)
+        throw new Error(errMsg)
+      }
+      await checkSession()
+    },
+    [authClient, checkSession]
+  )
 
-  const registerCustomer = React.useCallback(async () => {
-    setAuthError(AUTH_PROVIDER_NOT_CONFIGURED)
-    throw new Error(AUTH_PROVIDER_NOT_CONFIGURED)
-  }, [])
+  const registerCustomer = React.useCallback(
+    async (data: { name: string; mobileNumber: string; password: string; email: string }) => {
+      setAuthError(null)
+      const res = await authClient.signUp.email({
+        email: data.email,
+        password: data.password,
+        name: data.name,
+        role: "business_user",
+        mobileNumber: data.mobileNumber,
+      } as any)
+      if (res.error) {
+        const errObj = res.error as any
+        const errMsg = (typeof errObj === "string" ? errObj : errObj?.message) || "Failed to register customer"
+        setAuthError(errMsg)
+        throw new Error(errMsg)
+      }
+      await checkSession()
+    },
+    [authClient, checkSession]
+  )
 
   const verifyOtp = React.useCallback(async () => {
-    setAuthError(AUTH_PROVIDER_NOT_CONFIGURED)
-    throw new Error(AUTH_PROVIDER_NOT_CONFIGURED)
-  }, [])
-
-  const resendOtp = React.useCallback(async () => {
-    setAuthError(AUTH_PROVIDER_NOT_CONFIGURED)
-    throw new Error(AUTH_PROVIDER_NOT_CONFIGURED)
-  }, [])
-
-  const loginWithGoogle = React.useCallback(async () => {
-    setAuthError(AUTH_PROVIDER_NOT_CONFIGURED)
-    throw new Error(AUTH_PROVIDER_NOT_CONFIGURED)
-  }, [])
-
-  const resetPassword = React.useCallback(async () => {
-    setAuthError(AUTH_PROVIDER_NOT_CONFIGURED)
-    throw new Error(AUTH_PROVIDER_NOT_CONFIGURED)
-  }, [])
-
-  const getAccessToken = React.useCallback(async () => {
     return null
   }, [])
 
-  const updatePassword = React.useCallback(async () => {
-    setAuthError(AUTH_PROVIDER_NOT_CONFIGURED)
-    throw new Error(AUTH_PROVIDER_NOT_CONFIGURED)
-  }, [])
+  const resendOtp = React.useCallback(async () => {}, [])
 
-  const linkAccount = React.useCallback(async () => {
-    setAuthError(AUTH_PROVIDER_NOT_CONFIGURED)
-    throw new Error(AUTH_PROVIDER_NOT_CONFIGURED)
-  }, [])
+  const loginWithGoogle = React.useCallback(
+    async (returnTo?: string) => {
+      setAuthError(null)
+      await authClient.signIn.social({
+        provider: "google",
+        callbackURL: typeof window !== "undefined" ? window.location.origin + (returnTo || "/catalogue") : "/catalogue",
+      })
+    },
+    [authClient]
+  )
+
+  const resetPassword = React.useCallback(
+    async (email: string) => {
+      setAuthError(null)
+      const res = await (authClient as any).forgetPassword({
+        email,
+        redirectTo: "/reset-password",
+      })
+      if (res.error) {
+        const errObj = res.error as any
+        const errMsg = (typeof errObj === "string" ? errObj : errObj?.message) || "Failed to send reset password link"
+        setAuthError(errMsg)
+        throw new Error(errMsg)
+      }
+    },
+    [authClient]
+  )
+
+  const updatePassword = React.useCallback(
+    async (password: string, token?: string) => {
+      setAuthError(null)
+      const resetToken = token || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("token") : null)
+      if (!resetToken) {
+        throw new Error("Reset token is missing or expired. Please request a new password reset link.")
+      }
+      const res = await (authClient as any).resetPassword({
+        newPassword: password,
+        token: resetToken,
+      })
+      if (res.error) {
+        const errObj = res.error as any
+        const errMsg = (typeof errObj === "string" ? errObj : errObj?.message) || "Failed to reset password. Link may be expired."
+        setAuthError(errMsg)
+        throw new Error(errMsg)
+      }
+    },
+    [authClient]
+  )
+  const linkAccount = React.useCallback(async () => {}, [])
+  const getAccessToken = React.useCallback(async () => null, [])
 
   const pricingContext: UserPricingContext = React.useMemo(() => {
     if (accountStatus === "approved" && clientBusiness?.accountStatus === "active") {

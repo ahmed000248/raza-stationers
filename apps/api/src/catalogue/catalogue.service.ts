@@ -176,7 +176,7 @@ export class CatalogueService {
 
   async findAllAdmin(query: { page?: number; limit?: number; status?: string; categorySlug?: string }) {
     const page = Number(query.page) || 1;
-    const limit = Math.min(Number(query.limit) || 50, 100);  // ponytail: server-side cap; raise if bulk export added
+    const limit = Math.min(Number(query.limit) || 50, 3000);
     const where: Prisma.ProductWhereInput = {};
     if (query.status) where.status = query.status as any;
     if (query.categorySlug) where.category = { slug: query.categorySlug };

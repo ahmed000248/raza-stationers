@@ -197,17 +197,17 @@ export function ClientDrawer({ client, onClose, onUpdateClient }: ClientDrawerPr
               <div className="bg-[var(--canvas)] rounded-[12px] p-3.5 border border-[var(--border-subtle)]">
                 <div className="text-[11px] text-[var(--text-muted)]">Credit limit</div>
                 <div className="text-[16px] font-bold text-[var(--ink-900)] mt-1">
-                  Rs {client.creditLimit.toLocaleString()}
+                  Rs {Number(client.creditLimit || 0).toLocaleString()}
                 </div>
               </div>
               <div className="bg-[var(--canvas)] rounded-[12px] p-3.5 border border-[var(--border-subtle)]">
                 <div className="text-[11px] text-[var(--text-muted)]">Outstanding</div>
                 <div
                   className={`text-[16px] font-bold mt-1 ${
-                    client.outstandingBalance > 60000 ? "text-[var(--red-ink)]" : "text-[var(--ink-900)]"
+                    Number(client.outstandingBalance || 0) > 60000 ? "text-[var(--red-ink)]" : "text-[var(--ink-900)]"
                   }`}
                 >
-                  Rs {client.outstandingBalance.toLocaleString()}
+                  Rs {Number(client.outstandingBalance || 0).toLocaleString()}
                 </div>
               </div>
             </div>

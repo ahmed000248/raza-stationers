@@ -11,7 +11,7 @@ interface TotpChallengeViewProps {
 }
 
 /**
- * Shown to an admin/owner who is already enrolled in Supabase TOTP but
+ * Shown to an admin/owner who is already enrolled in Better Auth TOTP but
  * needs to step up from AAL1 → AAL2 to access the dashboard.
  */
 export function TotpChallengeView({ factorId, challengeId: initialChallengeId, onVerify, onNewChallenge }: TotpChallengeViewProps) {

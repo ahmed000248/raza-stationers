@@ -34,8 +34,9 @@ export function ClientTable({ clients, onSelectClient }: ClientTableProps) {
           </thead>
           <tbody className="divide-y divide-[var(--border-subtle)] font-sans">
             {clients.map((client) => {
+              const balance = Number(client.outstandingBalance || 0)
               const isPending = client.accountStatus === "pending"
-              const isOverdue = client.outstandingBalance > 60000
+              const isOverdue = balance > 60000
 
               return (
                 <tr
@@ -50,7 +51,7 @@ export function ClientTable({ clients, onSelectClient }: ClientTableProps) {
                   </td>
                   <td className="py-3.5 px-3 text-[var(--ink-900)]">{client.city}</td>
                   <td className="py-3.5 px-3 font-medium text-[var(--ink-900)]">
-                    {client.discountTier}
+                    {client.discountTier || "Standard"}
                   </td>
                   <td className="py-3.5 px-3">
                     {isPending ? (
@@ -65,7 +66,7 @@ export function ClientTable({ clients, onSelectClient }: ClientTableProps) {
                   </td>
                   <td className="py-3.5 px-5 font-semibold">
                     <span className={isOverdue ? "text-[var(--red-ink)] font-bold" : "text-[var(--ink-900)]"}>
-                      Rs {client.outstandingBalance.toLocaleString()}
+                      Rs {balance.toLocaleString()}
                     </span>
                     {isOverdue && (
                       <span className="ml-1.5 text-[10px] bg-[var(--red-tint)] text-[var(--red-ink)] px-1.5 py-0.5 rounded-full font-bold">

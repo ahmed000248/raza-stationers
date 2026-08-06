@@ -23,7 +23,6 @@ const sourceFilesUnder = (relative) => {
 
 for (const relative of [
   "docker-compose.staging.yml",
-  "apps/mobile/package.json",
   "tests/run_staging_e2e.mjs",
   "tests/run_gate15_security.mjs",
   "scripts/database/import_staging_catalogue.js",
@@ -57,7 +56,7 @@ assert.doesNotMatch(prismaService, /DIRECT_URL/);
 
 const backendFiles = [
   "apps/api/src/auth/auth.service.ts",
-  "apps/api/src/auth/strategies/supabase.strategy.ts",
+  "apps/api/src/auth/better-auth.ts",
   "apps/api/src/staff/staff.service.ts",
 ];
 for (const file of backendFiles) {

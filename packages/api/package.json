@@ -9,7 +9,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@raza-stationers/types": "*"
+    "@better-auth/infra": "^0.3.7",
+    "@raza-stationers/types": "*",
+    "better-auth": "^1.6.25"
   },
   "devDependencies": {
     "typescript": "^5"

@@ -424,21 +424,27 @@ enum NotificationType {
 }
 
 model User {
-  id              String    @id @default(cuid())
-  mobileNumber    String    @unique @map("mobile_number")
-  email           String?   @unique
-  passwordHash    String?   @map("password_hash")
-  name            String
-  role            UserRole
-  isActive        Boolean   @default(true) @map("is_active")
-  deactivatedAt   DateTime? @map("deactivated_at") @db.Timestamptz(3)
-  deactivatedById String?   @map("deactivated_by_id")
-  totpSecret      String?   @map("totp_secret") // Deprecated: Custom speakeasy TOTP secret (unused, superseded by Supabase MFA)
-  isTotpEnabled   Boolean   @default(false) @map("is_totp_enabled") // Deprecated: Custom speakeasy TOTP status (unused, superseded by Supabase MFA)
-  supabaseAuthId  String?   @unique @map("supabase_auth_id")
-  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  id               String    @id @default(cuid())
+  mobileNumber     String?   @unique @map("mobile_number")
+  email            String?   @unique
+  emailVerified    Boolean   @default(false) @map("email_verified")
+  image            String?
+  passwordHash     String?   @map("password_hash")
+  name             String
+  role             UserRole
+  isActive         Boolean   @default(true) @map("is_active")
+  twoFactorEnabled Boolean   @default(false) @map("two_factor_enabled")
+  deactivatedAt    DateTime? @map("deactivated_at") @db.Timestamptz(3)
+  deactivatedById  String?   @map("deactivated_by_id")
+  totpSecret       String?   @map("totp_secret") // Deprecated: Custom speakeasy TOTP secret
+  isTotpEnabled    Boolean   @default(false) @map("is_totp_enabled") // Deprecated: Custom speakeasy TOTP status
+  supabaseAuthId   String?   @unique @map("supabase_auth_id")
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
 
+  sessions                    Session[]
+  accounts                    Account[]
+  twoFactors                  TwoFactor[]
   deactivatedBy               User?                          @relation("UserDeactivatedBy", fields: [deactivatedById], references: [id], onDelete: Restrict)
   deactivatedUsers            User[]                         @relation("UserDeactivatedBy")
   staffProfile                StaffProfile?
@@ -1605,4 +1611,62 @@ model BusinessSettings {
   updatedAt          DateTime @updatedAt @map("updated_at")
 
   @@map("business_settings")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(3)
+  token     String   @unique
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String    @map("account_id")
+  providerId            String    @map("provider_id")
+  userId                String    @map("user_id")
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  idToken               String?   @map("id_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at") @db.Timestamptz(3)
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at") @db.Timestamptz(3)
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz(3)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("verification")
+}
+
+model TwoFactor {
+  id                      String    @id
+  secret                  String
+  backupCodes             String    @map("backup_codes")
+  userId                  String    @unique @map("user_id")
+  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  verified                Boolean?  @default(false)
+  failedVerificationCount Int?      @default(0) @map("failed_verification_count")
+  transientSecret         String?   @map("transient_secret")
+  lockedUntil             DateTime? @map("locked_until")
+
+  @@map("two_factor")
 }

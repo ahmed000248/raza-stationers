@@ -23,15 +23,13 @@ import { AppModule } from "./app.module";
 async function bootstrap() {
   const production = process.env.NODE_ENV === "production";
   if (production) {
-    const required = ["DATABASE_URL", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "JWT_SECRET"];
+    const required = ["DATABASE_URL"];
     const missing = required.filter((name) => !process.env[name]?.trim());
     if (missing.length) throw new Error(`Missing required production environment variables: ${missing.join(", ")}`);
-    if (Buffer.byteLength(process.env.JWT_SECRET!, "utf8") < 32) {
-      throw new Error("JWT_SECRET must contain at least 32 bytes in production.");
-    }
   }
 
   const app = await NestFactory.create(AppModule);
+  app.getHttpAdapter().getInstance().set("trust proxy", 1);
 
   app.enableShutdownHooks();
 
@@ -39,17 +37,32 @@ async function bootstrap() {
     ?.split(",")
     .map((origin) => origin.trim())
     .filter(Boolean);
-  const corsOrigins = configuredOrigins?.length
-    ? configuredOrigins
-    : production
-      ? ["https://raza-stationers-web.vercel.app", "https://raza-stationers-admin-seven.vercel.app"]
-      : ["http://localhost:3000", "http://localhost:3001"];
+  const allowedExactOrigins = new Set(
+    configuredOrigins?.length
+      ? configuredOrigins
+      : [
+          "http://localhost:3000",
+          "http://localhost:3001",
+          "http://localhost:3002",
+          "http://localhost:4000",
+          "https://raza-stationers-web.vercel.app",
+          "https://raza-stationers-admin-seven.vercel.app",
+        ]
+  );
 
   app.enableCors({
     origin: (requestOrigin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
       if (!requestOrigin) return callback(null, true);
-      if (corsOrigins.includes(requestOrigin)) return callback(null, true);
-      if (requestOrigin.endsWith(".vercel.app") || requestOrigin.includes("localhost") || requestOrigin.includes("raza-stationers")) return callback(null, true);
+      if (allowedExactOrigins.has(requestOrigin)) return callback(null, true);
+      if (/^https:\/\/raza-stationers-(web|admin)(-[a-z0-9-]+)?\.vercel\.app$/.test(requestOrigin)) {
+        return callback(null, true);
+      }
+      try {
+        const url = new URL(requestOrigin);
+        if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
+          return callback(null, true);
+        }
+      } catch {}
       callback(new Error(`Origin ${requestOrigin} not allowed by CORS`));
     },
     credentials: true,

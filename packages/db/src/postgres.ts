@@ -33,17 +33,20 @@ function findCertificate(): string | null {
   const configured = process.env.PGSSLROOTCERT?.trim();
   if (configured) {
     const resolved = path.resolve(configured);
-    if (!existsSync(resolved)) throw new Error("PGSSLROOTCERT does not reference an existing certificate.");
+    if (!existsSync(resolved)) throw new Error(`PGSSLROOTCERT path '${configured}' does not reference an existing certificate.`);
     return resolved;
   }
+  const searched: string[] = [];
   let current = process.cwd();
   for (let depth = 0; depth < 6; depth += 1) {
     const candidate = path.join(current, "supabase-ca.crt");
+    searched.push(candidate);
     if (existsSync(candidate)) return candidate;
     const parent = path.dirname(current);
     if (parent === current) break;
     current = parent;
   }
+  console.warn(`[postgres] supabase-ca.crt not found in searched locations: ${searched.join(", ")}`);
   return null;
 }
 

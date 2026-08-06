@@ -44,7 +44,7 @@ export default function CustomerSignupPage() {
     if (!name || name.trim().length < 2) newErrors.name = "Your full name is required"
     if (!normalizePakistaniMobile(mobileNumber)) newErrors.mobileNumber = "Use Pakistani mobile format 03XXXXXXXXX"
     if (!email || !email.includes("@")) newErrors.email = "Valid email address required"
-    if (!password || password.length < 6) newErrors.password = "Password must be at least 6 characters"
+    if (!password || password.length < 8) newErrors.password = "Password must be at least 8 characters"
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }

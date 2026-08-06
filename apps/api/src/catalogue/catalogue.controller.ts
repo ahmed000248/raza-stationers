@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Put, Delete, Param, Query, Body, UseGuards } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { BetterAuthGuard } from "../auth/guards/better-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { Roles } from "../auth/decorators/roles.decorator";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
@@ -19,7 +19,7 @@ export class CatalogueController {
   }
 
   @Get("admin/products")
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(BetterAuthGuard, RolesGuard)
   @Roles("owner", "admin")
   @ApiBearerAuth()
   @ApiOperation({ summary: "List all products for admin (including pending/archived)" })
@@ -28,7 +28,7 @@ export class CatalogueController {
   }
 
   @Post("products")
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(BetterAuthGuard, RolesGuard)
   @Roles("owner", "admin")
   @ApiBearerAuth()
   @ApiOperation({ summary: "Create a new product (admin only)" })
@@ -37,7 +37,7 @@ export class CatalogueController {
   }
 
   @Put("products/:id")
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(BetterAuthGuard, RolesGuard)
   @Roles("owner", "admin")
   @ApiBearerAuth()
   @ApiOperation({ summary: "Update a product (admin only)" })
@@ -46,7 +46,7 @@ export class CatalogueController {
   }
 
   @Put("products/:id/status")
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(BetterAuthGuard, RolesGuard)
   @Roles("owner", "admin")
   @ApiBearerAuth()
   @ApiOperation({ summary: "Update product status (activate/archive)" })

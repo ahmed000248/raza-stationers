@@ -4,6 +4,7 @@ import path from "node:path";
 import readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 import pg from "pg";
+import bcrypt from "bcryptjs";
 import { createClient } from "@supabase/supabase-js";
 
 export function normalizePakistaniMobile(value) {
@@ -171,8 +172,13 @@ async function handleExistingAdminAccountManagement({ db, supabase, authUser, ex
         "INSERT INTO public.audit_logs (id, actor_id, action, entity_type, entity_id, before_data, after_data, reason, created_at) VALUES ($1, $2, 'ADMIN_PASSWORD_RESET', 'User', $2, NULL, $3::jsonb, 'Reset password for existing admin via CLI', now()) ON CONFLICT (id) DO NOTHING",
         [auditId, userId, JSON.stringify({ email, mobileNumber: mobile, role: existingActiveAdmin.role, supabaseAuthId: authUser.id })]
       );
+      const hashedPassword = bcrypt.hashSync(password, 10);
+      await db.query(
+        "INSERT INTO public.account (id, user_id, account_id, provider_id, password, created_at, updated_at) VALUES ($1, $2, $3, 'credential', $4, now(), now()) ON CONFLICT (id) DO UPDATE SET password = $4, updated_at = now()",
+        [`account-${userId}`, userId, userId, hashedPassword]
+      );
       await db.query("COMMIT");
-      logger.log(`Supabase Auth password reset successfully for ${email}.`);
+      logger.log(`Password updated successfully for ${email}.`);
       return { status: "existing_admin_managed", action: "reset", code: 0, userId };
     } catch (err) {
       await db.query("ROLLBACK").catch(() => {});
@@ -277,6 +283,13 @@ export async function runAdminBootstrap({ db, supabase, rl, env = process.env, l
         "INSERT INTO public.audit_logs (id, actor_id, action, entity_type, entity_id, before_data, after_data, reason, created_at) VALUES ($1, $2, 'OWNER_BOOTSTRAPPED', 'User', $2, NULL, $3::jsonb, 'Trusted one-time production owner bootstrap', now()) ON CONFLICT (id) DO NOTHING",
         [auditId, userId, JSON.stringify({ email, mobileNumber: mobile, role: "owner", supabaseAuthId: authUser.id })]
       );
+      if (env.RAZA_OWNER_INITIAL_PASSWORD) {
+        const hashedPassword = bcrypt.hashSync(env.RAZA_OWNER_INITIAL_PASSWORD, 10);
+        await db.query(
+          "INSERT INTO public.account (id, user_id, account_id, provider_id, password, created_at, updated_at) VALUES ($1, $2, $3, 'credential', $4, now(), now()) ON CONFLICT (id) DO UPDATE SET password = $4, updated_at = now()",
+          [`account-${userId}`, userId, userId, hashedPassword]
+        );
+      }
       await db.query("COMMIT");
 
       logger.log("Admin account created successfully.");
