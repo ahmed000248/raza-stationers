@@ -28,7 +28,7 @@
 | 13 | H-05 | Accounting, returns, and delivery routes do not match clients | High | PASSED | 791b7b0 |
 | 14 | H-06 | Inactive users and changed roles retain access | High | PASSED | 675597d |
 | 15 | H-07 | Supabase RLS does not provide tenant isolation | High | PASSED | 875fc1b |
-| 16 | H-08 | Trusted origins and cookie settings are inconsistent | High | NOT STARTED | |
+| 16 | H-08 | Trusted origins and cookie settings are inconsistent | High | PASSED | c16f4b6 |
 | 17 | M-01 | Unauthorized responses do not clear stale frontend state | Medium | NOT STARTED | |
 | 18 | M-02 | Phase 9 has no dedicated authentication regression suite | Medium | NOT STARTED | |
 | 19 | M-03 | Important foreign keys lack indexes | Medium | NOT STARTED | |
@@ -413,10 +413,34 @@
 - Tests Run:
   - `npm run test:phase9:h07`
   - `npm test`
-- Test Results: All unit and regression tests passed 100%. Verified Model A backend-only security model, Better Auth table privilege revocations, and `raza_runtime` RLS policy configuration.
 - Remaining Risks: None. Database access is strictly confined to the NestJS backend via `raza_runtime`.
 - Commit Hash: 875fc1b
 - Notes: H-07 implementation and verification complete.
+
+### H-08 — Trusted origins and cookie settings are inconsistent
+
+- Status: PASSED
+- Started At: 2026-08-06T20:17:00+05:00
+- Completed At: 2026-08-06T20:19:00+05:00
+- Root Cause Confirmed: `better-auth.ts` and `main.ts` calculated trusted origins separately, cookies forced `secure: true` and `sameSite: "none"` even in local HTTP development, and partial Google OAuth credentials failed silently rather than throwing a clear startup error.
+- Files Changed:
+  - apps/api/src/config/env.config.ts (NEW)
+  - apps/api/src/auth/better-auth.ts
+  - apps/api/src/main.ts
+  - tests/phase9/test_h08_trusted_origins.mjs (NEW)
+  - package.json
+  - docs/manual_testing/third_audit_progress.md
+- Database Changes: None
+- Environment Changes: Created centralized `env.config.ts` validator for CORS origins, environment variables, and Google OAuth credentials.
+- Tests Run:
+  - `npm run build:api`
+  - `npm run test:phase9:h08`
+  - `npm test`
+- Test Results: All unit and regression tests passed 100%. Verified startup failure on partial Google OAuth configuration, unified CORS/trusted origin calculation, and environment-aware cookie attributes (`useSecureCookies: isProd`, `sameSite: "lax"`, `secure: isProd`).
+- Remaining Risks: None. Origin calculation and cookie configuration are unified and production-aware.
+- Commit Hash: c16f4b6
+- Notes: H-08 implementation and verification complete.
+
 
 
 

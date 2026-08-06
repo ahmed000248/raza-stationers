@@ -1,13 +1,15 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { twoFactor } from "better-auth/plugins";
-import { dash } from "@better-auth/infra";
 import * as bcrypt from "bcryptjs";
 import * as nodemailer from "nodemailer";
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { getPostgresConnection } from "@raza-stationers/db";
 import pg from "pg";
+import { getTrustedOrigins, validateEnvironment } from "../config/env.config";
+
+validateEnvironment();
 
 async function sendResetPasswordEmail(to: string, resetUrl: string) {
   const host = process.env.SMTP_HOST || process.env.EMAIL_SERVER_HOST;
@@ -67,42 +69,19 @@ function createPrismaClient(): PrismaClient {
 }
 
 const prisma = createPrismaClient();
-
-const authSecret = process.env.BETTER_AUTH_SECRET || process.env.JWT_SECRET;
-if (!authSecret) {
-  throw new Error("BETTER_AUTH_SECRET (or JWT_SECRET) environment variable is required.");
-}
-
+const authSecret = process.env.BETTER_AUTH_SECRET || process.env.JWT_SECRET!;
 const isProd = process.env.NODE_ENV === "production";
 const authUrl = process.env.BETTER_AUTH_URL;
-if (isProd && !authUrl) {
-  throw new Error("BETTER_AUTH_URL environment variable is required in production.");
-}
-
-const configuredTrustedOrigins = process.env.CORS_ORIGINS
-  ?.split(",")
-  .map((origin) => origin.trim())
-  .filter(Boolean);
-
-const trustedOriginsList = configuredTrustedOrigins?.length
-  ? configuredTrustedOrigins
-  : [
-      "http://localhost:3000",
-      "http://localhost:3001",
-      "http://localhost:3002",
-      "http://localhost:4000",
-      "https://raza-stationers-web.vercel.app",
-      "https://raza-stationers-admin-seven.vercel.app",
-    ];
 
 export const auth = betterAuth({
   baseURL: authUrl || "http://localhost:4000",
   basePath: "/auth/api",
   advanced: {
-    useSecureCookies: true,
+    useSecureCookies: isProd,
     defaultCookieAttributes: {
-      sameSite: "none",
-      secure: true,
+      sameSite: "lax",
+      secure: isProd,
+      httpOnly: true,
     },
   },
   account: {
@@ -155,11 +134,5 @@ export const auth = betterAuth({
       issuer: "Raza Stationers",
     }),
   ],
-  trustedOrigins: [
-    "http://localhost:3000",
-    "http://localhost:3001",
-    "http://localhost:4000",
-    "https://raza-stationers-web.vercel.app",
-    "https://raza-stationers-admin-seven.vercel.app",
-  ],
+  trustedOrigins: getTrustedOrigins(),
 });

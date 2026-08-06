@@ -19,6 +19,7 @@ import { NestFactory } from "@nestjs/core";
 import { ValidationPipe } from "@nestjs/common";
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 import { AppModule } from "./app.module";
+import { getTrustedOrigins } from "./config/env.config";
 
 async function bootstrap() {
   const production = process.env.NODE_ENV === "production";
@@ -33,22 +34,7 @@ async function bootstrap() {
 
   app.enableShutdownHooks();
 
-  const configuredOrigins = process.env.CORS_ORIGINS
-    ?.split(",")
-    .map((origin) => origin.trim())
-    .filter(Boolean);
-  const allowedExactOrigins = new Set(
-    configuredOrigins?.length
-      ? configuredOrigins
-      : [
-          "http://localhost:3000",
-          "http://localhost:3001",
-          "http://localhost:3002",
-          "http://localhost:4000",
-          "https://raza-stationers-web.vercel.app",
-          "https://raza-stationers-admin-seven.vercel.app",
-        ]
-  );
+  const allowedExactOrigins = new Set(getTrustedOrigins());
 
   app.enableCors({
     origin: (requestOrigin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
