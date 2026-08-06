@@ -95,19 +95,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           mobileNumber: (u as any).mobileNumber || "",
           passwordHash: "",
           role: ((u as any).role as any) || "business_user",
-          isActive: true,
+          isActive: (u as any).isActive !== false,
           createdAt: u.createdAt instanceof Date ? u.createdAt.toISOString() : String(u.createdAt),
         }
         setUser(mappedUser)
-        setAccountStatus(mappedUser.mobileNumber ? "approved" : "authenticated_unregistered")
         setAuthError(null)
 
-        api.getMyClient().then((res: any) => {
-          if (res?.clientBusiness) {
-            setClientBusiness(res.clientBusiness)
-            setBusinessRole(res.role || "business_owner")
+        try {
+          const clientRes: any = await api.getMyClient()
+          if (clientRes?.clientBusiness) {
+            setClientBusiness(clientRes.clientBusiness)
+            setBusinessRole(clientRes.role || "business_owner")
+
+            const bizStatus = clientRes.clientBusiness.accountStatus
+            if (bizStatus === "active" || bizStatus === "approved") {
+              setAccountStatus("approved")
+            } else if (bizStatus === "suspended") {
+              setAccountStatus("suspended")
+            } else if (bizStatus === "rejected") {
+              setAccountStatus("rejected")
+            } else {
+              setAccountStatus("pending")
+            }
+          } else {
+            setClientBusiness(null)
+            setBusinessRole(null)
+            setAccountStatus("authenticated_unregistered")
           }
-        }).catch(() => {})
+        } catch {
+          setClientBusiness(null)
+          setBusinessRole(null)
+          setAccountStatus("authenticated_unregistered")
+        }
       } else {
         setUser(null)
         setClientBusiness(null)
@@ -190,9 +209,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setAuthError(errMsg)
         throw new Error(errMsg)
       }
+
+      // Complete business registration
+      try {
+        await api.registerClient({
+          name: data.businessName,
+          businessType: data.businessType,
+          contactPerson: data.contactPerson || data.name,
+          mobileNumber: data.mobileNumber,
+          email: data.email,
+          address: data.address,
+          city: data.city,
+        })
+      } catch (err: any) {
+        console.warn("Client business registration notice:", err?.message || err)
+      }
       await checkSession()
     },
-    [authClient, checkSession]
+    [authClient, api, checkSession]
   )
 
   const registerCustomer = React.useCallback(
@@ -304,7 +338,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         getAccessToken,
       }}
     >
-      {children}
+      <OnboardingGate>{children}</OnboardingGate>
     </AuthContext.Provider>
   )
 }

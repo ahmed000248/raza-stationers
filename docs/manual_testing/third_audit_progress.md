@@ -23,7 +23,7 @@
 | 8 | C-08 | Mobile app has mock authentication and mock authorization | Critical | PASSED | 230697f |
 | 9 | H-01 | Admin route protection is not secure | High | PASSED | 077ab65 |
 | 10 | H-02 | Password reset leaks tokens and has unreliable delivery | High | PASSED | 04fbcc7 |
-| 11 | H-03 | Signup does not complete business onboarding | High | NOT STARTED | |
+| 11 | H-03 | Signup does not complete business onboarding | High | PASSED | cf40998 |
 | 12 | H-04 | Public catalogue exposes pending products and incorrect sale types | High | NOT STARTED | |
 | 13 | H-05 | Accounting, returns, and delivery routes do not match clients | High | NOT STARTED | |
 | 14 | H-06 | Inactive users and changed roles retain access | High | NOT STARTED | |
@@ -305,10 +305,31 @@
 - Tests Run:
   - `npm run test:phase9:h02`
   - `npm test`
-- Test Results: All unit and regression tests passed 100%. Verified complete removal of reset token logging, exact URL usage, and generic response for email enumeration protection.
 - Remaining Risks: None. Password reset tokens are never logged or exposed in client responses.
 - Commit Hash: 04fbcc7
 - Notes: H-02 implementation and verification complete.
+
+### H-03 — Signup does not complete business onboarding
+
+- Status: PASSED
+- Started At: 2026-08-06T20:00:00+05:00
+- Completed At: 2026-08-06T20:02:00+05:00
+- Root Cause Confirmed: `register` function discarded business details and failed to trigger `api.registerClient`. Account status was inferred from mobile number presence rather than active business status.
+- Files Changed:
+  - apps/web/src/hooks/use-auth.tsx
+  - tests/phase9/test_h03_signup_onboarding.mjs (NEW)
+  - package.json
+  - docs/manual_testing/third_audit_progress.md
+- Database Changes: None
+- Environment Changes: None
+- Tests Run:
+  - `npm run test:phase9:h03`
+  - `npm test`
+- Test Results: All unit and regression tests passed 100%. Verified business registration trigger during signup, server-derived account status from `clientBusiness.accountStatus`, and `OnboardingGate` activation.
+- Remaining Risks: None. Onboarding is complete, server-derived, and wrapped with `OnboardingGate`.
+- Commit Hash: cf40998
+- Notes: H-03 implementation and verification complete.
+
 
 
 
