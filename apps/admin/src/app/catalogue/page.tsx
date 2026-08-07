@@ -6,43 +6,15 @@ import { CategoryFilterBar } from "@/components/catalogue/CategoryFilterBar"
 import { ProductListTable } from "@/components/catalogue/ProductListTable"
 import { ProductModal } from "@/components/catalogue/ProductModal"
 import { BulkImportModal } from "@/components/catalogue/BulkImportModal"
-import { createAPIClient } from "@raza-stationers/api"
-import { Loader2, Search } from "lucide-react"
-import { getApiBaseUrl } from "@/lib/public-config"
-
-const API_BASE = getApiBaseUrl()
+import { Search } from "lucide-react"
 
 export default function ProductCataloguePage() {
-  const [products, setProducts] = React.useState<any[]>([])
-  const [loading, setLoading] = React.useState(true)
+  const [products] = React.useState<any[]>([])
   const [searchQuery, setSearchQuery] = React.useState("")
   const [activeCategory, setActiveCategory] = React.useState<string>("all")
   const [productModalOpen, setProductModalOpen] = React.useState(false)
   const [editingProduct, setEditingProduct] = React.useState<any>(null)
   const [bulkImportModalOpen, setBulkImportModalOpen] = React.useState(false)
-  const [fetchError, setFetchError] = React.useState("")
-
-  const api = React.useMemo(() => createAPIClient({ baseUrl: API_BASE }), [])
-
-  const fetchAll = React.useCallback(async () => {
-    setLoading(true)
-    setFetchError("")
-    try {
-      const data = await api.getAdminProducts({ limit: 3000 })
-      setProducts(data.items || [])
-    } catch (error) {
-      console.error("[Admin Catalogue] Failed to load products:", error)
-      const message = error instanceof Error ? error.message : "Failed to load products from the backend"
-      setFetchError(message)
-      setProducts([])
-    } finally {
-      setLoading(false)
-    }
-  }, [api])
-
-  React.useEffect(() => {
-    fetchAll()
-  }, [fetchAll])
 
   const mapToGrid = (p: any) => ({
     id: p.id,
@@ -70,29 +42,9 @@ export default function ProductCataloguePage() {
     setProductModalOpen(true)
   }
 
-  const handleSaveProduct = async (input: any) => {
-    try {
-      if (input.id) {
-        await api.updateProduct(input.id, {
-          name: input.name,
-          categoryId: input.categoryId,
-          shopName: input.shopName,
-          description: input.description,
-          purchaseType: input.purchaseType,
-        })
-      } else {
-        await api.createProduct({
-          name: input.name,
-          categoryId: input.categoryId,
-          purchaseType: input.purchaseType,
-          shopName: input.shopName,
-          description: input.description,
-          wholesalePrice: input.price,
-        })
-      }
-      setProductModalOpen(false)
-      fetchAll()
-    } catch {}
+  const handleSaveProduct = async () => {
+    alert("Backend rebuild in progress. Product mutations are currently disabled.")
+    setProductModalOpen(false)
   }
 
   const filteredProducts = products.filter((p: any) => {
@@ -117,7 +69,7 @@ export default function ProductCataloguePage() {
         <div>
           <h1 className="font-heading text-2xl font-bold">Product Catalogue</h1>
           <div className="text-xs text-[var(--text-muted)] mt-1">
-            {filteredProducts.length} of {products.length} products
+            {filteredProducts.length} of {products.length} products (Backend Rebuild in Progress)
           </div>
         </div>
         <div className="flex items-center gap-2.5">
@@ -144,27 +96,7 @@ export default function ProductCataloguePage() {
         </div>
       </div>
 
-      {fetchError && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 space-y-2">
-          <p className="font-semibold">Could not load products</p>
-          <p className="text-xs">{fetchError}</p>
-          <button
-            type="button"
-            onClick={fetchAll}
-            className="rounded-lg border border-red-300 bg-white px-3 py-1.5 text-xs font-semibold hover:bg-red-50 transition-colors"
-          >
-            Try again
-          </button>
-        </div>
-      )}
-
-      {loading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 className="size-6 animate-spin text-muted-foreground" />
-        </div>
-      ) : (
-        <ProductListTable products={filteredProducts.map(mapToGrid)} onEditProduct={handleOpenEdit} />
-      )}
+      <ProductListTable products={filteredProducts.map(mapToGrid)} onEditProduct={handleOpenEdit} />
 
       <ProductModal
         open={productModalOpen}

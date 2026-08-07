@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-
 import { useSearchParams } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
 import { CreditStatusCard } from "@/components/account/CreditStatusCard"
@@ -11,34 +10,15 @@ import { NotificationsFeedTab } from "@/components/account/NotificationsFeedTab"
 import { StaffTab } from "@/components/account/StaffTab"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Building2, CreditCard, Bell, ShieldCheck, Lock, LogOut, Users, MessageSquare, Loader2, Check } from "lucide-react"
-import { createAPIClient } from "@raza-stationers/api"
-import { getApiBaseUrl } from "@/lib/public-config"
-
-const API_BASE = getApiBaseUrl()
+import { Building2, CreditCard, Bell, ShieldCheck, Lock, LogOut, Users, MessageSquare } from "lucide-react"
 
 function SecurityTab() {
   const [currentPassword, setCurrentPassword] = React.useState("")
   const [newPassword, setNewPassword] = React.useState("")
-  const [loading, setLoading] = React.useState(false)
-  const [message, setMessage] = React.useState("")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!currentPassword || !newPassword || newPassword.length < 4) return
-    setLoading(true)
-    setMessage("")
-    try {
-      const api = createAPIClient({ baseUrl: API_BASE })
-      await api.changePassword(currentPassword, newPassword)
-      setMessage("Password changed successfully")
-      setCurrentPassword("")
-      setNewPassword("")
-    } catch (err: any) {
-      setMessage(err.message || "Failed to change password")
-    } finally {
-      setLoading(false)
-    }
+    alert("Backend rebuild in progress. Password changes are currently disabled.")
   }
 
   return (
@@ -55,10 +35,8 @@ function SecurityTab() {
           <label className="text-xs font-semibold">New Password</label>
           <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full h-10 px-3 rounded-xl border border-border bg-background text-sm outline-none focus:ring-2 focus:ring-ring" />
         </div>
-        {message && <p className={`text-xs font-medium ${message.includes("success") ? "text-[var(--color-evergreen-600)]" : "text-destructive"}`}>{message}</p>}
-        <Button type="submit" disabled={loading} size="sm" className="rounded-full gap-2">
-          {loading ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
-          <span>Update Password</span>
+        <Button type="submit" disabled size="sm" className="rounded-full gap-2 opacity-60">
+          <span>Update Password (Disabled)</span>
         </Button>
       </form>
     </div>
@@ -81,7 +59,6 @@ function AccountPageContent() {
   return (
     <div className="py-10 px-6 min-h-screen">
       <div className="mx-auto max-w-none w-full space-y-8">
-        {/* Header Banner */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
           <div>
             <span className="text-xs font-semibold uppercase tracking-wider text-[var(--color-evergreen-600)]">
@@ -96,7 +73,7 @@ function AccountPageContent() {
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            <Badge variant={accountStatus === "approved" ? "evergreen" : "amber"} className="px-3 py-1 text-xs">
+            <Badge variant="amber" className="px-3 py-1 text-xs">
               <ShieldCheck className="size-3.5 mr-1" />
               <span>Status: {accountStatus.toUpperCase()}</span>
             </Badge>
@@ -110,7 +87,6 @@ function AccountPageContent() {
           </div>
         </div>
 
-        {/* Tabbed Navigation Bar */}
         <div className="flex items-center gap-2 border-b border-border overflow-x-auto pb-px">
           <button
             type="button"
@@ -193,20 +169,12 @@ function AccountPageContent() {
           </button>
         </div>
 
-        {/* Tab Contents */}
         {activeTab === "profile" && <BusinessProfileTab />}
-
         {activeTab === "credit" && <CreditStatusCard clientBusiness={clientBusiness} />}
-
         {activeTab === "notifications" && <NotificationsFeedTab />}
-
         {activeTab === "preferences" && <NotificationPreferencesTab />}
-
         {activeTab === "staff" && isOwnerOrManager && <StaffTab />}
-
-        {activeTab === "security" && (
-          <SecurityTab />
-        )}
+        {activeTab === "security" && <SecurityTab />}
       </div>
     </div>
   )

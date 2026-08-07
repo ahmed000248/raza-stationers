@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { createAPIClient } from "@raza-stationers/api"
 import { Filter, SearchX, X } from "lucide-react"
 import { CategoryBrowser } from "@/components/catalogue/CategoryBrowser"
 import { CataloguePagination } from "@/components/catalogue/CataloguePagination"
@@ -14,9 +13,7 @@ import { Sheet, SheetClose, SheetHeader, SheetTitle } from "@/components/ui/shee
 import { Skeleton } from "@/components/ui/skeleton"
 import { useAuth } from "@/hooks/use-auth"
 import useDebounce from "@/hooks/use-debounce"
-import { getApiBaseUrl } from "@/lib/public-config"
 
-const API_BASE = getApiBaseUrl()
 const ITEMS_PER_PAGE = 20
 const allowedStock = new Set(["updating", "out_of_stock", "low_stock", "in_stock"])
 const allowedSaleType = new Set(["individual", "bulk"])
@@ -33,12 +30,12 @@ export default function CataloguePage() {
   const { pricingContext } = useAuth()
   const [searchInput, setSearchInput] = React.useState(searchParams.get("q") || "")
   const debouncedSearch = useDebounce(searchInput, 350)
-  const [products, setProducts] = React.useState<any[]>([])
-  const [categories, setCategories] = React.useState<any[]>([])
-  const [units, setUnits] = React.useState<any[]>([])
-  const [total, setTotal] = React.useState(0)
-  const [loading, setLoading] = React.useState(true)
-  const [error, setError] = React.useState("")
+  const [products] = React.useState<any[]>([])
+  const [categories] = React.useState<any[]>([])
+  const [units] = React.useState<any[]>([])
+  const [total] = React.useState(0)
+  const [loading] = React.useState(false)
+  const [error] = React.useState("")
   const [filtersOpen, setFiltersOpen] = React.useState(false)
 
   const current = React.useMemo(() => {
@@ -70,30 +67,6 @@ export default function CataloguePage() {
   React.useEffect(() => { if (debouncedSearch !== current.q) updateParams({ q: debouncedSearch || null }) }, [debouncedSearch, current.q, updateParams])
   React.useEffect(() => { setSearchInput(current.q) }, [current.q])
 
-  const [retryKey, setRetryKey] = React.useState(0)
-
-  React.useEffect(() => {
-    const api = createAPIClient({ baseUrl: API_BASE })
-    Promise.all([api.getCategories(), api.getCatalogueFilterOptions()]).then(([categoryData, optionData]: any[]) => {
-      setCategories(categoryData || [])
-      setUnits(optionData?.units || [])
-    }).catch((err) => {
-      console.warn("Failed to load catalogue categories/options", err)
-    })
-  }, [retryKey])
-
-  React.useEffect(() => {
-    const controller = new AbortController()
-    const api = createAPIClient({ baseUrl: API_BASE })
-    setLoading(true)
-    setError("")
-    api.getProducts({ page: current.page, limit: ITEMS_PER_PAGE, search: current.q || undefined, categorySlug: current.category || undefined, saleType: current.saleType, stock: current.stock, unit: current.unit, minPrice: current.minPrice, maxPrice: current.maxPrice, sort: current.sort, signal: controller.signal })
-      .then((data: any) => { setProducts(data.items || []); setTotal(data.total || 0) })
-      .catch((cause: unknown) => { if ((cause as Error)?.name !== "AbortError") { setProducts([]); setError("Catalogue results could not be loaded. Please check your connection and try again.") } })
-      .finally(() => { if (!controller.signal.aborted) setLoading(false) })
-    return () => controller.abort()
-  }, [current, retryKey])
-
   const reset = () => { setSearchInput(""); router.replace(pathname, { scroll: false }); setFiltersOpen(false) }
   const activeFilters = [current.category && ["category", current.category], current.saleType && ["saleType", current.saleType], current.stock && ["stock", current.stock.replaceAll("_", " ")], current.unit && ["unit", current.unit], current.minPrice !== undefined && ["minPrice", `From Rs. ${current.minPrice}`], current.maxPrice !== undefined && ["maxPrice", `To Rs. ${current.maxPrice}`]].filter(Boolean) as string[][]
   const filterControls = (
@@ -121,13 +94,13 @@ export default function CataloguePage() {
         <div className="flex gap-6">
           <CategoryBrowser categories={categories} selectedSlug={current.category} onSelect={(category) => updateParams({ category })} />
           <section className="min-w-0 flex-1" aria-busy={loading}>
-            <div className="mb-3 flex items-center justify-between text-xs text-muted-foreground"><span>{loading ? "Loading results…" : `${total.toLocaleString("en-PK")} products`}</span>{error && <button type="button" onClick={() => setRetryKey(k => k + 1)} className="font-semibold text-destructive underline">Retry</button>}</div>
+            <div className="mb-3 flex items-center justify-between text-xs text-muted-foreground"><span>{loading ? "Loading results…" : `${total.toLocaleString("en-PK")} products`}</span></div>
             {loading ? (
               <CatalogueSkeleton />
             ) : error ? (
-              <EmptyState icon={SearchX} title="Connection Error" description={error} actionLabel="Retry Connection" onAction={() => setRetryKey(k => k + 1)} />
+              <EmptyState icon={SearchX} title="Connection Error" description={error} />
             ) : products.length === 0 ? (
-              <EmptyState icon={SearchX} title={activeFilters.length > 0 || current.q ? "No products match these filters" : "No products available"} description={activeFilters.length > 0 || current.q ? "Try clearing one or more filters." : "The catalogue currently has no active products listed."} actionLabel={activeFilters.length > 0 || current.q ? "Reset filters" : undefined} onAction={activeFilters.length > 0 || current.q ? reset : undefined} />
+              <EmptyState icon={SearchX} title="Backend Rebuild in Progress" description="The legacy backend has been removed. Catalogue products will be available once Backend V2 is implemented." />
             ) : (
               <div className="overflow-hidden rounded-2xl border border-border bg-card">{products.map((product) => <ProductListRow key={product.id} product={product} pricingContext={pricingContext} />)}</div>
             )}

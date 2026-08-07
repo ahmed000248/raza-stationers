@@ -1,11 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { User, ClientBusiness, BusinessUserRole, AUTH_PROVIDER_NOT_CONFIGURED } from "@raza-stationers/types"
-import { UserPricingContext } from "@/lib/pricing"
-import { createAPIClient, createBetterAuthClient } from "@raza-stationers/api"
-import { usePathname, useRouter } from "next/navigation"
-import { getApiBaseUrl } from "@/lib/public-config"
+import { User, ClientBusiness, BusinessUserRole } from "@raza-stationers/types"
 
 export type AccountStatus =
   | "loading"
@@ -18,6 +14,11 @@ export type AccountStatus =
   | "unconfigured"
   | "auth_error"
 
+export interface UserPricingContext {
+  isApprovedBusiness: boolean
+  businessDiscountPercent?: number
+}
+
 interface AuthContextValue {
   accountStatus: AccountStatus
   user: User | null
@@ -27,331 +28,51 @@ interface AuthContextValue {
   authError: string | null
   retryBootstrap: () => Promise<void>
   login: (email: string, password: string) => Promise<any>
-  register: (data: {
-    name: string
-    mobileNumber: string
-    password: string
-    email: string
-    businessName: string
-    businessType: string
-    contactPerson: string
-    address: string
-    city: string
-  }) => Promise<void>
-  registerCustomer: (data: {
-    name: string
-    mobileNumber: string
-    password: string
-    email: string
-  }) => Promise<void>
+  register: (data: any) => Promise<void>
+  registerCustomer: (data: any) => Promise<void>
   verifyOtp: (email: string, token: string) => Promise<any>
   resendOtp: (email: string) => Promise<void>
   logout: () => Promise<void>
   loginWithGoogle: (returnTo?: string) => Promise<void>
   resetPassword: (email: string) => Promise<void>
   updatePassword: (password: string) => Promise<void>
-  linkAccount: (supabaseToken: string, mobileNumber: string, password: string) => Promise<void>
+  linkAccount: (...args: any[]) => Promise<void>
   getAccessToken: () => Promise<string | null>
 }
 
 const AuthContext = React.createContext<AuthContextValue | null>(null)
 
-const API_BASE = getApiBaseUrl()
-
-function OnboardingGate({ children }: { children: React.ReactNode }) {
-  const { accountStatus } = useAuth()
-  const pathname = usePathname()
-  const router = useRouter()
-
-  React.useEffect(() => {
-    if (accountStatus === "authenticated_unregistered" && pathname !== "/onboarding" && !pathname.startsWith("/auth")) {
-      router.replace("/onboarding")
-    }
-  }, [accountStatus, pathname, router])
-
-  return <>{children}</>
-}
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [accountStatus, setAccountStatus] = React.useState<AccountStatus>("loading")
-  const [user, setUser] = React.useState<User | null>(null)
-  const [clientBusiness, setClientBusiness] = React.useState<ClientBusiness | null>(null)
-  const [businessRole, setBusinessRole] = React.useState<BusinessUserRole | null>(null)
-  const [authError, setAuthError] = React.useState<string | null>(null)
+  const [accountStatus] = React.useState<AccountStatus>("guest")
+  const [user] = React.useState<User | null>(null)
+  const [clientBusiness] = React.useState<ClientBusiness | null>(null)
+  const [businessRole] = React.useState<BusinessUserRole | null>(null)
+  const [authError] = React.useState<string | null>(null)
 
-  const clearAuthState = React.useCallback(() => {
-    setUser(null)
-    setClientBusiness(null)
-    setBusinessRole(null)
-    setAuthError(null)
-    setAccountStatus("guest")
+  const retryBootstrap = React.useCallback(async () => {}, [])
+  const login = React.useCallback(async () => {
+    throw new Error("Backend rebuild in progress. Authentication is currently disabled.")
   }, [])
-
-  const api = React.useMemo(() => createAPIClient({
-    baseUrl: API_BASE,
-    onUnauthorized: () => {
-      clearAuthState()
-    },
-  }), [clearAuthState])
-  const authClient = React.useMemo(() => {
-    const baseUrl = typeof window !== "undefined" ? `${window.location.origin}/api` : API_BASE
-    return createBetterAuthClient(baseUrl)
+  const register = React.useCallback(async () => {
+    throw new Error("Backend rebuild in progress. Registration is currently disabled.")
   }, [])
-
-  const checkSession = React.useCallback(async () => {
-    try {
-      setAccountStatus("loading")
-      const sessionRes = await authClient.getSession()
-      if (sessionRes?.data?.user) {
-        const u = sessionRes.data.user
-        const mappedUser: User = {
-          id: u.id,
-          name: u.name,
-          mobileNumber: (u as any).mobileNumber || "",
-          passwordHash: "",
-          role: ((u as any).role as any) || "business_user",
-          isActive: (u as any).isActive !== false,
-          createdAt: u.createdAt instanceof Date ? u.createdAt.toISOString() : String(u.createdAt),
-        }
-        setUser(mappedUser)
-        setAuthError(null)
-
-        try {
-          const clientRes: any = await api.getMyClient()
-          if (clientRes?.clientBusiness) {
-            setClientBusiness(clientRes.clientBusiness)
-            setBusinessRole(clientRes.role || "business_owner")
-
-            const bizStatus = clientRes.clientBusiness.accountStatus
-            if (bizStatus === "active" || bizStatus === "approved") {
-              setAccountStatus("approved")
-            } else if (bizStatus === "suspended") {
-              setAccountStatus("suspended")
-            } else if (bizStatus === "rejected") {
-              setAccountStatus("rejected")
-            } else {
-              setAccountStatus("pending")
-            }
-          } else {
-            setClientBusiness(null)
-            setBusinessRole(null)
-            setAccountStatus("authenticated_unregistered")
-          }
-        } catch {
-          setClientBusiness(null)
-          setBusinessRole(null)
-          setAccountStatus("authenticated_unregistered")
-        }
-      } else {
-        setUser(null)
-        setClientBusiness(null)
-        setBusinessRole(null)
-        setAccountStatus("guest")
-      }
-    } catch {
-      setUser(null)
-      setAccountStatus("guest")
-    }
-  }, [authClient, api])
-
-  React.useEffect(() => {
-    checkSession()
-  }, [checkSession])
-
-  const logout = React.useCallback(async () => {
-    try {
-      await authClient.signOut()
-    } catch {}
-    setUser(null)
-    setClientBusiness(null)
-    setBusinessRole(null)
-    setAuthError(null)
-    setAccountStatus("guest")
-  }, [authClient])
-
-  const retryBootstrap = React.useCallback(async () => {
-    await checkSession()
-  }, [checkSession])
-
-  const login = React.useCallback(
-    async (identifier: string, password: string) => {
-      setAuthError(null)
-      try {
-        const res = await authClient.signIn.email({ email: identifier, password })
-        if (!res.error) {
-          await checkSession()
-          return res.data
-        }
-      } catch {}
-
-      // Fallback to custom login endpoint for email/mobile accounts
-      try {
-        await api.login(identifier, password)
-        await checkSession()
-        return { success: true }
-      } catch (err: any) {
-        const msg = err?.message || "Invalid credentials"
-        setAuthError(msg)
-        throw new Error(msg)
-      }
-    },
-    [authClient, api, checkSession]
-  )
-
-  const register = React.useCallback(
-    async (data: {
-      name: string
-      mobileNumber: string
-      password: string
-      email: string
-      businessName: string
-      businessType: string
-      contactPerson: string
-      address: string
-      city: string
-    }) => {
-      setAuthError(null)
-      const res = await authClient.signUp.email({
-        email: data.email,
-        password: data.password,
-        name: data.name,
-        role: "business_user",
-        mobileNumber: data.mobileNumber,
-      } as any)
-      if (res.error) {
-        const errObj = res.error as any
-        const errMsg = (typeof errObj === "string" ? errObj : errObj?.message) || "Failed to register"
-        setAuthError(errMsg)
-        throw new Error(errMsg)
-      }
-
-      // Complete business registration
-      try {
-        await api.registerClient({
-          businessName: data.businessName,
-          businessType: data.businessType,
-          contactPerson: data.contactPerson || data.name,
-          mobileNumber: data.mobileNumber,
-          address: data.address,
-          city: data.city,
-        })
-      } catch (err: any) {
-        console.warn("Client business registration notice:", err?.message || err)
-      }
-      await checkSession()
-    },
-    [authClient, api, checkSession]
-  )
-
-  const registerCustomer = React.useCallback(
-    async (data: { name: string; mobileNumber: string; password: string; email: string }) => {
-      setAuthError(null)
-      const res = await authClient.signUp.email({
-        email: data.email,
-        password: data.password,
-        name: data.name,
-        role: "business_user",
-        mobileNumber: data.mobileNumber,
-      } as any)
-      if (res.error) {
-        const errObj = res.error as any
-        const errMsg = (typeof errObj === "string" ? errObj : errObj?.message) || "Failed to register customer"
-        setAuthError(errMsg)
-        throw new Error(errMsg)
-      }
-      await checkSession()
-    },
-    [authClient, checkSession]
-  )
-
-  const verifyOtp = React.useCallback(async () => {
-    return null
+  const registerCustomer = React.useCallback(async () => {
+    throw new Error("Backend rebuild in progress. Registration is currently disabled.")
   }, [])
-
+  const verifyOtp = React.useCallback(async () => null, [])
   const resendOtp = React.useCallback(async () => {}, [])
-
-  const loginWithGoogle = React.useCallback(
-    async (returnTo?: string) => {
-      setAuthError(null);
-
-      if (typeof window === "undefined") {
-        throw new Error("Google sign-in must start in the browser.");
-      }
-
-      const origin = window.location.origin;
-      const destination = returnTo || "/catalogue";
-
-      try {
-        const result = await authClient.signIn.social({
-          provider: "google",
-          callbackURL: `${origin}${destination}`,
-          errorCallbackURL: `${origin}/signin?error=google_oauth`,
-          newUserCallbackURL: `${origin}/onboarding`,
-        });
-
-        if (result?.error) {
-          const msg = result.error.message || "Google sign-in could not be started.";
-          setAuthError(msg);
-          throw new Error(msg);
-        }
-      } catch (err: any) {
-        const msg = err?.message?.includes("404") || err?.status === 404 || String(err).includes("404")
-          ? "Google OAuth is not enabled on the backend. Please check GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in Render environment variables."
-          : err?.message || "Google sign-in could not be started.";
-        setAuthError(msg);
-        throw new Error(msg);
-      }
-    },
-    [authClient]
-  );
-
-  const resetPassword = React.useCallback(
-    async (email: string) => {
-      setAuthError(null)
-      try {
-        await (authClient as any).forgetPassword({
-          email,
-          redirectTo: "/reset-password",
-        })
-      } catch {
-        // Always succeed to prevent user/email enumeration attacks
-      }
-    },
-    [authClient]
-  )
-
-  const updatePassword = React.useCallback(
-    async (password: string, token?: string) => {
-      setAuthError(null)
-      const resetToken = token || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("token") : null)
-      if (!resetToken) {
-        throw new Error("Reset token is missing or expired. Please request a new password reset link.")
-      }
-      const res = await (authClient as any).resetPassword({
-        newPassword: password,
-        token: resetToken,
-      })
-      if (res.error) {
-        const errObj = res.error as any
-        const errMsg = (typeof errObj === "string" ? errObj : errObj?.message) || "Failed to reset password. Link may be expired."
-        setAuthError(errMsg)
-        throw new Error(errMsg)
-      }
-    },
-    [authClient]
-  )
+  const logout = React.useCallback(async () => {}, [])
+  const loginWithGoogle = React.useCallback(async () => {
+    throw new Error("Backend rebuild in progress. Google sign-in is currently disabled.")
+  }, [])
+  const resetPassword = React.useCallback(async () => {}, [])
+  const updatePassword = React.useCallback(async () => {}, [])
   const linkAccount = React.useCallback(async () => {}, [])
   const getAccessToken = React.useCallback(async () => null, [])
 
-  const pricingContext: UserPricingContext = React.useMemo(() => {
-    if (accountStatus === "approved" && clientBusiness?.accountStatus === "active") {
-      return {
-        isApprovedBusiness: true,
-        businessDiscountPercent: clientBusiness.discountPercent || 0,
-      }
-    }
-    return { isApprovedBusiness: false }
-  }, [accountStatus, clientBusiness])
+  const pricingContext: UserPricingContext = React.useMemo(() => ({
+    isApprovedBusiness: false,
+  }), [])
 
   return (
     <AuthContext.Provider
@@ -376,7 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         getAccessToken,
       }}
     >
-      <OnboardingGate>{children}</OnboardingGate>
+      {children}
     </AuthContext.Provider>
   )
 }

@@ -4,20 +4,11 @@ import * as React from "react"
 import { ProductCard } from "@/components/catalogue/ProductCard"
 import { StaggerList } from "@/components/motion/stagger-list"
 import { useAuth } from "@/hooks/use-auth"
-import { createAPIClient } from "@raza-stationers/api"
-import { Sparkles, Loader2 } from "lucide-react"
-import { getApiBaseUrl } from "@/lib/public-config"
-
-const API_BASE = getApiBaseUrl()
+import { Loader2 } from "lucide-react"
 
 export function FeaturedSection() {
   const { pricingContext } = useAuth()
-  const [products, setProducts] = React.useState<any[]>([])
-
-  React.useEffect(() => {
-    const api = createAPIClient({ baseUrl: API_BASE })
-    api.getProducts({ limit: 4 }).then((d: any) => setProducts(d.items || [])).catch(() => {})
-  }, [])
+  const [products] = React.useState<any[]>([])
 
   return (
     <section className="py-12 px-6 bg-card/30 border-t border-border/40">
@@ -28,7 +19,7 @@ export function FeaturedSection() {
           <p className="text-sm text-muted-foreground max-w-lg mx-auto">Fresh wholesale inventory just arrived — order before stock runs out.</p>
         </div>
         {products.length === 0 ? (
-          <div className="flex justify-center py-8"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>
+          <div className="text-center py-8 text-xs text-muted-foreground">Backend rebuild in progress. Catalogue products are temporarily offline.</div>
         ) : (
           <StaggerList className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {products.map((p: any) => <ProductCard key={p.id} product={p} pricingContext={pricingContext} />)}

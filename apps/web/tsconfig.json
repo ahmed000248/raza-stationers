@@ -22,7 +22,6 @@
       "@/*": ["./src/*"],
       "@raza-stationers/validation": ["../../packages/validation/src/index.ts"],
       "@raza-stationers/types": ["../../packages/types/src/index.ts"],
-      "@raza-stationers/api": ["../../packages/api/src/index.ts"],
       "@raza-stationers/ui": ["../../packages/ui/src/index.ts"],
       "@raza-stationers/ui/*": ["../../packages/ui/src/*"]
     }

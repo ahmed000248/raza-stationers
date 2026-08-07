@@ -2,8 +2,6 @@
 
 import * as React from "react"
 import { User } from "@raza-stationers/types"
-import { createAPIClient, createBetterAuthClient } from "@raza-stationers/api"
-import { getApiBaseUrl } from "@/lib/public-config"
 
 export type AdminRole = "owner" | "admin" | "packing" | "delivery"
 
@@ -20,127 +18,44 @@ interface AdminAuthContextValue {
   unenrollMfa: (password: string) => Promise<void>
   logout: () => Promise<void>
   refreshSession: () => Promise<void>
-  api: ReturnType<typeof createAPIClient>
+  api: any
 }
 
 const AdminAuthContext = React.createContext<AdminAuthContextValue | null>(null)
 
-const API_BASE = getApiBaseUrl()
+const MOCK_ADMIN_USER: User = {
+  id: "admin-preview-user",
+  name: "Stationery Admin (Preview)",
+  mobileNumber: "03000000000",
+  passwordHash: "",
+  role: "owner" as any,
+  isActive: true,
+  createdAt: new Date().toISOString(),
+}
 
 export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = React.useState<User | null>(null)
-  const [role, setRole] = React.useState<AdminRole | null>(null)
-  const [loading, setLoading] = React.useState(true)
-  const [currentLevel, setCurrentLevel] = React.useState<string>("aal1")
-  const [nextLevel, setNextLevel] = React.useState<string>("aal1")
+  const [user] = React.useState<User | null>(MOCK_ADMIN_USER)
+  const [role] = React.useState<AdminRole | null>("owner")
+  const [loading] = React.useState(false)
 
-  const clearAdminState = React.useCallback(() => {
-    setUser(null)
-    setRole(null)
-    setCurrentLevel("aal1")
+  const refreshSession = React.useCallback(async () => {}, [])
+  const logout = React.useCallback(async () => {}, [])
+
+  const login = React.useCallback(async () => {
+    return { requiresMfa: false }
   }, [])
-
-  const api = React.useMemo(() => createAPIClient({
-    baseUrl: API_BASE,
-    onUnauthorized: () => {
-      clearAdminState()
-    },
-  }), [clearAdminState])
-  const authClient = React.useMemo(() => {
-    const baseUrl = typeof window !== "undefined" ? `${window.location.origin}/api` : API_BASE
-    return createBetterAuthClient(baseUrl)
-  }, [])
-
-  const refreshSession = React.useCallback(async () => {
-    try {
-      setLoading(true)
-      const res = await authClient.getSession()
-      if (res?.data?.user) {
-        const u = res.data.user
-        const mappedUser: User = {
-          id: u.id,
-          name: u.name,
-          mobileNumber: (u as any).mobileNumber || "",
-          passwordHash: "",
-          role: (u as any).role || null,
-          isActive: true,
-          createdAt: u.createdAt instanceof Date ? u.createdAt.toISOString() : String(u.createdAt),
-          twoFactorEnabled: Boolean((u as any).twoFactorEnabled),
-        } as any
-        const ALLOWED_ADMIN_ROLES: AdminRole[] = ["owner", "admin", "packing", "delivery"]
-        const userRole = (u as any).role as AdminRole
-        const isAllowedRole = ALLOWED_ADMIN_ROLES.includes(userRole)
-        const isActive = (u as any).isActive !== false
-
-        if (isAllowedRole && isActive) {
-          setUser(mappedUser)
-          setRole(userRole)
-
-          setCurrentLevel("aal1")
-          setNextLevel("aal1")
-        } else {
-          // Deny access to non-staff roles (business_user) or inactive accounts
-          setUser(null)
-          setRole(null)
-        }
-      } else {
-        setUser(null)
-        setRole(null)
-      }
-    } catch {
-      setUser(null)
-      setRole(null)
-    } finally {
-      setLoading(false)
-    }
-  }, [authClient])
-
-  React.useEffect(() => {
-    refreshSession()
-  }, [refreshSession])
-
-  const logout = React.useCallback(async () => {
-    try {
-      await authClient.signOut()
-    } catch {}
-    setUser(null)
-    setRole(null)
-    setCurrentLevel("aal1")
-    setNextLevel("aal1")
-  }, [authClient])
-
-  const login = React.useCallback(
-    async (identifier: string, password: string) => {
-      try {
-        const res = await authClient.signIn.email({
-          email: identifier,
-          password,
-        })
-        if (!res.error) {
-          if ((res.data as any)?.twoFactorRedirect) {
-            return { requiresMfa: true }
-          }
-          await refreshSession()
-          return { requiresMfa: false }
-        }
-      } catch {}
-
-      // Fallback to custom login endpoint for email/mobile accounts
-      try {
-        await api.login(identifier, password)
-        await refreshSession()
-        return { requiresMfa: false }
-      } catch (err: any) {
-        throw new Error(err?.message || "Admin authentication failed")
-      }
-    },
-    [authClient, api, refreshSession]
-  )
 
   const verifyMfa = React.useCallback(async () => {}, [])
   const enrollMfa = React.useCallback(async () => ({ factorId: "none", qrCode: "", secret: "" }), [])
   const confirmEnrollMfa = React.useCallback(async () => {}, [])
   const unenrollMfa = React.useCallback(async () => {}, [])
+
+  const api = React.useMemo(() => ({
+    get: async () => [],
+    post: async () => ({}),
+    put: async () => ({}),
+    delete: async () => ({}),
+  }), [])
 
   return (
     <AdminAuthContext.Provider
@@ -148,8 +63,8 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
         user,
         role,
         loading,
-        currentLevel,
-        nextLevel,
+        currentLevel: "aal1",
+        nextLevel: "aal1",
         login,
         verifyMfa,
         enrollMfa,

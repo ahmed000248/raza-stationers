@@ -2,27 +2,11 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { OrderHistoryCard } from "@/components/orders/OrderHistoryCard"
 import { EmptyState } from "@/components/ui/empty-state"
-import { createAPIClient } from "@raza-stationers/api"
-import { Package, ArrowLeft, Loader2 } from "lucide-react"
-import { getApiBaseUrl } from "@/lib/public-config"
-
-const API_BASE = getApiBaseUrl()
+import { Package, ArrowLeft } from "lucide-react"
 
 export default function OrderHistoryPage() {
-  const [orders, setOrders] = React.useState<any[]>([])
-  const [loading, setLoading] = React.useState(true)
   const [filterStatus, setFilterStatus] = React.useState<string>("all")
-
-  React.useEffect(() => {
-    const api = createAPIClient({ baseUrl: API_BASE })
-    const params: any = {}
-    if (filterStatus !== "all") params.status = filterStatus
-    api.getOrders(params).then((data: any) => setOrders(data.items || [])).catch(() => setOrders([])).finally(() => setLoading(false))
-  }, [filterStatus])
-
-  const filteredOrders = filterStatus === "all" ? orders : orders.filter((o: any) => o.status === filterStatus)
 
   return (
     <div className="py-10 px-6 min-h-screen">
@@ -44,13 +28,7 @@ export default function OrderHistoryPage() {
           </div>
         </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-20"><Loader2 className="size-6 animate-spin text-muted-foreground" /></div>
-        ) : filteredOrders.length === 0 ? (
-          <EmptyState icon={Package} title="No Orders Found" description="You have no orders matching the selected filter." />
-        ) : (
-          <div className="space-y-4">{filteredOrders.map((order: any) => (<OrderHistoryCard key={order.id} order={order} />))}</div>
-        )}
+        <EmptyState icon={Package} title="Backend Rebuild in Progress" description="Order history is temporarily offline while the backend service is being updated." />
       </div>
     </div>
   )

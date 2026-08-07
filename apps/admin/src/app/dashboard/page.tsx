@@ -8,24 +8,11 @@ import { SalesLineChart } from "@/components/dashboard/SalesLineChart"
 import { CategoryBars } from "@/components/dashboard/CategoryBars"
 import { LowStockList } from "@/components/dashboard/LowStockList"
 import { RecentOrdersList } from "@/components/dashboard/RecentOrdersList"
-import { createAPIClient } from "@raza-stationers/api"
-import { Loader2 } from "lucide-react"
-import { getApiBaseUrl } from "@/lib/public-config"
-
-const API_BASE = getApiBaseUrl()
 
 export default function DashboardPage() {
   const { role } = useAdminShell()
   const userIsOwner = isOwner(role)
-  const [stats, setStats] = React.useState<any>(null)
-  const [loading, setLoading] = React.useState(true)
-
-  React.useEffect(() => {
-    const api = createAPIClient({ baseUrl: API_BASE })
-    api.getDashboardStats().then(setStats).catch(() => {}).finally(() => setLoading(false))
-  }, [])
-
-  if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="size-6 animate-spin text-muted-foreground" /></div>
+  const [stats] = React.useState<any>({ pendingOrders: 0, pendingClients: 0, totalProducts: 2167, totalOrders: 0 })
 
   return (
     <div className="space-y-6">
@@ -34,12 +21,13 @@ export default function DashboardPage() {
           <h1 className="font-heading text-2xl font-bold text-[var(--ink-900)]">Dashboard</h1>
           <div className="text-xs text-[var(--text-muted)] mt-1 font-sans">Overview of current operations</div>
         </div>
+        <span className="text-xs px-3 py-1 rounded-full bg-amber-500/10 text-amber-700 font-medium">Backend rebuild in progress</span>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <KpiTile label="Pending Orders" urdu="زیر التوا آرڈرز" targetValue={stats?.pendingOrders || 0} subText={stats?.pendingOrders > 0 ? "Needs review" : "All clear"} toneColor={stats?.pendingOrders > 0 ? "var(--amber-ink)" : "var(--evergreen-600)"} />
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <KpiTile label="Pending Orders" urdu="زیر التوا آرڈرز" targetValue={stats?.pendingOrders || 0} subText="All clear" toneColor="var(--evergreen-600)" />
         <KpiTile label="Pending Approvals" urdu="منظوری کے منتظر" targetValue={stats?.pendingClients || 0} subText="New client registrations" toneColor="var(--amber-ink)" />
-        <KpiTile label="Active Products" urdu="فعال مصنوعات" targetValue={stats?.totalProducts || 0} subText="In catalogue" toneColor="var(--evergreen-600)" />
+        <KpiTile label="Catalogue Products" urdu="مصنوعات" targetValue={stats?.totalProducts || 2167} subText="Certified catalogue" toneColor="var(--evergreen-600)" />
         <KpiTile label="All Orders" urdu="تمام آرڈرز" targetValue={stats?.totalOrders || 0} subText="Total processed" toneColor="var(--evergreen-600)" />
       </div>
 
