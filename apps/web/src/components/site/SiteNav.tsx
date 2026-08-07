@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation"
 import { Menu, ShoppingBag, UserRound } from "lucide-react"
 import { BrandLogo } from "@/components/site/BrandLogo"
 import { Sheet, SheetClose, SheetHeader, SheetTitle } from "@/components/ui/sheet"
-import { useAuth } from "@/hooks/use-auth"
 import { useCart } from "@/hooks/use-cart"
 import { cn } from "@/lib/utils"
 
@@ -20,9 +19,7 @@ const primaryLinks = [
 export function SiteNav() {
   const pathname = usePathname()
   const { totalItems } = useCart()
-  const { accountStatus } = useAuth()
   const [mobileOpen, setMobileOpen] = React.useState(false)
-  const accountHref = accountStatus === "guest" ? `/signin?returnTo=${encodeURIComponent(pathname)}` : "/account"
 
   return (
     <header className="sticky top-3 z-40 px-3 sm:px-6 pointer-events-none">
@@ -48,10 +45,10 @@ export function SiteNav() {
         </div>
 
         <div className="flex items-center gap-1.5">
-          <Link href={accountHref} aria-label={accountStatus === "guest" ? "Sign in" : "Open account"}
+          <Link href="/account" aria-label="Account"
             className="inline-flex h-10 items-center gap-2 rounded-xl px-2.5 text-sm font-semibold text-[var(--color-ink-900)] hover:bg-[var(--color-mist-100)] focus:outline-none focus:ring-2 focus:ring-ring">
             <UserRound className="size-4" />
-            <span className="hidden lg:inline">{accountStatus === "guest" ? "Sign in" : "Account"}</span>
+            <span className="hidden lg:inline">Account</span>
           </Link>
           <Link href="/cart" aria-label={`Cart with ${totalItems} items`}
             className="relative inline-flex size-10 items-center justify-center rounded-xl text-[var(--color-ink-900)] hover:bg-[var(--color-mist-100)] focus:outline-none focus:ring-2 focus:ring-ring">
@@ -73,8 +70,8 @@ export function SiteNav() {
               className={cn("rounded-xl px-4 py-3 text-sm font-semibold", pathname === link.href ? "bg-[var(--color-mist-100)]" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground")}>{link.label}</Link>
           ))}
           <Link href="/orders" onClick={() => setMobileOpen(false)} className="rounded-xl px-4 py-3 text-sm font-semibold text-muted-foreground hover:bg-muted/60 hover:text-foreground">Orders</Link>
-          <Link href={accountHref} onClick={() => setMobileOpen(false)} className="mt-auto rounded-xl bg-[var(--color-evergreen-600)] px-4 py-3 text-center text-sm font-semibold text-white">
-            {accountStatus === "guest" ? "Sign in to your account" : "Open your account"}
+          <Link href="/account" onClick={() => setMobileOpen(false)} className="mt-auto rounded-xl bg-[var(--color-evergreen-600)] px-4 py-3 text-center text-sm font-semibold text-white">
+            Open Account Preview
           </Link>
         </div>
       </Sheet>

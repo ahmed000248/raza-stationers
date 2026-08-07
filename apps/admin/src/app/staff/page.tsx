@@ -7,22 +7,12 @@ import { useAdminShell } from "@/components/shell/AdminShell"
 import { isOwner } from "@/lib/role"
 import { StaffTable } from "@/components/staff/StaffTable"
 import { AddStaffModal } from "@/components/staff/AddStaffModal"
-import { Loader2 } from "lucide-react"
-import { useAdminAuth } from "@/hooks/use-admin-auth"
 
 export default function StaffManagementPage() {
-  const { role, addToast } = useAdminShell()
-  const { api } = useAdminAuth()
+  const { role } = useAdminShell()
   const ownerRole = isOwner(role)
-  const [staff, setStaff] = React.useState<any[]>([])
-  const [loading, setLoading] = React.useState(true)
+  const [staff] = React.useState<any[]>([])
   const [addModalOpen, setAddModalOpen] = React.useState(false)
-
-  const fetchStaff = React.useCallback(async () => {
-    try { const d = await api.listStaff(); setStaff(d || []) } catch {} finally { setLoading(false) }
-  }, [])
-
-  React.useEffect(() => { if (ownerRole) fetchStaff() }, [ownerRole])
 
   if (!ownerRole) {
     return <div className="bg-[var(--white)] border border-[var(--border-subtle)] rounded-2xl p-12 text-center max-w-md mx-auto my-16 shadow-xs font-sans">
@@ -32,32 +22,17 @@ export default function StaffManagementPage() {
     </div>
   }
 
-  const handleCreateStaff = async (data: { name: string; email: string; mobileNumber: string; role: "admin" | "packing" | "delivery" }) => {
-    await api.createStaff(data)
-    setAddModalOpen(false)
-    fetchStaff()
-  }
-
-  const handleToggleActive = async (id: string) => {
-    await api.toggleStaffActive(id)
-    fetchStaff()
-  }
-
-  const handleChangeRole = async (id: string, role: string) => {
-    await api.changeStaffRole(id, role)
-    fetchStaff()
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div><h1 className="font-heading text-2xl font-bold">Staff Management</h1></div>
-        <Button variant="default" onClick={() => setAddModalOpen(true)} className="h-10 text-xs px-4">+ Add Staff</Button>
+        <div className="flex items-center gap-2">
+          <span className="text-xs px-3 py-1 rounded-full bg-amber-500/10 text-amber-700 font-medium">Backend rebuild in progress</span>
+          <Button variant="default" onClick={() => setAddModalOpen(true)} className="h-10 text-xs px-4">+ Add Staff</Button>
+        </div>
       </div>
-      {loading ? <div className="flex justify-center py-12"><Loader2 className="size-6 animate-spin" /></div> : (
-        <StaffTable staff={staff} onToggleActive={handleToggleActive} />
-      )}
-      <AddStaffModal open={addModalOpen} onClose={() => setAddModalOpen(false)} onInvite={handleCreateStaff} />
+      <StaffTable staff={staff} onToggleActive={async () => alert("Backend rebuild in progress.")} />
+      <AddStaffModal open={addModalOpen} onClose={() => setAddModalOpen(false)} onInvite={async () => alert("Backend rebuild in progress.")} />
     </div>
   )
 }

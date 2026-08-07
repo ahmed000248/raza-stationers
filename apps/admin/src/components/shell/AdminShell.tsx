@@ -5,8 +5,7 @@ import { AdminRole } from "@/lib/role"
 import { AdminNav } from "./AdminNav"
 import { TopBar } from "./TopBar"
 import { ToastContainer, ToastItem, ToastVariant } from "@raza-stationers/ui"
-import { useAdminAuth } from "@/hooks/use-admin-auth"
-import { BrandedLoader } from "./BrandedLoader"
+import { ADMIN_PREVIEW } from "@/lib/admin-preview"
 
 interface AddToastInput {
   title: string
@@ -32,7 +31,6 @@ export function useAdminShell() {
 }
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
-  const { user, role: adminRole, loading } = useAdminAuth()
   const [toasts, setToasts] = React.useState<ToastItem[]>([])
 
   const addToast = React.useCallback(({ title, description, type = "info" }: AddToastInput) => {
@@ -46,12 +44,12 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     setToasts((prev) => prev.filter((t) => t.id !== id))
   }, [])
 
-  const role = (adminRole || "owner") as AdminRole
-  const contextValue = React.useMemo(() => ({ role, userName: user?.name || "Staff", alertCount: 3, addToast }), [role, user, addToast])
-
-  if (loading) {
-    return <BrandedLoader />
-  }
+  const contextValue = React.useMemo(() => ({
+    role: ADMIN_PREVIEW.role as AdminRole,
+    userName: ADMIN_PREVIEW.name,
+    alertCount: 0,
+    addToast,
+  }), [addToast])
 
   return (
     <AdminShellContext.Provider value={contextValue}>

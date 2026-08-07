@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { useSearchParams } from "next/navigation"
-import { useAuth } from "@/hooks/use-auth"
 import { CreditStatusCard } from "@/components/account/CreditStatusCard"
 import { BusinessProfileTab } from "@/components/account/BusinessProfileTab"
 import { NotificationPreferencesTab } from "@/components/account/NotificationPreferencesTab"
@@ -10,7 +9,7 @@ import { NotificationsFeedTab } from "@/components/account/NotificationsFeedTab"
 import { StaffTab } from "@/components/account/StaffTab"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Building2, CreditCard, Bell, ShieldCheck, Lock, LogOut, Users, MessageSquare } from "lucide-react"
+import { Building2, CreditCard, Bell, ShieldCheck, Lock, Users, MessageSquare } from "lucide-react"
 
 function SecurityTab() {
   const [currentPassword, setCurrentPassword] = React.useState("")
@@ -47,14 +46,13 @@ function AccountPageContent() {
   const searchParams = useSearchParams()
   const initialTab = searchParams.get("tab") || "profile"
 
-  const { accountStatus, user, clientBusiness, businessRole, logout } = useAuth()
   const validTabs = ["profile", "credit", "notifications", "preferences", "staff", "security"] as const
   type TabId = typeof validTabs[number]
   const [activeTab, setActiveTab] = React.useState<TabId>(
     validTabs.includes(initialTab as TabId) ? (initialTab as TabId) : "profile"
   )
 
-  const isOwnerOrManager = businessRole === "owner" || businessRole === "manager"
+  const isOwnerOrManager = true
 
   return (
     <div className="py-10 px-6 min-h-screen">
@@ -68,22 +66,15 @@ function AccountPageContent() {
               Account & Shop Settings
             </h1>
             <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-              Welcome back, <strong className="text-foreground">{user?.name || "Guest User"}</strong> ({clientBusiness?.businessName || "Guest Shop"})
+              Welcome back, <strong className="text-foreground">Preview User</strong> (Al-Raza Book Depot & Stationers)
             </p>
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
             <Badge variant="amber" className="px-3 py-1 text-xs">
               <ShieldCheck className="size-3.5 mr-1" />
-              <span>Status: {accountStatus.toUpperCase()}</span>
+              <span>Status: PREVIEW</span>
             </Badge>
-
-            {accountStatus !== "guest" && (
-              <Button size="sm" variant="outline" onClick={logout} className="rounded-full gap-1.5 text-xs">
-                <LogOut className="size-3.5" />
-                <span>Log Out</span>
-              </Button>
-            )}
           </div>
         </div>
 
@@ -170,7 +161,7 @@ function AccountPageContent() {
         </div>
 
         {activeTab === "profile" && <BusinessProfileTab />}
-        {activeTab === "credit" && <CreditStatusCard clientBusiness={clientBusiness} />}
+        {activeTab === "credit" && <CreditStatusCard clientBusiness={null} />}
         {activeTab === "notifications" && <NotificationsFeedTab />}
         {activeTab === "preferences" && <NotificationPreferencesTab />}
         {activeTab === "staff" && isOwnerOrManager && <StaffTab />}

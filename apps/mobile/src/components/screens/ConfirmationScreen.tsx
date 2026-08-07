@@ -2,7 +2,7 @@ import React from 'react';
 import { CheckCircle2, ArrowRight, FileText, Home } from 'lucide-react';
 import { Order } from '../../types';
 import { STAGE_LABELS } from '../../data/mockData';
-import { formatPKR } from '../../lib/api';
+import { formatPKR } from '../../lib/local-catalogue';
 
 interface ConfirmationScreenProps {
   order: Order;

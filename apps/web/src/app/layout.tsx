@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Poppins, Unbounded, Noto_Nastaliq_Urdu } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/hooks/use-cart";
-import { AuthProvider } from "@/hooks/use-auth";
 import { SiteNav } from "@/components/site/SiteNav";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { FloatingCartFAB } from "@/components/cart/FloatingCartFAB";
@@ -43,14 +42,12 @@ export default function RootLayout({
       className={`${fontSans.variable} ${fontHeading.variable} ${fontUrdu.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-[var(--color-canvas)] text-[var(--color-ink-900)] overflow-x-hidden">
-        <AuthProvider>
-          <CartProvider>
-            <SiteNav />
-            <main className="flex-1 w-full">{children}</main>
-            <SiteFooter />
-            <FloatingCartFAB />
-          </CartProvider>
-        </AuthProvider>
+        <CartProvider>
+          <SiteNav />
+          <main className="flex-1 w-full">{children}</main>
+          <SiteFooter />
+          <FloatingCartFAB />
+        </CartProvider>
       </body>
     </html>
   );

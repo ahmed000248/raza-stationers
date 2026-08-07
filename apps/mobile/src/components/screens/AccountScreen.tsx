@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { User, CreditCard, Users, Bell, History, Info, LogOut, LogIn, ChevronRight, Check } from 'lucide-react';
 import { AccountTier, UserProfile } from '../../types';
-import { formatPKR } from '../../lib/api';
+import { formatPKR } from '../../lib/local-catalogue';
 
 interface AccountScreenProps {
   user: UserProfile;

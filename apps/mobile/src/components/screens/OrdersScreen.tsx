@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { History, ArrowRight, FileText, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { Order } from '../../types';
 import { STAGE_LABELS } from '../../data/mockData';
-import { formatPKR } from '../../lib/api';
+import { formatPKR } from '../../lib/local-catalogue';
 import { StatusBadge } from '../StatusBadge';
 
 interface OrdersScreenProps {

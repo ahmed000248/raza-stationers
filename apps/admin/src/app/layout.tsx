@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Poppins, Unbounded, Noto_Nastaliq_Urdu } from "next/font/google";
 import "./globals.css";
+import { AdminShell } from "@/components/shell/AdminShell";
+import { RegisterServiceWorker } from "@/components/shell/RegisterServiceWorker";
 
 const fontSans = Poppins({
   subsets: ["latin"],
@@ -19,10 +21,6 @@ const fontUrdu = Noto_Nastaliq_Urdu({
   weight: ["400", "500", "600", "700"],
   variable: "--font-urdu",
 });
-
-import { AdminShell } from "@/components/shell/AdminShell";
-import { AdminAuthProvider } from "@/hooks/use-admin-auth";
-import { RegisterServiceWorker } from "@/components/shell/RegisterServiceWorker";
 
 export const metadata: Metadata = {
   title: "Raza Stationers Admin",
@@ -44,7 +42,7 @@ export default function RootLayout({
     >
       <body className="min-h-full bg-[var(--color-canvas)] text-[var(--color-ink-900)] overflow-x-hidden">
         <RegisterServiceWorker />
-        <AdminAuthProvider><AdminShell>{children}</AdminShell></AdminAuthProvider>
+        <AdminShell>{children}</AdminShell>
       </body>
     </html>
   );

@@ -80,3 +80,4 @@ tools/__pycache__/
 
 graphify-out/
 .gstack/
+artifacts/

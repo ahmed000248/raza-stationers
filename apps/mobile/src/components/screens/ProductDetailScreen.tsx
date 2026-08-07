@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { BookOpen, Bell, Check, ShoppingBag, Info } from 'lucide-react';
 import { AccountTier, Product } from '../../types';
-import { formatPKR, getPriceCaption, getResolvedPrice } from '../../lib/api';
+import { formatPKR, getPriceCaption, getResolvedPrice } from '../../lib/local-catalogue';
 import { StatusBadge } from '../StatusBadge';
 import { QuantityStepper } from '../QuantityStepper';
 

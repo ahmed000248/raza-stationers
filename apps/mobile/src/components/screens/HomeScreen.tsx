@@ -1,7 +1,7 @@
 import React from 'react';
 import { Search, ShoppingBag, BookOpen, PenTool, FileText, Paperclip, ArrowRight, Check } from 'lucide-react';
 import { AccountTier, Product } from '../../types';
-import { formatPKR, getPriceCaption, getResolvedPrice } from '../../lib/api';
+import { formatPKR, getPriceCaption, getResolvedPrice } from '../../lib/local-catalogue';
 
 interface HomeScreenProps {
   accountTier: AccountTier;

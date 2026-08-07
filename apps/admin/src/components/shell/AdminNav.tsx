@@ -20,7 +20,6 @@ import {
 } from "lucide-react"
 import { AdminRole, ROLE_OPTIONS, OWNER_ONLY_ROUTES, isOwner } from "@/lib/role"
 import { useAdminShell } from "./AdminShell"
-import { useAdminAuth } from "@/hooks/use-admin-auth"
 
 interface NavItem {
   label: string
@@ -47,7 +46,6 @@ export function AdminNav() {
   const pathname = usePathname()
   const router = useRouter()
   const { role, addToast, userName } = useAdminShell()
-  const { logout } = useAdminAuth()
 
   const currentRoleOption = ROLE_OPTIONS.find((r) => r.key === role) || ROLE_OPTIONS[0]
   const initials = userName
@@ -127,7 +125,7 @@ export function AdminNav() {
               {currentRoleOption.roleLabel}
             </div>
           </div>
-          <button onClick={() => { logout(); router.push("/login"); }} className="text-white/60 hover:text-white transition-colors" title="Sign out">
+          <button onClick={() => addToast({ title: "Admin Preview Mode", description: "Authentication is disabled in preview state.", type: "info" })} className="text-white/60 hover:text-white transition-colors" title="Preview Info">
             <LogOut size={16} />
           </button>
         </div>

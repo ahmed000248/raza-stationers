@@ -2,21 +2,13 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { ProductIconBlock } from "@/components/ui/product-icon-block"
 import { Badge } from "@/components/ui/badge"
-import { formatPKR } from "@/lib/pricing"
-import { useCart } from "@/hooks/use-cart"
-import { useAuth } from "@/hooks/use-auth"
-import { ArrowLeft, ShieldCheck, Truck } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 
 interface Props { params: Promise<{ id: string }> }
 
 export default function ProductDetailPage({ params }: Props) {
   const { id } = React.use(params)
-  const { pricingContext } = useAuth()
-  const { addItem } = useCart()
-
-  const [quantity, setQuantity] = React.useState(1)
 
   return (
     <div className="min-h-screen px-3 py-8 sm:px-6 sm:py-10">

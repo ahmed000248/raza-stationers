@@ -3,12 +3,10 @@
 import * as React from "react"
 import { ProductCard } from "@/components/catalogue/ProductCard"
 import { StaggerList } from "@/components/motion/stagger-list"
-import { useAuth } from "@/hooks/use-auth"
-import { Loader2 } from "lucide-react"
 
 export function FeaturedSection() {
-  const { pricingContext } = useAuth()
   const [products] = React.useState<any[]>([])
+  const pricingContext = React.useMemo(() => ({ isApprovedBusiness: false }), [])
 
   return (
     <section className="py-12 px-6 bg-card/30 border-t border-border/40">

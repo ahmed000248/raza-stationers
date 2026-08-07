@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button"
 import { EmptyState } from "@/components/ui/empty-state"
 import { Sheet, SheetClose, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useAuth } from "@/hooks/use-auth"
 import useDebounce from "@/hooks/use-debounce"
 
 const ITEMS_PER_PAGE = 20
@@ -27,7 +26,7 @@ export default function CataloguePage() {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const { pricingContext } = useAuth()
+  const pricingContext = React.useMemo(() => ({ isApprovedBusiness: false }), [])
   const [searchInput, setSearchInput] = React.useState(searchParams.get("q") || "")
   const debouncedSearch = useDebounce(searchInput, 350)
   const [products] = React.useState<any[]>([])

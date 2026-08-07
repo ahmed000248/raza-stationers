@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { AccountTier, CartItem, Order, Product, ScreenName, UserProfile, WholesaleRegistrationData } from './types';
 import { PRODUCTS } from './data/products';
 import { MOCK_ORDERS, MOCK_USERS } from './data/mockData';
-import { createOrderApi, fetchProductsFromApi } from './lib/api';
+import { getLocalProducts } from './lib/local-catalogue';
+import { createPreviewOrder } from './lib/order-preview';
 
 // Components
 import { MobileFrame } from './components/MobileFrame';
@@ -55,10 +56,10 @@ export default function App() {
 
   // Sync products when tier or filters change
   useEffect(() => {
-    fetchProductsFromApi(selectedCategory, searchQuery, accountTier).then((res) => {
+    getLocalProducts(selectedCategory, searchQuery).then((res) => {
       setProductsList(res);
     });
-  }, [selectedCategory, searchQuery, accountTier]);
+  }, [selectedCategory, searchQuery]);
 
   // Navigation handlers
   const navigateTo = (targetScreen: ScreenName, extra?: { productId?: string }) => {
@@ -109,7 +110,7 @@ export default function App() {
 
   // Order Placement
   const handlePlaceOrder = async (orderPayload: any) => {
-    const created = await createOrderApi(orderPayload);
+    const created = await createPreviewOrder(orderPayload);
     setOrders((prev) => [created, ...prev]);
     setCurrentOrder(created);
     setCartItems([]);

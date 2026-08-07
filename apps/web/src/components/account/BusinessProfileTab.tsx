@@ -1,21 +1,18 @@
 "use client"
 
 import * as React from "react"
-import { useAuth } from "@/hooks/use-auth"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Bilingual } from "@/components/ui/bilingual"
 import { Building2, Save, Check, ShieldCheck } from "lucide-react"
 
 export function BusinessProfileTab() {
-  const { user, clientBusiness, accountStatus } = useAuth()
-
-  const [shopName, setShopName] = React.useState(clientBusiness?.businessName || "Al-Raza Book Depot & Stationers")
-  const [ownerName, setOwnerName] = React.useState(user?.name || "Ahmed Raza")
-  const [phone, setPhone] = React.useState(user?.mobileNumber || "")
-  const [email, setEmail] = React.useState(clientBusiness?.email || "ahmed@alrazabookdepot.com")
-  const [city, setCity] = React.useState(clientBusiness?.city || "Karachi")
-  const [address, setAddress] = React.useState(clientBusiness?.address || "Shop #42, Main Stationery Market, Urdu Bazar")
+  const [shopName, setShopName] = React.useState("Al-Raza Book Depot & Stationers")
+  const [ownerName, setOwnerName] = React.useState("Ahmed Raza")
+  const [phone, setPhone] = React.useState("03001234567")
+  const [email, setEmail] = React.useState("ahmed@alrazabookdepot.com")
+  const [city, setCity] = React.useState("Karachi")
+  const [address, setAddress] = React.useState("Shop #42, Main Stationery Market, Urdu Bazar")
   const [saved, setSaved] = React.useState(false)
 
   const handleSave = (e: React.FormEvent) => {
@@ -37,9 +34,9 @@ export function BusinessProfileTab() {
           </p>
         </div>
 
-        <span className="rounded-full bg-[var(--color-evergreen-600)]/10 text-[var(--color-evergreen-600)] px-3 py-1 text-xs font-bold flex items-center gap-1">
+        <span className="rounded-full bg-amber-500/10 text-amber-700 px-3 py-1 text-xs font-bold flex items-center gap-1">
           <ShieldCheck className="size-3" />
-          <span>Status: {accountStatus.toUpperCase()}</span>
+          <span>Status: PREVIEW</span>
         </span>
       </div>
 

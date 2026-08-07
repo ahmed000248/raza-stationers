@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ArrowRight, Check, CreditCard, Landmark, Truck, Upload, ShieldCheck, MapPin } from 'lucide-react';
 import { AccountTier, CartItem, PaymentMethod, Product } from '../../types';
 import { CITIES, FREE_DELIVERY_CITIES } from '../../data/mockData';
-import { formatPKR, getResolvedPrice } from '../../lib/api';
+import { formatPKR, getResolvedPrice } from '../../lib/local-catalogue';
 
 interface CheckoutScreenProps {
   cartItems: CartItem[];

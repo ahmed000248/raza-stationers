@@ -1,7 +1,7 @@
 import React from 'react';
 import { Search, BookOpen, PenTool, FileText, Paperclip, Filter } from 'lucide-react';
 import { AccountTier, Product } from '../../types';
-import { formatPKR, getPriceCaption, getResolvedPrice } from '../../lib/api';
+import { formatPKR, getPriceCaption, getResolvedPrice } from '../../lib/local-catalogue';
 import { StatusBadge } from '../StatusBadge';
 
 interface CatalogueScreenProps {

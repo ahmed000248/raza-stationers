@@ -19,7 +19,7 @@ import {
   Send,
   Video,
 } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import useDebounce from "@/hooks/use-debounce";

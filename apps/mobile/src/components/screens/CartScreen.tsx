@@ -1,7 +1,7 @@
 import React from 'react';
 import { ShoppingBag, Trash2, ArrowRight, Truck } from 'lucide-react';
 import { AccountTier, CartItem, Product } from '../../types';
-import { formatPKR, getResolvedPrice } from '../../lib/api';
+import { formatPKR, getResolvedPrice } from '../../lib/local-catalogue';
 import { FREE_DELIVERY_CITIES } from '../../data/mockData';
 import { QuantityStepper } from '../QuantityStepper';
 
